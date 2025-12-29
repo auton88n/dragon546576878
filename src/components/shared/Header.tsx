@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, User, Ticket } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import Logo from './Logo';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -11,6 +11,15 @@ const Header = () => {
   const { t, isRTL } = useLanguage();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navLinks = [
     { href: '/', label: t('nav.home') },
@@ -21,18 +30,26 @@ const Header = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <Logo showTagline />
+    <header 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm' 
+          : 'bg-transparent'
+      }`}
+    >
+      <div className="container flex h-16 md:h-20 items-center justify-between">
+        <Logo />
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               to={link.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                isActive(link.href) ? 'text-primary' : 'text-muted-foreground'
+              className={`text-sm font-medium transition-all duration-200 hover:text-accent ${
+                isActive(link.href) 
+                  ? 'text-accent' 
+                  : isScrolled ? 'text-foreground' : 'text-foreground'
               }`}
             >
               {link.label}
@@ -41,12 +58,17 @@ const Header = () => {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
           <LanguageSwitcher />
+          <Link to="/book">
+            <Button className="gap-2 gradient-bg text-white border-0 glow-hover">
+              <Ticket className="h-4 w-4" />
+              {t('nav.booking')}
+            </Button>
+          </Link>
           <Link to="/login">
-            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
-              <User className="h-4 w-4" />
-              <span>{t('nav.login')}</span>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent">
+              <User className="h-5 w-5" />
             </Button>
           </Link>
         </div>
@@ -56,37 +78,42 @@ const Header = () => {
           <LanguageSwitcher variant="minimal" />
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className={isScrolled ? '' : ''}>
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side={isRTL ? 'right' : 'left'} className="w-[280px]">
-              <div className="flex flex-col gap-6 mt-6">
-                <Logo showTagline />
+            <SheetContent side={isRTL ? 'right' : 'left'} className="w-[300px] bg-background/95 backdrop-blur-xl">
+              <div className="flex flex-col gap-8 mt-8">
+                <Logo />
                 <nav className="flex flex-col gap-4">
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}
                       to={link.href}
                       onClick={() => setIsOpen(false)}
-                      className={`text-lg font-medium transition-colors hover:text-primary ${
-                        isActive(link.href) ? 'text-primary' : 'text-foreground'
+                      className={`text-lg font-medium transition-colors hover:text-accent py-2 ${
+                        isActive(link.href) ? 'text-accent' : 'text-foreground'
                       }`}
                     >
                       {link.label}
                     </Link>
                   ))}
-                  <hr className="border-border" />
-                  <Link
-                    to="/login"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2 text-muted-foreground hover:text-primary"
-                  >
-                    <User className="h-4 w-4" />
-                    <span>{t('nav.login')}</span>
-                  </Link>
                 </nav>
+                <div className="flex flex-col gap-3 pt-4 border-t border-border">
+                  <Link to="/book" onClick={() => setIsOpen(false)}>
+                    <Button className="w-full gap-2 gradient-bg text-white border-0">
+                      <Ticket className="h-4 w-4" />
+                      {t('nav.booking')}
+                    </Button>
+                  </Link>
+                  <Link to="/login" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" className="w-full gap-2">
+                      <User className="h-4 w-4" />
+                      {t('nav.login')}
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </SheetContent>
           </Sheet>
