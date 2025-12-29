@@ -5,6 +5,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTicketsForBooking } from '@/lib/ticketService';
+import { sendBookingConfirmation } from '@/lib/emailService';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import StepIndicator from '@/components/booking/StepIndicator';
@@ -101,6 +102,12 @@ const BookingPage = () => {
           childCount: tickets.child,
           seniorCount: tickets.senior,
         });
+
+        // Send confirmation email with QR codes
+        const emailSent = await sendBookingConfirmation(booking.id);
+        if (!emailSent) {
+          console.warn('Confirmation email failed to send');
+        }
       } catch (ticketError) {
         console.error('Error generating tickets:', ticketError);
         // Continue anyway - tickets can be regenerated later
