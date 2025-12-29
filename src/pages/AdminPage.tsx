@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Ticket, Users, DollarSign, QrCode } from 'lucide-react';
+import { LayoutDashboard, Ticket, Users, DollarSign, QrCode, BarChart3, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
@@ -116,53 +116,83 @@ const AdminPage = () => {
             ))}
           </div>
 
-          {/* Bookings Management */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Ticket className="h-5 w-5 text-primary" />
-                {isArabic ? 'إدارة الحجوزات' : 'Booking Management'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <BookingFilters
-                filters={filters}
-                onFiltersChange={setFilters}
-                onReset={handleResetFilters}
-              />
-              
-              <BookingTable
-                bookings={bookings}
-                loading={bookingsLoading}
-                onViewDetails={handleViewDetails}
-              />
+          {/* Tabs Navigation */}
+          <Tabs defaultValue="bookings" className="space-y-6">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsTrigger value="bookings" className="gap-2">
+                <Ticket className="h-4 w-4" />
+                {isArabic ? 'الحجوزات' : 'Bookings'}
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                {isArabic ? 'التقارير' : 'Reports'}
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-2">
+                <Settings className="h-4 w-4" />
+                {isArabic ? 'الإعدادات' : 'Settings'}
+              </TabsTrigger>
+            </TabsList>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center gap-2 pt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    {isArabic ? 'السابق' : 'Previous'}
-                  </Button>
-                  <span className="flex items-center px-4 text-sm text-muted-foreground">
-                    {page} / {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                  >
-                    {isArabic ? 'التالي' : 'Next'}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            {/* Bookings Tab */}
+            <TabsContent value="bookings">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Ticket className="h-5 w-5 text-primary" />
+                    {isArabic ? 'إدارة الحجوزات' : 'Booking Management'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <BookingFilters
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    onReset={handleResetFilters}
+                  />
+                  
+                  <BookingTable
+                    bookings={bookings}
+                    loading={bookingsLoading}
+                    onViewDetails={handleViewDetails}
+                  />
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center gap-2 pt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                      >
+                        {isArabic ? 'السابق' : 'Previous'}
+                      </Button>
+                      <span className="flex items-center px-4 text-sm text-muted-foreground">
+                        {page} / {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                      >
+                        {isArabic ? 'التالي' : 'Next'}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Reports Tab */}
+            <TabsContent value="reports">
+              <ReportsPanel />
+            </TabsContent>
+
+            {/* Settings Tab */}
+            <TabsContent value="settings">
+              <SettingsPanel />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
 
