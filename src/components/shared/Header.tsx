@@ -14,7 +14,7 @@ const Header = () => {
 
   const navLinks = [
     { href: '/', label: t('nav.home') },
-    { href: '/book', label: t('nav.bookTickets') },
+    { href: '/book', label: t('nav.booking') },
     { href: '/my-tickets', label: t('nav.myTickets') },
   ];
 
@@ -46,7 +46,7 @@ const Header = () => {
           <Link to="/login">
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
               <User className="h-4 w-4" />
-              <span>{t('nav.staffLogin')}</span>
+              <span>{t('nav.login')}</span>
             </Button>
           </Link>
         </div>
@@ -84,7 +84,7 @@ const Header = () => {
                     className="flex items-center gap-2 text-muted-foreground hover:text-primary"
                   >
                     <User className="h-4 w-4" />
-                    <span>{t('nav.staffLogin')}</span>
+                    <span>{t('nav.login')}</span>
                   </Link>
                 </nav>
               </div>
