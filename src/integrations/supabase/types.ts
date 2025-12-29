@@ -14,16 +14,364 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          adult_count: number
+          adult_price: number
+          booking_reference: string
+          booking_status: string
+          cancelled_at: string | null
+          child_count: number
+          child_price: number
+          confirmation_email_sent: boolean | null
+          created_at: string | null
+          currency: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          language: string
+          paid_at: string | null
+          payment_id: string | null
+          payment_method: string | null
+          payment_status: string
+          qr_codes_generated: boolean | null
+          reminder_email_sent: boolean | null
+          senior_count: number | null
+          senior_price: number | null
+          special_requests: string | null
+          total_amount: number
+          updated_at: string | null
+          visit_date: string
+          visit_time: string
+        }
+        Insert: {
+          adult_count?: number
+          adult_price: number
+          booking_reference: string
+          booking_status?: string
+          cancelled_at?: string | null
+          child_count?: number
+          child_price: number
+          confirmation_email_sent?: boolean | null
+          created_at?: string | null
+          currency?: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          language?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
+          payment_status?: string
+          qr_codes_generated?: boolean | null
+          reminder_email_sent?: boolean | null
+          senior_count?: number | null
+          senior_price?: number | null
+          special_requests?: string | null
+          total_amount: number
+          updated_at?: string | null
+          visit_date: string
+          visit_time: string
+        }
+        Update: {
+          adult_count?: number
+          adult_price?: number
+          booking_reference?: string
+          booking_status?: string
+          cancelled_at?: string | null
+          child_count?: number
+          child_price?: number
+          confirmation_email_sent?: boolean | null
+          created_at?: string | null
+          currency?: string | null
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          language?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
+          payment_status?: string
+          qr_codes_generated?: boolean | null
+          reminder_email_sent?: boolean | null
+          senior_count?: number | null
+          senior_price?: number | null
+          special_requests?: string | null
+          total_amount?: number
+          updated_at?: string | null
+          visit_date?: string
+          visit_time?: string
+        }
+        Relationships: []
+      }
+      email_queue: {
+        Row: {
+          attachments: Json | null
+          attempts: number | null
+          body_html: string
+          body_text: string | null
+          booking_id: string | null
+          created_at: string | null
+          email_type: string
+          error_message: string | null
+          id: string
+          last_attempt: string | null
+          sent_at: string | null
+          status: string | null
+          subject: string
+          to_email: string
+          to_name: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          attempts?: number | null
+          body_html: string
+          body_text?: string | null
+          booking_id?: string | null
+          created_at?: string | null
+          email_type: string
+          error_message?: string | null
+          id?: string
+          last_attempt?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject: string
+          to_email: string
+          to_name?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          attempts?: number | null
+          body_html?: string
+          body_text?: string | null
+          booking_id?: string | null
+          created_at?: string | null
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          last_attempt?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string
+          to_email?: string
+          to_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_queue_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string
+          hired_date: string | null
+          id: string
+          is_active: boolean | null
+          last_login: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name: string
+          hired_date?: string | null
+          id: string
+          is_active?: boolean | null
+          last_login?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          hired_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      scan_logs: {
+        Row: {
+          device_info: string | null
+          id: string
+          ip_address: unknown
+          notes: string | null
+          scan_location: string | null
+          scan_result: string
+          scan_timestamp: string | null
+          scanner_user_id: string | null
+          ticket_id: string | null
+        }
+        Insert: {
+          device_info?: string | null
+          id?: string
+          ip_address?: unknown
+          notes?: string | null
+          scan_location?: string | null
+          scan_result: string
+          scan_timestamp?: string | null
+          scanner_user_id?: string | null
+          ticket_id?: string | null
+        }
+        Update: {
+          device_info?: string | null
+          id?: string
+          ip_address?: unknown
+          notes?: string | null
+          scan_location?: string | null
+          scan_result?: string
+          scan_timestamp?: string | null
+          scanner_user_id?: string | null
+          ticket_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_logs_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settings: {
+        Row: {
+          category: string | null
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      tickets: {
+        Row: {
+          booking_id: string
+          created_at: string | null
+          id: string
+          is_used: boolean | null
+          qr_code_data: string
+          qr_code_url: string | null
+          scan_location: string | null
+          scanned_at: string | null
+          scanned_by: string | null
+          ticket_code: string
+          ticket_type: string
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          qr_code_data: string
+          qr_code_url?: string | null
+          scan_location?: string | null
+          scanned_at?: string | null
+          scanned_by?: string | null
+          ticket_code: string
+          ticket_type: string
+          valid_from: string
+          valid_until: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          qr_code_data?: string
+          qr_code_url?: string | null
+          scan_location?: string | null
+          scanned_at?: string | null
+          scanned_by?: string | null
+          ticket_code?: string
+          ticket_type?: string
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "scanner" | "manager"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +498,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "scanner", "manager"],
+    },
   },
 } as const
