@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Ticket, Users, DollarSign, QrCode, Mail, Settings } from 'lucide-react';
+import { LayoutDashboard, Ticket, Users, DollarSign, QrCode } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
@@ -10,8 +10,11 @@ import StatsCard from '@/components/admin/StatsCard';
 import BookingTable from '@/components/admin/BookingTable';
 import BookingFilters from '@/components/admin/BookingFilters';
 import BookingDetailsDialog from '@/components/admin/BookingDetailsDialog';
+import SettingsPanel from '@/components/admin/SettingsPanel';
+import ReportsPanel from '@/components/admin/ReportsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Booking = Tables<'bookings'>;
