@@ -14,19 +14,6 @@ interface BookingConfirmationRequest {
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Create SMTP transporter for Hostinger
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: Deno.env.get("SMTP_HOST"),
-    port: parseInt(Deno.env.get("SMTP_PORT") || "465"),
-    secure: true,
-    auth: {
-      user: Deno.env.get("SMTP_USERNAME"),
-      pass: Deno.env.get("SMTP_PASSWORD"),
-    },
-  });
-};
-
 // Generate email template
 const generateEmailTemplate = (
   booking: any,
@@ -268,21 +255,33 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Email queue error:", queueError);
     }
 
-    // Send email via SMTP
-    const transporter = createTransporter();
-
-    const mailOptions = {
-      from: `"Souq Almufaijer" <${Deno.env.get("SMTP_USERNAME")}>`,
-      to: booking.customer_email,
-      subject: subject,
-      html: emailHtml,
-    };
+    // Create SMTP client for Hostinger
+    const client = new SMTPClient({
+      connection: {
+        hostname: Deno.env.get("SMTP_HOST") || "smtp.hostinger.com",
+        port: parseInt(Deno.env.get("SMTP_PORT") || "465"),
+        tls: true,
+        auth: {
+          username: Deno.env.get("SMTP_USERNAME") || "",
+          password: Deno.env.get("SMTP_PASSWORD") || "",
+        },
+      },
+    });
 
     console.log("Sending email to:", booking.customer_email);
 
-    const info = await transporter.sendMail(mailOptions);
+    // Send email
+    await client.send({
+      from: Deno.env.get("SMTP_USERNAME") || "info@almufaijer.com",
+      to: booking.customer_email,
+      subject: subject,
+      content: "auto",
+      html: emailHtml,
+    });
 
-    console.log("Email sent successfully:", info.messageId);
+    await client.close();
+
+    console.log("Email sent successfully to:", booking.customer_email);
 
     // Update email queue status
     if (emailQueueEntry) {
@@ -304,7 +303,6 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        messageId: info.messageId,
         recipient: booking.customer_email,
       }),
       {
