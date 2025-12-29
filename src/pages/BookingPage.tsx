@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { supabase } from '@/integrations/supabase/client';
+import { generateTicketsForBooking } from '@/lib/ticketService';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import StepIndicator from '@/components/booking/StepIndicator';
@@ -88,6 +89,22 @@ const BookingPage = () => {
         .single();
 
       if (error) throw error;
+
+      // Generate tickets with QR codes
+      try {
+        await generateTicketsForBooking({
+          bookingId: booking.id,
+          bookingReference: bookingReference,
+          visitDate: visitDate!,
+          visitTime: visitTime!,
+          adultCount: tickets.adult,
+          childCount: tickets.child,
+          seniorCount: tickets.senior,
+        });
+      } catch (ticketError) {
+        console.error('Error generating tickets:', ticketError);
+        // Continue anyway - tickets can be regenerated later
+      }
 
       // Reset booking store and navigate to confirmation
       reset();
