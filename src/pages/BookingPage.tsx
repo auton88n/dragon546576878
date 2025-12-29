@@ -62,7 +62,6 @@ const BookingPage = () => {
     try {
       const bookingReference = generateBookingReference();
       
-      // Create booking in database
       const { data: booking, error } = await supabase
         .from('bookings')
         .insert({
@@ -75,10 +74,10 @@ const BookingPage = () => {
           visit_time: visitTime!,
           adult_count: tickets.adult,
           child_count: tickets.child,
-          senior_count: tickets.senior,
+          senior_count: 0,
           adult_price: pricing.adult,
           child_price: pricing.child,
-          senior_price: pricing.senior,
+          senior_price: 0,
           total_amount: totalAmount,
           payment_id: paymentId,
           payment_status: 'completed',
@@ -91,7 +90,6 @@ const BookingPage = () => {
 
       if (error) throw error;
 
-      // Generate tickets with QR codes
       try {
         await generateTicketsForBooking({
           bookingId: booking.id,
@@ -100,20 +98,17 @@ const BookingPage = () => {
           visitTime: visitTime!,
           adultCount: tickets.adult,
           childCount: tickets.child,
-          seniorCount: tickets.senior,
+          seniorCount: 0,
         });
 
-        // Send confirmation email with QR codes
         const emailSent = await sendBookingConfirmation(booking.id);
         if (!emailSent) {
           console.warn('Confirmation email failed to send');
         }
       } catch (ticketError) {
         console.error('Error generating tickets:', ticketError);
-        // Continue anyway - tickets can be regenerated later
       }
 
-      // Reset booking store and navigate to confirmation
       reset();
       navigate(`/confirmation/${booking.id}`);
       
@@ -150,7 +145,7 @@ const BookingPage = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      <main className="flex-1 py-8">
+      <main className="flex-1 pt-24 pb-12">
         <div className="container">
           {/* Step Indicator */}
           <div className="max-w-3xl mx-auto mb-8">
@@ -161,18 +156,18 @@ const BookingPage = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Step Content */}
             <div className="lg:col-span-2">
-              <div className="bg-card rounded-xl p-6 md:p-8 shadow-sm border">
+              <div className="glass-card rounded-3xl p-6 md:p-8">
                 {renderStepContent()}
 
                 {/* Navigation Buttons */}
                 {step < 4 && (
-                  <div className="flex justify-between mt-8 pt-6 border-t">
+                  <div className="flex justify-between mt-10 pt-6 border-t border-border/50">
                     <Button
                       variant="outline"
                       size="lg"
                       onClick={handleBack}
                       disabled={step === 1}
-                      className="gap-2"
+                      className="gap-2 rounded-xl border-2 px-6"
                     >
                       {isRTL ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
                       {isArabic ? 'السابق' : 'Back'}
@@ -182,7 +177,7 @@ const BookingPage = () => {
                       size="lg"
                       onClick={handleNext}
                       disabled={!canProceed()}
-                      className="gap-2"
+                      className="gap-2 rounded-xl gradient-bg text-white border-0 px-8 glow-hover"
                     >
                       {isArabic ? 'التالي' : 'Continue'}
                       {isRTL ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}

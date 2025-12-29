@@ -1,12 +1,11 @@
-import { Minus, Plus, Users, Baby, UserCheck } from 'lucide-react';
+import { Minus, Plus, Users, Baby } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 const TicketSelector = () => {
-  const { t, currentLanguage } = useLanguage();
+  const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { tickets, pricing, setTickets } = useBookingStore();
 
@@ -20,6 +19,7 @@ const TicketSelector = () => {
       descEn: '12 years and above',
       price: pricing.adult,
       count: tickets.adult,
+      imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
     },
     {
       type: 'child' as const,
@@ -30,116 +30,154 @@ const TicketSelector = () => {
       descEn: 'Under 12 years',
       price: pricing.child,
       count: tickets.child,
-    },
-    {
-      type: 'senior' as const,
-      icon: UserCheck,
-      labelAr: 'كبار السن',
-      labelEn: 'Senior',
-      descAr: '60 سنة فما فوق',
-      descEn: '60 years and above',
-      price: pricing.senior,
-      count: tickets.senior,
+      imageUrl: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=300&fit=crop',
     },
   ];
 
-  const totalTickets = tickets.adult + tickets.child + tickets.senior;
+  const totalTickets = tickets.adult + tickets.child;
 
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
+    <div className="space-y-8">
+      <div className="text-center space-y-3">
         <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-          {t('booking.selectTickets')}
+          {isArabic ? 'اختر التذاكر' : 'Select Tickets'}
         </h2>
         <p className="text-muted-foreground">
-          {isArabic ? 'اختر عدد التذاكر لكل فئة' : 'Select the number of tickets for each category'}
+          {isArabic ? 'اختر نوع وعدد التذاكر للزيارة' : 'Choose ticket type and quantity for your visit'}
         </p>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid md:grid-cols-2 gap-6">
         {ticketTypes.map((ticket) => (
-          <Card 
+          <div
             key={ticket.type}
             className={cn(
-              'border-2 transition-all duration-300',
-              ticket.count > 0 ? 'border-primary shadow-lg' : 'border-border hover:border-primary/50'
+              'ticket-card group cursor-pointer',
+              ticket.count > 0 && 'selected'
             )}
           >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between gap-4">
-                {/* Ticket Info */}
-                <div className="flex items-center gap-4">
-                  <div className={cn(
-                    'w-14 h-14 rounded-xl flex items-center justify-center transition-colors',
-                    ticket.count > 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground'
-                  )}>
-                    <ticket.icon className="h-7 w-7" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {isArabic ? ticket.labelAr : ticket.labelEn}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {isArabic ? ticket.descAr : ticket.descEn}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Price & Counter */}
-                <div className="flex items-center gap-6">
-                  <div className="text-right rtl:text-left">
-                    <span className="text-2xl font-bold text-primary">{ticket.price}</span>
-                    <span className="text-sm text-muted-foreground mr-1 rtl:ml-1 rtl:mr-0">
-                      {isArabic ? 'ر.س' : 'SAR'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-10 w-10 rounded-full"
-                      onClick={() => setTickets(ticket.type, ticket.count - 1)}
-                      disabled={ticket.count === 0}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="w-8 text-center text-xl font-semibold">
-                      {ticket.count}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-10 w-10 rounded-full"
-                      onClick={() => setTickets(ticket.type, ticket.count + 1)}
-                      disabled={ticket.count >= 10}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+            {/* Ticket Image */}
+            <div className="relative h-40 overflow-hidden">
+              <img 
+                src={ticket.imageUrl} 
+                alt={isArabic ? ticket.labelAr : ticket.labelEn}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
+              
+              {/* Price Badge */}
+              <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4">
+                <div className="px-4 py-2 rounded-xl glass-card">
+                  <span className="text-xl font-bold gradient-text">{ticket.price}</span>
+                  <span className="text-sm text-muted-foreground ml-1 rtl:mr-1 rtl:ml-0">
+                    {isArabic ? 'ر.س' : 'SAR'}
+                  </span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+
+              {/* Selected Badge */}
+              {ticket.count > 0 && (
+                <div className="absolute top-4 left-4 rtl:left-auto rtl:right-4">
+                  <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white font-bold text-sm animate-scale-in">
+                    {ticket.count}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Ticket Info */}
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300',
+                  ticket.count > 0 ? 'gradient-bg text-white' : 'bg-secondary text-foreground'
+                )}>
+                  <ticket.icon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    {isArabic ? ticket.labelAr : ticket.labelEn}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {isArabic ? ticket.descAr : ticket.descEn}
+                  </p>
+                </div>
+              </div>
+
+              {/* Quantity Selector */}
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-muted-foreground">
+                  {isArabic ? 'الكمية' : 'Quantity'}
+                </span>
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className={cn(
+                      'h-10 w-10 rounded-full border-2 transition-all',
+                      ticket.count === 0 && 'opacity-50'
+                    )}
+                    onClick={() => setTickets(ticket.type, ticket.count - 1)}
+                    disabled={ticket.count === 0}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="w-8 text-center text-2xl font-bold">
+                    {ticket.count}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className={cn(
+                      'h-10 w-10 rounded-full border-2 transition-all hover:border-accent hover:bg-accent/10',
+                      ticket.count >= 10 && 'opacity-50'
+                    )}
+                    onClick={() => setTickets(ticket.type, ticket.count + 1)}
+                    disabled={ticket.count >= 10}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Subtotal */}
+              {ticket.count > 0 && (
+                <div className="pt-3 border-t border-border/50 flex justify-between items-center">
+                  <span className="text-muted-foreground">
+                    {isArabic ? 'المجموع الفرعي' : 'Subtotal'}
+                  </span>
+                  <span className="text-lg font-bold gradient-text">
+                    {ticket.count * ticket.price} {isArabic ? 'ر.س' : 'SAR'}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Total Tickets Info */}
-      {totalTickets > 0 && (
-        <div className="text-center p-4 bg-primary/10 rounded-xl border border-primary/20">
-          <span className="text-lg font-medium text-primary">
+      {/* Summary */}
+      {totalTickets > 0 ? (
+        <div className="glass-card rounded-2xl p-6 text-center space-y-2">
+          <div className="text-lg font-medium text-foreground">
             {isArabic 
               ? `إجمالي التذاكر: ${totalTickets} تذكرة`
-              : `Total Tickets: ${totalTickets} ticket${totalTickets > 1 ? 's' : ''}`
+              : `Total: ${totalTickets} ticket${totalTickets > 1 ? 's' : ''}`
             }
-          </span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {isArabic 
+              ? 'اضغط على "التالي" لاختيار موعد الزيارة'
+              : 'Click "Continue" to select your visit date'
+            }
+          </p>
         </div>
-      )}
-
-      {totalTickets === 0 && (
-        <p className="text-center text-muted-foreground text-sm">
-          {isArabic ? 'يرجى اختيار تذكرة واحدة على الأقل للمتابعة' : 'Please select at least one ticket to continue'}
-        </p>
+      ) : (
+        <div className="text-center p-6 border-2 border-dashed border-border rounded-2xl">
+          <p className="text-muted-foreground">
+            {isArabic ? 'يرجى اختيار تذكرة واحدة على الأقل للمتابعة' : 'Please select at least one ticket to continue'}
+          </p>
+        </div>
       )}
     </div>
   );
