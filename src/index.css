@@ -1,96 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* ============================================
+   SOUQ ALMUFAIJER - HERITAGE DESIGN SYSTEM
+   ============================================ */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Heritage Color Palette */
+    --background: 40 33% 94%;           /* #F5F1E8 - Warm cream */
+    --foreground: 30 27% 13%;           /* #2C2416 - Dark heritage text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;                  /* White cards */
+    --card-foreground: 30 27% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 30 27% 13%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Traditional Brown */
+    --primary: 30 32% 41%;              /* #8B6F47 */
+    --primary-foreground: 40 33% 94%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Desert Beige */
+    --secondary: 36 28% 76%;            /* #D4C5B0 */
+    --secondary-foreground: 30 27% 13%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted */
+    --muted: 36 20% 88%;
+    --muted-foreground: 30 18% 40%;     /* #6B5D4F */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Dark Heritage */
+    --accent: 24 35% 22%;               /* #4A3625 */
+    --accent-foreground: 40 33% 94%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive */
+    --destructive: 0 84% 60%;           /* #EF4444 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Success */
+    --success: 160 84% 39%;             /* #10B981 */
+    --success-foreground: 0 0% 100%;
+
+    /* Warning */
+    --warning: 38 92% 50%;              /* #F59E0B */
+    --warning-foreground: 0 0% 100%;
+
+    /* Info */
+    --info: 217 91% 60%;                /* #3B82F6 */
+    --info-foreground: 0 0% 100%;
+
+    /* Borders & Inputs */
+    --border: 36 20% 80%;
+    --input: 36 20% 85%;
+    --ring: 30 32% 41%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Scanner feedback colors */
+    --scan-valid: 160 84% 39%;
+    --scan-invalid: 0 84% 60%;
+    --scan-used: 38 92% 50%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Sidebar */
+    --sidebar-background: 36 28% 76%;
+    --sidebar-foreground: 30 27% 13%;
+    --sidebar-primary: 30 32% 41%;
+    --sidebar-primary-foreground: 40 33% 94%;
+    --sidebar-accent: 24 35% 22%;
+    --sidebar-accent-foreground: 40 33% 94%;
+    --sidebar-border: 36 20% 70%;
+    --sidebar-ring: 30 32% 41%;
 
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Gradients */
+    --gradient-heritage: linear-gradient(135deg, hsl(30 32% 41%) 0%, hsl(24 35% 22%) 100%);
+    --gradient-desert: linear-gradient(180deg, hsl(40 33% 94%) 0%, hsl(36 28% 76%) 100%);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 24 20% 10%;
+    --foreground: 40 33% 94%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 24 20% 14%;
+    --card-foreground: 40 33% 94%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 24 20% 14%;
+    --popover-foreground: 40 33% 94%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 36 40% 55%;
+    --primary-foreground: 24 20% 10%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 24 15% 25%;
+    --secondary-foreground: 40 33% 94%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 24 15% 20%;
+    --muted-foreground: 36 15% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 36 30% 45%;
+    --accent-foreground: 24 20% 10%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 24 15% 25%;
+    --input: 24 15% 25%;
+    --ring: 36 40% 55%;
+
+    --sidebar-background: 24 20% 10%;
+    --sidebar-foreground: 40 33% 94%;
+    --sidebar-primary: 36 40% 55%;
+    --sidebar-primary-foreground: 24 20% 10%;
+    --sidebar-accent: 24 15% 25%;
+    --sidebar-accent-foreground: 40 33% 94%;
+    --sidebar-border: 24 15% 25%;
+    --sidebar-ring: 36 40% 55%;
   }
 }
 
@@ -99,7 +125,157 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* RTL Support for Arabic */
+  [dir="rtl"] body,
+  html[lang="ar"] body {
+    font-family: 'Cairo', sans-serif;
+  }
+
+  /* Typography */
+  h1 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold;
+  }
+
+  h4 {
+    @apply text-xl font-semibold;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
+}
+
+@layer components {
+  /* Heritage Card Style */
+  .heritage-card {
+    @apply bg-card rounded-lg border border-border shadow-sm;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238B6F47' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Scanner Result Overlays */
+  .scan-overlay-valid {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+    background-color: hsl(var(--scan-valid) / 0.95);
+  }
+
+  .scan-overlay-invalid {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+    background-color: hsl(var(--scan-invalid) / 0.95);
+  }
+
+  .scan-overlay-used {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+    background-color: hsl(var(--scan-used) / 0.95);
+  }
+
+  /* Step Indicator */
+  .step-indicator {
+    @apply flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all;
+  }
+
+  .step-indicator.active {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  .step-indicator.completed {
+    @apply bg-success text-success-foreground;
+  }
+
+  .step-indicator.inactive {
+    @apply bg-muted text-muted-foreground;
+  }
+}
+
+@layer utilities {
+  /* RTL utilities */
+  .rtl {
+    direction: rtl;
+  }
+
+  .ltr {
+    direction: ltr;
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  .animate-pulse-success {
+    animation: pulseSuccess 0.5s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from { 
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to { 
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes pulseSuccess {
+    0%, 100% { 
+      transform: scale(1);
+    }
+    50% { 
+      transform: scale(1.05);
+    }
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-card/80 backdrop-blur-sm;
+  }
+
+  /* Heritage gradient text */
+  .text-heritage-gradient {
+    background: linear-gradient(135deg, hsl(30 32% 41%) 0%, hsl(24 35% 22%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
