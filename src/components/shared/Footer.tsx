@@ -86,6 +86,12 @@ const Footer = () => {
               ? `© ${currentYear} سوق المفيجر. جميع الحقوق محفوظة.`
               : `© ${currentYear} Souq Almufaijer. All rights reserved.`}
           </p>
+          <Link 
+            to="/login" 
+            className="inline-block mt-3 text-background/40 hover:text-accent text-xs transition-colors"
+          >
+            {isArabic ? 'بوابة الموظفين' : 'Staff Portal'}
+          </Link>
         </div>
       </div>
     </footer>
