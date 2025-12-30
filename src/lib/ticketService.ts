@@ -392,3 +392,56 @@ export const logScanAttempt = async (
     console.error('Error logging scan attempt:', err);
   }
 };
+
+// Manual ticket lookup by booking reference or ticket code
+export const lookupTicket = async (searchQuery: string): Promise<TicketValidationResult[]> => {
+  const query = searchQuery.trim().toUpperCase();
+  
+  if (!query) {
+    return [];
+  }
+
+  try {
+    // First try to find by exact ticket code
+    const { data: ticketByCode } = await supabase
+      .from('tickets')
+      .select(`
+        *,
+        bookings (
+          booking_reference,
+          customer_name,
+          visit_date,
+          visit_time
+        )
+      `)
+      .ilike('ticket_code', `%${query}%`)
+      .limit(10);
+
+    // Also search by booking reference
+    const { data: ticketsByBooking } = await supabase
+      .from('tickets')
+      .select(`
+        *,
+        bookings!inner (
+          booking_reference,
+          customer_name,
+          visit_date,
+          visit_time
+        )
+      `)
+      .ilike('bookings.booking_reference', `%${query}%`)
+      .limit(10);
+
+    // Combine results and remove duplicates
+    const allTickets = [...(ticketByCode || []), ...(ticketsByBooking || [])];
+    const uniqueTickets = allTickets.filter((ticket, index, self) =>
+      index === self.findIndex(t => t.id === ticket.id)
+    );
+
+    // Validate each ticket
+    return uniqueTickets.map(ticket => validateTicketRecord(ticket));
+  } catch (err) {
+    console.error('Error looking up ticket:', err);
+    return [];
+  }
+};

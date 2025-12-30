@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
-import { validateTicket, markTicketAsUsed, logScanAttempt, type TicketValidationResult } from '@/lib/ticketService';
+import { validateTicket, markTicketAsUsed, logScanAttempt, lookupTicket, type TicketValidationResult } from '@/lib/ticketService';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 interface ScanResult {
@@ -36,12 +37,16 @@ const ScannerPage = () => {
     invalidScans: 0,
     usedScans: 0,
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<TicketValidationResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showManualLookup, setShowManualLookup] = useState(false);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const resultTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  // Play feedback sound
+  // Play feedback sound with distinct tones
   const playSound = useCallback((type: 'success' | 'error' | 'warning') => {
     if (!soundEnabled) return;
     
@@ -51,36 +56,110 @@ const ScannerPage = () => {
       }
       
       const ctx = audioContextRef.current;
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
       
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      
-      switch (type) {
-        case 'success':
-          oscillator.frequency.value = 880;
-          oscillator.type = 'sine';
-          break;
-        case 'error':
-          oscillator.frequency.value = 220;
-          oscillator.type = 'square';
-          break;
-        case 'warning':
-          oscillator.frequency.value = 440;
-          oscillator.type = 'triangle';
-          break;
+      if (type === 'success') {
+        // Two-tone ascending beep for valid
+        [660, 880].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = freq;
+          osc.type = 'sine';
+          gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.15);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.15 + 0.15);
+          osc.start(ctx.currentTime + i * 0.15);
+          osc.stop(ctx.currentTime + i * 0.15 + 0.15);
+        });
+      } else if (type === 'warning') {
+        // Two quick beeps for already used
+        [440, 440].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = freq;
+          osc.type = 'triangle';
+          gain.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.2);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.2 + 0.1);
+          osc.start(ctx.currentTime + i * 0.2);
+          osc.stop(ctx.currentTime + i * 0.2 + 0.1);
+        });
+      } else {
+        // Low descending tone for invalid
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.4);
+        osc.type = 'square';
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.4);
       }
-      
-      gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-      
-      oscillator.start(ctx.currentTime);
-      oscillator.stop(ctx.currentTime + 0.3);
     } catch (err) {
       console.error('Error playing sound:', err);
     }
   }, [soundEnabled]);
+
+  // Manual ticket lookup
+  const handleManualLookup = useCallback(async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      const results = await lookupTicket(searchQuery);
+      setSearchResults(results);
+    } catch (err) {
+      console.error('Lookup error:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchQuery]);
+
+  // Process manual lookup result
+  const handleProcessTicket = useCallback(async (result: TicketValidationResult) => {
+    setCurrentResult(result);
+    setShowResultOverlay(true);
+    
+    if (result.isValid) {
+      playSound('success');
+      if (result.ticket) {
+        await markTicketAsUsed(result.ticket.id, user?.id, 'main_entrance');
+      }
+    } else if (result.status === 'used') {
+      playSound('warning');
+    } else {
+      playSound('error');
+    }
+
+    await logScanAttempt(result.ticket?.id || null, result.status, user?.id, 'manual_lookup');
+
+    setTodayStats(prev => ({
+      totalScans: prev.totalScans + 1,
+      validScans: result.isValid ? prev.validScans + 1 : prev.validScans,
+      invalidScans: ['invalid', 'not_found'].includes(result.status) ? prev.invalidScans + 1 : prev.invalidScans,
+      usedScans: result.status === 'used' ? prev.usedScans + 1 : prev.usedScans,
+    }));
+
+    setRecentScans(prev => [{
+      timestamp: new Date(),
+      status: result.status,
+      ticketCode: result.ticket?.ticketCode,
+      customerName: result.ticket?.customerName,
+      ticketType: result.ticket?.ticketType,
+    }, ...prev.slice(0, 9)]);
+
+    // Refresh search results
+    handleManualLookup();
+
+    resultTimeoutRef.current = setTimeout(() => {
+      setShowResultOverlay(false);
+      setCurrentResult(null);
+    }, 3000);
+  }, [playSound, user, handleManualLookup]);
 
   // Handle QR code scan result
   const onScanSuccess = useCallback(async (decodedText: string) => {
@@ -480,6 +559,65 @@ const ScannerPage = () => {
                   )}
                 </Button>
               </div>
+          {/* Manual Lookup Toggle */}
+          <div className="p-3 md:p-4 border-t border-border/50">
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => setShowManualLookup(!showManualLookup)}
+            >
+              <Search className="h-4 w-4" />
+              {isArabic ? 'بحث يدوي' : 'Manual Lookup'}
+            </Button>
+            
+            {showManualLookup && (
+              <div className="mt-3 space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={isArabic ? 'رقم الحجز أو كود التذكرة...' : 'Booking ref or ticket code...'}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleManualLookup()}
+                    className="flex-1"
+                  />
+                  <Button onClick={handleManualLookup} disabled={isSearching}>
+                    {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  </Button>
+                </div>
+                
+                {searchResults.length > 0 && (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {searchResults.map((result, idx) => (
+                      <div
+                        key={idx}
+                        className={cn(
+                          'p-3 rounded-lg border flex items-center justify-between',
+                          result.status === 'valid' && 'bg-success/5 border-success/20',
+                          result.status === 'used' && 'bg-warning/5 border-warning/20',
+                          !['valid', 'used'].includes(result.status) && 'bg-destructive/5 border-destructive/20'
+                        )}
+                      >
+                        <div>
+                          <p className="font-mono text-sm">{result.ticket?.ticketCode}</p>
+                          <p className="text-xs text-muted-foreground">{result.ticket?.customerName}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{result.ticket?.ticketType}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={result.isValid ? 'default' : 'outline'}
+                          onClick={() => handleProcessTicket(result)}
+                          disabled={!result.isValid}
+                          className={result.isValid ? 'btn-gold' : ''}
+                        >
+                          {result.isValid ? (isArabic ? 'تأكيد' : 'Validate') : getStatusText(result.status)}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
             </CardContent>
           </Card>
 
