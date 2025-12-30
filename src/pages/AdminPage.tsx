@@ -82,35 +82,39 @@ const AdminPage = () => {
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      <main className="flex-1 pt-24 pb-8">
-        <div className="container">
+      <main className="flex-1 pt-24 md:pt-28 pb-6 md:pb-8 px-4 md:px-6">
+        <div className="container px-0">
           {/* Page Header */}
-          <div className="flex items-center justify-between mb-8 animate-fade-in">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl gradient-gold flex items-center justify-center glow-gold">
-                <LayoutDashboard className="h-7 w-7 text-foreground" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8 animate-fade-in">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl gradient-gold flex items-center justify-center glow-gold flex-shrink-0">
+                <span className="icon-wrapper">
+                  <LayoutDashboard className="h-6 w-6 md:h-7 md:w-7 text-foreground" aria-hidden="true" />
+                </span>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground">
                   {isArabic ? 'لوحة التحكم' : 'Dashboard'}
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-sm md:text-base text-muted-foreground">
                   {isArabic ? 'إدارة الحجوزات والتذاكر' : 'Manage bookings and tickets'}
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 md:gap-3">
               <Link to="/scan">
-                <Button className="btn-gold gap-2">
-                  <QrCode className="h-4 w-4" />
-                  {isArabic ? 'الماسح' : 'Scanner'}
+                <Button className="btn-gold gap-2 text-sm md:text-base px-3 md:px-4">
+                  <span className="icon-wrapper">
+                    <QrCode className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="hidden sm:inline">{isArabic ? 'الماسح' : 'Scanner'}</span>
                 </Button>
               </Link>
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
             {statsCards.map((stat, index) => (
               <div 
                 key={index} 
@@ -123,27 +127,33 @@ const AdminPage = () => {
           </div>
 
           {/* Tabs Navigation */}
-          <Tabs defaultValue="bookings" className="space-y-6">
-            <TabsList className="glass-card-gold p-1 h-auto">
+          <Tabs defaultValue="bookings" className="space-y-4 md:space-y-6">
+            <TabsList className="glass-card-gold p-1 h-auto flex-wrap">
               <TabsTrigger 
                 value="bookings" 
-                className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-6 py-3 rounded-xl transition-all"
+                className="gap-1.5 md:gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 md:py-3 rounded-xl transition-all text-xs md:text-sm"
               >
-                <Ticket className="h-4 w-4" />
+                <span className="icon-wrapper">
+                  <Ticket className="h-3.5 w-3.5 md:h-4 md:w-4" aria-hidden="true" />
+                </span>
                 {isArabic ? 'الحجوزات' : 'Bookings'}
               </TabsTrigger>
               <TabsTrigger 
                 value="reports" 
-                className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-6 py-3 rounded-xl transition-all"
+                className="gap-1.5 md:gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 md:py-3 rounded-xl transition-all text-xs md:text-sm"
               >
-                <BarChart3 className="h-4 w-4" />
+                <span className="icon-wrapper">
+                  <BarChart3 className="h-3.5 w-3.5 md:h-4 md:w-4" aria-hidden="true" />
+                </span>
                 {isArabic ? 'التقارير' : 'Reports'}
               </TabsTrigger>
               <TabsTrigger 
                 value="settings" 
-                className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-6 py-3 rounded-xl transition-all"
+                className="gap-1.5 md:gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 md:py-3 rounded-xl transition-all text-xs md:text-sm"
               >
-                <Settings className="h-4 w-4" />
+                <span className="icon-wrapper">
+                  <Settings className="h-3.5 w-3.5 md:h-4 md:w-4" aria-hidden="true" />
+                </span>
                 {isArabic ? 'الإعدادات' : 'Settings'}
               </TabsTrigger>
             </TabsList>
@@ -151,10 +161,12 @@ const AdminPage = () => {
             {/* Bookings Tab */}
             <TabsContent value="bookings" className="animate-fade-in">
               <Card className="glass-card-gold border-0">
-                <CardHeader className="border-b border-border/50">
-                  <CardTitle className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center">
-                      <Ticket className="h-5 w-5 text-foreground" />
+                <CardHeader className="border-b border-border/50 p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 md:gap-3 text-base md:text-lg">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl gradient-gold flex items-center justify-center flex-shrink-0">
+                      <span className="icon-wrapper">
+                        <Ticket className="h-4 w-4 md:h-5 md:w-5 text-foreground" aria-hidden="true" />
+                      </span>
                     </div>
                     <span className="text-foreground">
                       {isArabic ? 'إدارة الحجوزات' : 'Booking Management'}

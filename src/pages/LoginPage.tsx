@@ -113,23 +113,25 @@ const LoginPage = () => {
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      <main className="flex-1 flex items-center justify-center py-12 px-4 relative overflow-hidden">
+      <main className="flex-1 flex items-center justify-center pt-24 md:pt-28 pb-8 md:pb-12 px-4 relative overflow-hidden">
         {/* Background Decorations */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute top-20 left-4 md:left-10 w-48 md:w-64 h-48 md:h-64 bg-accent/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-4 md:right-10 w-64 md:w-80 h-64 md:h-80 bg-primary/10 rounded-full blur-3xl" />
         </div>
 
         <Card className="w-full max-w-md glass-card border-accent/20 relative z-10">
-          <CardHeader className="text-center space-y-4 pb-2">
-            <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center border border-accent/20">
-              <Shield className="h-10 w-10 text-accent" />
+          <CardHeader className="text-center space-y-4 pb-2 p-4 md:p-6">
+            <div className="mx-auto w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center border border-accent/20">
+              <span className="icon-wrapper">
+                <Shield className="h-8 w-8 md:h-10 md:w-10 text-accent" aria-hidden="true" />
+              </span>
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-foreground">
+              <CardTitle className="text-xl md:text-2xl font-bold text-foreground">
                 {isArabic ? 'تسجيل دخول الموظفين' : 'Staff Login'}
               </CardTitle>
-              <CardDescription className="mt-2">
+              <CardDescription className="mt-2 text-sm md:text-base">
                 {isArabic 
                   ? 'أدخل بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم'
                   : 'Enter your credentials to access the dashboard'}
@@ -137,10 +139,12 @@ const LoginPage = () => {
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-6 pt-4">
+          <CardContent className="space-y-5 md:space-y-6 pt-4 p-4 md:p-6">
             {error && (
               <Alert variant="destructive" className="bg-destructive/10 border-destructive/30">
-                <AlertCircle className="h-4 w-4" />
+                <span className="icon-wrapper">
+                  <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                </span>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -152,8 +156,10 @@ const LoginPage = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2 text-foreground">
-                        <Mail className="h-4 w-4 text-accent" />
+                      <FormLabel className="flex items-center gap-2 text-foreground text-sm md:text-base">
+                        <span className="icon-wrapper">
+                          <Mail className="h-4 w-4 text-accent" aria-hidden="true" />
+                        </span>
                         {isArabic ? 'البريد الإلكتروني' : 'Email'}
                       </FormLabel>
                       <FormControl>
@@ -176,8 +182,10 @@ const LoginPage = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2 text-foreground">
-                        <Lock className="h-4 w-4 text-accent" />
+                      <FormLabel className="flex items-center gap-2 text-foreground text-sm md:text-base">
+                        <span className="icon-wrapper">
+                          <Lock className="h-4 w-4 text-accent" aria-hidden="true" />
+                        </span>
                         {isArabic ? 'كلمة المرور' : 'Password'}
                       </FormLabel>
                       <FormControl>
@@ -206,26 +214,32 @@ const LoginPage = () => {
                       <div className="w-5 h-5 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
                       {isArabic ? 'جاري الدخول...' : 'Signing in...'}
                     </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <LogIn className="h-5 w-5" />
-                      {isArabic ? 'تسجيل الدخول' : 'Sign In'}
-                    </span>
-                  )}
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <span className="icon-wrapper">
+                          <LogIn className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                        {isArabic ? 'تسجيل الدخول' : 'Sign In'}
+                      </span>
+                    )}
                 </Button>
               </form>
             </Form>
 
             <div className="text-center pt-4 border-t border-accent/10">
-              <p className="text-sm text-muted-foreground mb-4 flex items-center justify-center gap-2">
-                <Shield className="h-4 w-4" />
+              <p className="text-xs md:text-sm text-muted-foreground mb-4 flex items-center justify-center gap-2">
+                <span className="icon-wrapper">
+                  <Shield className="h-4 w-4" aria-hidden="true" />
+                </span>
                 {isArabic 
                   ? 'هذه الصفحة مخصصة للموظفين فقط'
                   : 'This page is for staff members only'}
               </p>
               <Link to="/">
                 <Button variant="ghost" size="sm" className="gap-2 hover:bg-accent/10 transition-colors">
-                  <Home className="h-4 w-4" />
+                  <span className="icon-wrapper">
+                    <Home className="h-4 w-4" aria-hidden="true" />
+                  </span>
                   {isArabic ? 'العودة للرئيسية' : 'Back to Home'}
                 </Button>
               </Link>

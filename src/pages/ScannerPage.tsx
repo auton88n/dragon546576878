@@ -272,19 +272,21 @@ const ScannerPage = () => {
         </div>
       )}
 
-      <main className="flex-1 pt-24 pb-8">
-        <div className="container max-w-4xl">
+      <main className="flex-1 pt-24 md:pt-28 pb-6 md:pb-8 px-4 md:px-6">
+        <div className="container max-w-4xl px-0">
           {/* Page Header */}
-          <div className="flex items-center justify-between mb-6 animate-fade-in">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl gradient-gold flex items-center justify-center glow-gold">
-                <QrCode className="h-7 w-7 text-foreground" />
+          <div className="flex items-center justify-between mb-4 md:mb-6 animate-fade-in">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl gradient-gold flex items-center justify-center glow-gold flex-shrink-0">
+                <span className="icon-wrapper">
+                  <QrCode className="h-6 w-6 md:h-7 md:w-7 text-foreground" aria-hidden="true" />
+                </span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
+                <h1 className="text-xl md:text-2xl font-bold text-foreground">
                   {isArabic ? 'ماسح التذاكر' : 'Ticket Scanner'}
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {isArabic ? 'امسح رموز QR للتحقق' : 'Scan QR codes to validate'}
                 </p>
               </div>
@@ -293,42 +295,44 @@ const ScannerPage = () => {
               variant="outline"
               size="icon"
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="border-accent/30 hover:bg-accent/5 h-12 w-12 rounded-xl"
+              className="border-accent/30 hover:bg-accent/5 h-10 w-10 md:h-12 md:w-12 rounded-xl flex-shrink-0"
             >
-              {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+              <span className="icon-wrapper">
+                {soundEnabled ? <Volume2 className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" /> : <VolumeX className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />}
+              </span>
             </Button>
           </div>
 
           {/* Today's Stats */}
-          <div className="grid grid-cols-4 gap-3 mb-6">
-            <Card className="glass-card p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{todayStats.totalScans}</p>
-              <p className="text-xs text-muted-foreground">
+          <div className="grid grid-cols-4 gap-2 md:gap-3 mb-4 md:mb-6">
+            <Card className="glass-card p-2 md:p-4 text-center">
+              <p className="text-lg md:text-2xl font-bold text-foreground">{todayStats.totalScans}</p>
+              <p className="text-[10px] md:text-xs text-muted-foreground">
                 {isArabic ? 'إجمالي' : 'Total'}
               </p>
             </Card>
-            <Card className="glass-card p-4 text-center border-success/30 bg-success/5">
-              <p className="text-2xl font-bold text-success">{todayStats.validScans}</p>
-              <p className="text-xs text-muted-foreground">
+            <Card className="glass-card p-2 md:p-4 text-center border-success/30 bg-success/5">
+              <p className="text-lg md:text-2xl font-bold text-success">{todayStats.validScans}</p>
+              <p className="text-[10px] md:text-xs text-muted-foreground">
                 {isArabic ? 'صالح' : 'Valid'}
               </p>
             </Card>
-            <Card className="glass-card p-4 text-center border-warning/30 bg-warning/5">
-              <p className="text-2xl font-bold text-warning">{todayStats.usedScans}</p>
-              <p className="text-xs text-muted-foreground">
+            <Card className="glass-card p-2 md:p-4 text-center border-warning/30 bg-warning/5">
+              <p className="text-lg md:text-2xl font-bold text-warning">{todayStats.usedScans}</p>
+              <p className="text-[10px] md:text-xs text-muted-foreground">
                 {isArabic ? 'مستخدم' : 'Used'}
               </p>
             </Card>
-            <Card className="glass-card p-4 text-center border-destructive/30 bg-destructive/5">
-              <p className="text-2xl font-bold text-destructive">{todayStats.invalidScans}</p>
-              <p className="text-xs text-muted-foreground">
+            <Card className="glass-card p-2 md:p-4 text-center border-destructive/30 bg-destructive/5">
+              <p className="text-lg md:text-2xl font-bold text-destructive">{todayStats.invalidScans}</p>
+              <p className="text-[10px] md:text-xs text-muted-foreground">
                 {isArabic ? 'غير صالح' : 'Invalid'}
               </p>
             </Card>
           </div>
 
           {/* Scanner Area */}
-          <Card className="glass-card-gold mb-6 overflow-hidden border-0">
+          <Card className="glass-card-gold mb-4 md:mb-6 overflow-hidden border-0">
             <CardContent className="p-0">
               <div className="relative">
                 {/* QR Reader Container */}
@@ -342,11 +346,13 @@ const ScannerPage = () => {
                 
                 {/* Placeholder when not scanning */}
                 {!isScanning && (
-                  <div className="w-full aspect-square bg-secondary/30 flex flex-col items-center justify-center">
-                    <div className="w-24 h-24 rounded-full gradient-gold flex items-center justify-center mb-6 glow-gold">
-                      <Camera className="h-12 w-12 text-foreground" />
+                  <div className="w-full aspect-square bg-secondary/30 flex flex-col items-center justify-center p-4">
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full gradient-gold flex items-center justify-center mb-4 md:mb-6 glow-gold">
+                      <span className="icon-wrapper">
+                        <Camera className="h-10 w-10 md:h-12 md:w-12 text-foreground" aria-hidden="true" />
+                      </span>
                     </div>
-                    <p className="text-muted-foreground text-center max-w-xs">
+                    <p className="text-muted-foreground text-center max-w-xs text-sm md:text-base">
                       {isArabic 
                         ? 'اضغط على الزر أدناه لبدء المسح'
                         : 'Press the button below to start scanning'}
@@ -374,11 +380,11 @@ const ScannerPage = () => {
               </div>
 
               {/* Scanner Controls */}
-              <div className="p-4 bg-card border-t border-border/50">
+              <div className="p-3 md:p-4 bg-card border-t border-border/50">
                 <Button
                   size="lg"
                   className={cn(
-                    "w-full h-14 text-lg gap-3 rounded-xl transition-all",
+                    "w-full h-12 md:h-14 text-base md:text-lg gap-2 md:gap-3 rounded-xl transition-all",
                     isScanning 
                       ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" 
                       : "btn-gold"
@@ -387,12 +393,12 @@ const ScannerPage = () => {
                 >
                   {isScanning ? (
                     <>
-                      <XCircle className="h-6 w-6" />
+                      <span className="icon-wrapper"><XCircle className="h-5 w-5 md:h-6 md:w-6" aria-hidden="true" /></span>
                       {isArabic ? 'إيقاف المسح' : 'Stop Scanning'}
                     </>
                   ) : (
                     <>
-                      <Camera className="h-6 w-6" />
+                      <span className="icon-wrapper"><Camera className="h-5 w-5 md:h-6 md:w-6" aria-hidden="true" /></span>
                       {isArabic ? 'بدء المسح' : 'Start Scanning'}
                     </>
                   )}
@@ -403,19 +409,23 @@ const ScannerPage = () => {
 
           {/* Recent Scans */}
           <Card className="glass-card-gold border-0">
-            <CardHeader className="pb-3 border-b border-border/50">
-              <CardTitle className="flex items-center gap-3 text-lg">
-                <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center">
-                  <History className="h-5 w-5 text-foreground" />
+            <CardHeader className="pb-3 border-b border-border/50 p-4 md:p-6">
+              <CardTitle className="flex items-center gap-2 md:gap-3 text-base md:text-lg">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl gradient-gold flex items-center justify-center flex-shrink-0">
+                  <span className="icon-wrapper">
+                    <History className="h-4 w-4 md:h-5 md:w-5 text-foreground" aria-hidden="true" />
+                  </span>
                 </div>
                 <span>{isArabic ? 'آخر عمليات المسح' : 'Recent Scans'}</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="pt-4 p-4 md:p-6">
               {recentScans.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <History className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>{isArabic ? 'لا توجد عمليات مسح بعد' : 'No scans yet'}</p>
+                <div className="text-center py-6 md:py-8 text-muted-foreground">
+                  <span className="icon-wrapper">
+                    <History className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-3 opacity-30" aria-hidden="true" />
+                  </span>
+                  <p className="text-sm md:text-base">{isArabic ? 'لا توجد عمليات مسح بعد' : 'No scans yet'}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
