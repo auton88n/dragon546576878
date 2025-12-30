@@ -157,79 +157,82 @@ const ConfirmationPage = () => {
 
     // Header section with gradient
     const headerGradient = ctx.createLinearGradient(0, 8, 0, 180);
-    headerGradient.addColorStop(0, '#8B7355');
-    headerGradient.addColorStop(1, '#5C4A3A');
+    headerGradient.addColorStop(0, '#5C4A3A');
+    headerGradient.addColorStop(1, '#3D2E1F');
     ctx.fillStyle = headerGradient;
     ctx.fillRect(0, 8, width, 172);
 
-    // Header text
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 42px Tajawal, Arial';
+    // Header text - center aligned
     ctx.textAlign = 'center';
-    ctx.fillText(isArabic ? 'سوق المفيجر' : 'Souq Almufaijer', width / 2, 80);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 42px Arial, sans-serif';
+    ctx.fillText(isArabic ? 'سوق المفيجر' : 'Souq Almufaijer', width / 2, 85);
     
-    ctx.fillStyle = '#C9A86C';
-    ctx.font = '18px Tajawal, Arial';
-    ctx.fillText(isArabic ? 'تذكرة دخول' : 'ENTRY TICKET', width / 2, 115);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 18px Arial, sans-serif';
+    ctx.fillText(isArabic ? 'تذكرة دخول' : 'ENTRY TICKET', width / 2, 120);
     
     // Decorative line
     ctx.strokeStyle = '#C9A86C';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(width/2 - 80, 135);
-    ctx.lineTo(width/2 + 80, 135);
+    ctx.moveTo(width/2 - 80, 140);
+    ctx.lineTo(width/2 + 80, 140);
     ctx.stroke();
     
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.font = '14px Tajawal, Arial';
-    ctx.fillText(isArabic ? 'التراث الأصيل' : 'Authentic Heritage', width / 2, 160);
+    ctx.fillStyle = '#E8DED0';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.fillText(isArabic ? 'التراث الأصيل' : 'Authentic Heritage', width / 2, 165);
 
-    // Booking reference card
+    // Booking reference card - dark brown background with WHITE text
     const refCardY = 210;
-    ctx.fillStyle = '#C9A86C';
+    ctx.fillStyle = '#3D2E1F';
     roundRect(ctx, 60, refCardY, width - 120, 100, 16);
     ctx.fill();
     
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = 'bold 14px Arial';
-    ctx.textAlign = isArabic ? 'right' : 'left';
-    ctx.fillText(isArabic ? 'رقم الحجز' : 'BOOKING REFERENCE', isArabic ? width - 90 : 90, refCardY + 35);
+    // Label in light color
+    ctx.fillStyle = '#E8DED0';
+    ctx.font = 'bold 14px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(isArabic ? 'رقم الحجز' : 'BOOKING REFERENCE', width / 2, refCardY + 35);
     
+    // Reference number in WHITE
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 36px Courier New, monospace';
-    ctx.fillText(booking.booking_reference, isArabic ? width - 90 : 90, refCardY + 75);
+    ctx.fillText(booking.booking_reference, width / 2, refCardY + 75);
 
-    // Details section
+    // Details section - use dark brown text on light background
     const detailsY = 350;
-    ctx.fillStyle = '#3D2E1F';
+    ctx.textAlign = isArabic ? 'right' : 'left';
+    const textX = isArabic ? width - 90 : 90;
     
     // Guest name
-    ctx.font = 'bold 13px Arial';
-    ctx.fillStyle = '#8B7355';
-    ctx.fillText(isArabic ? 'اسم الزائر' : 'GUEST NAME', isArabic ? width - 90 : 90, detailsY);
-    ctx.font = 'bold 24px Tajawal, Arial';
+    ctx.font = 'bold 13px Arial, sans-serif';
+    ctx.fillStyle = '#5C4A3A';
+    ctx.fillText(isArabic ? 'اسم الزائر' : 'GUEST NAME', textX, detailsY);
+    ctx.font = 'bold 24px Arial, sans-serif';
     ctx.fillStyle = '#3D2E1F';
-    ctx.fillText(booking.customer_name, isArabic ? width - 90 : 90, detailsY + 35);
+    ctx.fillText(booking.customer_name, textX, detailsY + 35);
 
     // Date
-    ctx.font = 'bold 13px Arial';
-    ctx.fillStyle = '#8B7355';
-    ctx.fillText(isArabic ? 'التاريخ' : 'DATE', isArabic ? width - 90 : 90, detailsY + 80);
-    ctx.font = 'bold 22px Tajawal, Arial';
+    ctx.font = 'bold 13px Arial, sans-serif';
+    ctx.fillStyle = '#5C4A3A';
+    ctx.fillText(isArabic ? 'التاريخ' : 'DATE', textX, detailsY + 80);
+    ctx.font = 'bold 22px Arial, sans-serif';
     ctx.fillStyle = '#3D2E1F';
     ctx.fillText(format(new Date(booking.visit_date), 'EEEE, d MMMM yyyy', { 
       locale: isArabic ? ar : enUS 
-    }), isArabic ? width - 90 : 90, detailsY + 110);
+    }), textX, detailsY + 110);
 
     // Time
-    ctx.font = 'bold 13px Arial';
-    ctx.fillStyle = '#8B7355';
-    ctx.fillText(isArabic ? 'الوقت' : 'TIME', isArabic ? width - 90 : 90, detailsY + 155);
-    ctx.font = 'bold 22px Tajawal, Arial';
+    ctx.font = 'bold 13px Arial, sans-serif';
+    ctx.fillStyle = '#5C4A3A';
+    ctx.fillText(isArabic ? 'الوقت' : 'TIME', textX, detailsY + 155);
+    ctx.font = 'bold 22px Arial, sans-serif';
     ctx.fillStyle = '#3D2E1F';
-    ctx.fillText(formatTimeDisplay(booking.visit_time), isArabic ? width - 90 : 90, detailsY + 185);
+    ctx.fillText(formatTimeDisplay(booking.visit_time), textX, detailsY + 185);
 
-    // Tickets summary card
+    // Tickets summary card - white background with dark text
     const ticketCardY = detailsY + 230;
     ctx.fillStyle = '#FFFFFF';
     roundRect(ctx, 60, ticketCardY, width - 120, 140, 16);
@@ -239,37 +242,40 @@ const ConfirmationPage = () => {
     roundRect(ctx, 60, ticketCardY, width - 120, 140, 16);
     ctx.stroke();
     
-    ctx.font = 'bold 13px Arial';
-    ctx.fillStyle = '#8B7355';
-    ctx.fillText(isArabic ? 'التذاكر' : 'TICKETS', isArabic ? width - 90 : 90, ticketCardY + 30);
+    ctx.font = 'bold 13px Arial, sans-serif';
+    ctx.fillStyle = '#5C4A3A';
+    ctx.fillText(isArabic ? 'التذاكر' : 'TICKETS', textX, ticketCardY + 30);
     
     let ticketYPos = ticketCardY + 55;
-    ctx.font = '18px Tajawal, Arial';
+    ctx.font = '18px Arial, sans-serif';
     ctx.fillStyle = '#3D2E1F';
     if (booking.adult_count > 0) {
-      ctx.fillText(`${isArabic ? 'بالغ' : 'Adult'}: ${booking.adult_count} × ${booking.adult_price} SAR`, isArabic ? width - 90 : 90, ticketYPos);
+      ctx.fillText(`${isArabic ? 'بالغ' : 'Adult'}: ${booking.adult_count} × ${booking.adult_price} SAR`, textX, ticketYPos);
       ticketYPos += 28;
     }
     if (booking.child_count > 0) {
-      ctx.fillText(`${isArabic ? 'طفل' : 'Child'}: ${booking.child_count} × ${booking.child_price} SAR`, isArabic ? width - 90 : 90, ticketYPos);
+      ctx.fillText(`${isArabic ? 'طفل' : 'Child'}: ${booking.child_count} × ${booking.child_price} SAR`, textX, ticketYPos);
       ticketYPos += 28;
     }
     if (booking.senior_count && booking.senior_count > 0) {
-      ctx.fillText(`${isArabic ? 'كبير السن' : 'Senior'}: ${booking.senior_count} × ${booking.senior_price} SAR`, isArabic ? width - 90 : 90, ticketYPos);
+      ctx.fillText(`${isArabic ? 'كبير السن' : 'Senior'}: ${booking.senior_count} × ${booking.senior_price} SAR`, textX, ticketYPos);
     }
 
-    // Total amount badge
+    // Total amount badge - dark background with WHITE text
     const totalY = ticketCardY + 170;
     ctx.fillStyle = '#3D2E1F';
     roundRect(ctx, 60, totalY, width - 120, 70, 16);
     ctx.fill();
     
-    ctx.font = 'bold 14px Arial';
-    ctx.fillStyle = '#C9A86C';
-    ctx.fillText(isArabic ? 'المبلغ المدفوع' : 'TOTAL PAID', isArabic ? width - 90 : 90, totalY + 30);
-    ctx.font = 'bold 32px Arial';
+    ctx.font = 'bold 14px Arial, sans-serif';
+    ctx.fillStyle = '#E8DED0';
+    ctx.fillText(isArabic ? 'المبلغ المدفوع' : 'TOTAL PAID', textX, totalY + 28);
+    
+    // Total amount on the opposite side
+    ctx.textAlign = isArabic ? 'left' : 'right';
+    ctx.font = 'bold 32px Arial, sans-serif';
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(`${booking.total_amount} SAR`, isArabic ? width - 90 : 90, totalY + 58);
+    ctx.fillText(`${booking.total_amount} SAR`, isArabic ? 90 : width - 90, totalY + 50);
 
     // QR Code section
     const qrSectionY = totalY + 110;
@@ -300,15 +306,16 @@ const ConfirmationPage = () => {
       ctx.drawImage(qrImage, width/2 - 100, qrSectionY + 50, 200, 200);
     }
 
-    ctx.fillStyle = '#8B7355';
-    ctx.font = 'bold 14px Tajawal, Arial';
+    // QR section text - dark brown for readability
+    ctx.fillStyle = '#3D2E1F';
+    ctx.font = 'bold 14px Arial, sans-serif';
     ctx.fillText(isArabic ? 'امسح الرمز عند الدخول' : 'Scan at entrance', width/2, qrSectionY + 300);
-    ctx.font = '12px Arial';
-    ctx.fillStyle = '#A69888';
+    ctx.font = '12px Arial, sans-serif';
+    ctx.fillStyle = '#5C4A3A';
     ctx.fillText(isArabic ? 'صالحة ليوم الزيارة فقط' : 'Valid for visit date only', width/2, qrSectionY + 322);
 
     // Footer
-    ctx.fillStyle = '#8B7355';
+    ctx.fillStyle = '#3D2E1F';
     ctx.fillRect(0, height - 80, width, 80);
     
     // Decorative footer line
@@ -316,9 +323,9 @@ const ConfirmationPage = () => {
     ctx.fillRect(0, height - 80, width, 4);
     
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 16px Tajawal, Arial';
+    ctx.font = 'bold 16px Arial, sans-serif';
     ctx.fillText(isArabic ? 'شكراً لزيارتكم سوق المفيجر' : 'Thank you for visiting Souq Almufaijer', width/2, height - 45);
-    ctx.font = '12px Arial';
+    ctx.font = '12px Arial, sans-serif';
     ctx.fillStyle = '#C9A86C';
     ctx.fillText('almufaijer.com', width/2, height - 22);
 
