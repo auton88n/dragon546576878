@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2 } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, CloudOff } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
 import { validateTicket, markTicketAsUsed, logScanAttempt, lookupTicket, type TicketValidationResult } from '@/lib/ticketService';
+import { useOfflineScanQueue } from '@/hooks/useOfflineScanQueue';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface ScanResult {
@@ -23,6 +25,7 @@ const ScannerPage = () => {
   const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { user } = useAuthStore();
+  const { isOnline, queueLength, isSyncing, addToQueue, syncQueue } = useOfflineScanQueue(user?.id);
   
   const [isScanning, setIsScanning] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
@@ -45,6 +48,33 @@ const ScannerPage = () => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const resultTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + K to toggle manual lookup
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowManualLookup(prev => !prev);
+        // Focus input when opening
+        setTimeout(() => {
+          if (!showManualLookup) {
+            searchInputRef.current?.focus();
+          }
+        }, 100);
+      }
+      // Escape to close manual lookup
+      if (e.key === 'Escape' && showManualLookup) {
+        setShowManualLookup(false);
+        setSearchQuery('');
+        setSearchResults([]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showManualLookup]);
 
   // Play feedback sound with distinct tones
   const playSound = useCallback((type: 'success' | 'error' | 'warning') => {
@@ -180,23 +210,20 @@ const ScannerPage = () => {
     // Play appropriate sound
     if (result.isValid) {
       playSound('success');
-      // Mark ticket as used
+      // Mark ticket as used - queue if offline
       if (result.ticket) {
-        await markTicketAsUsed(result.ticket.id, user?.id, 'main_entrance');
+        if (isOnline) {
+          await markTicketAsUsed(result.ticket.id, user?.id, 'main_entrance');
+          await logScanAttempt(result.ticket.id, result.status, user?.id, navigator.userAgent);
+        } else {
+          addToQueue(result.ticket.id, result.ticket.ticketCode, result.status, navigator.userAgent);
+        }
       }
     } else if (result.status === 'used') {
       playSound('warning');
     } else {
       playSound('error');
     }
-
-    // Log the scan attempt
-    await logScanAttempt(
-      result.ticket?.id || null,
-      result.status,
-      user?.id,
-      navigator.userAgent
-    );
 
     // Update stats
     setTodayStats(prev => ({
@@ -227,7 +254,7 @@ const ScannerPage = () => {
         }
       }
     }, 3000);
-  }, [playSound, user]);
+  }, [playSound, user, isOnline, addToQueue]);
 
   // Start camera scanning with back camera preference
   const startScanning = async () => {
