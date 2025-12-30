@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, CloudOff } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
 import { validateTicket, markTicketAsUsed, logScanAttempt, lookupTicket, type TicketValidationResult } from '@/lib/ticketService';
@@ -190,6 +191,20 @@ const ScannerPage = () => {
       setCurrentResult(null);
     }, 3000);
   }, [playSound, user, handleManualLookup]);
+
+  // Manual sync for offline queue
+  const handleManualSync = useCallback(async () => {
+    if (!isOnline || queueLength === 0 || isSyncing) return;
+    
+    const syncedCount = await syncQueue();
+    if (syncedCount && syncedCount > 0) {
+      toast.success(
+        isArabic 
+          ? `تمت مزامنة ${syncedCount} عمليات بنجاح`
+          : `Synced ${syncedCount} scans successfully`
+      );
+    }
+  }, [isOnline, queueLength, isSyncing, syncQueue, isArabic]);
 
   // Handle QR code scan result
   const onScanSuccess = useCallback(async (decodedText: string) => {
@@ -452,16 +467,68 @@ const ScannerPage = () => {
                 </p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="border-accent/30 hover:bg-accent/5 h-10 w-10 md:h-12 md:w-12 rounded-xl flex-shrink-0"
-            >
-              <span className="icon-wrapper">
-                {soundEnabled ? <Volume2 className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" /> : <VolumeX className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />}
-              </span>
-            </Button>
+            
+            {/* Status Indicator & Sync Button */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Online/Offline Badge */}
+              <Badge 
+                variant={isOnline ? "outline" : "destructive"}
+                className={cn(
+                  "gap-1.5 px-2 py-1 text-xs font-medium",
+                  isOnline 
+                    ? "border-success/50 text-success bg-success/10" 
+                    : "border-destructive/50"
+                )}
+              >
+                <span className="icon-wrapper">
+                  {isSyncing ? (
+                    <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                  ) : isOnline ? (
+                    <Wifi className="h-3 w-3" aria-hidden="true" />
+                  ) : (
+                    <WifiOff className="h-3 w-3" aria-hidden="true" />
+                  )}
+                </span>
+                <span className="hidden sm:inline">
+                  {isSyncing 
+                    ? (isArabic ? 'مزامنة...' : 'Syncing...') 
+                    : isOnline 
+                      ? (isArabic ? 'متصل' : 'Online') 
+                      : (isArabic ? 'غير متصل' : 'Offline')
+                  }
+                </span>
+              </Badge>
+
+              {/* Manual Sync Button - Only show when there are queued scans */}
+              {queueLength > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleManualSync}
+                  disabled={!isOnline || isSyncing}
+                  className="gap-1.5 h-8 px-2 md:px-3 border-warning/50 text-warning hover:bg-warning/10 hover:text-warning"
+                >
+                  <span className="icon-wrapper">
+                    <RefreshCw className={cn("h-3.5 w-3.5", isSyncing && "animate-spin")} aria-hidden="true" />
+                  </span>
+                  <span className="text-xs font-medium">
+                    {isArabic ? `مزامنة (${queueLength})` : `Sync (${queueLength})`}
+                  </span>
+                </Button>
+              )}
+
+              {/* Sound Toggle */}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className="border-accent/30 hover:bg-accent/5 h-10 w-10 md:h-12 md:w-12 rounded-xl flex-shrink-0"
+              >
+                <span className="icon-wrapper">
+                  {soundEnabled ? <Volume2 className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" /> : <VolumeX className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />}
+                </span>
+              </Button>
+            </div>
           </div>
 
           {/* Today's Stats */}
