@@ -365,3 +365,20 @@
     }
   }
 }
+
+/* Ensure Lucide icons render correctly regardless of font */
+.lucide,
+[class*="lucide-"] {
+  font-family: inherit !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Icon containers should reset any text styling */
+svg.lucide {
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+}

@@ -24,7 +24,7 @@ const Header = () => {
 
   const navLinks = [
     { href: '/', label: t('nav.home') },
-    { href: '/booking', label: t('nav.booking') },
+    { href: '/book', label: t('nav.booking') },
     { href: '/my-tickets', label: t('nav.myTickets') },
   ];
 
@@ -72,7 +72,7 @@ const Header = () => {
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
           <LanguageSwitcher />
-          <Link to="/booking">
+          <Link to="/book">
             <Button className="btn-gold">
               <Ticket className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" />
               {t('nav.booking')}
@@ -115,7 +115,7 @@ const Header = () => {
               </Link>
             ))}
             <div className="pt-4 mt-4 border-t border-border">
-              <Link to="/booking" onClick={() => setIsOpen(false)}>
+              <Link to="/book" onClick={() => setIsOpen(false)}>
                 <Button className="btn-gold w-full">
                   <Ticket className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" />
                   {t('nav.booking')}
