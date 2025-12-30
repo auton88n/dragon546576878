@@ -5,14 +5,17 @@ import { ar, enUS } from 'date-fns/locale';
 import QRCode from 'qrcode';
 import { 
   CheckCircle, Download, Calendar, Clock, Users, Mail, 
-  Ticket, Home, MapPin, Sparkles, Share2
+  Ticket, Home, MapPin, Sparkles, Share2, RefreshCw, QrCode
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
+import { resendConfirmationEmail } from '@/lib/emailService';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 interface BookingDetails {
   id: string;
@@ -25,18 +28,31 @@ interface BookingDetails {
   child_count: number;
   senior_count: number;
   total_amount: number;
+  confirmation_email_sent: boolean;
+}
+
+interface TicketDetails {
+  id: string;
+  ticket_code: string;
+  ticket_type: string;
+  qr_code_url: string | null;
+  qr_code_data: string;
+  is_used: boolean;
 }
 
 const ConfirmationPage = () => {
   const { bookingId } = useParams();
+  const { toast } = useToast();
   const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
+  const [tickets, setTickets] = useState<TicketDetails[]>([]);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(true);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -47,6 +63,7 @@ const ConfirmationPage = () => {
       }
 
       try {
+        // Fetch booking
         const { data, error: fetchError } = await supabase
           .from('bookings')
           .select('*')
@@ -58,6 +75,19 @@ const ConfirmationPage = () => {
 
         setBooking(data);
 
+        // Fetch tickets for this booking
+        const { data: ticketsData, error: ticketsError } = await supabase
+          .from('tickets')
+          .select('*')
+          .eq('booking_id', bookingId);
+
+        if (ticketsError) {
+          console.error('Error fetching tickets:', ticketsError);
+        } else {
+          setTickets(ticketsData || []);
+        }
+
+        // Generate a summary QR code for the booking
         const qrData = JSON.stringify({
           ref: data.booking_reference,
           date: data.visit_date,
@@ -98,11 +128,141 @@ const ConfirmationPage = () => {
     return hour < 12 ? `${hour}:00 AM` : `${hour === 12 ? 12 : hour - 12}:00 PM`;
   };
 
-  const handleDownloadTicket = () => {
-    if (!qrCodeUrl || !booking) return;
+  const handleDownloadTicket = async () => {
+    if (!booking) return;
+
+    // Create a canvas with the full ticket design
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas dimensions (ticket size)
+    const width = 800;
+    const height = 1200;
+    canvas.width = width;
+    canvas.height = height;
+
+    // Background
+    ctx.fillStyle = '#F5EDE4';
+    ctx.fillRect(0, 0, width, height);
+
+    // Header gradient
+    const gradient = ctx.createLinearGradient(0, 0, width, 120);
+    gradient.addColorStop(0, '#8B7355');
+    gradient.addColorStop(1, '#6B5344');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, 120);
+
+    // Header text
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 32px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(isArabic ? 'سوق المفيجر' : 'Souq Almufaijer', width / 2, 50);
+    ctx.font = '18px Arial';
+    ctx.fillText(isArabic ? 'تذكرة دخول' : 'Entry Pass', width / 2, 85);
+
+    // Booking reference box
+    ctx.fillStyle = '#C9A86C';
+    ctx.fillRect(50, 150, width - 100, 80);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(isArabic ? 'رقم الحجز' : 'BOOKING REFERENCE', 70, 180);
+    ctx.font = 'bold 28px monospace';
+    ctx.fillText(booking.booking_reference, 70, 215);
+
+    // Details section
+    ctx.fillStyle = '#2C2416';
+    ctx.font = 'bold 16px Arial';
+    
+    // Guest name
+    ctx.fillText(isArabic ? 'اسم الزائر' : 'GUEST NAME', 70, 280);
+    ctx.font = '22px Arial';
+    ctx.fillText(booking.customer_name, 70, 310);
+
+    // Date
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText(isArabic ? 'التاريخ' : 'DATE', 70, 370);
+    ctx.font = '22px Arial';
+    ctx.fillText(format(new Date(booking.visit_date), 'EEEE, d MMMM yyyy', { 
+      locale: isArabic ? ar : enUS 
+    }), 70, 400);
+
+    // Time
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText(isArabic ? 'الوقت' : 'TIME', 70, 460);
+    ctx.font = '22px Arial';
+    ctx.fillText(formatTimeDisplay(booking.visit_time), 70, 490);
+
+    // Tickets count
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText(isArabic ? 'عدد التذاكر' : 'TICKETS', 70, 550);
+    ctx.font = '22px Arial';
+    const totalTickets = booking.adult_count + booking.child_count + (booking.senior_count || 0);
+    ctx.fillText(`${totalTickets} ${isArabic ? 'تذكرة' : 'tickets'}`, 70, 580);
+    
+    // Ticket breakdown
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#666666';
+    let yPos = 610;
+    if (booking.adult_count > 0) {
+      ctx.fillText(`${isArabic ? 'بالغ' : 'Adult'}: ${booking.adult_count}`, 70, yPos);
+      yPos += 25;
+    }
+    if (booking.child_count > 0) {
+      ctx.fillText(`${isArabic ? 'طفل' : 'Child'}: ${booking.child_count}`, 70, yPos);
+      yPos += 25;
+    }
+
+    // Amount
+    ctx.fillStyle = '#2C2416';
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText(isArabic ? 'المبلغ المدفوع' : 'AMOUNT PAID', 70, 700);
+    ctx.font = 'bold 28px Arial';
+    ctx.fillStyle = '#C9A86C';
+    ctx.fillText(`${booking.total_amount} ${isArabic ? 'ر.س' : 'SAR'}`, 70, 735);
+
+    // QR Code section
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(width/2 - 130, 800, 260, 280);
+    ctx.strokeStyle = '#C9A86C';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(width/2 - 130, 800, 260, 280);
+
+    // Draw QR code
+    if (qrCodeUrl) {
+      const qrImage = new Image();
+      qrImage.src = qrCodeUrl;
+      await new Promise((resolve) => {
+        qrImage.onload = resolve;
+      });
+      ctx.drawImage(qrImage, width/2 - 100, 820, 200, 200);
+    }
+
+    ctx.fillStyle = '#666666';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(isArabic ? 'امسح رمز QR عند الدخول' : 'Scan QR code at entrance', width/2, 1050);
+
+    // Footer
+    ctx.fillStyle = '#8B7355';
+    ctx.fillRect(0, height - 60, width, 60);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '14px Arial';
+    ctx.fillText(isArabic ? 'شكراً لزيارتكم سوق المفيجر' : 'Thank you for visiting Souq Almufaijer', width/2, height - 30);
+
+    // Download
     const link = document.createElement('a');
     link.download = `${booking.booking_reference}-ticket.png`;
-    link.href = qrCodeUrl;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
+  const handleDownloadSingleTicket = (ticket: TicketDetails) => {
+    if (!ticket.qr_code_url) return;
+    const link = document.createElement('a');
+    link.download = `ticket-${ticket.ticket_code}.png`;
+    link.href = ticket.qr_code_url;
     link.click();
   };
 
@@ -118,6 +278,36 @@ const ConfirmationPage = () => {
     
     if (navigator.share) {
       await navigator.share(shareData);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!booking) return;
+    
+    setIsResendingEmail(true);
+    try {
+      const success = await resendConfirmationEmail(booking.id);
+      if (success) {
+        toast({
+          title: isArabic ? 'تم الإرسال' : 'Email Sent',
+          description: isArabic 
+            ? 'تم إرسال رسالة التأكيد إلى بريدك الإلكتروني'
+            : 'Confirmation email has been sent to your email',
+        });
+      } else {
+        throw new Error('Failed to send email');
+      }
+    } catch (error) {
+      console.error('Error resending email:', error);
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic 
+          ? 'فشل إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى.'
+          : 'Failed to send email. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResendingEmail(false);
     }
   };
 
@@ -345,6 +535,66 @@ const ConfirmationPage = () => {
             </div>
           </div>
 
+          {/* Individual Tickets Section */}
+          {tickets.length > 0 && (
+            <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <QrCode className="h-5 w-5 text-accent" />
+                {isArabic ? 'التذاكر الفردية' : 'Individual Tickets'}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {tickets.map((ticket, index) => (
+                  <div 
+                    key={ticket.id}
+                    className={`glass-card p-3 rounded-xl border text-center ${
+                      ticket.is_used 
+                        ? 'bg-muted/50 border-muted opacity-60' 
+                        : 'border-accent/20'
+                    }`}
+                  >
+                    {ticket.qr_code_url ? (
+                      <img 
+                        src={ticket.qr_code_url} 
+                        alt={`Ticket ${index + 1}`}
+                        className="w-full aspect-square rounded-lg mb-2"
+                      />
+                    ) : (
+                      <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center mb-2">
+                        <QrCode className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="text-xs font-mono text-muted-foreground truncate mb-1">
+                      {ticket.ticket_code}
+                    </div>
+                    <Badge 
+                      variant={ticket.is_used ? 'secondary' : 'outline'} 
+                      className="text-[10px]"
+                    >
+                      {ticket.is_used 
+                        ? (isArabic ? 'مستخدمة' : 'Used')
+                        : (isArabic 
+                            ? (ticket.ticket_type === 'adult' ? 'بالغ' : 'طفل')
+                            : ticket.ticket_type.charAt(0).toUpperCase() + ticket.ticket_type.slice(1)
+                          )
+                      }
+                    </Badge>
+                    {ticket.qr_code_url && !ticket.is_used && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="mt-2 w-full h-7 text-xs"
+                        onClick={() => handleDownloadSingleTicket(ticket)}
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        {isArabic ? 'تحميل' : 'Download'}
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 mb-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <Button 
@@ -364,19 +614,40 @@ const ConfirmationPage = () => {
             </Button>
           </div>
 
-          {/* Email Notice */}
+          {/* Email Notice with Resend Button */}
           <div 
-            className="flex items-center gap-3 p-4 glass-card-gold rounded-2xl mb-8 animate-slide-up" 
+            className="flex flex-col sm:flex-row items-center gap-3 p-4 glass-card-gold rounded-2xl mb-8 animate-slide-up" 
             style={{ animationDelay: '0.4s' }}
           >
-            <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center shrink-0">
-              <Mail className="h-5 w-5 text-foreground" />
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center shrink-0">
+                <Mail className="h-5 w-5 text-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {booking.confirmation_email_sent
+                  ? (isArabic 
+                      ? `تم إرسال تأكيد الحجز والتذاكر إلى ${booking.customer_email}`
+                      : `Confirmation and tickets have been sent to ${booking.customer_email}`)
+                  : (isArabic
+                      ? `لم يتم إرسال البريد الإلكتروني بعد. يرجى المحاولة مرة أخرى.`
+                      : `Email not sent yet. Please try again.`)
+                }
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {isArabic 
-                ? `تم إرسال تأكيد الحجز والتذاكر إلى ${booking.customer_email}`
-                : `Confirmation and tickets have been sent to ${booking.customer_email}`}
-            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResendEmail}
+              disabled={isResendingEmail}
+              className="gap-2 border-accent/30 hover:bg-accent/5"
+            >
+              {isResendingEmail ? (
+                <div className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {isArabic ? 'إعادة الإرسال' : 'Resend'}
+            </Button>
           </div>
 
           {/* Navigation */}

@@ -99,6 +99,12 @@ const BookingPage = () => {
           seniorCount: 0,
         });
 
+        // Update qr_codes_generated flag
+        await supabase
+          .from('bookings')
+          .update({ qr_codes_generated: true })
+          .eq('id', booking.id);
+
         const emailSent = await sendBookingConfirmation(booking.id);
         if (!emailSent) {
           console.warn('Confirmation email failed to send');
