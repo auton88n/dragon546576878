@@ -128,30 +128,31 @@ const BookingPage = () => {
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      <main className="flex-1 pt-28 pb-16">
-        <div className="container max-w-5xl">
+      <main className="flex-1 pt-24 md:pt-28 pb-12 md:pb-16 px-4 md:px-6">
+        <div className="container max-w-5xl px-0">
           {/* Page Title */}
-          <div className="text-center mb-8 animate-fade-in">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2 text-accent">
+          <div className="text-center mb-6 md:mb-8 animate-fade-in">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-accent">
               {isArabic ? 'احجز تذكرتك' : 'Book Your Ticket'}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm md:text-base">
               {isArabic ? 'اتبع الخطوات لإتمام حجزك' : 'Follow the steps to complete your booking'}
             </p>
           </div>
 
           {/* Step Indicator */}
-          <div className="mb-10">
+          <div className="mb-6 md:mb-10">
             <StepIndicator currentStep={step as 1 | 2} />
           </div>
 
           {/* Main Content */}
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
             {/* Step Content */}
             <div className="lg:col-span-2">
               <div 
-                className="glass-card-gold p-6 md:p-8 transition-all duration-500"
+                className="glass-card-gold p-4 sm:p-6 md:p-8 transition-all duration-500"
                 key={step}
+              >
               >
                 <div className="animate-fade-in">
                   {step === 1 && <TicketSelector />}
@@ -170,12 +171,12 @@ const BookingPage = () => {
                       size="lg"
                       onClick={handleNext}
                       disabled={!canProceed()}
-                      className="w-full h-14 text-lg rounded-xl btn-gold disabled:bg-muted disabled:text-muted-foreground disabled:opacity-50 disabled:shadow-none group"
+                      className="w-full h-12 md:h-14 text-base md:text-lg rounded-xl btn-gold disabled:bg-muted disabled:text-muted-foreground disabled:opacity-50 disabled:shadow-none group"
                     >
                       {isArabic ? 'التالي' : 'Continue'}
                       {isRTL 
-                        ? <ArrowLeft className="h-5 w-5 mr-2 transition-transform group-hover:-translate-x-1" /> 
-                        : <ArrowRight className="h-5 w-5 ml-2 transition-transform group-hover:translate-x-1" />
+                        ? <span className="icon-wrapper"><ArrowLeft className="h-5 w-5 mr-2 transition-transform group-hover:-translate-x-1" aria-hidden="true" /></span>
+                        : <span className="icon-wrapper"><ArrowRight className="h-5 w-5 ml-2 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
                       }
                     </Button>
                   </div>
@@ -190,8 +191,8 @@ const BookingPage = () => {
                       className="text-muted-foreground hover:text-foreground group"
                     >
                       {isRTL 
-                        ? <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" /> 
-                        : <ArrowLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" />
+                        ? <span className="icon-wrapper"><ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
+                        : <span className="icon-wrapper"><ArrowLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" aria-hidden="true" /></span>
                       }
                       {isArabic ? 'رجوع' : 'Back'}
                     </Button>
