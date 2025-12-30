@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
@@ -531,32 +531,87 @@ const ScannerPage = () => {
             </div>
           </div>
 
-          {/* Today's Stats */}
-          <div className="grid grid-cols-4 gap-2 md:gap-3 mb-4 md:mb-6">
-            <Card className="glass-card p-2 md:p-4 text-center">
-              <p className="text-lg md:text-2xl font-bold text-foreground">{todayStats.totalScans}</p>
-              <p className="text-[10px] md:text-xs text-muted-foreground">
+          {/* Compact Stats Bar */}
+          <div className="flex items-center justify-center gap-3 md:gap-4 py-2.5 px-4 bg-muted/30 rounded-lg text-sm mb-4 md:mb-6">
+            {/* Total */}
+            <div className="flex items-center gap-1.5">
+              <div className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                todayStats.totalScans > 0 ? "bg-foreground" : "bg-muted-foreground/50"
+              )} />
+              <span className={cn(
+                "transition-all tabular-nums",
+                todayStats.totalScans > 0 ? "font-semibold text-foreground" : "text-muted-foreground"
+              )}>
+                {todayStats.totalScans}
+              </span>
+              <span className="text-muted-foreground text-xs hidden sm:inline">
                 {isArabic ? 'إجمالي' : 'Total'}
-              </p>
-            </Card>
-            <Card className="glass-card p-2 md:p-4 text-center border-success/30 bg-success/5">
-              <p className="text-lg md:text-2xl font-bold text-success">{todayStats.validScans}</p>
-              <p className="text-[10px] md:text-xs text-muted-foreground">
+              </span>
+            </div>
+
+            <div className="w-px h-4 bg-border" />
+
+            {/* Valid */}
+            <div className="flex items-center gap-1.5">
+              <span className="icon-wrapper">
+                <Check className={cn(
+                  "w-3.5 h-3.5 transition-colors",
+                  todayStats.validScans > 0 ? "text-success" : "text-muted-foreground/50"
+                )} />
+              </span>
+              <span className={cn(
+                "transition-all tabular-nums",
+                todayStats.validScans > 0 ? "font-semibold text-success" : "text-muted-foreground"
+              )}>
+                {todayStats.validScans}
+              </span>
+              <span className="text-muted-foreground text-xs hidden sm:inline">
                 {isArabic ? 'صالح' : 'Valid'}
-              </p>
-            </Card>
-            <Card className="glass-card p-2 md:p-4 text-center border-warning/30 bg-warning/5">
-              <p className="text-lg md:text-2xl font-bold text-warning">{todayStats.usedScans}</p>
-              <p className="text-[10px] md:text-xs text-muted-foreground">
+              </span>
+            </div>
+
+            <div className="w-px h-4 bg-border" />
+
+            {/* Used */}
+            <div className="flex items-center gap-1.5">
+              <span className="icon-wrapper">
+                <AlertCircle className={cn(
+                  "w-3.5 h-3.5 transition-colors",
+                  todayStats.usedScans > 0 ? "text-warning" : "text-muted-foreground/50"
+                )} />
+              </span>
+              <span className={cn(
+                "transition-all tabular-nums",
+                todayStats.usedScans > 0 ? "font-semibold text-warning" : "text-muted-foreground"
+              )}>
+                {todayStats.usedScans}
+              </span>
+              <span className="text-muted-foreground text-xs hidden sm:inline">
                 {isArabic ? 'مستخدم' : 'Used'}
-              </p>
-            </Card>
-            <Card className="glass-card p-2 md:p-4 text-center border-destructive/30 bg-destructive/5">
-              <p className="text-lg md:text-2xl font-bold text-destructive">{todayStats.invalidScans}</p>
-              <p className="text-[10px] md:text-xs text-muted-foreground">
+              </span>
+            </div>
+
+            <div className="w-px h-4 bg-border" />
+
+            {/* Invalid */}
+            <div className="flex items-center gap-1.5">
+              <span className="icon-wrapper">
+                <X className={cn(
+                  "w-3.5 h-3.5 transition-colors",
+                  todayStats.invalidScans > 0 ? "text-destructive" : "text-muted-foreground/50"
+                )} />
+              </span>
+              <span className={cn(
+                "transition-all tabular-nums",
+                todayStats.invalidScans > 0 ? "font-semibold text-destructive" : "text-muted-foreground"
+              )}>
+                {todayStats.invalidScans}
+              </span>
+              <span className="text-muted-foreground text-xs hidden sm:inline">
                 {isArabic ? 'غير صالح' : 'Invalid'}
-              </p>
-            </Card>
+              </span>
+            </div>
           </div>
 
           {/* Scanner Area */}
