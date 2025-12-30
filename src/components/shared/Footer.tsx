@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
-import { MapPin, Phone, Mail, Facebook, Instagram, Youtube, ArrowUpRight } from 'lucide-react';
+import { MapPin, Phone, Mail } from 'lucide-react';
 import Logo from './Logo';
-import { Button } from '@/components/ui/button';
 
 const Footer = () => {
-  const { t, currentLanguage: language } = useLanguage();
+  const { currentLanguage: language } = useLanguage();
   const isArabic = language === 'ar';
   const currentYear = new Date().getFullYear();
 
@@ -15,117 +14,73 @@ const Footer = () => {
     { href: '/my-tickets', label: isArabic ? 'تذاكري' : 'My Tickets' },
   ];
 
-  const socialLinks = [
-    { icon: Facebook, href: 'https://www.facebook.com/', label: 'Facebook' },
-    { icon: Instagram, href: 'https://www.instagram.com/', label: 'Instagram' },
-    { icon: Youtube, href: 'https://www.youtube.com/', label: 'YouTube' },
-  ];
-
   return (
     <footer className="bg-primary text-primary-foreground">
-      <div className="container py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+      <div className="container py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Logo variant="light" />
-            <p className="text-primary-foreground/70 leading-relaxed">
+            <p className="text-primary-foreground/70 text-sm">
               {isArabic
-                ? 'تجربة تراثية أصيلة في قلب المملكة العربية السعودية'
+                ? 'تجربة تراثية أصيلة في قلب المملكة'
                 : 'An authentic heritage experience in the heart of the Kingdom'}
             </p>
-            <div className="flex gap-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-primary-foreground/10 hover:bg-accent flex items-center justify-center transition-colors"
-                  aria-label={social.label}
-                >
-                  <social.icon className="h-5 w-5" />
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* Quick Links */}
-          <div className="space-y-6">
-            <h3 className="font-semibold text-lg">
+          <div className="space-y-4">
+            <h3 className="font-semibold">
               {isArabic ? 'روابط سريعة' : 'Quick Links'}
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {quickLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="text-primary-foreground/70 hover:text-accent transition-colors inline-flex items-center gap-1 group"
+                    className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors"
                   >
                     {link.label}
-                    <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Contact Info */}
-          <div className="space-y-6">
-            <h3 className="font-semibold text-lg">
+          {/* Contact */}
+          <div className="space-y-4">
+            <h3 className="font-semibold">
               {isArabic ? 'تواصل معنا' : 'Contact Us'}
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-3 text-sm">
               <a 
                 href="mailto:info@almufaijer.com"
-                className="flex items-center gap-3 text-primary-foreground/70 hover:text-accent transition-colors"
+                className="flex items-center gap-2 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center">
-                  <Mail className="h-4 w-4" />
-                </div>
+                <Mail className="h-4 w-4" />
                 <span>info@almufaijer.com</span>
               </a>
               <a 
                 href="tel:+966501018811"
-                className="flex items-center gap-3 text-primary-foreground/70 hover:text-accent transition-colors"
+                className="flex items-center gap-2 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center">
-                  <Phone className="h-4 w-4" />
-                </div>
+                <Phone className="h-4 w-4" />
                 <span dir="ltr">+966 50 101 8811</span>
               </a>
-              <div className="flex items-start gap-3 text-primary-foreground/70">
-                <div className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center shrink-0">
-                  <MapPin className="h-4 w-4" />
-                </div>
+              <div className="flex items-start gap-2 text-primary-foreground/70">
+                <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>
                   {isArabic 
-                    ? 'المفيجر 16561، المملكة العربية السعودية' 
-                    : 'Almufaijer 16561, Saudi Arabia'}
+                    ? 'المفيجر، المملكة العربية السعودية' 
+                    : 'Almufaijer, Saudi Arabia'}
                 </span>
               </div>
             </div>
           </div>
-
-          {/* CTA */}
-          <div className="space-y-6">
-            <h3 className="font-semibold text-lg">
-              {isArabic ? 'احجز زيارتك' : 'Book Your Visit'}
-            </h3>
-            <p className="text-primary-foreground/70">
-              {isArabic
-                ? 'انضم إلينا لتجربة لا تُنسى في سوق المفيجر التراثي'
-                : 'Join us for an unforgettable experience at Souq Almufaijer'}
-            </p>
-            <Link to="/book">
-              <Button className="w-full gradient-bg text-white border-0 glow-hover">
-                {isArabic ? 'احجز الآن' : 'Book Now'}
-              </Button>
-            </Link>
-          </div>
         </div>
 
         {/* Copyright */}
-        <div className="mt-16 pt-8 border-t border-primary-foreground/10 text-center text-primary-foreground/50 text-sm">
+        <div className="mt-10 pt-6 border-t border-primary-foreground/10 text-center text-primary-foreground/50 text-sm">
           <p>
             {isArabic
               ? `© ${currentYear} سوق المفيجر. جميع الحقوق محفوظة.`
