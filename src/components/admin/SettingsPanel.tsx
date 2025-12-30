@@ -62,13 +62,13 @@ const SettingsPanel = () => {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="glass-card border-accent/20">
         <CardHeader>
-          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-6 w-32 bg-accent/10" />
         </CardHeader>
         <CardContent className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-20 w-full" />
+            <Skeleton key={i} className="h-20 w-full bg-accent/10" />
           ))}
         </CardContent>
       </Card>
@@ -76,26 +76,30 @@ const SettingsPanel = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings className="h-5 w-5 text-primary" />
+    <Card className="glass-card border-accent/20 overflow-hidden">
+      <CardHeader className="border-b border-accent/10 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardTitle className="flex items-center gap-3 text-foreground">
+          <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+            <Settings className="h-5 w-5 text-accent" />
+          </div>
           {isArabic ? 'الإعدادات' : 'Settings'}
         </CardTitle>
         <CardDescription>
           {isArabic ? 'إدارة أسعار التذاكر وساعات العمل' : 'Manage ticket prices and operating hours'}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8 pt-6">
         {/* Ticket Pricing */}
-        <div>
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
+        <div className="glass-card rounded-xl p-6 border border-accent/10">
+          <h3 className="font-semibold mb-6 flex items-center gap-3 text-foreground">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+              <DollarSign className="h-4 w-4 text-emerald-600" />
+            </div>
             {isArabic ? 'أسعار التذاكر (ر.س)' : 'Ticket Prices (SAR)'}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label>{isArabic ? 'بالغ' : 'Adult'}</Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{isArabic ? 'بالغ' : 'Adult'}</Label>
               <Input
                 type="number"
                 min="0"
@@ -106,10 +110,11 @@ const SettingsPanel = () => {
                     ticketPricing: { ...formData.ticketPricing, adult: Number(e.target.value) },
                   })
                 }
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
-            <div>
-              <Label>{isArabic ? 'طفل' : 'Child'}</Label>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{isArabic ? 'طفل' : 'Child'}</Label>
               <Input
                 type="number"
                 min="0"
@@ -120,10 +125,11 @@ const SettingsPanel = () => {
                     ticketPricing: { ...formData.ticketPricing, child: Number(e.target.value) },
                   })
                 }
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
-            <div>
-              <Label>{isArabic ? 'كبير السن' : 'Senior'}</Label>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{isArabic ? 'كبير السن' : 'Senior'}</Label>
               <Input
                 type="number"
                 min="0"
@@ -134,22 +140,23 @@ const SettingsPanel = () => {
                     ticketPricing: { ...formData.ticketPricing, senior: Number(e.target.value) },
                   })
                 }
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
           </div>
         </div>
 
-        <Separator />
-
         {/* Operating Hours */}
-        <div>
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Clock className="h-4 w-4" />
+        <div className="glass-card rounded-xl p-6 border border-accent/10">
+          <h3 className="font-semibold mb-6 flex items-center gap-3 text-foreground">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <Clock className="h-4 w-4 text-blue-600" />
+            </div>
             {isArabic ? 'ساعات العمل' : 'Operating Hours'}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <Label>{isArabic ? 'وقت الافتتاح' : 'Opening Time'}</Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{isArabic ? 'وقت الافتتاح' : 'Opening Time'}</Label>
               <Input
                 type="time"
                 value={formData.operatingHours.openTime}
@@ -159,10 +166,11 @@ const SettingsPanel = () => {
                     operatingHours: { ...formData.operatingHours, openTime: e.target.value },
                   })
                 }
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
-            <div>
-              <Label>{isArabic ? 'وقت الإغلاق' : 'Closing Time'}</Label>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{isArabic ? 'وقت الإغلاق' : 'Closing Time'}</Label>
               <Input
                 type="time"
                 value={formData.operatingHours.closeTime}
@@ -172,10 +180,11 @@ const SettingsPanel = () => {
                     operatingHours: { ...formData.operatingHours, closeTime: e.target.value },
                   })
                 }
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
-            <div>
-              <Label>{isArabic ? 'فترة الفتحة (دقيقة)' : 'Time Slot (minutes)'}</Label>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{isArabic ? 'فترة الفتحة (دقيقة)' : 'Time Slot (minutes)'}</Label>
               <Input
                 type="number"
                 min="15"
@@ -187,23 +196,33 @@ const SettingsPanel = () => {
                     operatingHours: { ...formData.operatingHours, timeSlotInterval: Number(e.target.value) },
                   })
                 }
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
           </div>
 
           <div>
-            <Label className="mb-2 block">{isArabic ? 'أيام الإغلاق' : 'Closed Days'}</Label>
+            <Label className="mb-3 block text-muted-foreground">{isArabic ? 'أيام الإغلاق' : 'Closed Days'}</Label>
             <div className="flex flex-wrap gap-3">
               {daysOfWeek.map((day) => (
-                <div key={day.value} className="flex items-center space-x-2 rtl:space-x-reverse">
+                <div 
+                  key={day.value} 
+                  className={`flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 rounded-lg border transition-colors cursor-pointer ${
+                    formData.operatingHours.closedDays.includes(day.value)
+                      ? 'bg-accent/20 border-accent/40'
+                      : 'bg-background/50 border-border/50 hover:border-accent/30'
+                  }`}
+                  onClick={() => toggleClosedDay(day.value)}
+                >
                   <Checkbox
                     id={`day-${day.value}`}
                     checked={formData.operatingHours.closedDays.includes(day.value)}
                     onCheckedChange={() => toggleClosedDay(day.value)}
+                    className="border-accent data-[state=checked]:bg-accent"
                   />
                   <label
                     htmlFor={`day-${day.value}`}
-                    className="text-sm cursor-pointer"
+                    className="text-sm cursor-pointer font-medium"
                   >
                     {isArabic ? day.labelAr : day.labelEn}
                   </label>
@@ -213,17 +232,17 @@ const SettingsPanel = () => {
           </div>
         </div>
 
-        <Separator />
-
         {/* Booking Rules */}
-        <div>
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
+        <div className="glass-card rounded-xl p-6 border border-accent/10">
+          <h3 className="font-semibold mb-6 flex items-center gap-3 text-foreground">
+            <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <Calendar className="h-4 w-4 text-purple-600" />
+            </div>
             {isArabic ? 'قواعد الحجز' : 'Booking Rules'}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label>{isArabic ? 'الحد الأقصى للتذاكر' : 'Max Tickets per Booking'}</Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{isArabic ? 'الحد الأقصى للتذاكر' : 'Max Tickets per Booking'}</Label>
               <Input
                 type="number"
                 min="1"
@@ -232,10 +251,11 @@ const SettingsPanel = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, maxTicketsPerBooking: Number(e.target.value) })
                 }
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
-            <div>
-              <Label>{isArabic ? 'أيام الحجز المسبق' : 'Advance Booking Days'}</Label>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{isArabic ? 'أيام الحجز المسبق' : 'Advance Booking Days'}</Label>
               <Input
                 type="number"
                 min="1"
@@ -244,10 +264,11 @@ const SettingsPanel = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, advanceBookingDays: Number(e.target.value) })
                 }
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
-            <div>
-              <Label>{isArabic ? 'قطع الحجز في نفس اليوم (ساعة)' : 'Same-Day Cutoff Hour'}</Label>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{isArabic ? 'قطع الحجز في نفس اليوم (ساعة)' : 'Same-Day Cutoff Hour'}</Label>
               <Input
                 type="number"
                 min="0"
@@ -256,20 +277,23 @@ const SettingsPanel = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, sameDayCutoffHour: Number(e.target.value) })
                 }
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
           </div>
         </div>
 
-        <Separator />
-
         {/* Save Button */}
-        <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={saving} className="gap-2">
+        <div className="flex justify-end pt-4">
+          <Button 
+            onClick={handleSave} 
+            disabled={saving} 
+            className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
+          >
             {saving ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
+              <RefreshCw className="h-5 w-5 animate-spin" />
             ) : (
-              <Save className="h-4 w-4" />
+              <Save className="h-5 w-5" />
             )}
             {isArabic ? 'حفظ الإعدادات' : 'Save Settings'}
           </Button>
