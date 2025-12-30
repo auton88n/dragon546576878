@@ -2,12 +2,11 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Phone, MessageSquare } from 'lucide-react';
+import { User, Mail, Phone, MessageSquare, Check } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -16,6 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { cn } from '@/lib/utils';
 
 const createFormSchema = (isArabic: boolean) => z.object({
   name: z.string()
@@ -32,7 +32,7 @@ const createFormSchema = (isArabic: boolean) => z.object({
 type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 const VisitorInfoForm = () => {
-  const { t, currentLanguage } = useLanguage();
+  const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { customerInfo, setCustomerInfo } = useBookingStore();
 
@@ -47,7 +47,8 @@ const VisitorInfoForm = () => {
     mode: 'onChange',
   });
 
-  // Update store whenever form values change
+  const { formState: { errors, dirtyFields } } = form;
+
   useEffect(() => {
     const subscription = form.watch((values) => {
       setCustomerInfo({
@@ -60,122 +61,166 @@ const VisitorInfoForm = () => {
     return () => subscription.unsubscribe();
   }, [form, setCustomerInfo]);
 
+  const isFieldValid = (fieldName: keyof FormValues) => {
+    return dirtyFields[fieldName] && !errors[fieldName];
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
+    <div className="space-y-8">
+      <div className="text-center space-y-3">
         <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-          {t('booking.visitorInfo')}
+          {isArabic ? 'معلومات الزائر' : 'Visitor Information'}
         </h2>
         <p className="text-muted-foreground">
-          {isArabic ? 'أدخل معلومات الاتصال الخاصة بك' : 'Enter your contact information'}
+          {isArabic ? 'أدخل بيانات الاتصال لإرسال التذاكر' : 'Enter contact details to receive your tickets'}
         </p>
       </div>
 
-      <Card className="border-2">
-        <CardContent className="p-6">
-          <Form {...form}>
-            <form className="space-y-6">
-              {/* Name Field */}
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2 text-base">
-                      <User className="h-4 w-4 text-primary" />
-                      {t('booking.name')} *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={isArabic ? 'أدخل اسمك الكامل' : 'Enter your full name'}
-                        className="h-12 text-base"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <Form {...form}>
+        <form className="space-y-6">
+          {/* Name Field */}
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                <FormLabel className="flex items-center gap-2 text-base font-medium">
+                  <div className={cn(
+                    'w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300',
+                    isFieldValid('name') ? 'gradient-bg' : 'bg-secondary'
+                  )}>
+                    {isFieldValid('name') ? (
+                      <Check className="h-4 w-4 text-white" />
+                    ) : (
+                      <User className="h-4 w-4 text-foreground" />
+                    )}
+                  </div>
+                  {isArabic ? 'الاسم الكامل' : 'Full Name'} *
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder={isArabic ? 'أدخل اسمك الكامل' : 'Enter your full name'}
+                    className={cn(
+                      'h-14 text-base rounded-xl border-2 transition-all duration-300',
+                      isFieldValid('name') && 'border-accent/50 bg-accent/5'
+                    )}
+                  />
+                </FormControl>
+                <FormMessage className="animate-fade-in" />
+              </FormItem>
+            )}
+          />
 
-              {/* Email Field */}
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2 text-base">
-                      <Mail className="h-4 w-4 text-primary" />
-                      {t('booking.email')} *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder={isArabic ? 'example@email.com' : 'example@email.com'}
-                        className="h-12 text-base"
-                        dir="ltr"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* Email Field */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                <FormLabel className="flex items-center gap-2 text-base font-medium">
+                  <div className={cn(
+                    'w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300',
+                    isFieldValid('email') ? 'gradient-bg' : 'bg-secondary'
+                  )}>
+                    {isFieldValid('email') ? (
+                      <Check className="h-4 w-4 text-white" />
+                    ) : (
+                      <Mail className="h-4 w-4 text-foreground" />
+                    )}
+                  </div>
+                  {isArabic ? 'البريد الإلكتروني' : 'Email Address'} *
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="example@email.com"
+                    className={cn(
+                      'h-14 text-base rounded-xl border-2 transition-all duration-300',
+                      isFieldValid('email') && 'border-accent/50 bg-accent/5'
+                    )}
+                    dir="ltr"
+                  />
+                </FormControl>
+                <FormMessage className="animate-fade-in" />
+              </FormItem>
+            )}
+          />
 
-              {/* Phone Field */}
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2 text-base">
-                      <Phone className="h-4 w-4 text-primary" />
-                      {t('booking.phone')} *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="tel"
-                        placeholder="+966501234567"
-                        className="h-12 text-base"
-                        dir="ltr"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* Phone Field */}
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                <FormLabel className="flex items-center gap-2 text-base font-medium">
+                  <div className={cn(
+                    'w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300',
+                    isFieldValid('phone') ? 'gradient-bg' : 'bg-secondary'
+                  )}>
+                    {isFieldValid('phone') ? (
+                      <Check className="h-4 w-4 text-white" />
+                    ) : (
+                      <Phone className="h-4 w-4 text-foreground" />
+                    )}
+                  </div>
+                  {isArabic ? 'رقم الجوال' : 'Phone Number'} *
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="tel"
+                    placeholder="+966501234567"
+                    className={cn(
+                      'h-14 text-base rounded-xl border-2 transition-all duration-300 font-mono',
+                      isFieldValid('phone') && 'border-accent/50 bg-accent/5'
+                    )}
+                    dir="ltr"
+                  />
+                </FormControl>
+                <FormMessage className="animate-fade-in" />
+              </FormItem>
+            )}
+          />
 
-              {/* Special Requests Field */}
-              <FormField
-                control={form.control}
-                name="specialRequests"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2 text-base">
-                      <MessageSquare className="h-4 w-4 text-primary" />
-                      {t('booking.specialRequests')}
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder={isArabic ? 'أي طلبات خاصة أو ملاحظات...' : 'Any special requests or notes...'}
-                        className="min-h-[100px] text-base resize-none"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+          {/* Special Requests Field */}
+          <FormField
+            control={form.control}
+            name="specialRequests"
+            render={({ field }) => (
+              <FormItem className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
+                <FormLabel className="flex items-center gap-2 text-base font-medium">
+                  <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+                    <MessageSquare className="h-4 w-4 text-foreground" />
+                  </div>
+                  {isArabic ? 'طلبات خاصة' : 'Special Requests'}
+                  <span className="text-muted-foreground text-sm font-normal">
+                    ({isArabic ? 'اختياري' : 'Optional'})
+                  </span>
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    placeholder={isArabic ? 'أي طلبات أو ملاحظات خاصة...' : 'Any special requests or notes...'}
+                    className="min-h-[100px] text-base resize-none rounded-xl border-2"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
 
-      <p className="text-sm text-muted-foreground text-center">
-        {isArabic 
-          ? '* سيتم إرسال تأكيد الحجز والتذاكر إلى بريدك الإلكتروني'
-          : '* Booking confirmation and tickets will be sent to your email'}
-      </p>
+      <div className="glass-card rounded-2xl p-4 text-center animate-slide-up" style={{ animationDelay: '0.5s' }}>
+        <p className="text-sm text-muted-foreground">
+          <Mail className="h-4 w-4 inline mr-2 rtl:ml-2 rtl:mr-0" />
+          {isArabic 
+            ? 'سيتم إرسال تأكيد الحجز والتذاكر إلى بريدك الإلكتروني'
+            : 'Booking confirmation and tickets will be sent to your email'}
+        </p>
+      </div>
     </div>
   );
 };
