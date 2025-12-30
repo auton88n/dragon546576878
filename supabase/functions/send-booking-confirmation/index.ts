@@ -339,29 +339,20 @@ const generateEmailTemplate = (
                 </tr>
               </table>
               
-              <!-- See You Soon -->
-              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top: 2px dashed #E8DED0;">
-                <tr>
-                  <td align="center" style="padding: 24px 0;">
-                    <p style="color: #3D2E1F; margin: 0; font-size: 20px; font-weight: 700; font-family: Arial, sans-serif;">${translations.seeYouSoon}</p>
-                    <p style="color: #5C4A3A; margin: 10px 0 0; font-size: 13px; font-family: Arial, sans-serif;">
-                      ${translations.contactUs}: <a href="mailto:${translations.email}" style="color: #8B7355; text-decoration: none; font-weight: 600;">${translations.email}</a>
-                    </p>
-                  </td>
-                </tr>
-              </table>
             </td>
           </tr>
           
           <!-- Footer -->
           <tr>
-            <td align="center" style="padding: 24px 16px;">
+            <td align="center" style="padding: 24px 16px; border-top: 2px dashed #E8DED0;">
+              <!-- Get Directions Button -->
+              <a href="https://maps.app.goo.gl/g4qJ4mM9ZVqg323t8" target="_blank" style="display: inline-block; background-color: #8B7355; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif; margin-bottom: 16px;">
+                📍 ${isArabic ? 'احصل على الاتجاهات' : 'Get Directions'}
+              </a>
               <p style="color: #5C4A3A; margin: 0 0 6px; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif;">${translations.address}</p>
-              <p style="color: #8B7355; margin: 0 0 16px; font-size: 11px; font-family: Arial, sans-serif;">
+              <p style="color: #8B7355; margin: 0 0 8px; font-size: 11px; font-family: Arial, sans-serif;">
                 © ${new Date().getFullYear()} Souq Almufaijer. ${isArabic ? 'جميع الحقوق محفوظة' : 'All rights reserved'}.
               </p>
-              <!-- Separator -->
-              <div style="border-top: 1px solid #E8DED0; width: 60px; margin: 0 auto 12px;"></div>
               <!-- AYN Branding -->
               <p style="color: #8B7355; margin: 0; font-size: 10px; font-family: Arial, sans-serif;">
                 Powered by <span style="font-weight: 600; color: #3D2E1F;">AYN</span>

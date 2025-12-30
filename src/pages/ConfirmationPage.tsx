@@ -314,25 +314,22 @@ const ConfirmationPage = () => {
     ctx.fillStyle = '#5C4A3A';
     ctx.fillText(isArabic ? 'صالحة ليوم الزيارة فقط' : 'Valid for visit date only', width/2, qrSectionY + 322);
 
-    // Footer - extended for AYN branding
+    // Footer
     ctx.fillStyle = '#3D2E1F';
-    ctx.fillRect(0, height - 95, width, 95);
+    ctx.fillRect(0, height - 80, width, 80);
     
     // Decorative footer line
     ctx.fillStyle = '#C9A86C';
-    ctx.fillRect(0, height - 95, width, 4);
+    ctx.fillRect(0, height - 80, width, 4);
     
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 16px Arial, sans-serif';
-    ctx.fillText(isArabic ? 'شكراً لزيارتكم سوق المفيجر' : 'Thank you for visiting Souq Almufaijer', width/2, height - 60);
-    ctx.font = '12px Arial, sans-serif';
-    ctx.fillStyle = '#C9A86C';
-    ctx.fillText('almufaijer.com', width/2, height - 38);
+    ctx.fillText(isArabic ? 'شكراً لزيارتكم سوق المفيجر' : 'Thank you for visiting Souq Almufaijer', width/2, height - 45);
     
     // Powered by AYN branding
     ctx.font = '10px Arial, sans-serif';
     ctx.fillStyle = '#8B7355';
-    ctx.fillText('Powered by AYN', width/2, height - 15);
+    ctx.fillText('Powered by AYN', width/2, height - 20);
 
     // Download
     const link = document.createElement('a');
