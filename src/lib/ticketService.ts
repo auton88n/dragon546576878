@@ -196,15 +196,51 @@ export interface TicketValidationResult {
 
 export const validateTicket = async (qrData: string): Promise<TicketValidationResult> => {
   try {
-    // Parse QR data
-    const parsed = JSON.parse(qrData);
-    const { code, ref, date, cs } = parsed;
-
-    if (!code || !ref || !date) {
+    console.log('Validating QR data:', qrData);
+    
+    // Parse QR data - handle both string and object formats
+    let parsed: { code?: string; ref?: string; date?: string; cs?: string };
+    
+    try {
+      parsed = typeof qrData === 'string' ? JSON.parse(qrData) : qrData;
+    } catch (parseErr) {
+      console.error('Failed to parse QR data as JSON:', parseErr);
+      
+      // Try to find ticket by raw code if JSON parsing fails
+      // This handles cases where the QR might contain just the ticket code
+      const { data: ticketByCode } = await supabase
+        .from('tickets')
+        .select(`
+          *,
+          bookings (
+            booking_reference,
+            customer_name,
+            visit_date,
+            visit_time
+          )
+        `)
+        .eq('ticket_code', qrData.trim())
+        .maybeSingle();
+      
+      if (ticketByCode) {
+        return validateTicketRecord(ticketByCode);
+      }
+      
       return {
         isValid: false,
         status: 'invalid',
         message: 'Invalid QR code format',
+      };
+    }
+
+    const { code, ref, date } = parsed;
+
+    if (!code) {
+      console.error('Missing ticket code in parsed data:', parsed);
+      return {
+        isValid: false,
+        status: 'invalid',
+        message: 'Invalid QR code format - missing ticket code',
       };
     }
 
@@ -221,9 +257,19 @@ export const validateTicket = async (qrData: string): Promise<TicketValidationRe
         )
       `)
       .eq('ticket_code', code)
-      .single();
+      .maybeSingle();
 
-    if (error || !ticket) {
+    if (error) {
+      console.error('Database error looking up ticket:', error);
+      return {
+        isValid: false,
+        status: 'invalid',
+        message: 'Error validating ticket',
+      };
+    }
+
+    if (!ticket) {
+      console.log('Ticket not found for code:', code);
       return {
         isValid: false,
         status: 'not_found',
@@ -231,61 +277,7 @@ export const validateTicket = async (qrData: string): Promise<TicketValidationRe
       };
     }
 
-    // Check if already used
-    if (ticket.is_used) {
-      return {
-        isValid: false,
-        status: 'used',
-        message: 'Ticket already used',
-        ticket: {
-          id: ticket.id,
-          ticketCode: ticket.ticket_code,
-          ticketType: ticket.ticket_type,
-          bookingReference: (ticket.bookings as any)?.booking_reference || ref,
-          customerName: (ticket.bookings as any)?.customer_name || 'Unknown',
-          visitDate: ticket.valid_from,
-          visitTime: (ticket.bookings as any)?.visit_time || '',
-        },
-      };
-    }
-
-    // Check date validity
-    const today = new Date().toISOString().split('T')[0];
-    if (ticket.valid_from !== today) {
-      const isExpired = new Date(ticket.valid_from) < new Date(today);
-      return {
-        isValid: false,
-        status: isExpired ? 'expired' : 'wrong_date',
-        message: isExpired 
-          ? 'Ticket has expired' 
-          : `Ticket valid for ${ticket.valid_from}`,
-        ticket: {
-          id: ticket.id,
-          ticketCode: ticket.ticket_code,
-          ticketType: ticket.ticket_type,
-          bookingReference: (ticket.bookings as any)?.booking_reference || ref,
-          customerName: (ticket.bookings as any)?.customer_name || 'Unknown',
-          visitDate: ticket.valid_from,
-          visitTime: (ticket.bookings as any)?.visit_time || '',
-        },
-      };
-    }
-
-    // Ticket is valid!
-    return {
-      isValid: true,
-      status: 'valid',
-      message: 'Ticket is valid',
-      ticket: {
-        id: ticket.id,
-        ticketCode: ticket.ticket_code,
-        ticketType: ticket.ticket_type,
-        bookingReference: (ticket.bookings as any)?.booking_reference || ref,
-        customerName: (ticket.bookings as any)?.customer_name || 'Unknown',
-        visitDate: ticket.valid_from,
-        visitTime: (ticket.bookings as any)?.visit_time || '',
-      },
-    };
+    return validateTicketRecord(ticket);
   } catch (err) {
     console.error('Error validating ticket:', err);
     return {
@@ -294,6 +286,67 @@ export const validateTicket = async (qrData: string): Promise<TicketValidationRe
       message: 'Invalid QR code data',
     };
   }
+};
+
+// Helper function to validate a ticket record
+const validateTicketRecord = (ticket: any): TicketValidationResult => {
+  const bookingData = ticket.bookings as any;
+  
+  // Check if already used
+  if (ticket.is_used) {
+    return {
+      isValid: false,
+      status: 'used',
+      message: 'Ticket already used',
+      ticket: {
+        id: ticket.id,
+        ticketCode: ticket.ticket_code,
+        ticketType: ticket.ticket_type,
+        bookingReference: bookingData?.booking_reference || '',
+        customerName: bookingData?.customer_name || 'Unknown',
+        visitDate: ticket.valid_from,
+        visitTime: bookingData?.visit_time || '',
+      },
+    };
+  }
+
+  // Check date validity
+  const today = new Date().toISOString().split('T')[0];
+  if (ticket.valid_from !== today) {
+    const isExpired = new Date(ticket.valid_from) < new Date(today);
+    return {
+      isValid: false,
+      status: isExpired ? 'expired' : 'wrong_date',
+      message: isExpired 
+        ? 'Ticket has expired' 
+        : `Ticket valid for ${ticket.valid_from}`,
+      ticket: {
+        id: ticket.id,
+        ticketCode: ticket.ticket_code,
+        ticketType: ticket.ticket_type,
+        bookingReference: bookingData?.booking_reference || '',
+        customerName: bookingData?.customer_name || 'Unknown',
+        visitDate: ticket.valid_from,
+        visitTime: bookingData?.visit_time || '',
+      },
+    };
+  }
+
+  // Ticket is valid!
+  return {
+    isValid: true,
+    status: 'valid',
+    message: 'Ticket is valid',
+    ticket: {
+      id: ticket.id,
+      ticketCode: ticket.ticket_code,
+      ticketType: ticket.ticket_type,
+      bookingReference: bookingData?.booking_reference || '',
+      customerName: bookingData?.customer_name || 'Unknown',
+      visitDate: ticket.valid_from,
+      visitTime: bookingData?.visit_time || '',
+    },
+  };
 };
 
 // Mark ticket as used
