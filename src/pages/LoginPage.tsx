@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Lock, LogIn, AlertCircle, Home } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, Home, Shield } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
@@ -34,7 +34,7 @@ type LoginFormValues = z.infer<ReturnType<typeof createLoginSchema>>;
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentLanguage } = useLanguage();
+  const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { setSession, setUser, setRole, setLoading } = useAuthStore();
 
@@ -110,28 +110,36 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      <main className="flex-1 flex items-center justify-center py-12 px-4">
-        <Card className="w-full max-w-md shadow-xl border-2">
-          <CardHeader className="text-center space-y-2">
-            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-              <LogIn className="h-8 w-8 text-primary" />
+      <main className="flex-1 flex items-center justify-center py-12 px-4 relative overflow-hidden">
+        {/* Background Decorations */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-20 left-10 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+        </div>
+
+        <Card className="w-full max-w-md glass-card border-accent/20 relative z-10">
+          <CardHeader className="text-center space-y-4 pb-2">
+            <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center border border-accent/20">
+              <Shield className="h-10 w-10 text-accent" />
             </div>
-            <CardTitle className="text-2xl font-bold">
-              {isArabic ? 'تسجيل دخول الموظفين' : 'Staff Login'}
-            </CardTitle>
-            <CardDescription>
-              {isArabic 
-                ? 'أدخل بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم'
-                : 'Enter your credentials to access the dashboard'}
-            </CardDescription>
+            <div>
+              <CardTitle className="text-2xl font-bold text-foreground">
+                {isArabic ? 'تسجيل دخول الموظفين' : 'Staff Login'}
+              </CardTitle>
+              <CardDescription className="mt-2">
+                {isArabic 
+                  ? 'أدخل بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم'
+                  : 'Enter your credentials to access the dashboard'}
+              </CardDescription>
+            </div>
           </CardHeader>
 
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 pt-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="bg-destructive/10 border-destructive/30">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -144,8 +152,8 @@ const LoginPage = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-primary" />
+                      <FormLabel className="flex items-center gap-2 text-foreground">
+                        <Mail className="h-4 w-4 text-accent" />
                         {isArabic ? 'البريد الإلكتروني' : 'Email'}
                       </FormLabel>
                       <FormControl>
@@ -153,7 +161,7 @@ const LoginPage = () => {
                           {...field}
                           type="email"
                           placeholder="staff@almufaijer.com"
-                          className="h-12"
+                          className="h-12 bg-background/50 border-border/50 focus:border-accent transition-colors"
                           dir="ltr"
                           autoComplete="email"
                         />
@@ -168,8 +176,8 @@ const LoginPage = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Lock className="h-4 w-4 text-primary" />
+                      <FormLabel className="flex items-center gap-2 text-foreground">
+                        <Lock className="h-4 w-4 text-accent" />
                         {isArabic ? 'كلمة المرور' : 'Password'}
                       </FormLabel>
                       <FormControl>
@@ -177,7 +185,7 @@ const LoginPage = () => {
                           {...field}
                           type="password"
                           placeholder="••••••••"
-                          className="h-12"
+                          className="h-12 bg-background/50 border-border/50 focus:border-accent transition-colors"
                           dir="ltr"
                           autoComplete="current-password"
                         />
@@ -190,12 +198,12 @@ const LoginPage = () => {
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full h-12"
+                  className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold shadow-lg hover:shadow-xl transition-all"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
                       {isArabic ? 'جاري الدخول...' : 'Signing in...'}
                     </span>
                   ) : (
@@ -208,14 +216,15 @@ const LoginPage = () => {
               </form>
             </Form>
 
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-4">
+            <div className="text-center pt-4 border-t border-accent/10">
+              <p className="text-sm text-muted-foreground mb-4 flex items-center justify-center gap-2">
+                <Shield className="h-4 w-4" />
                 {isArabic 
-                  ? '⚠️ هذه الصفحة مخصصة للموظفين فقط'
-                  : '⚠️ This page is for staff members only'}
+                  ? 'هذه الصفحة مخصصة للموظفين فقط'
+                  : 'This page is for staff members only'}
               </p>
               <Link to="/">
-                <Button variant="ghost" size="sm" className="gap-2">
+                <Button variant="ghost" size="sm" className="gap-2 hover:bg-accent/10 transition-colors">
                   <Home className="h-4 w-4" />
                   {isArabic ? 'العودة للرئيسية' : 'Back to Home'}
                 </Button>

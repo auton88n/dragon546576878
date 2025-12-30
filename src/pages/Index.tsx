@@ -80,7 +80,7 @@ const Index = () => {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 opacity-0 animate-slide-up" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
-                <Link to="/booking">
+                <Link to="/book">
                   <Button className="btn-gold text-lg px-8 py-6 w-full sm:w-auto group">
                     <Ticket className="w-5 h-5 mr-2 rtl:mr-0 rtl:ml-2 transition-transform group-hover:scale-110" />
                     {isArabic ? 'احجز زيارتك' : 'Book Your Visit'}
@@ -260,7 +260,7 @@ const Index = () => {
               ? 'انضم إلينا في رحلة استكشافية لا تُنسى'
               : 'Join us for an unforgettable exploratory journey'}
           </p>
-          <Link to="/booking">
+          <Link to="/book">
             <Button size="lg" className="btn-gold text-lg px-10 py-6 hover:scale-105 transition-transform">
               <Calendar className="h-5 w-5 mr-2 rtl:ml-2 rtl:mr-0" />
               {isArabic ? 'احجز الآن' : 'Book Now'}
