@@ -153,7 +153,6 @@ const BookingPage = () => {
                 className="glass-card-gold p-4 sm:p-6 md:p-8 transition-all duration-500"
                 key={step}
               >
-              >
                 <div className="animate-fade-in">
                   {step === 1 && <TicketSelector />}
                   {step === 2 && (
