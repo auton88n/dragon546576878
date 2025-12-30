@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import QRCode from 'qrcode';
+import {
 import { 
   CheckCircle, Download, Calendar, Clock, Users, Mail, 
   Ticket, Home, MapPin, Sparkles, Share2, RefreshCw, QrCode
@@ -51,7 +51,6 @@ const ConfirmationPage = () => {
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [tickets, setTickets] = useState<TicketDetails[]>([]);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(true);
@@ -90,24 +89,8 @@ const ConfirmationPage = () => {
           setTickets(ticketsData || []);
         }
 
-        // Generate a summary QR code for the booking
-        const qrData = JSON.stringify({
-          ref: data.booking_reference,
-          date: data.visit_date,
-          time: data.visit_time,
-          tickets: data.adult_count + data.child_count + (data.senior_count || 0),
-        });
-
-        const qrUrl = await QRCode.toDataURL(qrData, {
-          width: 200,
-          margin: 1,
-          color: {
-            dark: '#3D2E1F',
-            light: '#FFFFFF',
-          },
-          errorCorrectionLevel: 'H',
-        });
-        setQrCodeUrl(qrUrl);
+        // Note: Individual ticket QR codes are fetched from the tickets table
+        // and used directly for display and download
 
         // Hide confetti after animation
         setTimeout(() => setShowConfetti(false), 3000);
@@ -293,7 +276,7 @@ const ConfirmationPage = () => {
     ctx.fillStyle = '#FFFFFF';
     ctx.fillText(`${booking.total_amount} SAR`, isArabic ? 90 : width - 90, totalY + 50);
 
-    // QR Code section
+    // QR Code section - use FIRST ticket's QR code (the scannable one)
     const qrSectionY = totalY + 110;
     ctx.textAlign = 'center';
     
@@ -312,12 +295,15 @@ const ConfirmationPage = () => {
     roundRect(ctx, width/2 - 120, qrSectionY + 30, 240, 240, 12);
     ctx.stroke();
 
-    // Draw QR code
-    if (qrCodeUrl) {
+    // Draw QR code from FIRST ticket (individual ticket QR with proper code)
+    const firstTicket = tickets[0];
+    if (firstTicket?.qr_code_url) {
       const qrImage = new Image();
-      qrImage.src = qrCodeUrl;
+      qrImage.crossOrigin = 'anonymous';
+      qrImage.src = firstTicket.qr_code_url;
       await new Promise((resolve) => {
         qrImage.onload = resolve;
+        qrImage.onerror = resolve;
       });
       ctx.drawImage(qrImage, width/2 - 100, qrSectionY + 50, 200, 200);
     }
@@ -608,20 +594,24 @@ const ConfirmationPage = () => {
                     <div className="absolute -right-6 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background" />
                   </div>
 
-                  {/* Right Side - QR Code */}
+                  {/* Right Side - QR Code (use first ticket's scannable QR) */}
                   <div className="flex flex-col items-center justify-center md:w-48">
-                    {qrCodeUrl && (
+                    {tickets[0]?.qr_code_url ? (
                       <div className="p-3 bg-white rounded-2xl shadow-inner border-2 border-accent/20">
                         <img 
-                          src={qrCodeUrl} 
+                          src={tickets[0].qr_code_url} 
                           alt="QR Code" 
                           className="w-32 h-32 md:w-40 md:h-40"
                         />
                       </div>
+                    ) : (
+                      <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-muted flex items-center justify-center">
+                        <QrCode className="h-12 w-12 text-muted-foreground" />
+                      </div>
                     )}
-                    <p className="text-xs text-muted-foreground mt-3 text-center">
-                      {isArabic ? 'امسح عند الدخول' : 'Scan at entrance'}
-                    </p>
+                    <Badge className="mt-3 bg-accent/20 text-accent border-accent/30">
+                      {isArabic ? 'امسح عند الدخول' : 'SCAN AT ENTRANCE'}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -646,13 +636,18 @@ const ConfirmationPage = () => {
             </div>
           </div>
 
-          {/* Individual Tickets Section */}
-          {tickets.length > 0 && (
+          {/* Individual Tickets Section - THESE ARE THE SCANNABLE QR CODES */}
+          {tickets.length > 1 && (
             <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <QrCode className="h-5 w-5 text-accent" />
-                {isArabic ? 'التذاكر الفردية' : 'Individual Tickets'}
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <QrCode className="h-5 w-5 text-accent" />
+                  {isArabic ? 'جميع التذاكر' : 'All Tickets'}
+                </h3>
+                <Badge variant="outline" className="border-green-500 text-green-600">
+                  {isArabic ? 'امسح هذه عند الدخول' : 'Scan these at entrance'}
+                </Badge>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {tickets.map((ticket, index) => (
                   <div 
