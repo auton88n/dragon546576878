@@ -40,15 +40,11 @@ async function updateEmailQueueError(
   }
 }
 
-// Public HTTPS logo URL - Gmail-safe (no base64)
-const LOGO_URL = "https://tickets.almufaijer.com/images/logo-white-email.png";
-
 // Simple email template with fixed CSS (no dynamic property names)
 const generateEmailTemplate = (
   booking: any,
   tickets: any[],
-  isArabic: boolean,
-  logoUrl: string
+  isArabic: boolean
 ) => {
   const direction = isArabic ? "rtl" : "ltr";
   const textAlign = isArabic ? "right" : "left";
@@ -202,20 +198,26 @@ const generateEmailTemplate = (
       <td align="center" style="padding: 24px 16px;">
         <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px;">
           
-          <!-- Header -->
+          <!-- Header - Text-based branding (no images for best email compatibility) -->
           <tr>
             <td align="center" style="background-color: #5C4A3A; padding: 32px 24px; border-radius: 16px 16px 0 0;">
               <table cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
-                  <td align="center" style="padding-bottom: 12px;">
-                    <!-- Public HTTPS logo URL for Gmail compatibility -->
-                    <img src="${logoUrl}" alt="Souq Almufaijer" width="180" style="display: block; max-width: 180px; height: auto;" />
+                  <td align="center" style="padding-bottom: 4px;">
+                    <!-- Arabic brand name -->
+                    <h1 style="color: #C9A86C; font-size: 32px; margin: 0; font-weight: 700; font-family: 'Times New Roman', serif;">سوق المفيجر</h1>
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" style="padding-bottom: 8px;">
-                    <!-- Text brand fallback - visible even if images blocked -->
-                    <p style="color: #FFFFFF; margin: 0; font-size: 18px; font-weight: 700; font-family: Arial, sans-serif;">${isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</p>
+                  <td align="center" style="padding-bottom: 16px;">
+                    <!-- English brand name -->
+                    <p style="color: #D4C5B0; font-size: 12px; margin: 0; letter-spacing: 3px; text-transform: uppercase; font-family: Arial, sans-serif;">SOUQ ALMUFAIJER</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-bottom: 16px;">
+                    <!-- Decorative gold line -->
+                    <div style="width: 60px; height: 2px; background-color: #C9A86C; margin: 0 auto;"></div>
                   </td>
                 </tr>
                 <tr>
@@ -392,7 +394,7 @@ async function sendEmailWithRetry(
   emailQueueId: string | null,
   isArabic: boolean
 ): Promise<{ success: boolean; error?: string }> {
-  const emailHtml = generateEmailTemplate(booking, tickets, isArabic, LOGO_URL);
+  const emailHtml = generateEmailTemplate(booking, tickets, isArabic);
   const subject = isArabic
     ? `تأكيد الحجز - ${booking.booking_reference} | سوق المفيجر`
     : `Booking Confirmation - ${booking.booking_reference} | Souq Almufaijer`;
