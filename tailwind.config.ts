@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        cairo: ['Cairo', 'sans-serif'],
-        inter: ['Inter', 'sans-serif'],
+        display: ['Playfair Display', 'Georgia', 'serif'],
+        body: ['Playfair Display', 'Georgia', 'serif'],
+        arabic: ['Tajawal', 'Arial', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

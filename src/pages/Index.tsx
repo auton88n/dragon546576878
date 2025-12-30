@@ -67,10 +67,8 @@ const Index = () => {
               </p>
               
               {/* Site Name */}
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 opacity-0 animate-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-                <span className="gradient-text-gold">
-                  {isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
-                </span>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-accent opacity-0 animate-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+                {isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
               </h1>
               
               {/* Tagline */}
@@ -130,8 +128,8 @@ const Index = () => {
       <section className="py-24 bg-secondary/50">
         <div className="container">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="gradient-text">{isArabic ? 'اكتشف تجربتنا' : 'Discover Our Experience'}</span>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary">
+              {isArabic ? 'اكتشف تجربتنا' : 'Discover Our Experience'}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               {isArabic 
@@ -182,9 +180,9 @@ const Index = () => {
         <div className="container">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                <span className="gradient-text">{isArabic ? 'خطط لزيارتك' : 'Plan Your Visit'}</span>
-              </h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary">
+              {isArabic ? 'خطط لزيارتك' : 'Plan Your Visit'}
+            </h2>
               <p className="text-muted-foreground text-lg">
                 {isArabic ? 'ساعات العمل والموقع' : 'Operating Hours & Location'}
               </p>
