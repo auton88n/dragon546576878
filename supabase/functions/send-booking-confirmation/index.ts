@@ -50,14 +50,15 @@ const generateEmailTemplate = (
   isArabic: boolean
 ) => {
   const direction = isArabic ? "rtl" : "ltr";
-  const fontFamily = isArabic ? "'Cairo', Arial, sans-serif" : "'Inter', Arial, sans-serif";
+  const alignStart = isArabic ? "right" : "left";
+  const alignEnd = isArabic ? "left" : "right";
   
   const translations = {
     title: isArabic ? "تأكيد الحجز" : "Booking Confirmation",
     greeting: isArabic ? `مرحباً ${booking.customer_name}،` : `Hello ${booking.customer_name},`,
     thankYou: isArabic 
-      ? "شكراً لحجزك في سوق المفيجر! نحن متحمسون لاستضافتك."
-      : "Thank you for booking at Souq Almufaijer! We're excited to host you.",
+      ? "شكراً لحجزك في سوق المفيجر! نحن سعداء باستضافتك في رحلة عبر التراث الأصيل."
+      : "Thank you for booking at Souq Almufaijer! We're delighted to host you on a journey through authentic heritage.",
     bookingRef: isArabic ? "رقم الحجز" : "Booking Reference",
     visitDetails: isArabic ? "تفاصيل الزيارة" : "Visit Details",
     date: isArabic ? "التاريخ" : "Date",
@@ -67,20 +68,18 @@ const generateEmailTemplate = (
     child: isArabic ? "طفل" : "Child",
     senior: isArabic ? "كبير السن" : "Senior",
     total: isArabic ? "المجموع" : "Total",
-    qrCodes: isArabic ? "رموز QR الخاصة بك" : "Your QR Codes",
+    qrCodes: isArabic ? "تذاكر الدخول" : "Entry Tickets",
     instructions: isArabic 
-      ? "يرجى إظهار رموز QR هذه عند المدخل"
-      : "Please show these QR codes at the entrance",
+      ? "قم بإظهار هذه التذاكر عند البوابة"
+      : "Present these tickets at the entrance gate",
     validOnly: isArabic 
       ? "صالحة فقط للتاريخ والوقت المحددين"
       : "Valid only for the selected date and time",
+    seeYouSoon: isArabic ? "نراكم قريباً!" : "See you soon!",
     contactUs: isArabic ? "تواصل معنا" : "Contact Us",
     email: "info@almufaijer.com",
-    phone: "+966 XXX XXX XXXX",
-    address: isArabic ? "سوق المفيجر، المملكة العربية السعودية" : "Souq Almufaijer, Saudi Arabia",
-    footer: isArabic 
-      ? "نتطلع لرؤيتك قريباً!"
-      : "We look forward to seeing you soon!",
+    address: isArabic ? "سوق المفيجر، المملكة العربية السعودية" : "Souq Almufaijer, Kingdom of Saudi Arabia",
+    website: "almufaijer.com",
   };
 
   // Format date
@@ -102,29 +101,52 @@ const generateEmailTemplate = (
   };
 
   // Generate ticket rows
-  const ticketRows = [];
+  const ticketItems = [];
   if (booking.adult_count > 0) {
-    ticketRows.push(`${translations.adult}: ${booking.adult_count} × ${booking.adult_price} SAR`);
+    ticketItems.push({
+      type: translations.adult,
+      count: booking.adult_count,
+      price: booking.adult_price,
+      subtotal: booking.adult_count * booking.adult_price
+    });
   }
   if (booking.child_count > 0) {
-    ticketRows.push(`${translations.child}: ${booking.child_count} × ${booking.child_price} SAR`);
+    ticketItems.push({
+      type: translations.child,
+      count: booking.child_count,
+      price: booking.child_price,
+      subtotal: booking.child_count * booking.child_price
+    });
   }
   if (booking.senior_count > 0) {
-    ticketRows.push(`${translations.senior}: ${booking.senior_count} × ${booking.senior_price} SAR`);
+    ticketItems.push({
+      type: translations.senior,
+      count: booking.senior_count,
+      price: booking.senior_price,
+      subtotal: booking.senior_count * booking.senior_price
+    });
   }
 
-  // Generate QR code HTML
+  // Generate QR code HTML - modern card style
   const qrCodesHtml = tickets.length > 0 
-    ? tickets.map((ticket, index) => `
-      <div style="display: inline-block; text-align: center; margin: 10px; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #D4C5B0;">
-        <img src="${ticket.qr_code_url}" alt="QR Code ${index + 1}" style="width: 150px; height: 150px; display: block; margin: 0 auto;" />
-        <p style="margin: 10px 0 0; font-size: 12px; color: #4A3625;">
-          ${ticket.ticket_type === 'adult' ? translations.adult : ticket.ticket_type === 'child' ? translations.child : translations.senior} #${index + 1}
-        </p>
-        <p style="margin: 5px 0 0; font-size: 10px; color: #8B6F47;">${ticket.ticket_code}</p>
-      </div>
-    `).join('')
-    : '<p style="color: #8B6F47; font-style: italic;">QR codes will be available shortly. Please refresh your booking page.</p>';
+    ? tickets.map((ticket, index) => {
+        const ticketType = ticket.ticket_type === 'adult' ? translations.adult 
+          : ticket.ticket_type === 'child' ? translations.child 
+          : translations.senior;
+        return `
+        <div style="display: inline-block; margin: 12px; vertical-align: top;">
+          <div style="background: linear-gradient(180deg, #FFFFFF 0%, #FAF8F5 100%); border-radius: 16px; padding: 24px; box-shadow: 0 8px 32px rgba(139, 111, 71, 0.15); border: 1px solid #E8DED0; width: 200px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 16px; letter-spacing: 0.5px;">
+              ${ticketType} #${index + 1}
+            </div>
+            <div style="background: #FFFFFF; padding: 16px; border-radius: 12px; border: 2px solid #C9A86C; margin-bottom: 12px;">
+              <img src="${ticket.qr_code_url}" alt="QR Code" style="width: 140px; height: 140px; display: block; margin: 0 auto;" />
+            </div>
+            <div style="font-family: 'Courier New', monospace; font-size: 11px; color: #8B7355; letter-spacing: 1px; font-weight: 600;">${ticket.ticket_code}</div>
+          </div>
+        </div>
+      `}).join('')
+    : `<p style="color: #8B7355; font-style: italic; text-align: center; padding: 20px;">${isArabic ? 'سيتم إرسال رموز QR قريباً' : 'QR codes will be sent shortly'}</p>`;
 
   return `
 <!DOCTYPE html>
@@ -133,77 +155,114 @@ const generateEmailTemplate = (
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${translations.title}</title>
-  ${isArabic ? '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">' : ''}
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background-color: #F5F1E8; font-family: ${fontFamily};">
-  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-    <!-- Header -->
-    <div style="background: linear-gradient(135deg, #8B6F47 0%, #4A3625 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
-      <h1 style="color: #F5F1E8; margin: 0; font-size: 28px;">${isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</h1>
-      <p style="color: #D4C5B0; margin: 10px 0 0; font-size: 14px;">${isArabic ? 'التراث الأصيل' : 'Authentic Heritage'}</p>
+<body style="margin: 0; padding: 0; background-color: #F5F1EB; font-family: ${isArabic ? "'Tajawal', 'Arial', sans-serif" : "'Inter', 'Arial', sans-serif"}; -webkit-font-smoothing: antialiased;">
+  <div style="max-width: 640px; margin: 0 auto; padding: 32px 16px;">
+    
+    <!-- Header Card -->
+    <div style="background: linear-gradient(145deg, #8B7355 0%, #6B5344 50%, #4A3625 100%); padding: 48px 32px; text-align: center; border-radius: 24px 24px 0 0; position: relative; overflow: hidden;">
+      <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"40\" fill=\"none\" stroke=\"rgba(255,255,255,0.05)\" stroke-width=\"0.5\"/></svg>') repeat; opacity: 0.3;"></div>
+      <div style="position: relative; z-index: 1;">
+        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #C9A86C 0%, #D4B896 100%); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
+          <span style="font-size: 36px;">✓</span>
+        </div>
+        <h1 style="color: #FFFFFF; margin: 0; font-size: 32px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">${isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</h1>
+        <p style="color: #C9A86C; margin: 12px 0 0; font-size: 16px; font-weight: 500; letter-spacing: 2px;">${isArabic ? 'تم تأكيد الحجز' : 'BOOKING CONFIRMED'}</p>
+      </div>
     </div>
     
-    <!-- Main Content -->
-    <div style="background: #fff; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <!-- Main Content Card -->
+    <div style="background: #FFFFFF; padding: 40px 32px; border-radius: 0 0 24px 24px; box-shadow: 0 16px 48px rgba(74, 54, 37, 0.12);">
+      
       <!-- Greeting -->
-      <h2 style="color: #4A3625; margin: 0 0 10px; font-size: 20px;">${translations.greeting}</h2>
-      <p style="color: #666; margin: 0 0 25px; line-height: 1.6;">${translations.thankYou}</p>
+      <h2 style="color: #3D2E1F; margin: 0 0 12px; font-size: 24px; font-weight: 700;">${translations.greeting}</h2>
+      <p style="color: #6B5D52; margin: 0 0 32px; line-height: 1.7; font-size: 16px;">${translations.thankYou}</p>
       
-      <!-- Booking Reference -->
-      <div style="background: #F5F1E8; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 25px;">
-        <p style="color: #8B6F47; margin: 0; font-size: 12px; text-transform: uppercase;">${translations.bookingRef}</p>
-        <p style="color: #4A3625; margin: 10px 0 0; font-size: 24px; font-weight: bold; letter-spacing: 2px;">${booking.booking_reference}</p>
+      <!-- Booking Reference Badge -->
+      <div style="background: linear-gradient(135deg, #FAF6F1 0%, #F0E8DD 100%); padding: 28px; border-radius: 16px; text-align: center; margin-bottom: 32px; border: 2px solid #E8DED0;">
+        <p style="color: #8B7355; margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">${translations.bookingRef}</p>
+        <p style="color: #3D2E1F; margin: 0; font-size: 32px; font-weight: 800; letter-spacing: 3px; font-family: 'Courier New', monospace;">${booking.booking_reference}</p>
       </div>
       
-      <!-- Visit Details -->
-      <h3 style="color: #4A3625; margin: 0 0 15px; font-size: 16px; border-bottom: 2px solid #D4C5B0; padding-bottom: 10px;">${translations.visitDetails}</h3>
-      <table style="width: 100%; margin-bottom: 25px;">
-        <tr>
-          <td style="padding: 8px 0; color: #8B6F47; width: 100px;">${translations.date}:</td>
-          <td style="padding: 8px 0; color: #4A3625; font-weight: 600;">${formattedDate}</td>
-        </tr>
-        <tr>
-          <td style="padding: 8px 0; color: #8B6F47;">${translations.time}:</td>
-          <td style="padding: 8px 0; color: #4A3625; font-weight: 600;">${formatTime(booking.visit_time)}</td>
-        </tr>
-      </table>
-      
-      <!-- Tickets -->
-      <h3 style="color: #4A3625; margin: 0 0 15px; font-size: 16px; border-bottom: 2px solid #D4C5B0; padding-bottom: 10px;">${translations.tickets}</h3>
-      <div style="margin-bottom: 15px;">
-        ${ticketRows.map(row => `<p style="color: #666; margin: 8px 0;">${row}</p>`).join('')}
-      </div>
-      <div style="background: #4A3625; padding: 15px; border-radius: 8px; text-align: center;">
-        <span style="color: #D4C5B0; font-size: 14px;">${translations.total}:</span>
-        <span style="color: #F5F1E8; font-size: 24px; font-weight: bold; margin-${isArabic ? 'right' : 'left'}: 10px;">${booking.total_amount} SAR</span>
+      <!-- Visit Details Grid -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="color: #3D2E1F; margin: 0 0 20px; font-size: 18px; font-weight: 700; display: flex; align-items: center;">
+          <span style="display: inline-block; width: 4px; height: 20px; background: linear-gradient(180deg, #C9A86C 0%, #8B7355 100%); border-radius: 2px; margin-${alignEnd}: 12px;"></span>
+          ${translations.visitDetails}
+        </h3>
+        <div style="display: table; width: 100%; border-collapse: collapse;">
+          <div style="display: table-row;">
+            <div style="display: table-cell; padding: 16px 20px; background: #FAF8F5; border-radius: 12px 0 0 0; border-bottom: 1px solid #E8DED0;">
+              <p style="color: #8B7355; margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">📅 ${translations.date}</p>
+              <p style="color: #3D2E1F; margin: 0; font-size: 16px; font-weight: 600;">${formattedDate}</p>
+            </div>
+            <div style="display: table-cell; padding: 16px 20px; background: #FAF8F5; border-radius: 0 12px 0 0; border-bottom: 1px solid #E8DED0; border-${alignStart}: 1px solid #E8DED0;">
+              <p style="color: #8B7355; margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">🕐 ${translations.time}</p>
+              <p style="color: #3D2E1F; margin: 0; font-size: 16px; font-weight: 600;">${formatTime(booking.visit_time)}</p>
+            </div>
+          </div>
+        </div>
       </div>
       
-      <!-- QR Codes -->
-      <h3 style="color: #4A3625; margin: 30px 0 15px; font-size: 16px; border-bottom: 2px solid #D4C5B0; padding-bottom: 10px;">${translations.qrCodes}</h3>
-      <p style="color: #8B6F47; margin: 0 0 15px; font-size: 14px;">
-        📱 ${translations.instructions}
-      </p>
-      <div style="text-align: center; background: #F5F1E8; padding: 20px; border-radius: 8px;">
-        ${qrCodesHtml}
+      <!-- Tickets Section -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="color: #3D2E1F; margin: 0 0 20px; font-size: 18px; font-weight: 700; display: flex; align-items: center;">
+          <span style="display: inline-block; width: 4px; height: 20px; background: linear-gradient(180deg, #C9A86C 0%, #8B7355 100%); border-radius: 2px; margin-${alignEnd}: 12px;"></span>
+          ${translations.tickets}
+        </h3>
+        <div style="background: #FAF8F5; border-radius: 16px; overflow: hidden; border: 1px solid #E8DED0;">
+          ${ticketItems.map((item, i) => `
+            <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; ${i > 0 ? 'border-top: 1px solid #E8DED0;' : ''}">
+              <div>
+                <span style="color: #3D2E1F; font-weight: 600; font-size: 15px;">${item.type}</span>
+                <span style="color: #8B7355; font-size: 14px; margin-${alignStart}: 8px;">× ${item.count}</span>
+              </div>
+              <span style="color: #3D2E1F; font-weight: 600; font-size: 15px;">${item.subtotal} SAR</span>
+            </div>
+          `).join('')}
+          <div style="padding: 20px; background: linear-gradient(135deg, #3D2E1F 0%, #4A3625 100%); display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #C9A86C; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">${translations.total}</span>
+            <span style="color: #FFFFFF; font-size: 28px; font-weight: 800;">${booking.total_amount} <span style="font-size: 16px; font-weight: 600;">SAR</span></span>
+          </div>
+        </div>
       </div>
-      <p style="color: #999; margin: 15px 0 0; font-size: 12px; text-align: center; font-style: italic;">
-        ⚠️ ${translations.validOnly}
-      </p>
       
-      <!-- Footer -->
-      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #D4C5B0; text-align: center;">
-        <p style="color: #4A3625; margin: 0 0 15px; font-weight: 600;">${translations.footer}</p>
-        <p style="color: #8B6F47; margin: 0; font-size: 13px;">
-          ${translations.contactUs}: <a href="mailto:${translations.email}" style="color: #8B6F47;">${translations.email}</a>
+      <!-- QR Codes Section -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="color: #3D2E1F; margin: 0 0 12px; font-size: 18px; font-weight: 700; display: flex; align-items: center;">
+          <span style="display: inline-block; width: 4px; height: 20px; background: linear-gradient(180deg, #C9A86C 0%, #8B7355 100%); border-radius: 2px; margin-${alignEnd}: 12px;"></span>
+          ${translations.qrCodes}
+        </h3>
+        <p style="color: #8B7355; margin: 0 0 20px; font-size: 14px;">
+          📱 ${translations.instructions}
         </p>
-        <p style="color: #999; margin: 10px 0 0; font-size: 12px;">${translations.address}</p>
+        <div style="text-align: center; padding: 16px 0;">
+          ${qrCodesHtml}
+        </div>
+        <div style="background: linear-gradient(135deg, #FFF9E6 0%, #FFF3CC 100%); padding: 16px 20px; border-radius: 12px; border: 1px solid #F0D98C; text-align: center; margin-top: 16px;">
+          <p style="color: #8B6914; margin: 0; font-size: 13px; font-weight: 600;">
+            ⚠️ ${translations.validOnly}
+          </p>
+        </div>
+      </div>
+      
+      <!-- See You Soon -->
+      <div style="text-align: center; padding: 32px 0; border-top: 2px dashed #E8DED0;">
+        <p style="color: #3D2E1F; margin: 0; font-size: 24px; font-weight: 700;">${translations.seeYouSoon}</p>
+        <p style="color: #8B7355; margin: 12px 0 0; font-size: 14px;">
+          ${translations.contactUs}: <a href="mailto:${translations.email}" style="color: #C9A86C; text-decoration: none; font-weight: 600;">${translations.email}</a>
+        </p>
       </div>
     </div>
     
-    <!-- Legal Footer -->
-    <p style="text-align: center; color: #999; font-size: 11px; margin-top: 20px;">
-      © ${new Date().getFullYear()} Souq Almufaijer. ${isArabic ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
-    </p>
+    <!-- Footer -->
+    <div style="text-align: center; padding: 32px 16px;">
+      <p style="color: #8B7355; margin: 0 0 8px; font-size: 14px; font-weight: 600;">${translations.address}</p>
+      <p style="color: #A69888; margin: 0; font-size: 12px;">
+        © ${new Date().getFullYear()} Souq Almufaijer. ${isArabic ? 'جميع الحقوق محفوظة' : 'All rights reserved'}.
+      </p>
+    </div>
   </div>
 </body>
 </html>

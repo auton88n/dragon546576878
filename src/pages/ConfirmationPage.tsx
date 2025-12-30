@@ -136,98 +136,156 @@ const ConfirmationPage = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas dimensions (ticket size)
-    const width = 800;
-    const height = 1200;
+    const width = 900;
+    const height = 1400;
     canvas.width = width;
     canvas.height = height;
 
-    // Background
-    ctx.fillStyle = '#F5EDE4';
+    // Background with subtle gradient
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+    bgGradient.addColorStop(0, '#FAF8F5');
+    bgGradient.addColorStop(1, '#F0EBE3');
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Header gradient
-    const gradient = ctx.createLinearGradient(0, 0, width, 120);
-    gradient.addColorStop(0, '#8B7355');
-    gradient.addColorStop(1, '#6B5344');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, 120);
+    // Decorative top bar
+    ctx.fillStyle = '#C9A86C';
+    ctx.fillRect(0, 0, width, 8);
+
+    // Header section with gradient
+    const headerGradient = ctx.createLinearGradient(0, 8, 0, 180);
+    headerGradient.addColorStop(0, '#8B7355');
+    headerGradient.addColorStop(1, '#5C4A3A');
+    ctx.fillStyle = headerGradient;
+    ctx.fillRect(0, 8, width, 172);
 
     // Header text
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 32px Arial';
+    ctx.font = 'bold 42px Tajawal, Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(isArabic ? 'سوق المفيجر' : 'Souq Almufaijer', width / 2, 50);
-    ctx.font = '18px Arial';
-    ctx.fillText(isArabic ? 'تذكرة دخول' : 'Entry Pass', width / 2, 85);
-
-    // Booking reference box
+    ctx.fillText(isArabic ? 'سوق المفيجر' : 'Souq Almufaijer', width / 2, 80);
+    
     ctx.fillStyle = '#C9A86C';
-    ctx.fillRect(50, 150, width - 100, 80);
-    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '18px Tajawal, Arial';
+    ctx.fillText(isArabic ? 'تذكرة دخول' : 'ENTRY TICKET', width / 2, 115);
+    
+    // Decorative line
+    ctx.strokeStyle = '#C9A86C';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(width/2 - 80, 135);
+    ctx.lineTo(width/2 + 80, 135);
+    ctx.stroke();
+    
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.font = '14px Tajawal, Arial';
+    ctx.fillText(isArabic ? 'التراث الأصيل' : 'Authentic Heritage', width / 2, 160);
+
+    // Booking reference card
+    const refCardY = 210;
+    ctx.fillStyle = '#C9A86C';
+    roundRect(ctx, 60, refCardY, width - 120, 100, 16);
+    ctx.fill();
+    
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
     ctx.font = 'bold 14px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(isArabic ? 'رقم الحجز' : 'BOOKING REFERENCE', 70, 180);
-    ctx.font = 'bold 28px monospace';
-    ctx.fillText(booking.booking_reference, 70, 215);
+    ctx.textAlign = isArabic ? 'right' : 'left';
+    ctx.fillText(isArabic ? 'رقم الحجز' : 'BOOKING REFERENCE', isArabic ? width - 90 : 90, refCardY + 35);
+    
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 36px Courier New, monospace';
+    ctx.fillText(booking.booking_reference, isArabic ? width - 90 : 90, refCardY + 75);
 
     // Details section
-    ctx.fillStyle = '#2C2416';
-    ctx.font = 'bold 16px Arial';
+    const detailsY = 350;
+    ctx.fillStyle = '#3D2E1F';
     
     // Guest name
-    ctx.fillText(isArabic ? 'اسم الزائر' : 'GUEST NAME', 70, 280);
-    ctx.font = '22px Arial';
-    ctx.fillText(booking.customer_name, 70, 310);
+    ctx.font = 'bold 13px Arial';
+    ctx.fillStyle = '#8B7355';
+    ctx.fillText(isArabic ? 'اسم الزائر' : 'GUEST NAME', isArabic ? width - 90 : 90, detailsY);
+    ctx.font = 'bold 24px Tajawal, Arial';
+    ctx.fillStyle = '#3D2E1F';
+    ctx.fillText(booking.customer_name, isArabic ? width - 90 : 90, detailsY + 35);
 
     // Date
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText(isArabic ? 'التاريخ' : 'DATE', 70, 370);
-    ctx.font = '22px Arial';
+    ctx.font = 'bold 13px Arial';
+    ctx.fillStyle = '#8B7355';
+    ctx.fillText(isArabic ? 'التاريخ' : 'DATE', isArabic ? width - 90 : 90, detailsY + 80);
+    ctx.font = 'bold 22px Tajawal, Arial';
+    ctx.fillStyle = '#3D2E1F';
     ctx.fillText(format(new Date(booking.visit_date), 'EEEE, d MMMM yyyy', { 
       locale: isArabic ? ar : enUS 
-    }), 70, 400);
+    }), isArabic ? width - 90 : 90, detailsY + 110);
 
     // Time
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText(isArabic ? 'الوقت' : 'TIME', 70, 460);
-    ctx.font = '22px Arial';
-    ctx.fillText(formatTimeDisplay(booking.visit_time), 70, 490);
+    ctx.font = 'bold 13px Arial';
+    ctx.fillStyle = '#8B7355';
+    ctx.fillText(isArabic ? 'الوقت' : 'TIME', isArabic ? width - 90 : 90, detailsY + 155);
+    ctx.font = 'bold 22px Tajawal, Arial';
+    ctx.fillStyle = '#3D2E1F';
+    ctx.fillText(formatTimeDisplay(booking.visit_time), isArabic ? width - 90 : 90, detailsY + 185);
 
-    // Tickets count
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText(isArabic ? 'عدد التذاكر' : 'TICKETS', 70, 550);
-    ctx.font = '22px Arial';
-    const totalTickets = booking.adult_count + booking.child_count + (booking.senior_count || 0);
-    ctx.fillText(`${totalTickets} ${isArabic ? 'تذكرة' : 'tickets'}`, 70, 580);
+    // Tickets summary card
+    const ticketCardY = detailsY + 230;
+    ctx.fillStyle = '#FFFFFF';
+    roundRect(ctx, 60, ticketCardY, width - 120, 140, 16);
+    ctx.fill();
+    ctx.strokeStyle = '#E8DED0';
+    ctx.lineWidth = 2;
+    roundRect(ctx, 60, ticketCardY, width - 120, 140, 16);
+    ctx.stroke();
     
-    // Ticket breakdown
-    ctx.font = '16px Arial';
-    ctx.fillStyle = '#666666';
-    let yPos = 610;
+    ctx.font = 'bold 13px Arial';
+    ctx.fillStyle = '#8B7355';
+    ctx.fillText(isArabic ? 'التذاكر' : 'TICKETS', isArabic ? width - 90 : 90, ticketCardY + 30);
+    
+    let ticketYPos = ticketCardY + 55;
+    ctx.font = '18px Tajawal, Arial';
+    ctx.fillStyle = '#3D2E1F';
     if (booking.adult_count > 0) {
-      ctx.fillText(`${isArabic ? 'بالغ' : 'Adult'}: ${booking.adult_count}`, 70, yPos);
-      yPos += 25;
+      ctx.fillText(`${isArabic ? 'بالغ' : 'Adult'}: ${booking.adult_count} × ${booking.adult_price} SAR`, isArabic ? width - 90 : 90, ticketYPos);
+      ticketYPos += 28;
     }
     if (booking.child_count > 0) {
-      ctx.fillText(`${isArabic ? 'طفل' : 'Child'}: ${booking.child_count}`, 70, yPos);
-      yPos += 25;
+      ctx.fillText(`${isArabic ? 'طفل' : 'Child'}: ${booking.child_count} × ${booking.child_price} SAR`, isArabic ? width - 90 : 90, ticketYPos);
+      ticketYPos += 28;
+    }
+    if (booking.senior_count && booking.senior_count > 0) {
+      ctx.fillText(`${isArabic ? 'كبير السن' : 'Senior'}: ${booking.senior_count} × ${booking.senior_price} SAR`, isArabic ? width - 90 : 90, ticketYPos);
     }
 
-    // Amount
-    ctx.fillStyle = '#2C2416';
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText(isArabic ? 'المبلغ المدفوع' : 'AMOUNT PAID', 70, 700);
-    ctx.font = 'bold 28px Arial';
+    // Total amount badge
+    const totalY = ticketCardY + 170;
+    ctx.fillStyle = '#3D2E1F';
+    roundRect(ctx, 60, totalY, width - 120, 70, 16);
+    ctx.fill();
+    
+    ctx.font = 'bold 14px Arial';
     ctx.fillStyle = '#C9A86C';
-    ctx.fillText(`${booking.total_amount} ${isArabic ? 'ر.س' : 'SAR'}`, 70, 735);
+    ctx.fillText(isArabic ? 'المبلغ المدفوع' : 'TOTAL PAID', isArabic ? width - 90 : 90, totalY + 30);
+    ctx.font = 'bold 32px Arial';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(`${booking.total_amount} SAR`, isArabic ? width - 90 : 90, totalY + 58);
 
     // QR Code section
+    const qrSectionY = totalY + 110;
+    ctx.textAlign = 'center';
+    
+    // QR card background
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(width/2 - 130, 800, 260, 280);
+    roundRect(ctx, width/2 - 150, qrSectionY, 300, 340, 20);
+    ctx.fill();
     ctx.strokeStyle = '#C9A86C';
     ctx.lineWidth = 3;
-    ctx.strokeRect(width/2 - 130, 800, 260, 280);
+    roundRect(ctx, width/2 - 150, qrSectionY, 300, 340, 20);
+    ctx.stroke();
+    
+    // Inner QR border
+    ctx.strokeStyle = '#E8DED0';
+    ctx.lineWidth = 2;
+    roundRect(ctx, width/2 - 120, qrSectionY + 30, 240, 240, 12);
+    ctx.stroke();
 
     // Draw QR code
     if (qrCodeUrl) {
@@ -236,26 +294,51 @@ const ConfirmationPage = () => {
       await new Promise((resolve) => {
         qrImage.onload = resolve;
       });
-      ctx.drawImage(qrImage, width/2 - 100, 820, 200, 200);
+      ctx.drawImage(qrImage, width/2 - 100, qrSectionY + 50, 200, 200);
     }
 
-    ctx.fillStyle = '#666666';
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(isArabic ? 'امسح رمز QR عند الدخول' : 'Scan QR code at entrance', width/2, 1050);
+    ctx.fillStyle = '#8B7355';
+    ctx.font = 'bold 14px Tajawal, Arial';
+    ctx.fillText(isArabic ? 'امسح الرمز عند الدخول' : 'Scan at entrance', width/2, qrSectionY + 300);
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#A69888';
+    ctx.fillText(isArabic ? 'صالحة ليوم الزيارة فقط' : 'Valid for visit date only', width/2, qrSectionY + 322);
 
     // Footer
     ctx.fillStyle = '#8B7355';
-    ctx.fillRect(0, height - 60, width, 60);
+    ctx.fillRect(0, height - 80, width, 80);
+    
+    // Decorative footer line
+    ctx.fillStyle = '#C9A86C';
+    ctx.fillRect(0, height - 80, width, 4);
+    
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '14px Arial';
-    ctx.fillText(isArabic ? 'شكراً لزيارتكم سوق المفيجر' : 'Thank you for visiting Souq Almufaijer', width/2, height - 30);
+    ctx.font = 'bold 16px Tajawal, Arial';
+    ctx.fillText(isArabic ? 'شكراً لزيارتكم سوق المفيجر' : 'Thank you for visiting Souq Almufaijer', width/2, height - 45);
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#C9A86C';
+    ctx.fillText('almufaijer.com', width/2, height - 22);
 
     // Download
     const link = document.createElement('a');
     link.download = `${booking.booking_reference}-ticket.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.href = canvas.toDataURL('image/png', 1.0);
     link.click();
+  };
+
+  // Helper function for rounded rectangles
+  const roundRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
   };
 
   const handleDownloadSingleTicket = (ticket: TicketDetails) => {
