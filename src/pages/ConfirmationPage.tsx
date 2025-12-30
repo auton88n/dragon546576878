@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import {
 import { 
   CheckCircle, Download, Calendar, Clock, Users, Mail, 
   Ticket, Home, MapPin, Sparkles, Share2, RefreshCw, QrCode
