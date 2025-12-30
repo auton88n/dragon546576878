@@ -30,20 +30,24 @@ const Header = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Determine text colors based on scroll and page
+  // Determine text colors based on scroll and page - ensure visibility on all backgrounds
   const getTextColor = (isActiveLink: boolean) => {
     if (isScrolled || !isHomePage) {
-      return isActiveLink ? 'text-accent' : 'text-foreground hover:text-accent';
+      // On solid background - use foreground colors
+      return isActiveLink ? 'text-accent font-semibold' : 'text-foreground hover:text-accent';
     }
-    return isActiveLink ? 'text-accent' : 'text-white/90 hover:text-white';
+    // On transparent header (hero) - use contrasting colors with text shadow for visibility
+    return isActiveLink 
+      ? 'text-accent font-semibold drop-shadow-md' 
+      : 'text-foreground drop-shadow-md hover:text-accent';
   };
 
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled || !isHomePage
-          ? 'bg-card/95 backdrop-blur-xl border-b border-border/50 shadow-sm' 
-          : 'bg-transparent'
+          ? 'bg-card/98 backdrop-blur-xl border-b border-border/50 shadow-sm' 
+          : 'bg-gradient-to-b from-foreground/30 to-transparent'
       }`}
     >
       <div className="container flex h-16 md:h-20 items-center justify-between">
@@ -84,7 +88,7 @@ const Header = () => {
             className={`p-2 rounded-lg transition-colors ${
               isScrolled || !isHomePage 
                 ? 'text-foreground hover:bg-muted' 
-                : 'text-white hover:bg-white/10'
+                : 'text-foreground drop-shadow-md hover:bg-foreground/10'
             }`}
           >
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
