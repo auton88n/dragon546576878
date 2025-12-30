@@ -14,7 +14,6 @@ import DetailsAndPayment from '@/components/booking/DetailsAndPayment';
 import OrderSummary from '@/components/booking/OrderSummary';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { GeometricPattern, FloatingOrnaments, DecorativeBorder } from '@/components/shared/HeritagePatterns';
 
 const BookingPage = () => {
   const navigate = useNavigate();
@@ -129,20 +128,17 @@ const BookingPage = () => {
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      <main className="flex-1 pt-28 pb-16 relative overflow-hidden">
-        <GeometricPattern className="opacity-[0.015]" />
-        <FloatingOrnaments className="opacity-50" />
-        
-        <div className="container max-w-5xl relative z-10">
+      <main className="flex-1 pt-28 pb-16">
+        <div className="container max-w-5xl">
           {/* Page Title */}
-          <DecorativeBorder className="text-center mb-8 animate-fade-in py-4">
+          <div className="text-center mb-8 animate-fade-in">
             <h1 className="text-3xl md:text-4xl font-bold mb-2 text-accent">
               {isArabic ? 'احجز تذكرتك' : 'Book Your Ticket'}
             </h1>
             <p className="text-muted-foreground">
               {isArabic ? 'اتبع الخطوات لإتمام حجزك' : 'Follow the steps to complete your booking'}
             </p>
-          </DecorativeBorder>
+          </div>
 
           {/* Step Indicator */}
           <div className="mb-10">
