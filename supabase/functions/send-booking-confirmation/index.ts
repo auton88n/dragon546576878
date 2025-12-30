@@ -14,6 +14,35 @@ interface BookingConfirmationRequest {
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+
+// Helper to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Update email queue with error details
+async function updateEmailQueueError(
+  supabase: any,
+  emailQueueId: string,
+  errorMessage: string,
+  attempt: number
+) {
+  try {
+    await supabase
+      .from("email_queue")
+      .update({
+        status: attempt >= MAX_RETRIES ? "failed" : "pending",
+        error_message: errorMessage,
+        attempts: attempt,
+        last_attempt: new Date().toISOString(),
+      })
+      .eq("id", emailQueueId);
+    console.log(`Email queue updated with error: ${errorMessage}`);
+  } catch (updateError) {
+    console.error("Failed to update email queue:", updateError);
+  }
+}
+
 // Generate email template
 const generateEmailTemplate = (
   booking: any,
@@ -85,15 +114,17 @@ const generateEmailTemplate = (
   }
 
   // Generate QR code HTML
-  const qrCodesHtml = tickets.map((ticket, index) => `
-    <div style="display: inline-block; text-align: center; margin: 10px; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #D4C5B0;">
-      <img src="${ticket.qr_code_url}" alt="QR Code ${index + 1}" style="width: 150px; height: 150px; display: block; margin: 0 auto;" />
-      <p style="margin: 10px 0 0; font-size: 12px; color: #4A3625;">
-        ${ticket.ticket_type === 'adult' ? translations.adult : ticket.ticket_type === 'child' ? translations.child : translations.senior} #${index + 1}
-      </p>
-      <p style="margin: 5px 0 0; font-size: 10px; color: #8B6F47;">${ticket.ticket_code}</p>
-    </div>
-  `).join('');
+  const qrCodesHtml = tickets.length > 0 
+    ? tickets.map((ticket, index) => `
+      <div style="display: inline-block; text-align: center; margin: 10px; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #D4C5B0;">
+        <img src="${ticket.qr_code_url}" alt="QR Code ${index + 1}" style="width: 150px; height: 150px; display: block; margin: 0 auto;" />
+        <p style="margin: 10px 0 0; font-size: 12px; color: #4A3625;">
+          ${ticket.ticket_type === 'adult' ? translations.adult : ticket.ticket_type === 'child' ? translations.child : translations.senior} #${index + 1}
+        </p>
+        <p style="margin: 5px 0 0; font-size: 10px; color: #8B6F47;">${ticket.ticket_code}</p>
+      </div>
+    `).join('')
+    : '<p style="color: #8B6F47; font-style: italic;">QR codes will be available shortly. Please refresh your booking page.</p>';
 
   return `
 <!DOCTYPE html>
@@ -179,20 +210,145 @@ const generateEmailTemplate = (
   `;
 };
 
+// Send email with retry logic
+async function sendEmailWithRetry(
+  supabase: any,
+  booking: any,
+  tickets: any[],
+  emailQueueId: string | null,
+  isArabic: boolean
+): Promise<{ success: boolean; error?: string }> {
+  const smtpHost = Deno.env.get("SMTP_HOST");
+  const smtpPort = Deno.env.get("SMTP_PORT");
+  const smtpUsername = Deno.env.get("SMTP_USERNAME");
+  const smtpPassword = Deno.env.get("SMTP_PASSWORD");
+
+  // Validate SMTP configuration
+  if (!smtpHost || !smtpUsername || !smtpPassword) {
+    const error = "SMTP configuration incomplete. Missing: " + 
+      [!smtpHost && "SMTP_HOST", !smtpUsername && "SMTP_USERNAME", !smtpPassword && "SMTP_PASSWORD"]
+        .filter(Boolean).join(", ");
+    console.error(error);
+    if (emailQueueId) {
+      await updateEmailQueueError(supabase, emailQueueId, error, MAX_RETRIES);
+    }
+    return { success: false, error };
+  }
+
+  // Generate email content
+  const emailHtml = generateEmailTemplate(booking, tickets, isArabic);
+  const subject = isArabic
+    ? `تأكيد الحجز - ${booking.booking_reference} | سوق المفيجر`
+    : `Booking Confirmation - ${booking.booking_reference} | Souq Almufaijer`;
+
+  let lastError = "";
+  
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    console.log(`Attempt ${attempt}/${MAX_RETRIES} - Sending email to: ${booking.customer_email}`);
+    
+    let client: SMTPClient | null = null;
+    
+    try {
+      // Create SMTP client
+      client = new SMTPClient({
+        connection: {
+          hostname: smtpHost,
+          port: parseInt(smtpPort || "465"),
+          tls: true,
+          auth: {
+            username: smtpUsername,
+            password: smtpPassword,
+          },
+        },
+      });
+
+      console.log(`SMTP client created, connecting to ${smtpHost}:${smtpPort}`);
+
+      // Send email
+      await client.send({
+        from: smtpUsername,
+        to: booking.customer_email,
+        subject: subject,
+        content: "auto",
+        html: emailHtml,
+      });
+
+      await client.close();
+      
+      console.log(`✅ Email sent successfully to ${booking.customer_email} on attempt ${attempt}`);
+
+      // Update email queue success
+      if (emailQueueId) {
+        await supabase
+          .from("email_queue")
+          .update({
+            status: "sent",
+            sent_at: new Date().toISOString(),
+            attempts: attempt,
+            last_attempt: new Date().toISOString(),
+            error_message: null,
+          })
+          .eq("id", emailQueueId);
+      }
+
+      // Update booking confirmation status
+      await supabase
+        .from("bookings")
+        .update({ confirmation_email_sent: true })
+        .eq("id", booking.id);
+
+      return { success: true };
+
+    } catch (error: any) {
+      lastError = error.message || String(error);
+      console.error(`❌ Attempt ${attempt} failed:`, lastError);
+      
+      // Try to close client if it exists
+      if (client) {
+        try {
+          await client.close();
+        } catch (closeError) {
+          console.error("Error closing SMTP client:", closeError);
+        }
+      }
+
+      // Update email queue with attempt info
+      if (emailQueueId) {
+        await updateEmailQueueError(supabase, emailQueueId, lastError, attempt);
+      }
+
+      // Wait before retry (exponential backoff)
+      if (attempt < MAX_RETRIES) {
+        const waitTime = RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+        console.log(`Waiting ${waitTime}ms before retry...`);
+        await delay(waitTime);
+      }
+    }
+  }
+
+  return { success: false, error: lastError };
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  let bookingId = "";
+
   try {
-    const { bookingId }: BookingConfirmationRequest = await req.json();
+    const body = await req.json();
+    bookingId = body.bookingId;
 
     if (!bookingId) {
       throw new Error("Missing bookingId parameter");
     }
 
-    console.log("Processing booking confirmation for:", bookingId);
+    console.log("=".repeat(50));
+    console.log(`📧 Processing booking confirmation for: ${bookingId}`);
+    console.log(`Timestamp: ${new Date().toISOString()}`);
 
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -209,7 +365,9 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Booking not found: ${bookingId}`);
     }
 
-    console.log("Booking found:", booking.booking_reference);
+    console.log(`📋 Booking found: ${booking.booking_reference}`);
+    console.log(`   Customer: ${booking.customer_name} (${booking.customer_email})`);
+    console.log(`   Language: ${booking.language}`);
 
     // Fetch tickets for this booking
     const { data: tickets, error: ticketsError } = await supabase
@@ -219,10 +377,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (ticketsError) {
       console.error("Tickets fetch error:", ticketsError);
-      throw new Error("Failed to fetch tickets");
     }
 
-    console.log("Tickets found:", tickets?.length || 0);
+    console.log(`🎟️ Tickets found: ${tickets?.length || 0}`);
 
     // Determine language
     const isArabic = booking.language === "ar";
@@ -235,7 +392,7 @@ const handler = async (req: Request): Promise<Response> => {
       ? `تأكيد الحجز - ${booking.booking_reference} | سوق المفيجر`
       : `Booking Confirmation - ${booking.booking_reference} | Souq Almufaijer`;
 
-    // Queue the email in database
+    // Queue the email in database first
     const { data: emailQueueEntry, error: queueError } = await supabase
       .from("email_queue")
       .insert({
@@ -246,77 +403,73 @@ const handler = async (req: Request): Promise<Response> => {
         body_html: emailHtml,
         body_text: `Booking Confirmation: ${booking.booking_reference}`,
         email_type: "booking_confirmation",
-        status: "pending",
+        status: "processing",
+        attempts: 0,
       })
       .select()
       .single();
 
     if (queueError) {
-      console.error("Email queue error:", queueError);
+      console.error("Email queue insert error:", queueError);
+    } else {
+      console.log(`📝 Email queued with ID: ${emailQueueEntry?.id}`);
     }
 
-    // Create SMTP client for Hostinger
-    const client = new SMTPClient({
-      connection: {
-        hostname: Deno.env.get("SMTP_HOST") || "smtp.hostinger.com",
-        port: parseInt(Deno.env.get("SMTP_PORT") || "465"),
-        tls: true,
-        auth: {
-          username: Deno.env.get("SMTP_USERNAME") || "",
-          password: Deno.env.get("SMTP_PASSWORD") || "",
-        },
-      },
-    });
-
-    console.log("Sending email to:", booking.customer_email);
-
-    // Send email
-    await client.send({
-      from: Deno.env.get("SMTP_USERNAME") || "info@almufaijer.com",
-      to: booking.customer_email,
-      subject: subject,
-      content: "auto",
-      html: emailHtml,
-    });
-
-    await client.close();
-
-    console.log("Email sent successfully to:", booking.customer_email);
-
-    // Update email queue status
-    if (emailQueueEntry) {
-      await supabase
-        .from("email_queue")
-        .update({
-          status: "sent",
-          sent_at: new Date().toISOString(),
-        })
-        .eq("id", emailQueueEntry.id);
-    }
-
-    // Update booking confirmation status
-    await supabase
-      .from("bookings")
-      .update({ confirmation_email_sent: true })
-      .eq("id", bookingId);
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        recipient: booking.customer_email,
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+    // Send email with retry logic
+    const result = await sendEmailWithRetry(
+      supabase,
+      booking,
+      tickets || [],
+      emailQueueEntry?.id || null,
+      isArabic
     );
+
+    const duration = Date.now() - startTime;
+    console.log(`⏱️ Total processing time: ${duration}ms`);
+    console.log("=".repeat(50));
+
+    if (result.success) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          recipient: booking.customer_email,
+          duration: duration,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    } else {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: result.error,
+          recipient: booking.customer_email,
+          duration: duration,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
   } catch (error: any) {
-    console.error("Error in send-booking-confirmation:", error);
+    const duration = Date.now() - startTime;
+    console.error("=".repeat(50));
+    console.error(`❌ Error in send-booking-confirmation`);
+    console.error(`BookingId: ${bookingId}`);
+    console.error(`Error: ${error.message}`);
+    console.error(`Stack: ${error.stack}`);
+    console.error(`Duration: ${duration}ms`);
+    console.error("=".repeat(50));
 
     return new Response(
       JSON.stringify({
         success: false,
         error: error.message,
+        duration: duration,
       }),
       {
         status: 500,
