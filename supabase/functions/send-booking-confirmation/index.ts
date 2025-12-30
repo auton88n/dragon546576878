@@ -204,7 +204,8 @@ const generateEmailTemplate = (
               <table cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center" style="padding-bottom: 16px;">
-                    <img src="https://souq-almufaijer-tickets.lovable.app/images/logo-white-email.png" alt="Souq Almufaijer" width="180" style="display: block; max-width: 180px; height: auto;" />
+                    <!-- Use CID embedded image to avoid blocked/invalid external URLs in email clients -->
+                    <img src="cid:souq-logo" alt="Souq Almufaijer" width="180" style="display: block; max-width: 180px; height: auto;" />
                   </td>
                 </tr>
                 <tr>
@@ -397,6 +398,14 @@ async function sendEmailWithRetry(
         to: [booking.customer_email],
         subject: subject,
         html: emailHtml,
+        // Embed logo so Gmail/clients don't show a blank header when external images are blocked
+        attachments: [
+          {
+            path: "https://preview--souq-almufaijer-tickets.lovable.app/images/logo-white-email.png",
+            filename: "souq-logo.png",
+            contentId: "souq-logo",
+          },
+        ],
       });
 
       if (error) {
