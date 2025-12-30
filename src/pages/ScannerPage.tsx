@@ -153,8 +153,10 @@ const ScannerPage = () => {
   // Start camera scanning with back camera preference
   const startScanning = async () => {
     setCameraError(null);
+    setIsScanning(true); // Show scanner area immediately
     
     try {
+      // Create scanner if not exists
       if (!scannerRef.current) {
         scannerRef.current = new Html5Qrcode('qr-reader');
       }
@@ -165,26 +167,42 @@ const ScannerPage = () => {
         aspectRatio: 1,
       };
 
-      // Try strict back camera first (required for iOS)
+      // Try to get available cameras first
+      let cameraId: string | { facingMode: string } = { facingMode: 'environment' };
+      
       try {
-        await scannerRef.current.start(
-          { facingMode: { exact: 'environment' } },
-          qrConfig,
-          onScanSuccess,
-          () => {} // Ignore scan failures
-        );
-      } catch (strictErr) {
-        console.log('Strict back camera failed, trying fallback:', strictErr);
-        // Fallback: try with non-strict constraint
-        await scannerRef.current.start(
-          { facingMode: 'environment' },
-          qrConfig,
-          onScanSuccess,
-          () => {}
-        );
+        const cameras = await Html5Qrcode.getCameras();
+        console.log('Available cameras:', cameras);
+        
+        if (cameras && cameras.length > 0) {
+          // Find back camera by label
+          const backCamera = cameras.find(cam => 
+            cam.label.toLowerCase().includes('back') ||
+            cam.label.toLowerCase().includes('rear') ||
+            cam.label.toLowerCase().includes('environment')
+          );
+          
+          if (backCamera) {
+            cameraId = backCamera.id;
+            console.log('Using back camera by label:', backCamera.label);
+          } else {
+            // On phones, back camera is usually the last one
+            cameraId = cameras[cameras.length - 1].id;
+            console.log('Using last camera:', cameras[cameras.length - 1].label);
+          }
+        }
+      } catch (camErr) {
+        console.log('Could not enumerate cameras, using facingMode:', camErr);
       }
 
-      setIsScanning(true);
+      // Start the scanner
+      await scannerRef.current.start(
+        cameraId,
+        qrConfig,
+        onScanSuccess,
+        () => {} // Ignore scan failures
+      );
+
       setCameraReady(true);
     } catch (err: any) {
       console.error('Error starting scanner:', err);
@@ -198,8 +216,8 @@ const ScannerPage = () => {
           : 'Please allow camera access in your browser settings');
       } else if (err.name === 'NotFoundError' || err.message?.includes('Requested device not found')) {
         setCameraError(isArabic
-          ? 'لم يتم العثور على كاميرا خلفية'
-          : 'No back camera found on this device');
+          ? 'لم يتم العثور على كاميرا'
+          : 'No camera found on this device');
       } else if (err.name === 'NotReadableError') {
         setCameraError(isArabic
           ? 'الكاميرا مستخدمة من قبل تطبيق آخر'
@@ -371,19 +389,16 @@ const ScannerPage = () => {
           {/* Scanner Area */}
           <Card className="glass-card-gold mb-4 md:mb-6 overflow-hidden border-0">
             <CardContent className="p-0">
-              <div className="relative">
-                {/* QR Reader Container */}
+              <div className="relative w-full aspect-square overflow-hidden">
+                {/* QR Reader Container - Always mounted for html5-qrcode */}
                 <div 
                   id="qr-reader" 
-                  className={cn(
-                    'w-full aspect-square bg-foreground/5',
-                    !isScanning && 'hidden'
-                  )}
+                  className="absolute inset-0 w-full h-full qr-scanner-container"
                 />
                 
-                {/* Camera Error Display */}
-                {cameraError && !isScanning && (
-                  <div className="w-full aspect-square bg-destructive/10 flex flex-col items-center justify-center p-6">
+                {/* Camera Error Overlay */}
+                {cameraError && (
+                  <div className="absolute inset-0 z-10 bg-destructive/10 flex flex-col items-center justify-center p-6">
                     <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-destructive/20 flex items-center justify-center mb-4 md:mb-6">
                       <span className="icon-wrapper">
                         <AlertTriangle className="h-10 w-10 md:h-12 md:w-12 text-destructive" aria-hidden="true" />
@@ -405,9 +420,9 @@ const ScannerPage = () => {
                   </div>
                 )}
 
-                {/* Placeholder when not scanning */}
+                {/* Placeholder Overlay when not scanning */}
                 {!isScanning && !cameraError && (
-                  <div className="w-full aspect-square bg-secondary/30 flex flex-col items-center justify-center p-4">
+                  <div className="absolute inset-0 z-10 bg-secondary/30 flex flex-col items-center justify-center p-4">
                     <div className="w-20 h-20 md:w-24 md:h-24 rounded-full gradient-gold flex items-center justify-center mb-4 md:mb-6 glow-gold">
                       <span className="icon-wrapper">
                         <Camera className="h-10 w-10 md:h-12 md:w-12 text-foreground" aria-hidden="true" />
