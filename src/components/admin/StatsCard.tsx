@@ -22,15 +22,15 @@ const StatsCard = ({
   loading,
 }: StatsCardProps) => {
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="glass-card-gold hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-0">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">{title}</p>
+            <p className="text-sm text-muted-foreground mb-2">{title}</p>
             {loading ? (
               <Skeleton className="h-9 w-24" />
             ) : (
-              <p className="text-3xl font-bold">
+              <p className="text-3xl font-bold text-foreground">
                 {typeof value === 'number' ? value.toLocaleString() : value}
                 {suffix && (
                   <span className="text-lg text-muted-foreground mr-1 rtl:ml-1 rtl:mr-0">
@@ -40,7 +40,7 @@ const StatsCard = ({
               </p>
             )}
           </div>
-          <div className={`w-12 h-12 rounded-xl ${bgColor} flex items-center justify-center`}>
+          <div className={`w-12 h-12 rounded-xl ${bgColor} flex items-center justify-center glow-gold`}>
             <Icon className={`h-6 w-6 ${color}`} />
           </div>
         </div>

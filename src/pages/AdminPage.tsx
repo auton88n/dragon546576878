@@ -20,7 +20,7 @@ import type { Tables } from '@/integrations/supabase/types';
 type Booking = Tables<'bookings'>;
 
 const AdminPage = () => {
-  const { currentLanguage } = useLanguage();
+  const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { stats, loading: statsLoading } = useAdminStats();
   
@@ -52,8 +52,8 @@ const AdminPage = () => {
       value: stats.totalRevenue,
       suffix: isArabic ? 'ر.س' : 'SAR',
       icon: DollarSign,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
+      color: 'text-accent',
+      bgColor: 'gradient-gold',
     },
     {
       title: isArabic ? 'الحجوزات اليوم' : "Today's Bookings",
@@ -66,29 +66,29 @@ const AdminPage = () => {
       title: isArabic ? 'الزوار اليوم' : "Today's Visitors",
       value: stats.todayVisitors,
       icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
+      color: 'text-accent',
+      bgColor: 'bg-accent/10',
     },
     {
       title: isArabic ? 'التذاكر الممسوحة' : 'Tickets Scanned',
       value: stats.ticketsScanned,
       icon: QrCode,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-100',
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
     },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      <main className="flex-1 py-8">
+      <main className="flex-1 pt-24 pb-8">
         <div className="container">
           {/* Page Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <LayoutDashboard className="h-6 w-6 text-primary" />
+          <div className="flex items-center justify-between mb-8 animate-fade-in">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl gradient-gold flex items-center justify-center glow-gold">
+                <LayoutDashboard className="h-7 w-7 text-foreground" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
@@ -99,9 +99,9 @@ const AdminPage = () => {
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Link to="/scan">
-                <Button variant="outline" className="gap-2">
+                <Button className="btn-gold gap-2">
                   <QrCode className="h-4 w-4" />
                   {isArabic ? 'الماسح' : 'Scanner'}
                 </Button>
@@ -112,37 +112,56 @@ const AdminPage = () => {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {statsCards.map((stat, index) => (
-              <StatsCard key={index} {...stat} loading={statsLoading} />
+              <div 
+                key={index} 
+                className="animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <StatsCard {...stat} loading={statsLoading} />
+              </div>
             ))}
           </div>
 
           {/* Tabs Navigation */}
           <Tabs defaultValue="bookings" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-3">
-              <TabsTrigger value="bookings" className="gap-2">
+            <TabsList className="glass-card-gold p-1 h-auto">
+              <TabsTrigger 
+                value="bookings" 
+                className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-6 py-3 rounded-xl transition-all"
+              >
                 <Ticket className="h-4 w-4" />
                 {isArabic ? 'الحجوزات' : 'Bookings'}
               </TabsTrigger>
-              <TabsTrigger value="reports" className="gap-2">
+              <TabsTrigger 
+                value="reports" 
+                className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-6 py-3 rounded-xl transition-all"
+              >
                 <BarChart3 className="h-4 w-4" />
                 {isArabic ? 'التقارير' : 'Reports'}
               </TabsTrigger>
-              <TabsTrigger value="settings" className="gap-2">
+              <TabsTrigger 
+                value="settings" 
+                className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-6 py-3 rounded-xl transition-all"
+              >
                 <Settings className="h-4 w-4" />
                 {isArabic ? 'الإعدادات' : 'Settings'}
               </TabsTrigger>
             </TabsList>
 
             {/* Bookings Tab */}
-            <TabsContent value="bookings">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Ticket className="h-5 w-5 text-primary" />
-                    {isArabic ? 'إدارة الحجوزات' : 'Booking Management'}
+            <TabsContent value="bookings" className="animate-fade-in">
+              <Card className="glass-card-gold border-0">
+                <CardHeader className="border-b border-border/50">
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center">
+                      <Ticket className="h-5 w-5 text-foreground" />
+                    </div>
+                    <span className="text-foreground">
+                      {isArabic ? 'إدارة الحجوزات' : 'Booking Management'}
+                    </span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pt-6">
                   <BookingFilters
                     filters={filters}
                     onFiltersChange={setFilters}
@@ -163,10 +182,11 @@ const AdminPage = () => {
                         size="sm"
                         onClick={() => setPage(p => Math.max(1, p - 1))}
                         disabled={page === 1}
+                        className="border-accent/30 hover:bg-accent/5"
                       >
                         {isArabic ? 'السابق' : 'Previous'}
                       </Button>
-                      <span className="flex items-center px-4 text-sm text-muted-foreground">
+                      <span className="flex items-center px-4 text-sm text-muted-foreground glass-card rounded-lg">
                         {page} / {totalPages}
                       </span>
                       <Button
@@ -174,6 +194,7 @@ const AdminPage = () => {
                         size="sm"
                         onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
+                        className="border-accent/30 hover:bg-accent/5"
                       >
                         {isArabic ? 'التالي' : 'Next'}
                       </Button>
@@ -184,12 +205,12 @@ const AdminPage = () => {
             </TabsContent>
 
             {/* Reports Tab */}
-            <TabsContent value="reports">
+            <TabsContent value="reports" className="animate-fade-in">
               <ReportsPanel />
             </TabsContent>
 
             {/* Settings Tab */}
-            <TabsContent value="settings">
+            <TabsContent value="settings" className="animate-fade-in">
               <SettingsPanel />
             </TabsContent>
           </Tabs>

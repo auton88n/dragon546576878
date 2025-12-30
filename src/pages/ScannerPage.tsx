@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Loader2 } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
 import { validateTicket, markTicketAsUsed, logScanAttempt, type TicketValidationResult } from '@/lib/ticketService';
@@ -19,7 +19,7 @@ interface ScanResult {
 }
 
 const ScannerPage = () => {
-  const { currentLanguage } = useLanguage();
+  const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { user } = useAuthStore();
   
@@ -243,7 +243,7 @@ const ScannerPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
       {/* Result Overlay */}
@@ -258,10 +258,12 @@ const ScannerPage = () => {
           </h2>
           <p className="text-xl opacity-90 mb-4">{currentResult.message}</p>
           {currentResult.ticket && (
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/30">
               <p className="text-lg font-semibold">{currentResult.ticket.customerName}</p>
-              <p className="opacity-80">{currentResult.ticket.ticketCode}</p>
-              <p className="text-sm opacity-70 capitalize">{currentResult.ticket.ticketType}</p>
+              <p className="opacity-80 font-mono">{currentResult.ticket.ticketCode}</p>
+              <p className="text-sm opacity-70 capitalize mt-2 px-4 py-1 bg-white/10 rounded-full inline-block">
+                {currentResult.ticket.ticketType}
+              </p>
             </div>
           )}
           <p className="mt-6 opacity-60 text-sm">
@@ -270,13 +272,13 @@ const ScannerPage = () => {
         </div>
       )}
 
-      <main className="flex-1 py-8">
+      <main className="flex-1 pt-24 pb-8">
         <div className="container max-w-4xl">
           {/* Page Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <QrCode className="h-6 w-6 text-primary" />
+          <div className="flex items-center justify-between mb-6 animate-fade-in">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl gradient-gold flex items-center justify-center glow-gold">
+                <QrCode className="h-7 w-7 text-foreground" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
@@ -291,6 +293,7 @@ const ScannerPage = () => {
               variant="outline"
               size="icon"
               onClick={() => setSoundEnabled(!soundEnabled)}
+              className="border-accent/30 hover:bg-accent/5 h-12 w-12 rounded-xl"
             >
               {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
             </Button>
@@ -298,58 +301,52 @@ const ScannerPage = () => {
 
           {/* Today's Stats */}
           <div className="grid grid-cols-4 gap-3 mb-6">
-            <Card className="p-3">
-              <div className="text-center">
-                <p className="text-2xl font-bold">{todayStats.totalScans}</p>
-                <p className="text-xs text-muted-foreground">
-                  {isArabic ? 'إجمالي' : 'Total'}
-                </p>
-              </div>
+            <Card className="glass-card p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{todayStats.totalScans}</p>
+              <p className="text-xs text-muted-foreground">
+                {isArabic ? 'إجمالي' : 'Total'}
+              </p>
             </Card>
-            <Card className="p-3 border-success/30 bg-success/5">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-success">{todayStats.validScans}</p>
-                <p className="text-xs text-muted-foreground">
-                  {isArabic ? 'صالح' : 'Valid'}
-                </p>
-              </div>
+            <Card className="glass-card p-4 text-center border-success/30 bg-success/5">
+              <p className="text-2xl font-bold text-success">{todayStats.validScans}</p>
+              <p className="text-xs text-muted-foreground">
+                {isArabic ? 'صالح' : 'Valid'}
+              </p>
             </Card>
-            <Card className="p-3 border-warning/30 bg-warning/5">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-warning">{todayStats.usedScans}</p>
-                <p className="text-xs text-muted-foreground">
-                  {isArabic ? 'مستخدم' : 'Used'}
-                </p>
-              </div>
+            <Card className="glass-card p-4 text-center border-warning/30 bg-warning/5">
+              <p className="text-2xl font-bold text-warning">{todayStats.usedScans}</p>
+              <p className="text-xs text-muted-foreground">
+                {isArabic ? 'مستخدم' : 'Used'}
+              </p>
             </Card>
-            <Card className="p-3 border-destructive/30 bg-destructive/5">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-destructive">{todayStats.invalidScans}</p>
-                <p className="text-xs text-muted-foreground">
-                  {isArabic ? 'غير صالح' : 'Invalid'}
-                </p>
-              </div>
+            <Card className="glass-card p-4 text-center border-destructive/30 bg-destructive/5">
+              <p className="text-2xl font-bold text-destructive">{todayStats.invalidScans}</p>
+              <p className="text-xs text-muted-foreground">
+                {isArabic ? 'غير صالح' : 'Invalid'}
+              </p>
             </Card>
           </div>
 
           {/* Scanner Area */}
-          <Card className="mb-6 overflow-hidden">
+          <Card className="glass-card-gold mb-6 overflow-hidden border-0">
             <CardContent className="p-0">
               <div className="relative">
                 {/* QR Reader Container */}
                 <div 
                   id="qr-reader" 
                   className={cn(
-                    'w-full aspect-square bg-muted',
+                    'w-full aspect-square bg-foreground/5',
                     !isScanning && 'hidden'
                   )}
                 />
                 
                 {/* Placeholder when not scanning */}
                 {!isScanning && (
-                  <div className="w-full aspect-square bg-muted flex flex-col items-center justify-center">
-                    <Camera className="h-20 w-20 text-muted-foreground/30 mb-4" />
-                    <p className="text-muted-foreground mb-6">
+                  <div className="w-full aspect-square bg-secondary/30 flex flex-col items-center justify-center">
+                    <div className="w-24 h-24 rounded-full gradient-gold flex items-center justify-center mb-6 glow-gold">
+                      <Camera className="h-12 w-12 text-foreground" />
+                    </div>
+                    <p className="text-muted-foreground text-center max-w-xs">
                       {isArabic 
                         ? 'اضغط على الزر أدناه لبدء المسح'
                         : 'Press the button below to start scanning'}
@@ -360,23 +357,33 @@ const ScannerPage = () => {
                 {/* Scanning overlay guide */}
                 {isScanning && cameraReady && (
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className="w-64 h-64 border-4 border-primary rounded-2xl relative">
-                      <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-xl" />
-                      <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-xl" />
-                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-xl" />
-                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-xl" />
+                    <div className="w-64 h-64 border-4 border-accent rounded-2xl relative">
+                      <div className="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-accent rounded-tl-2xl" />
+                      <div className="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-accent rounded-tr-2xl" />
+                      <div className="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-accent rounded-bl-2xl" />
+                      <div className="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-accent rounded-br-2xl" />
+                      {/* Scanning animation line */}
+                      <div className="absolute inset-x-0 top-0 h-1 bg-accent/50 animate-pulse" 
+                        style={{ 
+                          animation: 'scan-line 2s ease-in-out infinite',
+                        }} 
+                      />
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Scanner Controls */}
-              <div className="p-4 bg-card">
+              <div className="p-4 bg-card border-t border-border/50">
                 <Button
                   size="lg"
-                  className="w-full h-14 text-lg gap-3"
+                  className={cn(
+                    "w-full h-14 text-lg gap-3 rounded-xl transition-all",
+                    isScanning 
+                      ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" 
+                      : "btn-gold"
+                  )}
                   onClick={isScanning ? stopScanning : startScanning}
-                  variant={isScanning ? 'destructive' : 'default'}
                 >
                   {isScanning ? (
                     <>
@@ -395,17 +402,19 @@ const ScannerPage = () => {
           </Card>
 
           {/* Recent Scans */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <History className="h-5 w-5 text-primary" />
-                {isArabic ? 'آخر عمليات المسح' : 'Recent Scans'}
+          <Card className="glass-card-gold border-0">
+            <CardHeader className="pb-3 border-b border-border/50">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center">
+                  <History className="h-5 w-5 text-foreground" />
+                </div>
+                <span>{isArabic ? 'آخر عمليات المسح' : 'Recent Scans'}</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               {recentScans.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <History className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                  <History className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p>{isArabic ? 'لا توجد عمليات مسح بعد' : 'No scans yet'}</p>
                 </div>
               ) : (
@@ -414,18 +423,25 @@ const ScannerPage = () => {
                     <div
                       key={index}
                       className={cn(
-                        'flex items-center justify-between p-3 rounded-lg border',
+                        'flex items-center justify-between p-4 rounded-xl border transition-all hover:scale-[1.01]',
                         scan.status === 'valid' && 'bg-success/5 border-success/20',
                         scan.status === 'used' && 'bg-warning/5 border-warning/20',
                         !['valid', 'used'].includes(scan.status) && 'bg-destructive/5 border-destructive/20'
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        {scan.status === 'valid' && <CheckCircle className="h-5 w-5 text-success" />}
-                        {scan.status === 'used' && <AlertTriangle className="h-5 w-5 text-warning" />}
-                        {!['valid', 'used'].includes(scan.status) && <XCircle className="h-5 w-5 text-destructive" />}
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center",
+                          scan.status === 'valid' && 'bg-success/10',
+                          scan.status === 'used' && 'bg-warning/10',
+                          !['valid', 'used'].includes(scan.status) && 'bg-destructive/10'
+                        )}>
+                          {scan.status === 'valid' && <CheckCircle className="h-5 w-5 text-success" />}
+                          {scan.status === 'used' && <AlertTriangle className="h-5 w-5 text-warning" />}
+                          {!['valid', 'used'].includes(scan.status) && <XCircle className="h-5 w-5 text-destructive" />}
+                        </div>
                         <div>
-                          <p className="font-medium text-sm">
+                          <p className="font-medium text-sm font-mono">
                             {scan.ticketCode || (isArabic ? 'غير معروف' : 'Unknown')}
                           </p>
                           {scan.customerName && (
@@ -434,7 +450,12 @@ const ScannerPage = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-medium">
+                        <p className={cn(
+                          "text-xs font-medium",
+                          scan.status === 'valid' && 'text-success',
+                          scan.status === 'used' && 'text-warning',
+                          !['valid', 'used'].includes(scan.status) && 'text-destructive'
+                        )}>
                           {getStatusText(scan.status)}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -451,6 +472,14 @@ const ScannerPage = () => {
       </main>
 
       <Footer />
+
+      {/* Scan line animation */}
+      <style>{`
+        @keyframes scan-line {
+          0%, 100% { transform: translateY(0); opacity: 0.5; }
+          50% { transform: translateY(250px); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };
