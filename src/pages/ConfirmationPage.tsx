@@ -27,6 +27,9 @@ interface BookingDetails {
   adult_count: number;
   child_count: number;
   senior_count: number;
+  adult_price: number;
+  child_price: number;
+  senior_price: number;
   total_amount: number;
   confirmation_email_sent: boolean;
 }
