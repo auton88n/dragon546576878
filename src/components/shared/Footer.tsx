@@ -10,35 +10,35 @@ const Footer = () => {
 
   const quickLinks = [
     { href: '/', label: isArabic ? 'الرئيسية' : 'Home' },
-    { href: '/book', label: isArabic ? 'احجز تذكرتك' : 'Book Tickets' },
+    { href: '/booking', label: isArabic ? 'احجز تذكرتك' : 'Book Tickets' },
     { href: '/my-tickets', label: isArabic ? 'تذاكري' : 'My Tickets' },
   ];
 
   return (
-    <footer className="bg-primary text-primary-foreground">
-      <div className="container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <footer className="bg-foreground text-background">
+      <div className="container py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Brand */}
           <div className="space-y-4">
             <Logo variant="light" />
-            <p className="text-primary-foreground/70 text-sm">
+            <p className="text-background/70 text-sm max-w-sm">
               {isArabic
-                ? 'تجربة تراثية أصيلة في قلب المملكة'
-                : 'An authentic heritage experience in the heart of the Kingdom'}
+                ? 'تجربة تراثية أصيلة في قلب المملكة العربية السعودية'
+                : 'An authentic heritage experience in the heart of Saudi Arabia'}
             </p>
           </div>
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="font-semibold">
+            <h3 className="font-semibold text-lg text-accent">
               {isArabic ? 'روابط سريعة' : 'Quick Links'}
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors"
+                    className="text-background/70 hover:text-accent text-sm transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -49,26 +49,26 @@ const Footer = () => {
 
           {/* Contact */}
           <div className="space-y-4">
-            <h3 className="font-semibold">
+            <h3 className="font-semibold text-lg text-accent">
               {isArabic ? 'تواصل معنا' : 'Contact Us'}
             </h3>
             <div className="space-y-3 text-sm">
               <a 
                 href="mailto:info@almufaijer.com"
-                className="flex items-center gap-2 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                className="flex items-center gap-3 text-background/70 hover:text-accent transition-colors"
               >
-                <Mail className="h-4 w-4" />
+                <Mail className="h-5 w-5 flex-shrink-0" />
                 <span>info@almufaijer.com</span>
               </a>
               <a 
                 href="tel:+966501018811"
-                className="flex items-center gap-2 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                className="flex items-center gap-3 text-background/70 hover:text-accent transition-colors"
               >
-                <Phone className="h-4 w-4" />
+                <Phone className="h-5 w-5 flex-shrink-0" />
                 <span dir="ltr">+966 50 101 8811</span>
               </a>
-              <div className="flex items-start gap-2 text-primary-foreground/70">
-                <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 text-background/70">
+                <MapPin className="h-5 w-5 shrink-0 mt-0.5" />
                 <span>
                   {isArabic 
                     ? 'المفيجر، المملكة العربية السعودية' 
@@ -80,7 +80,7 @@ const Footer = () => {
         </div>
 
         {/* Copyright */}
-        <div className="mt-10 pt-6 border-t border-primary-foreground/10 text-center text-primary-foreground/50 text-sm">
+        <div className="mt-12 pt-8 border-t border-background/10 text-center text-background/50 text-sm">
           <p>
             {isArabic
               ? `© ${currentYear} سوق المفيجر. جميع الحقوق محفوظة.`
