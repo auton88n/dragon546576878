@@ -6,59 +6,60 @@
 @tailwind utilities;
 
 /* ============================================
-   SOUQ ALMUFAIJER - HERITAGE DESIGN SYSTEM
+   SOUQ ALMUFAIJER - MODERN DESIGN SYSTEM
+   Navy + Emerald Color Palette
    ============================================ */
 
 @layer base {
   :root {
-    /* Heritage Color Palette */
-    --background: 40 33% 94%;           /* #F5F1E8 - Warm cream */
-    --foreground: 30 27% 13%;           /* #2C2416 - Dark heritage text */
+    /* Modern Color Palette - Light Mode */
+    --background: 210 40% 98%;           /* #f8fafc - Clean white-ish */
+    --foreground: 222 47% 11%;           /* #0f172a - Deep navy text */
 
-    --card: 0 0% 100%;                  /* White cards */
-    --card-foreground: 30 27% 13%;
+    --card: 0 0% 100%;                   /* White cards */
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 30 27% 13%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Primary - Traditional Brown */
-    --primary: 30 32% 41%;              /* #8B6F47 */
-    --primary-foreground: 40 33% 94%;
+    /* Primary - Deep Navy */
+    --primary: 222 47% 11%;              /* #0f172a */
+    --primary-foreground: 210 40% 98%;
 
-    /* Secondary - Desert Beige */
-    --secondary: 36 28% 76%;            /* #D4C5B0 */
-    --secondary-foreground: 30 27% 13%;
+    /* Secondary - Light Gray */
+    --secondary: 210 40% 96%;            /* #f1f5f9 */
+    --secondary-foreground: 222 47% 11%;
 
     /* Muted */
-    --muted: 36 20% 88%;
-    --muted-foreground: 30 18% 40%;     /* #6B5D4F */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;     /* #64748b */
 
-    /* Accent - Dark Heritage */
-    --accent: 24 35% 22%;               /* #4A3625 */
-    --accent-foreground: 40 33% 94%;
+    /* Accent - Emerald/Teal */
+    --accent: 160 84% 39%;               /* #10b981 */
+    --accent-foreground: 0 0% 100%;
 
     /* Destructive */
-    --destructive: 0 84% 60%;           /* #EF4444 */
+    --destructive: 0 84% 60%;            /* #ef4444 */
     --destructive-foreground: 0 0% 100%;
 
     /* Success */
-    --success: 160 84% 39%;             /* #10B981 */
+    --success: 160 84% 39%;              /* #10b981 */
     --success-foreground: 0 0% 100%;
 
     /* Warning */
-    --warning: 38 92% 50%;              /* #F59E0B */
+    --warning: 38 92% 50%;               /* #f59e0b */
     --warning-foreground: 0 0% 100%;
 
     /* Info */
-    --info: 217 91% 60%;                /* #3B82F6 */
+    --info: 217 91% 60%;                 /* #3b82f6 */
     --info-foreground: 0 0% 100%;
 
     /* Borders & Inputs */
-    --border: 36 20% 80%;
-    --input: 36 20% 85%;
-    --ring: 30 32% 41%;
+    --border: 214 32% 91%;               /* #e2e8f0 */
+    --input: 214 32% 91%;
+    --ring: 160 84% 39%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Scanner feedback colors */
     --scan-valid: 160 84% 39%;
@@ -66,57 +67,53 @@
     --scan-used: 38 92% 50%;
 
     /* Sidebar */
-    --sidebar-background: 36 28% 76%;
-    --sidebar-foreground: 30 27% 13%;
-    --sidebar-primary: 30 32% 41%;
-    --sidebar-primary-foreground: 40 33% 94%;
-    --sidebar-accent: 24 35% 22%;
-    --sidebar-accent-foreground: 40 33% 94%;
-    --sidebar-border: 36 20% 70%;
-    --sidebar-ring: 30 32% 41%;
-
-    /* Gradients */
-    --gradient-heritage: linear-gradient(135deg, hsl(30 32% 41%) 0%, hsl(24 35% 22%) 100%);
-    --gradient-desert: linear-gradient(180deg, hsl(40 33% 94%) 0%, hsl(36 28% 76%) 100%);
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 84% 39%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 25% 20%;
+    --sidebar-ring: 160 84% 39%;
   }
 
   .dark {
-    --background: 24 20% 10%;
-    --foreground: 40 33% 94%;
+    --background: 222 47% 6%;            /* Very dark navy */
+    --foreground: 210 40% 98%;
 
-    --card: 24 20% 14%;
-    --card-foreground: 40 33% 94%;
+    --card: 222 47% 9%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 24 20% 14%;
-    --popover-foreground: 40 33% 94%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 36 40% 55%;
-    --primary-foreground: 24 20% 10%;
+    --primary: 160 84% 45%;
+    --primary-foreground: 222 47% 6%;
 
-    --secondary: 24 15% 25%;
-    --secondary-foreground: 40 33% 94%;
+    --secondary: 222 47% 15%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 24 15% 20%;
-    --muted-foreground: 36 15% 60%;
+    --muted: 222 47% 15%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 36 30% 45%;
-    --accent-foreground: 24 20% 10%;
+    --accent: 160 84% 45%;
+    --accent-foreground: 222 47% 6%;
 
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 24 15% 25%;
-    --input: 24 15% 25%;
-    --ring: 36 40% 55%;
+    --border: 222 47% 20%;
+    --input: 222 47% 20%;
+    --ring: 160 84% 45%;
 
-    --sidebar-background: 24 20% 10%;
-    --sidebar-foreground: 40 33% 94%;
-    --sidebar-primary: 36 40% 55%;
-    --sidebar-primary-foreground: 24 20% 10%;
-    --sidebar-accent: 24 15% 25%;
-    --sidebar-accent-foreground: 40 33% 94%;
-    --sidebar-border: 24 15% 25%;
-    --sidebar-ring: 36 40% 55%;
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 160 84% 45%;
+    --sidebar-primary-foreground: 222 47% 6%;
+    --sidebar-accent: 222 47% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 47% 20%;
+    --sidebar-ring: 160 84% 45%;
   }
 }
 
@@ -163,10 +160,45 @@
 }
 
 @layer components {
-  /* Heritage Card Style */
-  .heritage-card {
-    @apply bg-card rounded-lg border border-border shadow-sm;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238B6F47' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  /* Modern Card Style */
+  .glass-card {
+    @apply bg-card rounded-2xl border border-border shadow-sm;
+  }
+
+  /* Gradient Background */
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(160 84% 32%) 100%);
+  }
+
+  /* Gradient Text */
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(160 84% 32%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow Hover Effect */
+  .glow-hover {
+    transition: all 0.3s ease;
+  }
+  
+  .glow-hover:hover {
+    box-shadow: 0 0 30px hsl(160 84% 39% / 0.4);
+  }
+
+  /* Ticket Card Style */
+  .ticket-card {
+    @apply bg-card rounded-2xl border-2 border-border overflow-hidden transition-all duration-300;
+  }
+
+  .ticket-card:hover {
+    @apply border-accent/50 shadow-lg;
+    transform: translateY(-4px);
+  }
+
+  .ticket-card.selected {
+    @apply border-accent shadow-lg;
   }
 
   /* Scanner Result Overlays */
@@ -183,23 +215,6 @@
   .scan-overlay-used {
     @apply fixed inset-0 z-50 flex items-center justify-center;
     background-color: hsl(var(--scan-used) / 0.95);
-  }
-
-  /* Step Indicator */
-  .step-indicator {
-    @apply flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all;
-  }
-
-  .step-indicator.active {
-    @apply bg-primary text-primary-foreground;
-  }
-
-  .step-indicator.completed {
-    @apply bg-success text-success-foreground;
-  }
-
-  .step-indicator.inactive {
-    @apply bg-muted text-muted-foreground;
   }
 }
 
@@ -224,10 +239,6 @@
 
   .animate-scale-in {
     animation: scaleIn 0.2s ease-out;
-  }
-
-  .animate-pulse-success {
-    animation: pulseSuccess 0.5s ease-out;
   }
 
   @keyframes fadeIn {
@@ -255,27 +266,5 @@
       opacity: 1;
       transform: scale(1);
     }
-  }
-
-  @keyframes pulseSuccess {
-    0%, 100% { 
-      transform: scale(1);
-    }
-    50% { 
-      transform: scale(1.05);
-    }
-  }
-
-  /* Glass effect */
-  .glass {
-    @apply bg-card/80 backdrop-blur-sm;
-  }
-
-  /* Heritage gradient text */
-  .text-heritage-gradient {
-    background: linear-gradient(135deg, hsl(30 32% 41%) 0%, hsl(24 35% 22%) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 }

@@ -3,8 +3,8 @@ import { persist } from 'zustand/middleware';
 import type { BookingFormState, TicketPricing } from '@/types';
 
 interface BookingStore extends BookingFormState {
-  // Actions
-  setStep: (step: 1 | 2 | 3 | 4) => void;
+  // Actions - Now 2 steps only
+  setStep: (step: 1 | 2) => void;
   setTickets: (type: 'adult' | 'child' | 'senior', count: number) => void;
   setPricing: (pricing: TicketPricing) => void;
   setVisitDate: (date: string) => void;
@@ -48,7 +48,7 @@ export const useBookingStore = create<BookingStore>()(
       setStep: (step) => set({ step }),
 
       setTickets: (type, count) => {
-        const newCount = Math.max(0, Math.min(10, count)); // Max 10 per type
+        const newCount = Math.max(0, Math.min(10, count));
         set((state) => ({
           tickets: { ...state.tickets, [type]: newCount },
         }));
@@ -86,17 +86,19 @@ export const useBookingStore = create<BookingStore>()(
         const state = get();
         switch (state.step) {
           case 1:
-            return state.tickets.adult + state.tickets.child + state.tickets.senior > 0;
+            // Step 1: Tickets + Date + Time selected
+            return (
+              state.tickets.adult + state.tickets.child + state.tickets.senior > 0 &&
+              !!state.visitDate &&
+              !!state.visitTime
+            );
           case 2:
-            return !!state.visitDate && !!state.visitTime;
-          case 3:
+            // Step 2: Customer info valid
             return (
               state.customerInfo.name.length >= 3 &&
               /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.customerInfo.email) &&
               /^\+966[0-9]{9}$/.test(state.customerInfo.phone)
             );
-          case 4:
-            return state.totalAmount > 0;
           default:
             return false;
         }

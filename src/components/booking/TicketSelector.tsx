@@ -1,13 +1,17 @@
-import { Minus, Plus, Users, Baby } from 'lucide-react';
+import { Minus, Plus, Users, Baby, CalendarIcon, Clock, Check } from 'lucide-react';
+import { format, isFriday, isBefore, startOfDay } from 'date-fns';
+import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 const TicketSelector = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { tickets, pricing, setTickets } = useBookingStore();
+  const { tickets, pricing, setTickets, visitDate, visitTime, setVisitDate, setVisitTime } = useBookingStore();
 
   const ticketTypes = [
     {
@@ -19,7 +23,6 @@ const TicketSelector = () => {
       descEn: '12 years and above',
       price: pricing.adult,
       count: tickets.adult,
-      imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
     },
     {
       type: 'child' as const,
@@ -30,108 +33,80 @@ const TicketSelector = () => {
       descEn: 'Under 12 years',
       price: pricing.child,
       count: tickets.child,
-      imageUrl: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=300&fit=crop',
     },
   ];
 
+  const timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+
+  const formatTimeDisplay = (time: string) => {
+    const hour = parseInt(time.split(':')[0]);
+    if (isArabic) {
+      return hour < 12 ? `${hour}:00 ص` : `${hour === 12 ? 12 : hour - 12}:00 م`;
+    }
+    return hour < 12 ? `${hour}:00 AM` : `${hour === 12 ? 12 : hour - 12}:00 PM`;
+  };
+
+  const disabledDays = (date: Date) => {
+    const today = startOfDay(new Date());
+    return isBefore(date, today) || isFriday(date);
+  };
+
+  const selectedDate = visitDate ? new Date(visitDate) : undefined;
   const totalTickets = tickets.adult + tickets.child;
 
   return (
     <div className="space-y-8">
-      <div className="text-center space-y-3">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+      {/* Ticket Selection */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-sm flex items-center justify-center">1</span>
           {isArabic ? 'اختر التذاكر' : 'Select Tickets'}
-        </h2>
-        <p className="text-muted-foreground">
-          {isArabic ? 'اختر نوع وعدد التذاكر للزيارة' : 'Choose ticket type and quantity for your visit'}
-        </p>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {ticketTypes.map((ticket) => (
-          <div
-            key={ticket.type}
-            className={cn(
-              'ticket-card group cursor-pointer',
-              ticket.count > 0 && 'selected'
-            )}
-          >
-            {/* Ticket Image */}
-            <div className="relative h-40 overflow-hidden">
-              <img 
-                src={ticket.imageUrl} 
-                alt={isArabic ? ticket.labelAr : ticket.labelEn}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
-              
-              {/* Price Badge */}
-              <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4">
-                <div className="px-4 py-2 rounded-xl glass-card">
-                  <span className="text-xl font-bold gradient-text">{ticket.price}</span>
-                  <span className="text-sm text-muted-foreground ml-1 rtl:mr-1 rtl:ml-0">
-                    {isArabic ? 'ر.س' : 'SAR'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Selected Badge */}
-              {ticket.count > 0 && (
-                <div className="absolute top-4 left-4 rtl:left-auto rtl:right-4">
-                  <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white font-bold text-sm animate-scale-in">
-                    {ticket.count}
+        </h3>
+        
+        <div className="grid sm:grid-cols-2 gap-4">
+          {ticketTypes.map((ticket) => (
+            <div
+              key={ticket.type}
+              className={cn(
+                'p-4 rounded-xl border-2 transition-all duration-200',
+                ticket.count > 0 
+                  ? 'border-accent bg-accent/5' 
+                  : 'border-border hover:border-accent/50'
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    'w-10 h-10 rounded-lg flex items-center justify-center',
+                    ticket.count > 0 ? 'bg-accent text-accent-foreground' : 'bg-secondary'
+                  )}>
+                    <ticket.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-foreground">
+                      {isArabic ? ticket.labelAr : ticket.labelEn}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {ticket.price} {isArabic ? 'ر.س' : 'SAR'}
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Ticket Info */}
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300',
-                  ticket.count > 0 ? 'gradient-bg text-white' : 'bg-secondary text-foreground'
-                )}>
-                  <ticket.icon className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-foreground">
-                    {isArabic ? ticket.labelAr : ticket.labelEn}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {isArabic ? ticket.descAr : ticket.descEn}
-                  </p>
-                </div>
-              </div>
-
-              {/* Quantity Selector */}
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-muted-foreground">
-                  {isArabic ? 'الكمية' : 'Quantity'}
-                </span>
-                <div className="flex items-center gap-4">
+                
+                <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
                     size="icon"
-                    className={cn(
-                      'h-10 w-10 rounded-full border-2 transition-all',
-                      ticket.count === 0 && 'opacity-50'
-                    )}
+                    className="h-8 w-8 rounded-full"
                     onClick={() => setTickets(ticket.type, ticket.count - 1)}
                     disabled={ticket.count === 0}
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="w-8 text-center text-2xl font-bold">
-                    {ticket.count}
-                  </span>
+                  <span className="w-6 text-center font-semibold text-lg">{ticket.count}</span>
                   <Button
                     variant="outline"
                     size="icon"
-                    className={cn(
-                      'h-10 w-10 rounded-full border-2 transition-all hover:border-accent hover:bg-accent/10',
-                      ticket.count >= 10 && 'opacity-50'
-                    )}
+                    className="h-8 w-8 rounded-full hover:bg-accent hover:text-accent-foreground"
                     onClick={() => setTickets(ticket.type, ticket.count + 1)}
                     disabled={ticket.count >= 10}
                   >
@@ -139,43 +114,94 @@ const TicketSelector = () => {
                   </Button>
                 </div>
               </div>
-
-              {/* Subtotal */}
-              {ticket.count > 0 && (
-                <div className="pt-3 border-t border-border/50 flex justify-between items-center">
-                  <span className="text-muted-foreground">
-                    {isArabic ? 'المجموع الفرعي' : 'Subtotal'}
-                  </span>
-                  <span className="text-lg font-bold gradient-text">
-                    {ticket.count * ticket.price} {isArabic ? 'ر.س' : 'SAR'}
-                  </span>
-                </div>
-              )}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+      </div>
+
+      {/* Date Selection */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-sm flex items-center justify-center">2</span>
+          {isArabic ? 'اختر التاريخ' : 'Select Date'}
+        </h3>
+        
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                'w-full justify-start h-12 text-base rounded-xl border-2',
+                selectedDate ? 'border-accent bg-accent/5' : 'border-border'
+              )}
+            >
+              <CalendarIcon className="mr-3 rtl:ml-3 rtl:mr-0 h-5 w-5 text-accent" />
+              {selectedDate ? (
+                <span className="font-medium">
+                  {format(selectedDate, 'EEEE, d MMMM yyyy', { locale: isArabic ? ar : enUS })}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">
+                  {isArabic ? 'اضغط لاختيار التاريخ' : 'Click to select date'}
+                </span>
+              )}
+              {selectedDate && <Check className="h-4 w-4 text-accent ml-auto rtl:mr-auto rtl:ml-0" />}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setVisitDate(format(date, 'yyyy-MM-dd'))}
+              disabled={disabledDays}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+              locale={isArabic ? ar : enUS}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Time Selection */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-sm flex items-center justify-center">3</span>
+          {isArabic ? 'اختر الوقت' : 'Select Time'}
+        </h3>
+        
+        <div className="grid grid-cols-3 gap-2">
+          {timeSlots.map((time) => (
+            <Button
+              key={time}
+              variant="outline"
+              className={cn(
+                'h-11 text-sm font-medium rounded-lg border-2 transition-all',
+                visitTime === time 
+                  ? 'border-accent bg-accent text-accent-foreground hover:bg-accent/90' 
+                  : 'border-border hover:border-accent/50'
+              )}
+              onClick={() => setVisitTime(time)}
+            >
+              {formatTimeDisplay(time)}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Summary */}
-      {totalTickets > 0 ? (
-        <div className="glass-card rounded-2xl p-6 text-center space-y-2">
-          <div className="text-lg font-medium text-foreground">
-            {isArabic 
-              ? `إجمالي التذاكر: ${totalTickets} تذكرة`
-              : `Total: ${totalTickets} ticket${totalTickets > 1 ? 's' : ''}`
-            }
+      {totalTickets > 0 && visitDate && visitTime && (
+        <div className="bg-accent/10 border border-accent/30 rounded-xl p-4 text-center">
+          <div className="flex items-center justify-center gap-2 text-accent">
+            <Check className="h-5 w-5" />
+            <span className="font-medium">{isArabic ? 'جاهز للمتابعة' : 'Ready to continue'}</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {isArabic 
-              ? 'اضغط على "التالي" لاختيار موعد الزيارة'
-              : 'Click "Continue" to select your visit date'
-            }
-          </p>
         </div>
-      ) : (
-        <div className="text-center p-6 border-2 border-dashed border-border rounded-2xl">
-          <p className="text-muted-foreground">
-            {isArabic ? 'يرجى اختيار تذكرة واحدة على الأقل للمتابعة' : 'Please select at least one ticket to continue'}
+      )}
+
+      {totalTickets === 0 && (
+        <div className="border-2 border-dashed border-border rounded-xl p-4 text-center">
+          <p className="text-muted-foreground text-sm">
+            {isArabic ? 'اختر تذكرة واحدة على الأقل' : 'Select at least one ticket'}
           </p>
         </div>
       )}

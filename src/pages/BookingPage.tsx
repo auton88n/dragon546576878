@@ -10,10 +10,8 @@ import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import StepIndicator from '@/components/booking/StepIndicator';
 import TicketSelector from '@/components/booking/TicketSelector';
-import DateTimePicker from '@/components/booking/DateTimePicker';
-import VisitorInfoForm from '@/components/booking/VisitorInfoForm';
+import DetailsAndPayment from '@/components/booking/DetailsAndPayment';
 import OrderSummary from '@/components/booking/OrderSummary';
-import PaymentForm from '@/components/booking/PaymentForm';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,14 +43,14 @@ const BookingPage = () => {
   };
 
   const handleNext = () => {
-    if (step < 4 && canProceed()) {
-      setStep((step + 1) as 1 | 2 | 3 | 4);
+    if (step === 1 && canProceed()) {
+      setStep(2);
     }
   };
 
   const handleBack = () => {
-    if (step > 1) {
-      setStep((step - 1) as 1 | 2 | 3 | 4);
+    if (step === 2) {
+      setStep(1);
     }
   };
 
@@ -126,61 +124,62 @@ const BookingPage = () => {
     }
   };
 
-  const renderStepContent = () => {
-    switch (step) {
-      case 1:
-        return <TicketSelector />;
-      case 2:
-        return <DateTimePicker />;
-      case 3:
-        return <VisitorInfoForm />;
-      case 4:
-        return <PaymentForm onPaymentComplete={handlePaymentComplete} isProcessing={isProcessing} />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
       <main className="flex-1 pt-24 pb-12">
-        <div className="container">
+        <div className="container max-w-5xl">
+          {/* Page Title */}
+          <div className="text-center mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              {isArabic ? 'احجز تذكرتك' : 'Book Your Ticket'}
+            </h1>
+          </div>
+
           {/* Step Indicator */}
-          <div className="max-w-3xl mx-auto mb-8">
-            <StepIndicator currentStep={step} />
+          <div className="mb-8">
+            <StepIndicator currentStep={step as 1 | 2} />
           </div>
 
           {/* Main Content */}
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-6">
             {/* Step Content */}
             <div className="lg:col-span-2">
-              <div className="glass-card rounded-3xl p-6 md:p-8">
-                {renderStepContent()}
+              <div className="bg-card rounded-2xl border border-border p-6">
+                {step === 1 && <TicketSelector />}
+                {step === 2 && (
+                  <DetailsAndPayment 
+                    onPaymentComplete={handlePaymentComplete} 
+                    isProcessing={isProcessing} 
+                  />
+                )}
 
-                {/* Navigation Buttons */}
-                {step < 4 && (
-                  <div className="flex justify-between mt-10 pt-6 border-t border-border/50">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={handleBack}
-                      disabled={step === 1}
-                      className="gap-2 rounded-xl border-2 px-6"
-                    >
-                      {isRTL ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
-                      {isArabic ? 'السابق' : 'Back'}
-                    </Button>
-                    
+                {/* Navigation Button for Step 1 */}
+                {step === 1 && (
+                  <div className="mt-8 pt-6 border-t border-border">
                     <Button
                       size="lg"
                       onClick={handleNext}
                       disabled={!canProceed()}
-                      className="gap-2 rounded-xl gradient-bg text-white border-0 px-8 glow-hover"
+                      className="w-full h-12 text-base rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground disabled:bg-secondary disabled:text-muted-foreground"
                     >
                       {isArabic ? 'التالي' : 'Continue'}
-                      {isRTL ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                      {isRTL ? <ArrowLeft className="h-4 w-4 mr-2" /> : <ArrowRight className="h-4 w-4 ml-2" />}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Back Button for Step 2 */}
+                {step === 2 && (
+                  <div className="mt-6 pt-4 border-t border-border">
+                    <Button
+                      variant="ghost"
+                      onClick={handleBack}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      {isRTL ? <ArrowRight className="h-4 w-4 ml-2" /> : <ArrowLeft className="h-4 w-4 mr-2" />}
+                      {isArabic ? 'رجوع' : 'Back'}
                     </Button>
                   </div>
                 )}
