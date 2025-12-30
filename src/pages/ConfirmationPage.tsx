@@ -5,7 +5,7 @@ import { ar, enUS } from 'date-fns/locale';
 import QRCode from 'qrcode';
 import { 
   CheckCircle, Download, Calendar, Clock, Users, Mail, 
-  Ticket, Home, MapPin, Sparkles, Share2, Plane
+  Ticket, Home, MapPin, Sparkles, Share2
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,7 +29,7 @@ interface BookingDetails {
 
 const ConfirmationPage = () => {
   const { bookingId } = useParams();
-  const { currentLanguage } = useLanguage();
+  const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
@@ -69,7 +69,7 @@ const ConfirmationPage = () => {
           width: 200,
           margin: 1,
           color: {
-            dark: '#0f172a',
+            dark: '#3D2E1F',
             light: '#FFFFFF',
           },
           errorCorrectionLevel: 'H',
@@ -123,7 +123,7 @@ const ConfirmationPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner size="lg" />
@@ -135,16 +135,16 @@ const ConfirmationPage = () => {
 
   if (error || !booking) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <Header />
         <div className="flex-1 flex items-center justify-center pt-20">
-          <div className="glass-card rounded-3xl p-8 text-center max-w-md mx-4">
+          <div className="glass-card-gold rounded-3xl p-8 text-center max-w-md mx-4">
             <h2 className="text-2xl font-bold text-foreground mb-4">
               {isArabic ? 'خطأ' : 'Error'}
             </h2>
             <p className="text-muted-foreground mb-6">{error}</p>
             <Link to="/">
-              <Button className="gradient-bg text-white border-0">
+              <Button className="btn-gold">
                 {isArabic ? 'العودة للرئيسية' : 'Back to Home'}
               </Button>
             </Link>
@@ -158,10 +158,10 @@ const ConfirmationPage = () => {
   const totalTickets = booking.adult_count + booking.child_count + (booking.senior_count || 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-hidden">
+    <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      {/* Confetti Animation */}
+      {/* Confetti Animation - Heritage colors */}
       {showConfetti && (
         <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
           {[...Array(50)].map((_, i) => (
@@ -170,7 +170,7 @@ const ConfirmationPage = () => {
               className="absolute w-3 h-3 rounded-full animate-confetti"
               style={{
                 left: `${Math.random() * 100}%`,
-                backgroundColor: ['#00d4aa', '#8b5cf6', '#f59e0b', '#ef4444', '#3b82f6'][Math.floor(Math.random() * 5)],
+                backgroundColor: ['#C9A86C', '#8B7355', '#D4C5B0', '#4A3625', '#F5EDE4'][Math.floor(Math.random() * 5)],
                 animationDelay: `${Math.random() * 2}s`,
                 animationDuration: `${2 + Math.random() * 2}s`,
               }}
@@ -184,8 +184,8 @@ const ConfirmationPage = () => {
           {/* Success Header */}
           <div className="text-center mb-8 animate-fade-in">
             <div className="relative inline-block mb-6">
-              <div className="w-24 h-24 rounded-full gradient-bg flex items-center justify-center animate-scale-in glow">
-                <CheckCircle className="h-12 w-12 text-white" />
+              <div className="w-24 h-24 rounded-full gradient-gold flex items-center justify-center animate-scale-in glow-gold">
+                <CheckCircle className="h-12 w-12 text-foreground" />
               </div>
               <Sparkles className="absolute -top-2 -right-2 h-8 w-8 text-accent animate-pulse" />
             </div>
@@ -199,32 +199,32 @@ const ConfirmationPage = () => {
             </p>
           </div>
 
-          {/* Boarding Pass Style Ticket */}
+          {/* Heritage Style Ticket Card */}
           <div className="relative mb-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
             {/* Main Ticket */}
-            <div className="bg-card rounded-3xl overflow-hidden shadow-2xl border border-border">
+            <div className="glass-card-gold overflow-hidden">
               {/* Ticket Header */}
-              <div className="gradient-bg p-6 text-white">
+              <div className="gradient-heritage p-6 text-primary-foreground">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold">
-                      م
+                    <div className="w-12 h-12 rounded-full border-2 border-primary-foreground/30 flex items-center justify-center">
+                      <span className="font-arabic font-bold text-lg">سم</span>
                     </div>
                     <div>
                       <div className="font-bold text-lg">
                         {isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
                       </div>
-                      <div className="text-white/70 text-sm">
+                      <div className="text-primary-foreground/70 text-sm">
                         {isArabic ? 'تذكرة دخول' : 'Entry Pass'}
                       </div>
                     </div>
                   </div>
-                  <Plane className="h-8 w-8 text-white/50 rotate-45" />
+                  <Ticket className="h-8 w-8 text-primary-foreground/50" />
                 </div>
               </div>
 
               {/* Ticket Body */}
-              <div className="p-6">
+              <div className="p-6 bg-card">
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Left Side - Details */}
                   <div className="flex-1 space-y-6">
@@ -233,7 +233,7 @@ const ConfirmationPage = () => {
                       <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                         {isArabic ? 'رقم الحجز' : 'Booking Reference'}
                       </div>
-                      <div className="text-2xl font-bold font-mono gradient-text tracking-wider">
+                      <div className="text-2xl font-bold font-mono text-accent tracking-wider">
                         {booking.booking_reference}
                       </div>
                     </div>
@@ -310,7 +310,7 @@ const ConfirmationPage = () => {
                   {/* Right Side - QR Code */}
                   <div className="flex flex-col items-center justify-center md:w-48">
                     {qrCodeUrl && (
-                      <div className="p-3 bg-white rounded-2xl shadow-inner border-2 border-border">
+                      <div className="p-3 bg-white rounded-2xl shadow-inner border-2 border-accent/20">
                         <img 
                           src={qrCodeUrl} 
                           alt="QR Code" 
@@ -326,14 +326,14 @@ const ConfirmationPage = () => {
               </div>
 
               {/* Ticket Footer */}
-              <div className="bg-secondary/30 p-4 border-t border-border">
+              <div className="bg-secondary/50 p-4 border-t border-border">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Ticket className="h-4 w-4" />
+                    <Ticket className="h-4 w-4 text-accent" />
                     <span>
                       {isArabic ? 'المبلغ المدفوع:' : 'Amount Paid:'}
                     </span>
-                    <span className="font-bold text-foreground">
+                    <span className="font-bold text-accent">
                       {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
                     </span>
                   </div>
@@ -349,7 +349,7 @@ const ConfirmationPage = () => {
           <div className="flex flex-col sm:flex-row gap-3 mb-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <Button 
               onClick={handleDownloadTicket}
-              className="flex-1 gap-2 gradient-bg text-white border-0 h-12 glow-hover"
+              className="flex-1 gap-2 btn-gold h-12"
             >
               <Download className="h-5 w-5" />
               {isArabic ? 'تحميل التذكرة' : 'Download Ticket'}
@@ -357,7 +357,7 @@ const ConfirmationPage = () => {
             <Button 
               variant="outline" 
               onClick={handleShare}
-              className="flex-1 gap-2 h-12 border-2"
+              className="flex-1 gap-2 h-12 border-2 border-accent/30 hover:bg-accent/5"
             >
               <Share2 className="h-5 w-5" />
               {isArabic ? 'مشاركة' : 'Share'}
@@ -366,11 +366,11 @@ const ConfirmationPage = () => {
 
           {/* Email Notice */}
           <div 
-            className="flex items-center gap-3 p-4 glass-card rounded-2xl mb-8 animate-slide-up" 
+            className="flex items-center gap-3 p-4 glass-card-gold rounded-2xl mb-8 animate-slide-up" 
             style={{ animationDelay: '0.4s' }}
           >
-            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-              <Mail className="h-5 w-5 text-accent" />
+            <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center shrink-0">
+              <Mail className="h-5 w-5 text-foreground" />
             </div>
             <p className="text-sm text-muted-foreground">
               {isArabic 
@@ -382,13 +382,13 @@ const ConfirmationPage = () => {
           {/* Navigation */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.5s' }}>
             <Link to="/my-tickets">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 border-2">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 border-2 border-accent/30 hover:bg-accent/5">
                 <Ticket className="h-5 w-5" />
                 {isArabic ? 'عرض تذاكري' : 'View My Tickets'}
               </Button>
             </Link>
             <Link to="/">
-              <Button size="lg" variant="ghost" className="w-full sm:w-auto gap-2">
+              <Button size="lg" variant="ghost" className="w-full sm:w-auto gap-2 hover:bg-secondary">
                 <Home className="h-5 w-5" />
                 {isArabic ? 'العودة للرئيسية' : 'Back to Home'}
               </Button>
