@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw } from 'lucide-react';
+import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { resendConfirmationEmail } from '@/lib/emailService';
 import { useToast } from '@/hooks/use-toast';
@@ -66,19 +66,27 @@ const BookingTable = ({ bookings, loading, onViewDetails }: BookingTableProps) =
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      confirmed: 'default',
-      pending: 'secondary',
-      cancelled: 'destructive',
+    const config: Record<string, { className: string; labelAr: string; labelEn: string }> = {
+      confirmed: { 
+        className: 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30 dark:text-emerald-400',
+        labelAr: 'مؤكد',
+        labelEn: 'Confirmed'
+      },
+      pending: { 
+        className: 'bg-amber-500/20 text-amber-700 border-amber-500/30 dark:text-amber-400',
+        labelAr: 'معلق',
+        labelEn: 'Pending'
+      },
+      cancelled: { 
+        className: 'bg-red-500/20 text-red-700 border-red-500/30 dark:text-red-400',
+        labelAr: 'ملغي',
+        labelEn: 'Cancelled'
+      },
     };
-    const labels: Record<string, { ar: string; en: string }> = {
-      confirmed: { ar: 'مؤكد', en: 'Confirmed' },
-      pending: { ar: 'معلق', en: 'Pending' },
-      cancelled: { ar: 'ملغي', en: 'Cancelled' },
-    };
+    const { className, labelAr, labelEn } = config[status] || { className: '', labelAr: status, labelEn: status };
     return (
-      <Badge variant={variants[status] || 'outline'}>
-        {isArabic ? labels[status]?.ar : labels[status]?.en || status}
+      <Badge variant="outline" className={className}>
+        {isArabic ? labelAr : labelEn}
       </Badge>
     );
   };
@@ -99,7 +107,7 @@ const BookingTable = ({ bookings, loading, onViewDetails }: BookingTableProps) =
     return (
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
+          <Skeleton key={i} className="h-16 w-full bg-accent/10" />
         ))}
       </div>
     );
@@ -107,79 +115,93 @@ const BookingTable = ({ bookings, loading, onViewDetails }: BookingTableProps) =
 
   if (bookings.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <Mail className="h-12 w-12 mx-auto mb-4 opacity-30" />
-        <p>{isArabic ? 'لا توجد حجوزات' : 'No bookings found'}</p>
+      <div className="text-center py-16">
+        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
+          <Ticket className="h-10 w-10 text-accent/50" />
+        </div>
+        <p className="text-muted-foreground text-lg">{isArabic ? 'لا توجد حجوزات' : 'No bookings found'}</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto glass-card rounded-xl border border-accent/20">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
-            <TableHead>{isArabic ? 'العميل' : 'Customer'}</TableHead>
-            <TableHead>{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
-            <TableHead>{isArabic ? 'الوقت' : 'Time'}</TableHead>
-            <TableHead>{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
-            <TableHead>{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-            <TableHead>{isArabic ? 'الحالة' : 'Status'}</TableHead>
-            <TableHead>{isArabic ? 'البريد' : 'Email'}</TableHead>
-            <TableHead className="text-right rtl:text-left">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
+          <TableRow className="border-b border-accent/20 hover:bg-transparent">
+            <TableHead className="text-accent font-semibold">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
+            <TableHead className="text-accent font-semibold">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+            <TableHead className="text-accent font-semibold">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
+            <TableHead className="text-accent font-semibold">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+            <TableHead className="text-accent font-semibold">{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
+            <TableHead className="text-accent font-semibold">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+            <TableHead className="text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+            <TableHead className="text-accent font-semibold">{isArabic ? 'البريد' : 'Email'}</TableHead>
+            <TableHead className="text-right rtl:text-left text-accent font-semibold">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {bookings.map((booking) => (
-            <TableRow key={booking.id}>
-              <TableCell className="font-mono font-medium">
+          {bookings.map((booking, index) => (
+            <TableRow 
+              key={booking.id} 
+              className="border-b border-accent/10 hover:bg-accent/5 transition-colors"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <TableCell className="font-mono font-semibold text-accent">
                 {booking.booking_reference}
               </TableCell>
               <TableCell>
                 <div>
-                  <p className="font-medium">{booking.customer_name}</p>
+                  <p className="font-medium text-foreground">{booking.customer_name}</p>
                   <p className="text-sm text-muted-foreground">{booking.customer_email}</p>
                 </div>
               </TableCell>
-              <TableCell>{formatDate(booking.visit_date)}</TableCell>
-              <TableCell>{formatTime(booking.visit_time)}</TableCell>
+              <TableCell className="text-foreground">{formatDate(booking.visit_date)}</TableCell>
+              <TableCell className="text-foreground">{formatTime(booking.visit_time)}</TableCell>
               <TableCell>
-                <span className="text-sm">
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent/10 text-accent font-semibold">
                   {booking.adult_count + booking.child_count + (booking.senior_count || 0)}
                 </span>
               </TableCell>
-              <TableCell className="font-medium">
+              <TableCell className="font-semibold text-accent">
                 {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
               </TableCell>
               <TableCell>{getStatusBadge(booking.booking_status)}</TableCell>
               <TableCell>
                 {booking.confirmation_email_sent ? (
-                  <MailCheck className="h-4 w-4 text-success" />
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <MailCheck className="h-4 w-4 text-emerald-600" />
+                  </div>
                 ) : (
-                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 )}
               </TableCell>
               <TableCell className="text-right rtl:text-left">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="hover:bg-accent/10">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onViewDetails(booking)}>
-                      <Eye className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                  <DropdownMenuContent align="end" className="bg-card border-border">
+                    <DropdownMenuItem 
+                      onClick={() => onViewDetails(booking)}
+                      className="cursor-pointer hover:bg-accent/10"
+                    >
+                      <Eye className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-accent" />
                       {isArabic ? 'عرض التفاصيل' : 'View Details'}
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => handleResendEmail(booking)}
                       disabled={resendingId === booking.id}
+                      className="cursor-pointer hover:bg-accent/10"
                     >
                       {resendingId === booking.id ? (
-                        <RefreshCw className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" />
+                        <RefreshCw className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin text-accent" />
                       ) : (
-                        <Mail className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                        <Mail className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-accent" />
                       )}
                       {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
                     </DropdownMenuItem>
