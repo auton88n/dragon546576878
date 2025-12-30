@@ -165,13 +165,13 @@ const ConfirmationPage = () => {
     // Load and draw logo
     const logoImg = new Image();
     logoImg.crossOrigin = 'anonymous';
-    
+
     await new Promise<void>((resolve) => {
       logoImg.onload = () => {
-        // Draw logo centered - scale to fit nicely (max height ~70px)
-        const logoHeight = 70;
+        // Draw logo centered with a bit more presence
+        const logoHeight = 78;
         const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
-        ctx.drawImage(logoImg, (width - logoWidth) / 2, 35, logoWidth, logoHeight);
+        ctx.drawImage(logoImg, (width - logoWidth) / 2, 26, logoWidth, logoHeight);
         resolve();
       };
       logoImg.onerror = () => {
@@ -190,14 +190,14 @@ const ConfirmationPage = () => {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 18px Arial, sans-serif';
-    ctx.fillText(isArabic ? 'تذكرة دخول' : 'ENTRY TICKET', width / 2, 130);
-    
+    ctx.fillText(isArabic ? 'تذكرة دخول' : 'ENTRY TICKET', width / 2, 138);
+
     // Decorative gold line below entry ticket text
     ctx.strokeStyle = '#C9A86C';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(width/2 - 60, 148);
-    ctx.lineTo(width/2 + 60, 148);
+    ctx.moveTo(width / 2 - 86, 158);
+    ctx.lineTo(width / 2 + 86, 158);
     ctx.stroke();
 
     // Booking reference card - dark brown background with WHITE text
