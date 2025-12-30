@@ -132,8 +132,8 @@ const BookingPage = () => {
         <div className="container max-w-5xl">
           {/* Page Title */}
           <div className="text-center mb-8 animate-fade-in">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              <span className="gradient-text-gold">{isArabic ? 'احجز تذكرتك' : 'Book Your Ticket'}</span>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 text-accent">
+              {isArabic ? 'احجز تذكرتك' : 'Book Your Ticket'}
             </h1>
             <p className="text-muted-foreground">
               {isArabic ? 'اتبع الخطوات لإتمام حجزك' : 'Follow the steps to complete your booking'}

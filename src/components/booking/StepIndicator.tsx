@@ -7,7 +7,7 @@ interface StepIndicatorProps {
 }
 
 const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
-  const { currentLanguage, isRTL } = useLanguage();
+  const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
 
   const steps = [
@@ -26,24 +26,27 @@ const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
           return (
             <div key={step.number} className="flex items-center">
               <div className="flex items-center gap-3">
+                {/* Step Circle with Heritage Styling */}
                 <div
                   className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 font-semibold text-sm',
-                    isCompleted && 'bg-accent text-accent-foreground',
-                    isActive && 'bg-accent text-accent-foreground shadow-lg',
-                    !isCompleted && !isActive && 'bg-secondary text-muted-foreground'
+                    'w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 font-semibold text-sm border-2',
+                    isCompleted && 'gradient-gold border-accent text-foreground glow-gold',
+                    isActive && 'gradient-gold border-accent text-foreground shadow-xl glow-gold scale-110',
+                    !isCompleted && !isActive && 'bg-secondary border-border text-muted-foreground'
                   )}
                 >
                   {isCompleted ? (
                     <Check className="h-5 w-5" />
                   ) : (
-                    <span>{step.number}</span>
+                    <Icon className="h-5 w-5" />
                   )}
                 </div>
+                
+                {/* Step Label */}
                 <span 
                   className={cn(
-                    'text-sm font-medium hidden sm:block',
-                    isActive && 'text-foreground',
+                    'text-sm font-medium hidden sm:block transition-colors',
+                    isActive && 'text-accent font-semibold',
                     isCompleted && 'text-accent',
                     !isActive && !isCompleted && 'text-muted-foreground'
                   )}
@@ -52,12 +55,16 @@ const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
                 </span>
               </div>
               
-              {/* Connector line */}
+              {/* Connector line with animation */}
               {index < steps.length - 1 && (
-                <div className={cn(
-                  'w-16 h-0.5 mx-4',
-                  isCompleted ? 'bg-accent' : 'bg-border'
-                )} />
+                <div className="relative w-20 h-1 mx-4 bg-border rounded-full overflow-hidden">
+                  <div 
+                    className={cn(
+                      'absolute inset-y-0 left-0 gradient-gold rounded-full transition-all duration-700 ease-out',
+                      isCompleted ? 'w-full' : 'w-0'
+                    )} 
+                  />
+                </div>
               )}
             </div>
           );
