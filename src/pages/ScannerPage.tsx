@@ -25,6 +25,7 @@ const ScannerPage = () => {
   
   const [isScanning, setIsScanning] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [currentResult, setCurrentResult] = useState<TicketValidationResult | null>(null);
   const [showResultOverlay, setShowResultOverlay] = useState(false);
@@ -149,29 +150,65 @@ const ScannerPage = () => {
     }, 3000);
   }, [playSound, user]);
 
-  // Start camera scanning
+  // Start camera scanning with back camera preference
   const startScanning = async () => {
+    setCameraError(null);
+    
     try {
       if (!scannerRef.current) {
         scannerRef.current = new Html5Qrcode('qr-reader');
       }
 
-      await scannerRef.current.start(
-        { facingMode: 'environment' },
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1,
-        },
-        onScanSuccess,
-        () => {} // Ignore scan failures
-      );
+      const qrConfig = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1,
+      };
+
+      // Try strict back camera first (required for iOS)
+      try {
+        await scannerRef.current.start(
+          { facingMode: { exact: 'environment' } },
+          qrConfig,
+          onScanSuccess,
+          () => {} // Ignore scan failures
+        );
+      } catch (strictErr) {
+        console.log('Strict back camera failed, trying fallback:', strictErr);
+        // Fallback: try with non-strict constraint
+        await scannerRef.current.start(
+          { facingMode: 'environment' },
+          qrConfig,
+          onScanSuccess,
+          () => {}
+        );
+      }
 
       setIsScanning(true);
       setCameraReady(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error starting scanner:', err);
       setCameraReady(false);
+      setIsScanning(false);
+      
+      // Show user-friendly error messages
+      if (err.name === 'NotAllowedError' || err.message?.includes('Permission')) {
+        setCameraError(isArabic 
+          ? 'يرجى السماح بالوصول للكاميرا في إعدادات المتصفح'
+          : 'Please allow camera access in your browser settings');
+      } else if (err.name === 'NotFoundError' || err.message?.includes('Requested device not found')) {
+        setCameraError(isArabic
+          ? 'لم يتم العثور على كاميرا خلفية'
+          : 'No back camera found on this device');
+      } else if (err.name === 'NotReadableError') {
+        setCameraError(isArabic
+          ? 'الكاميرا مستخدمة من قبل تطبيق آخر'
+          : 'Camera is being used by another app');
+      } else {
+        setCameraError(isArabic
+          ? 'حدث خطأ في الكاميرا. يرجى المحاولة مرة أخرى'
+          : 'Camera error. Please try again');
+      }
     }
   };
 
@@ -344,8 +381,32 @@ const ScannerPage = () => {
                   )}
                 />
                 
+                {/* Camera Error Display */}
+                {cameraError && !isScanning && (
+                  <div className="w-full aspect-square bg-destructive/10 flex flex-col items-center justify-center p-6">
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-destructive/20 flex items-center justify-center mb-4 md:mb-6">
+                      <span className="icon-wrapper">
+                        <AlertTriangle className="h-10 w-10 md:h-12 md:w-12 text-destructive" aria-hidden="true" />
+                      </span>
+                    </div>
+                    <p className="text-destructive text-center font-medium max-w-xs text-sm md:text-base mb-4">
+                      {cameraError}
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setCameraError(null);
+                        startScanning();
+                      }}
+                      className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                    >
+                      {isArabic ? 'إعادة المحاولة' : 'Try Again'}
+                    </Button>
+                  </div>
+                )}
+
                 {/* Placeholder when not scanning */}
-                {!isScanning && (
+                {!isScanning && !cameraError && (
                   <div className="w-full aspect-square bg-secondary/30 flex flex-col items-center justify-center p-4">
                     <div className="w-20 h-20 md:w-24 md:h-24 rounded-full gradient-gold flex items-center justify-center mb-4 md:mb-6 glow-gold">
                       <span className="icon-wrapper">
