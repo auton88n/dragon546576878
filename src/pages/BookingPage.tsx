@@ -125,35 +125,43 @@ const BookingPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      <main className="flex-1 pt-24 pb-12">
+      <main className="flex-1 pt-28 pb-16">
         <div className="container max-w-5xl">
           {/* Page Title */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              {isArabic ? 'احجز تذكرتك' : 'Book Your Ticket'}
+          <div className="text-center mb-8 animate-fade-in">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">
+              <span className="gradient-text-gold">{isArabic ? 'احجز تذكرتك' : 'Book Your Ticket'}</span>
             </h1>
+            <p className="text-muted-foreground">
+              {isArabic ? 'اتبع الخطوات لإتمام حجزك' : 'Follow the steps to complete your booking'}
+            </p>
           </div>
 
           {/* Step Indicator */}
-          <div className="mb-8">
+          <div className="mb-10">
             <StepIndicator currentStep={step as 1 | 2} />
           </div>
 
           {/* Main Content */}
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-8">
             {/* Step Content */}
             <div className="lg:col-span-2">
-              <div className="bg-card rounded-2xl border border-border p-6">
-                {step === 1 && <TicketSelector />}
-                {step === 2 && (
-                  <DetailsAndPayment 
-                    onPaymentComplete={handlePaymentComplete} 
-                    isProcessing={isProcessing} 
-                  />
-                )}
+              <div 
+                className="glass-card-gold p-6 md:p-8 transition-all duration-500"
+                key={step}
+              >
+                <div className="animate-fade-in">
+                  {step === 1 && <TicketSelector />}
+                  {step === 2 && (
+                    <DetailsAndPayment 
+                      onPaymentComplete={handlePaymentComplete} 
+                      isProcessing={isProcessing} 
+                    />
+                  )}
+                </div>
 
                 {/* Navigation Button for Step 1 */}
                 {step === 1 && (
@@ -162,10 +170,13 @@ const BookingPage = () => {
                       size="lg"
                       onClick={handleNext}
                       disabled={!canProceed()}
-                      className="w-full h-12 text-base rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground disabled:bg-secondary disabled:text-muted-foreground"
+                      className="w-full h-14 text-lg rounded-xl btn-gold disabled:bg-muted disabled:text-muted-foreground disabled:opacity-50 disabled:shadow-none group"
                     >
                       {isArabic ? 'التالي' : 'Continue'}
-                      {isRTL ? <ArrowLeft className="h-4 w-4 mr-2" /> : <ArrowRight className="h-4 w-4 ml-2" />}
+                      {isRTL 
+                        ? <ArrowLeft className="h-5 w-5 mr-2 transition-transform group-hover:-translate-x-1" /> 
+                        : <ArrowRight className="h-5 w-5 ml-2 transition-transform group-hover:translate-x-1" />
+                      }
                     </Button>
                   </div>
                 )}
@@ -176,9 +187,12 @@ const BookingPage = () => {
                     <Button
                       variant="ghost"
                       onClick={handleBack}
-                      className="text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground group"
                     >
-                      {isRTL ? <ArrowRight className="h-4 w-4 ml-2" /> : <ArrowLeft className="h-4 w-4 mr-2" />}
+                      {isRTL 
+                        ? <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" /> 
+                        : <ArrowLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" />
+                      }
                       {isArabic ? 'رجوع' : 'Back'}
                     </Button>
                   </div>
@@ -188,7 +202,9 @@ const BookingPage = () => {
 
             {/* Order Summary Sidebar */}
             <div className="lg:col-span-1">
-              <OrderSummary />
+              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                <OrderSummary />
+              </div>
             </div>
           </div>
         </div>

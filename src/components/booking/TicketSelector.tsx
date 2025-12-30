@@ -58,32 +58,33 @@ const TicketSelector = () => {
     <div className="space-y-8">
       {/* Ticket Selection */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-sm flex items-center justify-center">1</span>
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
+          <span className="w-8 h-8 rounded-full gradient-gold text-foreground text-sm flex items-center justify-center font-bold glow-gold">1</span>
           {isArabic ? 'اختر التذاكر' : 'Select Tickets'}
         </h3>
         
         <div className="grid sm:grid-cols-2 gap-4">
-          {ticketTypes.map((ticket) => (
+          {ticketTypes.map((ticket, index) => (
             <div
               key={ticket.type}
               className={cn(
-                'p-4 rounded-xl border-2 transition-all duration-200',
+                'p-5 rounded-2xl border-2 transition-all duration-300 hover:shadow-lg',
                 ticket.count > 0 
-                  ? 'border-accent bg-accent/5' 
+                  ? 'border-accent bg-accent/5 shadow-md' 
                   : 'border-border hover:border-accent/50'
               )}
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={cn(
-                    'w-10 h-10 rounded-lg flex items-center justify-center',
-                    ticket.count > 0 ? 'bg-accent text-accent-foreground' : 'bg-secondary'
+                    'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300',
+                    ticket.count > 0 ? 'gradient-gold glow-gold' : 'bg-secondary'
                   )}>
-                    <ticket.icon className="h-5 w-5" />
+                    <ticket.icon className="h-6 w-6 text-foreground" />
                   </div>
                   <div>
-                    <div className="font-medium text-foreground">
+                    <div className="font-semibold text-foreground text-lg">
                       {isArabic ? ticket.labelAr : ticket.labelEn}
                     </div>
                     <div className="text-sm text-muted-foreground">
@@ -96,17 +97,17 @@ const TicketSelector = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-full"
+                    className="h-10 w-10 rounded-full border-2 hover:border-accent hover:bg-accent/10 transition-all"
                     onClick={() => setTickets(ticket.type, ticket.count - 1)}
                     disabled={ticket.count === 0}
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="w-6 text-center font-semibold text-lg">{ticket.count}</span>
+                  <span className="w-8 text-center font-bold text-xl text-foreground">{ticket.count}</span>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-full hover:bg-accent hover:text-accent-foreground"
+                    className="h-10 w-10 rounded-full border-2 hover:bg-accent hover:text-foreground hover:border-accent transition-all"
                     onClick={() => setTickets(ticket.type, ticket.count + 1)}
                     disabled={ticket.count >= 10}
                   >
@@ -121,8 +122,8 @@ const TicketSelector = () => {
 
       {/* Date Selection */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-sm flex items-center justify-center">2</span>
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
+          <span className="w-8 h-8 rounded-full gradient-gold text-foreground text-sm flex items-center justify-center font-bold glow-gold">2</span>
           {isArabic ? 'اختر التاريخ' : 'Select Date'}
         </h3>
         
@@ -131,8 +132,8 @@ const TicketSelector = () => {
             <Button
               variant="outline"
               className={cn(
-                'w-full justify-start h-12 text-base rounded-xl border-2',
-                selectedDate ? 'border-accent bg-accent/5' : 'border-border'
+                'w-full justify-start h-14 text-base rounded-xl border-2 transition-all duration-300 hover:shadow-md',
+                selectedDate ? 'border-accent bg-accent/5 shadow-sm' : 'border-border hover:border-accent/50'
               )}
             >
               <CalendarIcon className="mr-3 rtl:ml-3 rtl:mr-0 h-5 w-5 text-accent" />
@@ -145,10 +146,10 @@ const TicketSelector = () => {
                   {isArabic ? 'اضغط لاختيار التاريخ' : 'Click to select date'}
                 </span>
               )}
-              {selectedDate && <Check className="h-4 w-4 text-accent ml-auto rtl:mr-auto rtl:ml-0" />}
+              {selectedDate && <Check className="h-5 w-5 text-accent ml-auto rtl:mr-auto rtl:ml-0" />}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 glass-card" align="start">
             <Calendar
               mode="single"
               selected={selectedDate}
@@ -164,23 +165,24 @@ const TicketSelector = () => {
 
       {/* Time Selection */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-accent text-accent-foreground text-sm flex items-center justify-center">3</span>
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
+          <span className="w-8 h-8 rounded-full gradient-gold text-foreground text-sm flex items-center justify-center font-bold glow-gold">3</span>
           {isArabic ? 'اختر الوقت' : 'Select Time'}
         </h3>
         
-        <div className="grid grid-cols-3 gap-2">
-          {timeSlots.map((time) => (
+        <div className="grid grid-cols-3 gap-3">
+          {timeSlots.map((time, index) => (
             <Button
               key={time}
               variant="outline"
               className={cn(
-                'h-11 text-sm font-medium rounded-lg border-2 transition-all',
+                'h-12 text-sm font-medium rounded-xl border-2 transition-all duration-300 hover:shadow-md',
                 visitTime === time 
-                  ? 'border-accent bg-accent text-accent-foreground hover:bg-accent/90' 
-                  : 'border-border hover:border-accent/50'
+                  ? 'border-accent gradient-gold text-foreground hover:opacity-90 shadow-md' 
+                  : 'border-border hover:border-accent/50 hover:bg-accent/5'
               )}
               onClick={() => setVisitTime(time)}
+              style={{ animationDelay: `${index * 0.03}s` }}
             >
               {formatTimeDisplay(time)}
             </Button>
@@ -190,17 +192,19 @@ const TicketSelector = () => {
 
       {/* Summary */}
       {totalTickets > 0 && visitDate && visitTime && (
-        <div className="bg-accent/10 border border-accent/30 rounded-xl p-4 text-center">
+        <div className="bg-accent/10 border-2 border-accent/30 rounded-2xl p-5 text-center animate-scale-in">
           <div className="flex items-center justify-center gap-2 text-accent">
-            <Check className="h-5 w-5" />
-            <span className="font-medium">{isArabic ? 'جاهز للمتابعة' : 'Ready to continue'}</span>
+            <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+              <Check className="h-5 w-5" />
+            </div>
+            <span className="font-semibold text-lg">{isArabic ? 'جاهز للمتابعة' : 'Ready to continue'}</span>
           </div>
         </div>
       )}
 
       {totalTickets === 0 && (
-        <div className="border-2 border-dashed border-border rounded-xl p-4 text-center">
-          <p className="text-muted-foreground text-sm">
+        <div className="border-2 border-dashed border-border rounded-2xl p-5 text-center">
+          <p className="text-muted-foreground">
             {isArabic ? 'اختر تذكرة واحدة على الأقل' : 'Select at least one ticket'}
           </p>
         </div>
