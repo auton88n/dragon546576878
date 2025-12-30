@@ -162,27 +162,47 @@ const ConfirmationPage = () => {
     ctx.fillStyle = headerGradient;
     ctx.fillRect(0, 8, width, 172);
 
-    // Header text - center aligned
+    // Load and draw logo
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    
+    await new Promise<void>((resolve) => {
+      logoImg.onload = () => {
+        // Draw logo centered - scale to fit nicely (max height ~70px)
+        const logoHeight = 70;
+        const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
+        ctx.drawImage(logoImg, (width - logoWidth) / 2, 35, logoWidth, logoHeight);
+        resolve();
+      };
+      logoImg.onerror = () => {
+        // Fallback to text if logo fails to load
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 42px Arial, sans-serif';
+        ctx.fillText(isArabic ? 'سوق المفيجر' : 'Souq Almufaijer', width / 2, 85);
+        resolve();
+      };
+      // Use the white logo for dark header
+      logoImg.src = '/images/logo-white-email.png';
+    });
+
+    // Entry ticket text below logo
     ctx.textAlign = 'center';
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 42px Arial, sans-serif';
-    ctx.fillText(isArabic ? 'سوق المفيجر' : 'Souq Almufaijer', width / 2, 85);
-    
-    ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 18px Arial, sans-serif';
-    ctx.fillText(isArabic ? 'تذكرة دخول' : 'ENTRY TICKET', width / 2, 120);
+    ctx.fillText(isArabic ? 'تذكرة دخول' : 'ENTRY TICKET', width / 2, 130);
     
     // Decorative line
     ctx.strokeStyle = '#C9A86C';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(width/2 - 80, 140);
-    ctx.lineTo(width/2 + 80, 140);
+    ctx.moveTo(width/2 - 80, 150);
+    ctx.lineTo(width/2 + 80, 150);
     ctx.stroke();
     
     ctx.fillStyle = '#E8DED0';
     ctx.font = '14px Arial, sans-serif';
-    ctx.fillText(isArabic ? 'التراث الأصيل' : 'Authentic Heritage', width / 2, 165);
+    ctx.fillText(isArabic ? 'التراث الأصيل' : 'Authentic Heritage', width / 2, 172);
 
     // Booking reference card - dark brown background with WHITE text
     const refCardY = 210;
