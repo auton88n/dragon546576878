@@ -366,10 +366,28 @@
   }
 }
 
+/* Icon wrapper to isolate icons from text/font styling */
+.icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.icon-wrapper svg,
+.icon-wrapper .lucide {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-style: normal !important;
+  font-variant: normal !important;
+  text-rendering: geometricPrecision !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
 /* Ensure Lucide icons render correctly regardless of font */
 .lucide,
 [class*="lucide-"] {
-  font-family: inherit !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -379,6 +397,6 @@
 svg.lucide {
   font-style: normal;
   font-variant: normal;
-  text-rendering: auto;
+  text-rendering: geometricPrecision;
   -webkit-font-smoothing: antialiased;
 }

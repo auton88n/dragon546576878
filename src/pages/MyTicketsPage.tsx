@@ -58,20 +58,22 @@ const MyTicketsPage = () => {
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      <main className="flex-1 py-12 relative overflow-hidden">
+      <main className="flex-1 pt-24 md:pt-28 pb-8 md:pb-12 px-4 md:px-6 relative overflow-hidden">
         {/* Background Decorations */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 right-10 w-72 h-72 bg-accent/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 left-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-4 md:right-10 w-48 md:w-72 h-48 md:h-72 bg-accent/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-4 md:left-10 w-64 md:w-96 h-64 md:h-96 bg-primary/5 rounded-full blur-3xl" />
         </div>
 
-        <div className="container max-w-2xl relative z-10">
+        <div className="container max-w-2xl relative z-10 px-0">
           {/* Page Header */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 mb-6 border border-accent/20">
-              <Ticket className="h-10 w-10 text-accent" />
+          <div className="text-center mb-8 md:mb-10">
+            <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 mb-4 md:mb-6 border border-accent/20">
+              <span className="icon-wrapper">
+                <Ticket className="h-8 w-8 md:h-10 md:w-10 text-accent" aria-hidden="true" />
+              </span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 md:mb-3">
               {isArabic ? 'تذاكري' : 'My Tickets'}
             </h1>
             <p className="text-muted-foreground text-lg">
@@ -84,9 +86,11 @@ const MyTicketsPage = () => {
           {/* Email Search Form */}
           <Card className="mb-8 glass-card border-accent/20">
             <CardHeader className="border-b border-accent/10 bg-gradient-to-r from-accent/5 to-transparent">
-              <CardTitle className="flex items-center gap-3 text-lg text-foreground">
-                <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                  <Search className="h-5 w-5 text-accent" />
+              <CardTitle className="flex items-center gap-2 md:gap-3 text-base md:text-lg text-foreground">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+                  <span className="icon-wrapper">
+                    <Search className="h-4 w-4 md:h-5 md:w-5 text-accent" aria-hidden="true" />
+                  </span>
                 </div>
                 {isArabic ? 'البحث عن التذاكر' : 'Search Tickets'}
               </CardTitle>
@@ -104,8 +108,10 @@ const MyTicketsPage = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2 text-foreground">
-                          <Mail className="h-4 w-4 text-accent" />
+                        <FormLabel className="flex items-center gap-2 text-foreground text-sm md:text-base">
+                          <span className="icon-wrapper">
+                            <Mail className="h-4 w-4 text-accent" aria-hidden="true" />
+                          </span>
                           {isArabic ? 'البريد الإلكتروني' : 'Email Address'}
                         </FormLabel>
                         <FormControl>
@@ -135,7 +141,9 @@ const MyTicketsPage = () => {
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        <Search className="h-5 w-5" />
+                        <span className="icon-wrapper">
+                          <Search className="h-5 w-5" aria-hidden="true" />
+                        </span>
                         {isArabic ? 'بحث' : 'Search'}
                       </span>
                     )}
@@ -149,18 +157,22 @@ const MyTicketsPage = () => {
           {hasSearched && (
             <Card className="glass-card border-accent/20 animate-fade-in">
               <CardHeader className="border-b border-accent/10">
-                <CardTitle className="flex items-center gap-3 text-foreground">
-                  <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                    <Ticket className="h-5 w-5 text-accent" />
-                  </div>
+              <CardTitle className="flex items-center gap-2 md:gap-3 text-foreground">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+                  <span className="icon-wrapper">
+                    <Ticket className="h-4 w-4 md:h-5 md:w-5 text-accent" aria-hidden="true" />
+                  </span>
+                </div>
                   {isArabic ? 'نتائج البحث' : 'Search Results'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
                 {tickets.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
-                      <Ticket className="h-12 w-12 text-muted-foreground/40" />
+                  <div className="text-center py-8 md:py-12">
+                    <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 md:mb-6 rounded-full bg-muted/50 flex items-center justify-center">
+                      <span className="icon-wrapper">
+                        <Ticket className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/40" aria-hidden="true" />
+                      </span>
                     </div>
                     <h3 className="text-xl font-semibold text-foreground mb-2">
                       {isArabic ? 'لم يتم العثور على تذاكر' : 'No Tickets Found'}
@@ -172,7 +184,9 @@ const MyTicketsPage = () => {
                     </p>
                     <Link to="/book">
                       <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
-                        <Calendar className="h-4 w-4" />
+                        <span className="icon-wrapper">
+                          <Calendar className="h-4 w-4" aria-hidden="true" />
+                        </span>
                         {isArabic ? 'احجز زيارة جديدة' : 'Book a New Visit'}
                       </Button>
                     </Link>
@@ -188,15 +202,17 @@ const MyTicketsPage = () => {
 
           {/* Help Section */}
           {!hasSearched && (
-            <div className="text-center glass-card p-8 rounded-xl border border-accent/10">
-              <p className="text-muted-foreground mb-4 text-lg">
+            <div className="text-center glass-card p-6 md:p-8 rounded-xl border border-accent/10">
+              <p className="text-muted-foreground mb-4 text-base md:text-lg">
                 {isArabic 
                   ? 'لم تحجز بعد؟'
                   : "Haven't booked yet?"}
               </p>
               <Link to="/book">
-                <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 px-8 py-6 text-lg">
-                  <Calendar className="h-5 w-5" />
+                <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 px-6 md:px-8 py-5 md:py-6 text-base md:text-lg">
+                  <span className="icon-wrapper">
+                    <Calendar className="h-5 w-5" aria-hidden="true" />
+                  </span>
                   {isArabic ? 'احجز زيارتك الآن' : 'Book Your Visit Now'}
                 </Button>
               </Link>
