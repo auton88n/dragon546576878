@@ -4,6 +4,7 @@ import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Landmark, Heart, Calendar, Users, Ticket } from 'lucide-react';
+import { GeometricPattern, FloatingOrnaments, HeritageDivider, HeritageTitle, DecorativeBorder } from '@/components/shared/HeritagePatterns';
 import heroImage from '@/assets/hero-heritage.jpg';
 import featureHeritage from '@/assets/feature-heritage.jpg';
 import featureTours from '@/assets/feature-tours.jpg';
@@ -125,18 +126,18 @@ const Index = () => {
       </section>
 
       {/* Features Section with Images */}
-      <section className="py-24 bg-secondary/50">
-        <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary">
-              {isArabic ? 'اكتشف تجربتنا' : 'Discover Our Experience'}
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              {isArabic 
-                ? 'استمتع برحلة عبر الزمن في أحد أجمل المواقع التراثية'
-                : 'Enjoy a journey through time at one of the most beautiful heritage sites'}
-            </p>
-          </div>
+      <section className="py-24 bg-secondary/50 relative overflow-hidden">
+        <GeometricPattern />
+        <FloatingOrnaments />
+        <div className="container relative z-10">
+          <HeritageTitle
+            subtitle={isArabic 
+              ? 'استمتع برحلة عبر الزمن في أحد أجمل المواقع التراثية'
+              : 'Enjoy a journey through time at one of the most beautiful heritage sites'}
+            className="mb-16"
+          >
+            {isArabic ? 'اكتشف تجربتنا' : 'Discover Our Experience'}
+          </HeritageTitle>
 
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
@@ -176,17 +177,16 @@ const Index = () => {
       </section>
 
       {/* Hours & Location */}
-      <section className="py-24">
-        <div className="container">
+      <section className="py-24 relative overflow-hidden">
+        <GeometricPattern className="opacity-[0.02]" />
+        <div className="container relative z-10">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary">
+            <HeritageTitle
+              subtitle={isArabic ? 'ساعات العمل والموقع' : 'Operating Hours & Location'}
+              className="mb-12"
+            >
               {isArabic ? 'خطط لزيارتك' : 'Plan Your Visit'}
-            </h2>
-              <p className="text-muted-foreground text-lg">
-                {isArabic ? 'ساعات العمل والموقع' : 'Operating Hours & Location'}
-              </p>
-            </div>
+            </HeritageTitle>
 
             <div className="glass-card-gold p-8 md:p-12 hover:shadow-2xl transition-shadow duration-500">
               <div className="grid md:grid-cols-2 gap-8">
@@ -239,6 +239,8 @@ const Index = () => {
                 </div>
               </div>
             </div>
+            
+            <HeritageDivider className="mt-12" />
           </div>
         </div>
       </section>
