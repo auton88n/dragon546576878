@@ -357,8 +357,14 @@ const generateEmailTemplate = (
           <tr>
             <td align="center" style="padding: 24px 16px;">
               <p style="color: #5C4A3A; margin: 0 0 6px; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif;">${translations.address}</p>
-              <p style="color: #8B7355; margin: 0; font-size: 11px; font-family: Arial, sans-serif;">
+              <p style="color: #8B7355; margin: 0 0 16px; font-size: 11px; font-family: Arial, sans-serif;">
                 © ${new Date().getFullYear()} Souq Almufaijer. ${isArabic ? 'جميع الحقوق محفوظة' : 'All rights reserved'}.
+              </p>
+              <!-- Separator -->
+              <div style="border-top: 1px solid #E8DED0; width: 60px; margin: 0 auto 12px;"></div>
+              <!-- AYN Branding -->
+              <p style="color: #8B7355; margin: 0; font-size: 10px; font-family: Arial, sans-serif;">
+                Powered by <span style="font-weight: 600; color: #3D2E1F;">AYN</span>
               </p>
             </td>
           </tr>
