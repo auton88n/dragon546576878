@@ -232,7 +232,7 @@ async function sendEmailWithRetry(
     
     try {
       const { data, error } = await resend.emails.send({
-        from: "Souq Almufaijer <onboarding@resend.dev>",
+        from: "Souq Almufaijer <info@almufaijer.com>",
         to: [booking.customer_email],
         subject: subject,
         html: emailHtml,
