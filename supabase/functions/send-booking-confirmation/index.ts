@@ -201,8 +201,18 @@ const generateEmailTemplate = (
           <!-- Header -->
           <tr>
             <td align="center" style="background-color: #5C4A3A; padding: 32px 24px; border-radius: 16px 16px 0 0;">
-              <img src="https://preview--souq-almufaijer-tickets.lovable.app/images/logo-white-email.png" alt="Souq Almufaijer" width="180" height="auto" style="display: block; margin: 0 auto 16px;" />
-              <p style="color: #FFFFFF; margin: 0; font-size: 14px; font-weight: 600; letter-spacing: 1px; font-family: Arial, sans-serif;">${translations.confirmed}</p>
+              <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom: 16px;">
+                    <img src="https://souq-almufaijer-tickets.lovable.app/images/logo-white-email.png" alt="Souq Almufaijer" width="180" style="display: block; max-width: 180px; height: auto;" />
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <p style="color: #FFFFFF; margin: 0; font-size: 14px; font-weight: 600; letter-spacing: 1px; font-family: Arial, sans-serif;">${translations.confirmed}</p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           

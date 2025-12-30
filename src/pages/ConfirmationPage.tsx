@@ -192,17 +192,13 @@ const ConfirmationPage = () => {
     ctx.font = 'bold 18px Arial, sans-serif';
     ctx.fillText(isArabic ? 'تذكرة دخول' : 'ENTRY TICKET', width / 2, 130);
     
-    // Decorative line
+    // Decorative gold line below entry ticket text
     ctx.strokeStyle = '#C9A86C';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(width/2 - 80, 150);
-    ctx.lineTo(width/2 + 80, 150);
+    ctx.moveTo(width/2 - 60, 148);
+    ctx.lineTo(width/2 + 60, 148);
     ctx.stroke();
-    
-    ctx.fillStyle = '#E8DED0';
-    ctx.font = '14px Arial, sans-serif';
-    ctx.fillText(isArabic ? 'التراث الأصيل' : 'Authentic Heritage', width / 2, 172);
 
     // Booking reference card - dark brown background with WHITE text
     const refCardY = 210;
