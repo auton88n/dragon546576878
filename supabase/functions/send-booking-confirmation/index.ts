@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -210,31 +210,15 @@ const generateEmailTemplate = (
   `;
 };
 
-// Send email with retry logic
+// Send email with retry logic using Resend
 async function sendEmailWithRetry(
   supabase: any,
+  resend: Resend,
   booking: any,
   tickets: any[],
   emailQueueId: string | null,
   isArabic: boolean
 ): Promise<{ success: boolean; error?: string }> {
-  const smtpHost = Deno.env.get("SMTP_HOST");
-  const smtpPort = Deno.env.get("SMTP_PORT");
-  const smtpUsername = Deno.env.get("SMTP_USERNAME");
-  const smtpPassword = Deno.env.get("SMTP_PASSWORD");
-
-  // Validate SMTP configuration
-  if (!smtpHost || !smtpUsername || !smtpPassword) {
-    const error = "SMTP configuration incomplete. Missing: " + 
-      [!smtpHost && "SMTP_HOST", !smtpUsername && "SMTP_USERNAME", !smtpPassword && "SMTP_PASSWORD"]
-        .filter(Boolean).join(", ");
-    console.error(error);
-    if (emailQueueId) {
-      await updateEmailQueueError(supabase, emailQueueId, error, MAX_RETRIES);
-    }
-    return { success: false, error };
-  }
-
   // Generate email content
   const emailHtml = generateEmailTemplate(booking, tickets, isArabic);
   const subject = isArabic
@@ -246,36 +230,20 @@ async function sendEmailWithRetry(
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     console.log(`Attempt ${attempt}/${MAX_RETRIES} - Sending email to: ${booking.customer_email}`);
     
-    let client: SMTPClient | null = null;
-    
     try {
-      // Create SMTP client
-      client = new SMTPClient({
-        connection: {
-          hostname: smtpHost,
-          port: parseInt(smtpPort || "465"),
-          tls: true,
-          auth: {
-            username: smtpUsername,
-            password: smtpPassword,
-          },
-        },
-      });
-
-      console.log(`SMTP client created, connecting to ${smtpHost}:${smtpPort}`);
-
-      // Send email
-      await client.send({
-        from: smtpUsername,
-        to: booking.customer_email,
+      const { data, error } = await resend.emails.send({
+        from: "Souq Almufaijer <onboarding@resend.dev>",
+        to: [booking.customer_email],
         subject: subject,
-        content: "auto",
         html: emailHtml,
       });
 
-      await client.close();
-      
+      if (error) {
+        throw new Error(error.message || "Resend API error");
+      }
+
       console.log(`✅ Email sent successfully to ${booking.customer_email} on attempt ${attempt}`);
+      console.log(`   Resend ID: ${data?.id}`);
 
       // Update email queue success
       if (emailQueueId) {
@@ -302,15 +270,6 @@ async function sendEmailWithRetry(
     } catch (error: any) {
       lastError = error.message || String(error);
       console.error(`❌ Attempt ${attempt} failed:`, lastError);
-      
-      // Try to close client if it exists
-      if (client) {
-        try {
-          await client.close();
-        } catch (closeError) {
-          console.error("Error closing SMTP client:", closeError);
-        }
-      }
 
       // Update email queue with attempt info
       if (emailQueueId) {
@@ -349,6 +308,17 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("=".repeat(50));
     console.log(`📧 Processing booking confirmation for: ${bookingId}`);
     console.log(`Timestamp: ${new Date().toISOString()}`);
+
+    // Check Resend API key
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("❌ RESEND_API_KEY not configured");
+      throw new Error("Email service not configured: RESEND_API_KEY missing");
+    }
+
+    // Initialize Resend client
+    const resend = new Resend(resendApiKey);
+    console.log("✅ Resend client initialized");
 
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -418,6 +388,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email with retry logic
     const result = await sendEmailWithRetry(
       supabase,
+      resend,
       booking,
       tickets || [],
       emailQueueEntry?.id || null,
