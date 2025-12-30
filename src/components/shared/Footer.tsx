@@ -10,7 +10,7 @@ const Footer = () => {
 
   const quickLinks = [
     { href: '/', label: isArabic ? 'الرئيسية' : 'Home' },
-    { href: '/booking', label: isArabic ? 'احجز تذكرتك' : 'Book Tickets' },
+    { href: '/book', label: isArabic ? 'احجز تذكرتك' : 'Book Tickets' },
     { href: '/my-tickets', label: isArabic ? 'تذاكري' : 'My Tickets' },
   ];
 
