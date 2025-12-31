@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Maximize, Minimize } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
@@ -82,6 +82,7 @@ const ScannerPage = () => {
   const [searchResults, setSearchResults] = useState<TicketValidationResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showManualLookup, setShowManualLookup] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const resultTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -491,7 +492,7 @@ const ScannerPage = () => {
 
   return (
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <StaffHeader title="Ticket Scanner" titleAr="ماسح التذاكر" />
+      {!isFullscreen && <StaffHeader title="Ticket Scanner" titleAr="ماسح التذاكر" />}
 
       {/* Result Overlay */}
       {showResultOverlay && currentResult && (
@@ -566,9 +567,18 @@ const ScannerPage = () => {
           </div>
 
           {/* Scanner Area */}
-          <Card className="glass-card-gold mb-4 overflow-hidden border-0">
+          <Card className={cn("glass-card-gold overflow-hidden border-0", isFullscreen ? "mb-0" : "mb-4")}>
             <CardContent className="p-0">
-              <div className="relative w-full aspect-square overflow-hidden">
+              <div className={cn("relative w-full overflow-hidden", isFullscreen ? "h-[calc(100vh-120px)]" : "aspect-square")}>
+                {/* Fullscreen Toggle */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="absolute top-3 right-3 z-20 bg-background/80 backdrop-blur-sm border-accent/30 hover:bg-accent/10 h-10 w-10 rounded-xl"
+                >
+                  {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                </Button>
                 <div id="qr-reader" className="absolute inset-0 w-full h-full qr-scanner-container" />
                 
                 {cameraError && (
@@ -649,7 +659,7 @@ const ScannerPage = () => {
           </Card>
 
           {/* Recent Scans */}
-          <Card className="glass-card-gold border-0">
+          <Card className={cn("glass-card-gold border-0", isFullscreen && "hidden")}>
             <CardHeader className="pb-3 border-b border-border/50 p-4">
               <CardTitle className="flex items-center gap-2 text-base">
                 <div className="w-8 h-8 rounded-xl gradient-gold flex items-center justify-center">
@@ -693,7 +703,7 @@ const ScannerPage = () => {
       </main>
 
       {/* Powered by AYN Footer */}
-      <PoweredByAYN className="border-t border-border" />
+      {!isFullscreen && <PoweredByAYN className="border-t border-border" />}
 
       <style>{`
         @keyframes scan-line {
