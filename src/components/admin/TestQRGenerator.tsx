@@ -100,12 +100,12 @@ const TestQRGenerator = () => {
         cs: ticketCode.slice(-6),
       });
 
-      // Generate QR code image
+      // Generate QR code image - OPTIMIZED FOR SCREEN SCANNING
       const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
-        width: 400,
-        margin: 2,
+        width: 600,              // Larger for screen scanning
+        margin: 4,               // More white space
         errorCorrectionLevel: 'H',
-        color: { dark: '#2C2416', light: '#FFFFFF' },
+        color: { dark: '#000000', light: '#FFFFFF' }, // Pure black/white
       });
 
       // Create ticket
