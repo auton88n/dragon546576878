@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Ticket, Calendar, Clock, Users, ShieldCheck, Sparkles } from 'lucide-react';
+import { Ticket, Calendar, Sun, Users, ShieldCheck, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 
@@ -11,7 +11,7 @@ interface OrderSummaryProps {
 const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { tickets, pricing, visitDate, visitTime, totalAmount } = useBookingStore();
+  const { tickets, pricing, visitDate, totalAmount } = useBookingStore();
 
   const ticketItems = [
     { type: 'adult', labelAr: 'بالغ', labelEn: 'Adult', count: tickets.adult, price: pricing.adult },
@@ -19,14 +19,6 @@ const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
   ].filter(item => item.count > 0);
 
   const totalTickets = tickets.adult + tickets.child;
-
-  const formatTimeDisplay = (time: string) => {
-    const hour = parseInt(time.split(':')[0]);
-    if (isArabic) {
-      return hour < 12 ? `${hour}:00 ص` : `${hour === 12 ? 12 : hour - 12}:00 م`;
-    }
-    return hour < 12 ? `${hour}:00 AM` : `${hour === 12 ? 12 : hour - 12}:00 PM`;
-  };
 
   if (totalTickets === 0) {
     return (
@@ -70,24 +62,23 @@ const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
 
       <div className="p-6 space-y-5">
         {/* Visit Details */}
-        {(visitDate || visitTime) && (
+        {visitDate && (
           <div className="space-y-3 pb-5 border-b border-border">
-            {visitDate && (
-              <div className="flex items-center gap-3 text-sm group">
-                <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110">
-                  <Calendar className="h-4 w-4 text-accent" />
-                </div>
-                <span className="font-medium">{format(new Date(visitDate), 'd MMM yyyy', { locale: isArabic ? ar : enUS })}</span>
+            <div className="flex items-center gap-3 text-sm group">
+              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110">
+                <Calendar className="h-4 w-4 text-accent" />
               </div>
-            )}
-            {visitTime && (
-              <div className="flex items-center gap-3 text-sm group">
-                <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110">
-                  <Clock className="h-4 w-4 text-accent" />
-                </div>
-                <span className="font-medium">{formatTimeDisplay(visitTime)}</span>
+              <span className="font-medium">{format(new Date(visitDate), 'd MMM yyyy', { locale: isArabic ? ar : enUS })}</span>
+            </div>
+            {/* Valid All Day indicator */}
+            <div className="flex items-center gap-3 text-sm group">
+              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110">
+                <Sun className="h-4 w-4 text-accent" />
               </div>
-            )}
+              <span className="font-medium text-accent">
+                {isArabic ? 'صالحة طوال اليوم (9 ص - 6 م)' : 'Valid All Day (9 AM - 6 PM)'}
+              </span>
+            </div>
           </div>
         )}
 

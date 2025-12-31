@@ -2,13 +2,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { BookingFormState, TicketPricing } from '@/types';
 
-interface BookingStore extends BookingFormState {
+interface BookingStore extends Omit<BookingFormState, 'visitTime'> {
   // Actions - Now 2 steps only
   setStep: (step: 1 | 2) => void;
   setTickets: (type: 'adult' | 'child' | 'senior', count: number) => void;
   setPricing: (pricing: TicketPricing) => void;
   setVisitDate: (date: string) => void;
-  setVisitTime: (time: string) => void;
   setCustomerInfo: (info: Partial<BookingFormState['customerInfo']>) => void;
   setLanguage: (lang: 'ar' | 'en') => void;
   calculateTotal: () => void;
@@ -16,7 +15,7 @@ interface BookingStore extends BookingFormState {
   canProceed: () => boolean;
 }
 
-const initialState: BookingFormState = {
+const initialState: Omit<BookingFormState, 'visitTime'> = {
   step: 1,
   tickets: {
     adult: 0,
@@ -24,12 +23,11 @@ const initialState: BookingFormState = {
     senior: 0,
   },
   pricing: {
-    adult: 100,
-    child: 50,
-    senior: 75,
+    adult: 40,
+    child: 25,
+    senior: 0,
   },
   visitDate: undefined,
-  visitTime: undefined,
   customerInfo: {
     name: '',
     email: '',
@@ -62,8 +60,6 @@ export const useBookingStore = create<BookingStore>()(
 
       setVisitDate: (date) => set({ visitDate: date }),
 
-      setVisitTime: (time) => set({ visitTime: time }),
-
       setCustomerInfo: (info) =>
         set((state) => ({
           customerInfo: { ...state.customerInfo, ...info },
@@ -86,11 +82,10 @@ export const useBookingStore = create<BookingStore>()(
         const state = get();
         switch (state.step) {
           case 1:
-            // Step 1: Tickets + Date + Time selected
+            // Step 1: Tickets + Date selected (NO time required)
             return (
               state.tickets.adult + state.tickets.child + state.tickets.senior > 0 &&
-              !!state.visitDate &&
-              !!state.visitTime
+              !!state.visitDate
             );
           case 2:
             // Step 2: Customer info valid
@@ -109,7 +104,6 @@ export const useBookingStore = create<BookingStore>()(
       partialize: (state) => ({
         tickets: state.tickets,
         visitDate: state.visitDate,
-        visitTime: state.visitTime,
         customerInfo: state.customerInfo,
         language: state.language,
       }),

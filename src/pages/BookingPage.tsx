@@ -28,7 +28,6 @@ const BookingPage = () => {
     tickets, 
     pricing,
     visitDate, 
-    visitTime, 
     customerInfo, 
     totalAmount,
     reset 
@@ -69,7 +68,7 @@ const BookingPage = () => {
           customer_phone: customerInfo.phone,
           special_requests: customerInfo.specialRequests || null,
           visit_date: visitDate!,
-          visit_time: visitTime!,
+          visit_time: '09:00', // Default time - tickets valid all day
           adult_count: tickets.adult,
           child_count: tickets.child,
           senior_count: 0,
@@ -93,7 +92,6 @@ const BookingPage = () => {
           bookingId: booking.id,
           bookingReference: bookingReference,
           visitDate: visitDate!,
-          visitTime: visitTime!,
           adultCount: tickets.adult,
           childCount: tickets.child,
           seniorCount: 0,
