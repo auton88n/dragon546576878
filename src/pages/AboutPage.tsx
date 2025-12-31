@@ -32,7 +32,7 @@ const AboutPage = () => {
                 {isArabic ? 'اكتشف تراثنا' : 'Discover Our Heritage'}
               </span>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 animate-fade-in">
-                {isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
+                {isArabic ? 'المفيجر' : 'Almufaijer'}
               </h1>
               <div className="w-32 h-1 bg-gradient-to-r from-transparent via-accent to-transparent mx-auto mb-6" />
               <p className="text-white/80 text-lg md:text-xl max-w-xl mx-auto animate-fade-in">
