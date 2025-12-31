@@ -1,4 +1,4 @@
-import { CalendarIcon, Check, Sun, Sparkles } from 'lucide-react';
+import { CalendarIcon, Check, Sun, Sparkles, ShoppingBag, Home, Mountain, Landmark, Building2, TreePalm, Palette, Users } from 'lucide-react';
 import { format, isFriday, isBefore, startOfDay } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -9,26 +9,16 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import PackageCard, { type Package } from './PackageCard';
 
-// Attraction images
-import traditionalMarketImg from '@/assets/attractions/traditional-market.jpg';
-import samhaImg from '@/assets/attractions/samha.jpg';
-import alAdabImg from '@/assets/attractions/al-adab.jpg';
-import alWajahImg from '@/assets/attractions/al-wajah.jpg';
-import alOudImg from '@/assets/attractions/al-oud.jpg';
-import alBusiteenImg from '@/assets/attractions/al-busiteen.jpg';
-import alyaImg from '@/assets/attractions/alya.jpg';
-import alSawaniImg from '@/assets/attractions/al-sawani.jpg';
-
 // Attractions included in the ticket
 const ATTRACTIONS = [
-  { image: traditionalMarketImg, nameEn: 'Traditional Market', nameAr: 'السوق الشعبية', descEn: 'Heritage marketplace: traditional foods, incense, honey, handicrafts', descAr: 'سوق منتجات تراثية متنوعة: مأكولات، بخور، عسل، حرف يدوية' },
-  { image: samhaImg, nameEn: 'Samha', nameAr: 'سمحة', descEn: 'Authentic heritage site reflecting traditional village life', descAr: 'موقع تراثي أصيل يعكس الحياة التقليدية في القرية' },
-  { image: alAdabImg, nameEn: 'Al-Adab Area', nameAr: 'منطقة العداب', descEn: 'Stunning natural area to enjoy beautiful surroundings', descAr: 'منطقة طبيعية خلابة للاستمتاع بجمال المحيط' },
-  { image: alWajahImg, nameEn: 'Al-Wajah', nameAr: 'الوجاة', descEn: "Distinguished heritage landmark telling ancestors' stories", descAr: 'معلم تراثي مميز يروي قصص الأجداد' },
-  { image: alOudImg, nameEn: 'Al-Oud', nameAr: 'العود', descEn: 'Historical site celebrating local heritage', descAr: 'موقع تاريخي يحتفي بالتراث المحلي' },
-  { image: alBusiteenImg, nameEn: 'Al-Busiteen', nameAr: 'البسيتين', descEn: 'Traditional orchard showcasing heritage agriculture', descAr: 'بستان تقليدي يعرض الزراعة التراثية' },
-  { image: alyaImg, nameEn: 'Alya', nameAr: 'عليا', descEn: 'Cultural experiences and heritage activities', descAr: 'تجارب ثقافية وأنشطة تراثية' },
-  { image: alSawaniImg, nameEn: 'Al-Sawani', nameAr: 'السواني', descEn: 'Heritage activities and local traditions', descAr: 'أنشطة تراثية وتقاليد محلية' },
+  { icon: ShoppingBag, nameEn: 'Traditional Market', nameAr: 'السوق الشعبية', descEn: 'Heritage marketplace: traditional foods, incense, honey, handicrafts', descAr: 'سوق منتجات تراثية متنوعة: مأكولات، بخور، عسل، حرف يدوية' },
+  { icon: Home, nameEn: 'Samha', nameAr: 'سمحة', descEn: 'Authentic heritage site reflecting traditional village life', descAr: 'موقع تراثي أصيل يعكس الحياة التقليدية في القرية' },
+  { icon: Mountain, nameEn: 'Al-Adab Area', nameAr: 'منطقة العداب', descEn: 'Stunning natural area to enjoy beautiful surroundings', descAr: 'منطقة طبيعية خلابة للاستمتاع بجمال المحيط' },
+  { icon: Landmark, nameEn: 'Al-Wajah', nameAr: 'الوجاة', descEn: "Distinguished heritage landmark telling ancestors' stories", descAr: 'معلم تراثي مميز يروي قصص الأجداد' },
+  { icon: Building2, nameEn: 'Al-Oud', nameAr: 'العود', descEn: 'Historical site celebrating local heritage', descAr: 'موقع تاريخي يحتفي بالتراث المحلي' },
+  { icon: TreePalm, nameEn: 'Al-Busiteen', nameAr: 'البسيتين', descEn: 'Traditional orchard showcasing heritage agriculture', descAr: 'بستان تقليدي يعرض الزراعة التراثية' },
+  { icon: Palette, nameEn: 'Alya', nameAr: 'عليا', descEn: 'Cultural experiences and heritage activities', descAr: 'تجارب ثقافية وأنشطة تراثية' },
+  { icon: Users, nameEn: 'Al-Sawani', nameAr: 'السواني', descEn: 'Heritage activities and local traditions', descAr: 'أنشطة تراثية وتقاليد محلية' },
 ];
 
 // Hardcoded packages - can be moved to database later
@@ -190,20 +180,16 @@ const TicketSelector = () => {
         </h3>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {ATTRACTIONS.map((attraction, index) => (
-            <div
-              key={index}
-              className="group rounded-xl border border-border bg-card/50 hover:border-accent/50 overflow-hidden transition-all duration-300 hover:shadow-lg"
-            >
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={attraction.image}
-                  alt={attraction.nameEn}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  loading="lazy"
-                />
-              </div>
-              <div className="p-3">
+          {ATTRACTIONS.map((attraction, index) => {
+            const Icon = attraction.icon;
+            return (
+              <div
+                key={index}
+                className="group p-3 rounded-xl border border-border bg-card/50 hover:border-accent/50 hover:bg-accent/5 transition-all duration-300"
+              >
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mb-2 group-hover:bg-accent/20 transition-colors">
+                  <Icon className="h-4 w-4 text-accent" />
+                </div>
                 <p className="font-medium text-sm text-foreground leading-tight">
                   {isArabic ? attraction.nameAr : attraction.nameEn}
                 </p>
@@ -211,8 +197,8 @@ const TicketSelector = () => {
                   {isArabic ? attraction.descAr : attraction.descEn}
                 </p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
