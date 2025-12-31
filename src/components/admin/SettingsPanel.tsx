@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import TestQRGenerator from './TestQRGenerator';
 import PackagesManager from './PackagesManager';
 import AttractionsManager from './AttractionsManager';
+import StaffManager from './StaffManager';
 
 const SettingsPanel = () => {
   const { currentLanguage } = useLanguage();
@@ -302,6 +303,11 @@ const SettingsPanel = () => {
             {isArabic ? 'حفظ الإعدادات' : 'Save Settings'}
           </Button>
         </div>
+
+        <Separator className="my-4" />
+
+        {/* Staff Management */}
+        <StaffManager />
 
         <Separator className="my-4" />
 
