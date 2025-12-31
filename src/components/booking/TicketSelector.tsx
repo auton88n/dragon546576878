@@ -1,4 +1,4 @@
-import { Minus, Plus, Users, Baby, CalendarIcon, Clock, Check } from 'lucide-react';
+import { Minus, Plus, Users, Baby, CalendarIcon, Check, Sun } from 'lucide-react';
 import { format, isFriday, isBefore, startOfDay } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 const TicketSelector = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { tickets, pricing, setTickets, visitDate, visitTime, setVisitDate, setVisitTime } = useBookingStore();
+  const { tickets, pricing, setTickets, visitDate, setVisitDate } = useBookingStore();
 
   const ticketTypes = [
     {
@@ -35,16 +35,6 @@ const TicketSelector = () => {
       count: tickets.child,
     },
   ];
-
-  const timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
-
-  const formatTimeDisplay = (time: string) => {
-    const hour = parseInt(time.split(':')[0]);
-    if (isArabic) {
-      return hour < 12 ? `${hour}:00 ص` : `${hour === 12 ? 12 : hour - 12}:00 م`;
-    }
-    return hour < 12 ? `${hour}:00 AM` : `${hour === 12 ? 12 : hour - 12}:00 PM`;
-  };
 
   const disabledDays = (date: Date) => {
     const today = startOfDay(new Date());
@@ -161,37 +151,29 @@ const TicketSelector = () => {
             />
           </PopoverContent>
         </Popover>
-      </div>
 
-      {/* Time Selection */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
-          <span className="w-8 h-8 rounded-full gradient-gold text-foreground text-sm flex items-center justify-center font-bold glow-gold">3</span>
-          {isArabic ? 'اختر الوقت' : 'Select Time'}
-        </h3>
-        
-        <div className="grid grid-cols-3 gap-3">
-          {timeSlots.map((time, index) => (
-            <Button
-              key={time}
-              variant="outline"
-              className={cn(
-                'h-12 text-sm font-medium rounded-xl border-2 transition-all duration-300 hover:shadow-md',
-                visitTime === time 
-                  ? 'border-accent gradient-gold text-foreground hover:opacity-90 shadow-md' 
-                  : 'border-border hover:border-accent/50 hover:bg-accent/5'
-              )}
-              onClick={() => setVisitTime(time)}
-              style={{ animationDelay: `${index * 0.03}s` }}
-            >
-              {formatTimeDisplay(time)}
-            </Button>
-          ))}
-        </div>
+        {/* Valid All Day Message */}
+        {selectedDate && (
+          <div className="flex items-center gap-3 p-4 bg-accent/10 rounded-xl border border-accent/20">
+            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+              <Sun className="h-5 w-5 text-accent" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">
+                {isArabic ? 'صالحة طوال اليوم' : 'Valid All Day'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {isArabic 
+                  ? 'تعال في أي وقت خلال ساعات العمل (9 ص - 6 م)' 
+                  : 'Come anytime during operating hours (9 AM - 6 PM)'}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Summary */}
-      {totalTickets > 0 && visitDate && visitTime && (
+      {totalTickets > 0 && visitDate && (
         <div className="bg-accent/10 border-2 border-accent/30 rounded-2xl p-5 text-center animate-scale-in">
           <div className="flex items-center justify-center gap-2 text-accent">
             <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
