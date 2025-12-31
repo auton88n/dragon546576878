@@ -19,16 +19,18 @@ interface OrderSummaryProps {
 const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { tickets, pricing, visitDate, totalAmount, selectedPackageId } = useBookingStore();
+  const { tickets, visitDate, totalAmount, packageQuantities } = useBookingStore();
   
-  const packageName = selectedPackageId 
-    ? (isArabic ? PACKAGE_NAMES[selectedPackageId]?.ar : PACKAGE_NAMES[selectedPackageId]?.en) 
-    : null;
+  // Get package names for display
+  const selectedPackages = packageQuantities
+    .filter(p => p.quantity > 0)
+    .map(p => ({
+      name: isArabic ? PACKAGE_NAMES[p.packageId]?.ar : PACKAGE_NAMES[p.packageId]?.en,
+      quantity: p.quantity,
+      price: p.price * p.quantity,
+    }));
 
-  const ticketItems = [
-    { type: 'adult', labelAr: 'بالغ', labelEn: 'Adult', count: tickets.adult, price: pricing.adult },
-    { type: 'child', labelAr: 'طفل', labelEn: 'Child', count: tickets.child, price: pricing.child },
-  ].filter(item => item.count > 0);
+  const totalTickets = tickets.adult + tickets.child;
 
   const totalTickets = tickets.adult + tickets.child;
 
@@ -94,26 +96,18 @@ const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
           </div>
         )}
 
-        {/* Package Name */}
-        {packageName && (
-          <div className="flex items-center gap-2 pb-3 border-b border-border">
-            <Package className="h-4 w-4 text-accent" />
-            <span className="font-medium text-foreground">{packageName}</span>
-          </div>
-        )}
-
-        {/* Tickets Breakdown */}
+        {/* Package Breakdown */}
         <div className="space-y-3">
-          {ticketItems.map((item) => (
-            <div key={item.type} className="flex justify-between items-center text-sm">
+          {selectedPackages.map((pkg, index) => (
+            <div key={index} className="flex justify-between items-center text-sm">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <Package className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">
-                  {isArabic ? item.labelAr : item.labelEn} × {item.count}
+                  {pkg.name} × {pkg.quantity}
                 </span>
               </div>
               <span className="font-semibold">
-                {item.count * item.price} {isArabic ? 'ر.س' : 'SAR'}
+                {pkg.price.toFixed(2)} {isArabic ? 'ر.س' : 'SAR'}
               </span>
             </div>
           ))}

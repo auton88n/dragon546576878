@@ -1,6 +1,7 @@
-import { Check, Users, Baby, Crown } from 'lucide-react';
+import { Users, Baby, Minus, Plus } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export interface Package {
   id: string;
@@ -16,13 +17,14 @@ export interface Package {
 
 interface PackageCardProps {
   package_: Package;
-  isSelected: boolean;
-  onSelect: () => void;
+  quantity: number;
+  onQuantityChange: (quantity: number) => void;
 }
 
-const PackageCard = ({ package_, isSelected, onSelect }: PackageCardProps) => {
+const PackageCard = ({ package_, quantity, onQuantityChange }: PackageCardProps) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
+  const isSelected = quantity > 0;
 
   const getBadgeText = () => {
     if (package_.badge === 'popular') return isArabic ? 'الأكثر طلباً' : 'Most Popular';
@@ -32,15 +34,27 @@ const PackageCard = ({ package_, isSelected, onSelect }: PackageCardProps) => {
 
   const badgeText = getBadgeText();
 
+  const handleDecrease = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (quantity > 0) {
+      onQuantityChange(quantity - 1);
+    }
+  };
+
+  const handleIncrease = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (quantity < 10) {
+      onQuantityChange(quantity + 1);
+    }
+  };
+
   return (
-    <button
-      onClick={onSelect}
+    <div
       className={cn(
         'relative w-full p-5 rounded-2xl border-2 transition-all duration-300 text-start',
-        'hover:shadow-lg hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-accent/50',
         isSelected
           ? 'border-accent bg-accent/10 shadow-md ring-2 ring-accent/30'
-          : 'border-border bg-card hover:border-accent/50'
+          : 'border-border bg-card hover:border-accent/50 hover:shadow-lg'
       )}
     >
       {/* Badge */}
@@ -55,31 +69,6 @@ const PackageCard = ({ package_, isSelected, onSelect }: PackageCardProps) => {
           {badgeText}
         </div>
       )}
-
-      {/* Selection Indicator */}
-      <div className={cn(
-        'absolute top-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
-        isSelected 
-          ? 'bg-accent border-accent' 
-          : 'border-muted-foreground/30 bg-background',
-        isArabic ? 'left-4' : 'right-4'
-      )}>
-        {isSelected && <Check className="h-4 w-4 text-accent-foreground" />}
-      </div>
-
-      {/* Icon */}
-      <div className={cn(
-        'w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-all',
-        isSelected ? 'gradient-gold glow-gold' : 'bg-secondary'
-      )}>
-        {package_.adults + package_.children > 2 ? (
-          <Crown className="h-7 w-7 text-foreground" />
-        ) : package_.children > 0 ? (
-          <Baby className="h-7 w-7 text-foreground" />
-        ) : (
-          <Users className="h-7 w-7 text-foreground" />
-        )}
-      </div>
 
       {/* Package Name */}
       <h4 className="font-bold text-lg text-foreground mb-1">
@@ -107,19 +96,57 @@ const PackageCard = ({ package_, isSelected, onSelect }: PackageCardProps) => {
         )}
       </div>
 
-      {/* Price */}
-      <div className="flex items-baseline gap-1">
-        <span className={cn(
-          'text-2xl font-bold',
-          isSelected ? 'gradient-text-gold' : 'text-foreground'
-        )}>
-          {package_.price}
-        </span>
-        <span className="text-sm text-muted-foreground">
-          {isArabic ? 'ر.س' : 'SAR'}
-        </span>
+      {/* Price and Quantity */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-baseline gap-1">
+          <span className={cn(
+            'text-2xl font-bold',
+            isSelected ? 'gradient-text-gold' : 'text-foreground'
+          )}>
+            {package_.price}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            {isArabic ? 'ر.س' : 'SAR'}
+          </span>
+        </div>
+
+        {/* Quantity Selector */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              'h-9 w-9 rounded-full transition-all',
+              quantity === 0 ? 'opacity-50' : 'hover:bg-accent hover:text-accent-foreground'
+            )}
+            onClick={handleDecrease}
+            disabled={quantity === 0}
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          
+          <span className={cn(
+            'w-8 text-center font-bold text-lg',
+            isSelected ? 'text-accent' : 'text-foreground'
+          )}>
+            {quantity}
+          </span>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              'h-9 w-9 rounded-full transition-all hover:bg-accent hover:text-accent-foreground',
+              quantity >= 10 && 'opacity-50'
+            )}
+            onClick={handleIncrease}
+            disabled={quantity >= 10}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-    </button>
+    </div>
   );
 };
 
