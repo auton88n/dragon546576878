@@ -502,19 +502,21 @@ const ScannerPage = () => {
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && dismissResult()}
         >
-          {getStatusIcon(currentResult.status)}
-          <h2 className="text-3xl font-bold mt-6 mb-2">{getStatusText(currentResult.status)}</h2>
-          <p className="text-xl opacity-90 mb-4">{currentResult.message}</p>
+          <div className="scale-150 mb-2">
+            {getStatusIcon(currentResult.status)}
+          </div>
+          <h2 className="text-5xl md:text-6xl font-bold mt-6 mb-3 text-center leading-tight">{getStatusText(currentResult.status)}</h2>
+          <p className="text-2xl md:text-3xl opacity-95 mb-6 font-medium text-center">{currentResult.message}</p>
           {currentResult.ticket && (
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/30">
-              <p className="text-lg font-semibold">{currentResult.ticket.customerName}</p>
-              <p className="opacity-80 font-mono">{currentResult.ticket.ticketCode}</p>
-              <p className="text-sm opacity-70 capitalize mt-2 px-4 py-1 bg-white/10 rounded-full inline-block">
+            <div className="bg-white/30 backdrop-blur-md rounded-3xl p-8 text-center border-2 border-white/40 min-w-[300px] shadow-2xl">
+              <p className="text-2xl md:text-3xl font-bold mb-3">{currentResult.ticket.customerName}</p>
+              <p className="text-xl md:text-2xl opacity-90 font-mono tracking-wider mb-4">{currentResult.ticket.ticketCode}</p>
+              <p className="text-lg md:text-xl opacity-90 capitalize px-6 py-2 bg-white/25 rounded-full inline-block font-semibold">
                 {currentResult.ticket.ticketType}
               </p>
             </div>
           )}
-          <p className="mt-6 opacity-60 text-sm">{isArabic ? 'اضغط للمتابعة أو انتظر...' : 'Tap to continue or wait...'}</p>
+          <p className="mt-8 opacity-75 text-lg md:text-xl font-medium">{isArabic ? 'اضغط للمتابعة أو انتظر...' : 'Tap to continue or wait...'}</p>
         </div>
       )}
 
