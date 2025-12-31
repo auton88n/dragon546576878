@@ -220,13 +220,13 @@ const TestQRGenerator = () => {
   return (
     <Card className="glass-card border-accent/20 overflow-hidden">
       <CardHeader className="border-b border-accent/10 bg-gradient-to-r from-orange-500/5 to-transparent">
-        <CardTitle className="flex items-center gap-3 text-foreground">
+        <CardTitle className="flex items-center gap-3 text-foreground rtl:flex-row-reverse">
           <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
             <QrCode className="h-5 w-5 text-orange-600" />
           </div>
           {isArabic ? 'تذاكر الاختبار' : 'Test QR Codes'}
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-start rtl:text-end">
           {isArabic 
             ? 'إنشاء تذاكر اختبار لتدريب الموظفين على استخدام الماسح'
             : 'Generate test tickets for staff scanner training'}
@@ -245,17 +245,17 @@ const TestQRGenerator = () => {
               onClick={() => generateTestTicket(type)}
               disabled={generating !== null}
             >
-              <div className="flex items-center gap-2 w-full">
+              <div className="flex items-center gap-2 w-full rtl:flex-row-reverse">
                 {generating === type ? (
                   <Loader2 className="h-5 w-5 animate-spin text-accent" />
                 ) : (
                   <Badge className={`${getTypeColor(type)} border`}>
                     {getTypeIcon(type)}
-                    <span className="ml-1">{getTypeLabel(type, isArabic)}</span>
+                    <span className="ms-1">{getTypeLabel(type, isArabic)}</span>
                   </Badge>
                 )}
               </div>
-              <span className="text-xs text-muted-foreground text-start">
+              <span className="text-xs text-muted-foreground text-start rtl:text-end w-full">
                 {isArabic ? description.ar : description.en}
               </span>
             </Button>
@@ -265,21 +265,21 @@ const TestQRGenerator = () => {
         {/* Generated Tickets */}
         {testTickets.length > 0 && (
           <>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between rtl:flex-row-reverse">
               <h4 className="font-medium text-foreground">
                 {isArabic ? 'التذاكر المُنشأة' : 'Generated Tickets'}
               </h4>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 rtl:flex-row-reverse"
                 onClick={clearTestTickets}
                 disabled={clearing}
               >
                 {clearing ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className="h-4 w-4 animate-spin me-2" />
                 ) : (
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-4 w-4 me-2" />
                 )}
                 {isArabic ? 'مسح الكل' : 'Clear All'}
               </Button>
@@ -309,14 +309,26 @@ const TestQRGenerator = () => {
 
         {/* Instructions */}
         <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
-          <h4 className="font-medium text-foreground mb-2">
+          <h4 className="font-medium text-foreground mb-3 text-start rtl:text-end">
             {isArabic ? 'تعليمات الاستخدام' : 'How to Use'}
           </h4>
-          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-            <li>{isArabic ? 'انقر على نوع التذكرة لإنشاء رمز QR اختباري' : 'Click a ticket type to generate a test QR code'}</li>
-            <li>{isArabic ? 'افتح صفحة الماسح على جهاز آخر' : 'Open the scanner page on another device'}</li>
-            <li>{isArabic ? 'امسح رمز QR للتحقق من النتيجة المتوقعة' : 'Scan the QR code to verify the expected result'}</li>
-            <li>{isArabic ? 'استخدم "مسح الكل" لحذف تذاكر الاختبار بعد الانتهاء' : 'Use "Clear All" to delete test tickets when done'}</li>
+          <ul className="text-sm text-muted-foreground space-y-2">
+            <li className="flex items-start gap-2 rtl:flex-row-reverse">
+              <span className="text-accent mt-0.5 shrink-0">•</span>
+              <span className="text-start rtl:text-end">{isArabic ? 'انقر على نوع التذكرة لإنشاء رمز QR اختباري' : 'Click a ticket type to generate a test QR code'}</span>
+            </li>
+            <li className="flex items-start gap-2 rtl:flex-row-reverse">
+              <span className="text-accent mt-0.5 shrink-0">•</span>
+              <span className="text-start rtl:text-end">{isArabic ? 'افتح صفحة الماسح على جهاز آخر' : 'Open the scanner page on another device'}</span>
+            </li>
+            <li className="flex items-start gap-2 rtl:flex-row-reverse">
+              <span className="text-accent mt-0.5 shrink-0">•</span>
+              <span className="text-start rtl:text-end">{isArabic ? 'امسح رمز QR للتحقق من النتيجة المتوقعة' : 'Scan the QR code to verify the expected result'}</span>
+            </li>
+            <li className="flex items-start gap-2 rtl:flex-row-reverse">
+              <span className="text-accent mt-0.5 shrink-0">•</span>
+              <span className="text-start rtl:text-end">{isArabic ? 'استخدم "مسح الكل" لحذف تذاكر الاختبار بعد الانتهاء' : 'Use "Clear All" to delete test tickets when done'}</span>
+            </li>
           </ul>
         </div>
       </CardContent>
