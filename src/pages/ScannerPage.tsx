@@ -127,15 +127,35 @@ const ScannerPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showManualLookup]);
 
-  const initAudioContext = useCallback(() => {
+  const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
+      await audioContextRef.current.resume();
     }
     return audioContextRef.current;
   }, []);
+
+  const playReadyBeep = useCallback(async () => {
+    try {
+      const ctx = await initAudioContext();
+      if (ctx.state === 'running') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.1);
+      }
+    } catch (e) {
+      console.log('Audio init failed:', e);
+    }
+  }, [initAudioContext]);
 
   useEffect(() => {
     return () => {
@@ -157,10 +177,13 @@ const ScannerPage = () => {
     } catch (e) {}
   }, []);
 
-  const playSound = useCallback((type: 'success' | 'error' | 'warning') => {
+  const playSound = useCallback(async (type: 'success' | 'error' | 'warning') => {
     if (!soundEnabled) return;
     try {
-      const ctx = initAudioContext();
+      const ctx = await initAudioContext();
+      if (ctx.state !== 'running') {
+        await ctx.resume();
+      }
       if (type === 'success') {
         [660, 880].forEach((freq, i) => {
           const osc = ctx.createOscillator();
@@ -359,7 +382,11 @@ const ScannerPage = () => {
   const startScanning = async () => {
     setCameraError(null);
     setIsScanning(true);
-    initAudioContext();
+    
+    // Play ready beep to unlock audio on user interaction
+    if (soundEnabled) {
+      await playReadyBeep();
+    }
     
     try {
       if (!scannerRef.current) {
