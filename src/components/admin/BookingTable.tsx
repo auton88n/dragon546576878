@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, memo } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket } from 'lucide-react';
@@ -32,11 +33,25 @@ interface BookingTableProps {
   onViewDetails: (booking: Booking) => void;
 }
 
-const BookingTable = ({ bookings, loading, onViewDetails }: BookingTableProps) => {
+const ROW_HEIGHT = 72; // Approximate row height in pixels
+const VIRTUAL_THRESHOLD = 50; // Only use virtual scrolling for lists larger than this
+
+const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTableProps) => {
   const { currentLanguage } = useLanguage();
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const useVirtual = bookings.length > VIRTUAL_THRESHOLD;
+
+  const virtualizer = useVirtualizer({
+    count: bookings.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 5,
+    enabled: useVirtual,
+  });
 
   const handleResendEmail = async (booking: Booking) => {
     setResendingId(booking.id);
@@ -103,6 +118,72 @@ const BookingTable = ({ bookings, loading, onViewDetails }: BookingTableProps) =
     return `${hour12}:${minutes} ${ampm}`;
   };
 
+  const renderRow = (booking: Booking) => (
+    <>
+      <TableCell className="font-mono font-semibold text-accent">
+        {booking.booking_reference}
+      </TableCell>
+      <TableCell>
+        <div>
+          <p className="font-medium text-foreground">{booking.customer_name}</p>
+          <p className="text-sm text-muted-foreground">{booking.customer_email}</p>
+        </div>
+      </TableCell>
+      <TableCell className="text-foreground">{formatDate(booking.visit_date)}</TableCell>
+      <TableCell className="text-foreground">{formatTime(booking.visit_time)}</TableCell>
+      <TableCell>
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent/10 text-accent font-semibold">
+          {booking.adult_count + booking.child_count + (booking.senior_count || 0)}
+        </span>
+      </TableCell>
+      <TableCell className="font-semibold text-accent">
+        {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
+      </TableCell>
+      <TableCell>{getStatusBadge(booking.booking_status)}</TableCell>
+      <TableCell>
+        {booking.confirmation_email_sent ? (
+          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <MailCheck className="h-4 w-4 text-emerald-600" />
+          </div>
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+            <Mail className="h-4 w-4 text-muted-foreground" />
+          </div>
+        )}
+      </TableCell>
+      <TableCell className="text-right rtl:text-left">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="hover:bg-accent/10">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-card border-border">
+            <DropdownMenuItem 
+              onClick={() => onViewDetails(booking)}
+              className="cursor-pointer hover:bg-accent/10"
+            >
+              <Eye className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-accent" />
+              {isArabic ? 'عرض التفاصيل' : 'View Details'}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => handleResendEmail(booking)}
+              disabled={resendingId === booking.id}
+              className="cursor-pointer hover:bg-accent/10"
+            >
+              {resendingId === booking.id ? (
+                <RefreshCw className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin text-accent" />
+              ) : (
+                <Mail className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-accent" />
+              )}
+              {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </>
+  );
+
   if (loading) {
     return (
       <div className="space-y-3">
@@ -124,96 +205,106 @@ const BookingTable = ({ bookings, loading, onViewDetails }: BookingTableProps) =
     );
   }
 
-  return (
-    <div className="overflow-x-auto glass-card rounded-xl border border-accent/20">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-b border-accent/20 hover:bg-transparent">
-            <TableHead className="text-accent font-semibold">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
-            <TableHead className="text-accent font-semibold">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-            <TableHead className="text-accent font-semibold">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
-            <TableHead className="text-accent font-semibold">{isArabic ? 'الوقت' : 'Time'}</TableHead>
-            <TableHead className="text-accent font-semibold">{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
-            <TableHead className="text-accent font-semibold">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-            <TableHead className="text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
-            <TableHead className="text-accent font-semibold">{isArabic ? 'البريد' : 'Email'}</TableHead>
-            <TableHead className="text-right rtl:text-left text-accent font-semibold">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {bookings.map((booking, index) => (
-            <TableRow 
-              key={booking.id} 
-              className="border-b border-accent/10 hover:bg-accent/5 transition-colors"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <TableCell className="font-mono font-semibold text-accent">
-                {booking.booking_reference}
-              </TableCell>
-              <TableCell>
-                <div>
-                  <p className="font-medium text-foreground">{booking.customer_name}</p>
-                  <p className="text-sm text-muted-foreground">{booking.customer_email}</p>
-                </div>
-              </TableCell>
-              <TableCell className="text-foreground">{formatDate(booking.visit_date)}</TableCell>
-              <TableCell className="text-foreground">{formatTime(booking.visit_time)}</TableCell>
-              <TableCell>
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent/10 text-accent font-semibold">
-                  {booking.adult_count + booking.child_count + (booking.senior_count || 0)}
-                </span>
-              </TableCell>
-              <TableCell className="font-semibold text-accent">
-                {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
-              </TableCell>
-              <TableCell>{getStatusBadge(booking.booking_status)}</TableCell>
-              <TableCell>
-                {booking.confirmation_email_sent ? (
-                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <MailCheck className="h-4 w-4 text-emerald-600" />
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                )}
-              </TableCell>
-              <TableCell className="text-right rtl:text-left">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="hover:bg-accent/10">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-card border-border">
-                    <DropdownMenuItem 
-                      onClick={() => onViewDetails(booking)}
-                      className="cursor-pointer hover:bg-accent/10"
-                    >
-                      <Eye className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-accent" />
-                      {isArabic ? 'عرض التفاصيل' : 'View Details'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleResendEmail(booking)}
-                      disabled={resendingId === booking.id}
-                      className="cursor-pointer hover:bg-accent/10"
-                    >
-                      {resendingId === booking.id ? (
-                        <RefreshCw className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin text-accent" />
-                      ) : (
-                        <Mail className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-accent" />
-                      )}
-                      {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
+  // Regular table for small datasets
+  if (!useVirtual) {
+    return (
+      <div className="overflow-x-auto glass-card rounded-xl border border-accent/20">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-accent/20 hover:bg-transparent">
+              <TableHead className="text-accent font-semibold">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
+              <TableHead className="text-accent font-semibold">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+              <TableHead className="text-accent font-semibold">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
+              <TableHead className="text-accent font-semibold">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+              <TableHead className="text-accent font-semibold">{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
+              <TableHead className="text-accent font-semibold">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+              <TableHead className="text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+              <TableHead className="text-accent font-semibold">{isArabic ? 'البريد' : 'Email'}</TableHead>
+              <TableHead className="text-right rtl:text-left text-accent font-semibold">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {bookings.map((booking) => (
+              <TableRow 
+                key={booking.id} 
+                className="border-b border-accent/10 hover:bg-accent/5 transition-colors"
+              >
+                {renderRow(booking)}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
+
+  // Virtual scrolling table for large datasets
+  const virtualItems = virtualizer.getVirtualItems();
+
+  return (
+    <div className="glass-card rounded-xl border border-accent/20 overflow-hidden">
+      {/* Fixed header */}
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-accent/20 hover:bg-transparent">
+              <TableHead className="text-accent font-semibold min-w-[120px]">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
+              <TableHead className="text-accent font-semibold min-w-[180px]">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+              <TableHead className="text-accent font-semibold min-w-[130px]">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
+              <TableHead className="text-accent font-semibold min-w-[80px]">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+              <TableHead className="text-accent font-semibold min-w-[80px]">{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
+              <TableHead className="text-accent font-semibold min-w-[100px]">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+              <TableHead className="text-accent font-semibold min-w-[100px]">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+              <TableHead className="text-accent font-semibold min-w-[60px]">{isArabic ? 'البريد' : 'Email'}</TableHead>
+              <TableHead className="text-right rtl:text-left text-accent font-semibold min-w-[80px]">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
+            </TableRow>
+          </TableHeader>
+        </Table>
+      </div>
+
+      {/* Virtualized scrollable body */}
+      <div 
+        ref={parentRef}
+        className="overflow-auto max-h-[500px]"
+      >
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          <Table>
+            <TableBody>
+              {virtualItems.map((virtualRow) => {
+                const booking = bookings[virtualRow.index];
+                return (
+                  <TableRow
+                    key={booking.id}
+                    data-index={virtualRow.index}
+                    ref={virtualizer.measureElement}
+                    className="border-b border-accent/10 hover:bg-accent/5 transition-colors"
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    {renderRow(booking)}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </div>
   );
-};
+});
+
+BookingTable.displayName = 'BookingTable';
 
 export default BookingTable;
