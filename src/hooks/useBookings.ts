@@ -65,16 +65,16 @@ export const useBookings = (filters: BookingFilters, page: number = 1, pageSize:
     }
   }, [filters, page, pageSize]);
 
-  useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
-
   const throttledFetch = useCallback(() => {
     const now = Date.now();
     if (now - lastFetchRef.current > THROTTLE_MS) {
       lastFetchRef.current = now;
       fetchBookings();
     }
+  }, [fetchBookings]);
+
+  useEffect(() => {
+    fetchBookings();
   }, [fetchBookings]);
 
   // Real-time updates with throttle
