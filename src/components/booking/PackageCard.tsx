@@ -1,4 +1,4 @@
-import { Check, Users, Baby } from 'lucide-react';
+import { Check, Users, Baby, Crown } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +12,6 @@ export interface Package {
   children: number;
   price: number;
   badge?: 'popular' | 'value';
-  image: string;
 }
 
 interface PackageCardProps {
@@ -68,17 +67,18 @@ const PackageCard = ({ package_, isSelected, onSelect }: PackageCardProps) => {
         {isSelected && <Check className="h-4 w-4 text-accent-foreground" />}
       </div>
 
-      {/* Package Image */}
+      {/* Icon */}
       <div className={cn(
-        'w-20 h-20 rounded-xl overflow-hidden mb-4 transition-all',
-        isSelected ? 'ring-2 ring-accent glow-gold' : ''
+        'w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-all',
+        isSelected ? 'gradient-gold glow-gold' : 'bg-secondary'
       )}>
-        <img 
-          src={package_.image} 
-          alt={isArabic ? package_.nameAr : package_.nameEn}
-          className="w-full h-full object-cover"
-          loading="lazy"
-        />
+        {package_.adults + package_.children > 2 ? (
+          <Crown className="h-7 w-7 text-foreground" />
+        ) : package_.children > 0 ? (
+          <Baby className="h-7 w-7 text-foreground" />
+        ) : (
+          <Users className="h-7 w-7 text-foreground" />
+        )}
       </div>
 
       {/* Package Name */}
