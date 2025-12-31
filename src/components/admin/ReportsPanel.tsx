@@ -89,62 +89,62 @@ const ReportsPanel = () => {
 
   return (
     <Card className="glass-card border-accent/20 overflow-hidden">
-      <CardHeader className="border-b border-accent/10 bg-gradient-to-r from-accent/5 to-transparent">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-foreground">
-              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                <BarChart3 className="h-5 w-5 text-accent" />
+      <CardHeader className="border-b border-accent/10 bg-gradient-to-r from-accent/5 to-transparent rtl:bg-gradient-to-l p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="text-start rtl:text-right">
+            <CardTitle className="flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end text-base md:text-lg">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+                <BarChart3 className="h-4 w-4 md:h-5 md:w-5 text-accent" />
               </div>
               {isArabic ? 'التقارير والإحصائيات' : 'Reports & Analytics'}
             </CardTitle>
-            <CardDescription className="mt-1">
+            <CardDescription className="mt-1 text-sm">
               {isArabic ? 'عرض اتجاهات الإيرادات وإحصائيات الزوار' : 'View revenue trends and visitor statistics'}
             </CardDescription>
           </div>
           <Tabs value={period} onValueChange={(v) => setPeriod(v as '7' | '30' | '90')}>
             <TabsList className="bg-background/50 border border-accent/20">
-              <TabsTrigger value="7" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+              <TabsTrigger value="7" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-xs md:text-sm px-2 md:px-3">
                 {isArabic ? '7 أيام' : '7 Days'}
               </TabsTrigger>
-              <TabsTrigger value="30" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+              <TabsTrigger value="30" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-xs md:text-sm px-2 md:px-3">
                 {isArabic ? '30 يوم' : '30 Days'}
               </TabsTrigger>
-              <TabsTrigger value="90" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+              <TabsTrigger value="90" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-xs md:text-sm px-2 md:px-3">
                 {isArabic ? '90 يوم' : '90 Days'}
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       </CardHeader>
-      <CardContent className="space-y-8 pt-6">
+      <CardContent className="space-y-6 md:space-y-8 p-4 md:p-6 pt-4 md:pt-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {summaryCards.map((card, index) => (
             <div
               key={index}
-              className={`rounded-xl p-4 bg-gradient-to-br ${card.gradient} border border-accent/10 transition-transform hover:scale-[1.02]`}
+              className={`rounded-xl p-3 md:p-4 bg-gradient-to-br ${card.gradient} border border-accent/10 transition-transform hover:scale-[1.02] text-start rtl:text-right`}
             >
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`w-10 h-10 rounded-lg ${card.iconBg} flex items-center justify-center`}>
-                  <card.icon className={`h-5 w-5 ${card.iconColor}`} />
+              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3 rtl:flex-row-reverse rtl:justify-end">
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg ${card.iconBg} flex items-center justify-center`}>
+                  <card.icon className={`h-4 w-4 md:h-5 md:w-5 ${card.iconColor}`} />
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground mb-1">{card.title}</p>
-              <p className="text-xl font-bold text-foreground">{card.value}</p>
+              <p className="text-xs md:text-sm text-muted-foreground mb-1">{card.title}</p>
+              <p className="text-lg md:text-xl font-bold text-foreground">{card.value}</p>
             </div>
           ))}
         </div>
 
         {/* Revenue Chart */}
-        <div className="glass-card rounded-xl p-6 border border-accent/10">
-          <h3 className="font-semibold mb-6 flex items-center gap-2 text-foreground">
-            <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
-              <DollarSign className="h-4 w-4 text-accent" />
+        <div className="glass-card rounded-xl p-4 md:p-6 border border-accent/10">
+          <h3 className="font-semibold mb-4 md:mb-6 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end text-sm md:text-base">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+              <DollarSign className="h-3.5 w-3.5 md:h-4 md:w-4 text-accent" />
             </div>
             {isArabic ? 'اتجاه الإيرادات' : 'Revenue Trend'}
           </h3>
-          <div className="h-72">
+          <div className="h-56 md:h-72">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
                 <defs>
@@ -188,14 +188,14 @@ const ReportsPanel = () => {
         </div>
 
         {/* Visitors Chart */}
-        <div className="glass-card rounded-xl p-6 border border-accent/10">
-          <h3 className="font-semibold mb-6 flex items-center gap-2 text-foreground">
-            <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
-              <Users className="h-4 w-4 text-purple-600" />
+        <div className="glass-card rounded-xl p-4 md:p-6 border border-accent/10">
+          <h3 className="font-semibold mb-4 md:mb-6 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end text-sm md:text-base">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <Users className="h-3.5 w-3.5 md:h-4 md:w-4 text-purple-600" />
             </div>
             {isArabic ? 'الزوار والحجوزات' : 'Visitors & Bookings'}
           </h3>
-          <div className="h-72">
+          <div className="h-56 md:h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--accent) / 0.1)" />

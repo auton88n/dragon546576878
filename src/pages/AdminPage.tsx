@@ -84,10 +84,10 @@ const AdminPage = () => {
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <StaffHeader title="Dashboard" titleAr="لوحة التحكم" />
 
-      <main className="flex-1 pt-20 pb-4 px-4 md:px-6">
+      <main className="flex-1 pt-20 pb-4 px-3 sm:px-4 md:px-6">
         <div className="container px-0">
           {/* Quick Actions */}
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end rtl:justify-start mb-4">
             <Link to="/scan">
               <Button className="btn-gold gap-2 text-sm">
                 <QrCode className="h-4 w-4" />
@@ -132,8 +132,8 @@ const AdminPage = () => {
             {/* Bookings Tab */}
             <TabsContent value="bookings" className="animate-fade-in">
               <Card className="glass-card-gold border-0">
-                <CardHeader className="border-b border-border/50 p-4 md:p-6">
-                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <CardHeader className="border-b border-border/50 p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg rtl:flex-row-reverse rtl:justify-end">
                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl gradient-gold flex items-center justify-center">
                       <Ticket className="h-4 w-4 md:h-5 md:w-5 text-foreground" />
                     </div>
@@ -142,7 +142,7 @@ const AdminPage = () => {
                     </span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 pt-6">
+                <CardContent className="space-y-4 p-3 sm:p-4 md:p-6 pt-4 sm:pt-6">
                   <BookingFilters
                     filters={filters}
                     onFiltersChange={setFilters}
