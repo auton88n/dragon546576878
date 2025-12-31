@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,7 +13,7 @@ interface StatsCardProps {
   loading?: boolean;
 }
 
-const StatsCard = ({
+const StatsCard = memo(({
   title,
   value,
   suffix,
@@ -47,6 +48,8 @@ const StatsCard = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+StatsCard.displayName = 'StatsCard';
 
 export default StatsCard;
