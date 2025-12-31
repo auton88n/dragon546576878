@@ -1,4 +1,4 @@
-import { CalendarIcon, Check, Sun } from 'lucide-react';
+import { CalendarIcon, Check, Sun, Sparkles, ShoppingBag, Home, Mountain, Landmark, Building2, TreePalm, Palette, Users } from 'lucide-react';
 import { format, isFriday, isBefore, startOfDay } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -8,6 +8,18 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import PackageCard, { type Package } from './PackageCard';
+
+// Attractions included in the ticket
+const ATTRACTIONS = [
+  { icon: ShoppingBag, nameEn: 'Traditional Market', nameAr: 'السوق الشعبية', descEn: 'Heritage marketplace: traditional foods, incense, honey, handicrafts', descAr: 'سوق منتجات تراثية متنوعة: مأكولات، بخور، عسل، حرف يدوية' },
+  { icon: Home, nameEn: 'Samha', nameAr: 'سمحة', descEn: 'Authentic heritage site reflecting traditional village life', descAr: 'موقع تراثي أصيل يعكس الحياة التقليدية في القرية' },
+  { icon: Mountain, nameEn: 'Al-Adab Area', nameAr: 'منطقة العداب', descEn: 'Stunning natural area to enjoy beautiful surroundings', descAr: 'منطقة طبيعية خلابة للاستمتاع بجمال المحيط' },
+  { icon: Landmark, nameEn: 'Al-Wajah', nameAr: 'الوجاة', descEn: "Distinguished heritage landmark telling ancestors' stories", descAr: 'معلم تراثي مميز يروي قصص الأجداد' },
+  { icon: Building2, nameEn: 'Al-Oud', nameAr: 'العود', descEn: 'Historical site celebrating local heritage', descAr: 'موقع تاريخي يحتفي بالتراث المحلي' },
+  { icon: TreePalm, nameEn: 'Al-Busiteen', nameAr: 'البسيتين', descEn: 'Traditional orchard showcasing heritage agriculture', descAr: 'بستان تقليدي يعرض الزراعة التراثية' },
+  { icon: Palette, nameEn: 'Alya', nameAr: 'عليا', descEn: 'Cultural experiences and heritage activities', descAr: 'تجارب ثقافية وأنشطة تراثية' },
+  { icon: Users, nameEn: 'Al-Sawani', nameAr: 'السواني', descEn: 'Heritage activities and local traditions', descAr: 'أنشطة تراثية وتقاليد محلية' },
+];
 
 // Hardcoded packages - can be moved to database later
 const PACKAGES: Package[] = [
@@ -156,6 +168,38 @@ const TicketSelector = () => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* What You'll Experience */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
+          <span className="w-8 h-8 rounded-full gradient-gold text-foreground text-sm flex items-center justify-center font-bold glow-gold">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          {isArabic ? 'ماذا ستختبر' : "What You'll Experience"}
+        </h3>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {ATTRACTIONS.map((attraction, index) => {
+            const Icon = attraction.icon;
+            return (
+              <div
+                key={index}
+                className="group p-3 rounded-xl border border-border bg-card/50 hover:border-accent/50 hover:bg-accent/5 transition-all duration-300"
+              >
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mb-2 group-hover:bg-accent/20 transition-colors">
+                  <Icon className="h-4 w-4 text-accent" />
+                </div>
+                <p className="font-medium text-sm text-foreground leading-tight">
+                  {isArabic ? attraction.nameAr : attraction.nameEn}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  {isArabic ? attraction.descAr : attraction.descEn}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Summary */}

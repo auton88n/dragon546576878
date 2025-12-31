@@ -32,8 +32,6 @@ const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
 
   const totalTickets = tickets.adult + tickets.child;
 
-  const totalTickets = tickets.adult + tickets.child;
-
   if (totalTickets === 0) {
     return (
       <div className={`glass-card-gold p-6 ${compact ? '' : 'sticky top-28'}`}>
