@@ -137,7 +137,7 @@ const generateEmailTemplate = (
         : translations.senior;
       return `
         <td align="center" valign="top" style="padding: 12px;">
-          <table cellpadding="0" cellspacing="0" border="0" width="180" style="background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E8DED0;">
+          <table cellpadding="0" cellspacing="0" border="0" width="220" style="background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E8DED0;">
             <tr>
               <td align="center" style="padding: 16px 16px 12px 16px;">
                 <span style="display: inline-block; background-color: #5C4A3A; color: #FFFFFF; padding: 6px 12px; border-radius: 16px; font-size: 11px; font-weight: 600; font-family: Arial, sans-serif;">
@@ -147,7 +147,7 @@ const generateEmailTemplate = (
             </tr>
             <tr>
               <td align="center" style="padding: 0 16px 12px 16px;">
-                <img src="${ticket.qr_code_url}" alt="QR Code" width="120" height="120" style="display: block; border: 2px solid #C9A86C; border-radius: 8px;" />
+                <img src="${ticket.qr_code_url}" alt="QR Code" width="180" height="180" style="display: block; border: 2px solid #C9A86C; border-radius: 8px;" />
               </td>
             </tr>
             <tr>
