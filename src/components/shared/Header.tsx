@@ -35,13 +35,15 @@ const Header = () => {
   // Determine text colors based on scroll and page - ensure visibility on all backgrounds
   const getTextColor = (isActiveLink: boolean) => {
     if (isScrolled || !hasHeroSection) {
-      // On solid background - use foreground colors
-      return isActiveLink ? 'text-accent font-semibold' : 'text-foreground hover:text-accent';
+      // On solid white background - dark text, hover to darker
+      return isActiveLink 
+        ? 'text-accent font-semibold' 
+        : 'text-foreground/80 hover:text-foreground';
     }
-    // On transparent header (hero) - use contrasting colors with text shadow for visibility
+    // On transparent header (dark hero) - light text, hover to white
     return isActiveLink 
-      ? 'text-accent font-semibold drop-shadow-md' 
-      : 'text-foreground drop-shadow-md hover:text-accent';
+      ? 'text-white font-semibold drop-shadow-md' 
+      : 'text-white/80 drop-shadow-md hover:text-white';
   };
 
   return (

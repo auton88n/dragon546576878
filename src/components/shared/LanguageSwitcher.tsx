@@ -27,7 +27,7 @@ const LanguageSwitcher = ({ variant = 'default', className = '' }: LanguageSwitc
       variant="outline"
       size="sm"
       onClick={toggleLanguage}
-      className={`gap-2 border-primary/20 hover:bg-primary/10 ${className}`}
+      className={`gap-2 rounded-full border-foreground/15 hover:bg-foreground/5 hover:border-foreground/25 shadow-sm ${className}`}
       aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
     >
       <Globe className="h-4 w-4" />
