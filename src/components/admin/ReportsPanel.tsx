@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { TrendingUp, Users, DollarSign, Calendar, BarChart3 } from 'lucide-react';
@@ -31,10 +31,13 @@ const ReportsPanel = () => {
     return format(date, 'MMM d', { locale: isArabic ? ar : enUS });
   };
 
-  const chartData = data.dailyStats.map((stat) => ({
-    ...stat,
-    dateLabel: formatDate(stat.date),
-  }));
+  const chartData = useMemo(() => 
+    data.dailyStats.map((stat) => ({
+      ...stat,
+      dateLabel: formatDate(stat.date),
+    })),
+    [data.dailyStats, isArabic]
+  );
 
   const summaryCards = [
     {
@@ -237,4 +240,4 @@ const ReportsPanel = () => {
   );
 };
 
-export default ReportsPanel;
+export default memo(ReportsPanel);

@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react';
 import { Search, Calendar, Filter, RotateCcw } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,24 @@ interface BookingFiltersProps {
 const BookingFilters = ({ filters, onFiltersChange, onReset }: BookingFiltersProps) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
+  
+  // Local state for debounced search
+  const [localSearch, setLocalSearch] = useState(filters.search);
+  
+  // Sync local state when filters.search changes externally (e.g., reset)
+  useEffect(() => {
+    setLocalSearch(filters.search);
+  }, [filters.search]);
+  
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== filters.search) {
+        onFiltersChange({ ...filters, search: localSearch });
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
 
   return (
     <div className="glass-card p-4 rounded-xl border border-accent/20">
@@ -35,8 +54,8 @@ const BookingFilters = ({ filters, onFiltersChange, onReset }: BookingFiltersPro
           <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 -translate-y-1/2 h-4 w-4 text-accent" />
           <Input
             placeholder={isArabic ? 'بحث برقم الحجز أو اسم العميل...' : 'Search by reference or customer...'}
-            value={filters.search}
-            onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="pl-10 rtl:pr-10 rtl:pl-3 bg-background/50 border-border/50 focus:border-accent transition-colors"
           />
         </div>

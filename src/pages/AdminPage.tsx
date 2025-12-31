@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { LayoutDashboard, Ticket, Users, DollarSign, QrCode, BarChart3, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -10,8 +10,10 @@ import StatsCard from '@/components/admin/StatsCard';
 import BookingTable from '@/components/admin/BookingTable';
 import BookingFilters from '@/components/admin/BookingFilters';
 import BookingDetailsDialog from '@/components/admin/BookingDetailsDialog';
-import SettingsPanel from '@/components/admin/SettingsPanel';
-import ReportsPanel from '@/components/admin/ReportsPanel';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const SettingsPanel = lazy(() => import('@/components/admin/SettingsPanel'));
+const ReportsPanel = lazy(() => import('@/components/admin/ReportsPanel'));
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -116,18 +118,12 @@ const AdminPage = () => {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
             {statsCards.map((stat, index) => (
-              <div 
-                key={index} 
-                className="animate-slide-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <StatsCard {...stat} loading={statsLoading} />
-              </div>
+              <StatsCard key={index} {...stat} loading={statsLoading} />
             ))}
           </div>
 
           {/* Tabs Navigation */}
-          <Tabs defaultValue="bookings" className="space-y-4 md:space-y-6">
+          <Tabs defaultValue="bookings" className="space-y-4 md:space-y-6" activationMode="manual">
             <TabsList className="glass-card-gold p-1 h-auto flex-wrap">
               <TabsTrigger 
                 value="bookings" 
@@ -218,12 +214,16 @@ const AdminPage = () => {
 
             {/* Reports Tab */}
             <TabsContent value="reports" className="animate-fade-in">
-              <ReportsPanel />
+              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                <ReportsPanel />
+              </Suspense>
             </TabsContent>
 
             {/* Settings Tab */}
             <TabsContent value="settings" className="animate-fade-in">
-              <SettingsPanel />
+              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                <SettingsPanel />
+              </Suspense>
             </TabsContent>
           </Tabs>
         </div>
