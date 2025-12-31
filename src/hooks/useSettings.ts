@@ -65,12 +65,17 @@ export const useSettings = () => {
           settingsMap[item.setting_key] = item.setting_value;
         });
 
+        const dbOperatingHours = settingsMap['operating_hours'];
         setSettings({
-          ticketPricing: settingsMap['ticket_pricing'] || defaultSettings.ticketPricing,
-          operatingHours: settingsMap['operating_hours'] || defaultSettings.operatingHours,
-          maxTicketsPerBooking: settingsMap['max_tickets_per_booking'] || defaultSettings.maxTicketsPerBooking,
-          advanceBookingDays: settingsMap['advance_booking_days'] || defaultSettings.advanceBookingDays,
-          sameDayCutoffHour: settingsMap['same_day_cutoff_hour'] || defaultSettings.sameDayCutoffHour,
+          ticketPricing: { ...defaultSettings.ticketPricing, ...settingsMap['ticket_pricing'] },
+          operatingHours: {
+            ...defaultSettings.operatingHours,
+            ...dbOperatingHours,
+            closedDays: dbOperatingHours?.closedDays ?? defaultSettings.operatingHours.closedDays,
+          },
+          maxTicketsPerBooking: settingsMap['max_tickets_per_booking'] ?? defaultSettings.maxTicketsPerBooking,
+          advanceBookingDays: settingsMap['advance_booking_days'] ?? defaultSettings.advanceBookingDays,
+          sameDayCutoffHour: settingsMap['same_day_cutoff_hour'] ?? defaultSettings.sameDayCutoffHour,
         });
       }
     } catch (error) {
