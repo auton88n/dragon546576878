@@ -1,4 +1,4 @@
-import { useLanguage } from '@/hooks/useLanguage';
+import logoLoading from '@/assets/logo-loading.png';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -7,29 +7,22 @@ interface LoadingSpinnerProps {
 }
 
 const LoadingSpinner = ({ size = 'md', fullPage = false, text }: LoadingSpinnerProps) => {
-  const { currentLanguage: language } = useLanguage();
-  const isArabic = language === 'ar';
-
   const sizeClasses = {
-    sm: 'h-4 w-4 border-2',
-    md: 'h-8 w-8 border-3',
-    lg: 'h-12 w-12 border-4',
+    sm: 'h-8 w-auto',
+    md: 'h-16 w-auto',
+    lg: 'h-24 w-auto',
   };
 
   const spinner = (
-    <div className="flex flex-col items-center gap-3">
-      <div
-        className={`${sizeClasses[size]} rounded-full border-primary/30 border-t-primary animate-spin`}
+    <div className="flex flex-col items-center gap-4">
+      <img
+        src={logoLoading}
+        alt=""
+        className={`${sizeClasses[size]} animate-logo-breathe`}
+        style={{ filter: 'drop-shadow(0 0 12px hsl(var(--heritage-gold) / 0.4))' }}
       />
       {text && (
-        <p className="text-sm text-muted-foreground">
-          {text}
-        </p>
-      )}
-      {!text && fullPage && (
-        <p className="text-sm text-muted-foreground">
-          {isArabic ? 'جاري التحميل...' : 'Loading...'}
-        </p>
+        <p className="text-sm text-muted-foreground">{text}</p>
       )}
     </div>
   );
