@@ -29,12 +29,23 @@ const enTranslations = {
   },
   nav: {
     home: 'Home',
+    about: 'About Us',
     booking: 'Book Tickets',
     myTickets: 'My Tickets',
     scanner: 'Scanner',
     admin: 'Admin Dashboard',
     login: 'Staff Login',
     logout: 'Logout',
+  },
+  about: {
+    title: 'About Us',
+    story: {
+      titleAr: 'سوق المفيجر: تراث حي ومستقبل واعد',
+      titleEn: 'Souq Almufaijer: Living Heritage, Promising Future',
+    },
+    vision: {
+      title: 'Our Vision',
+    },
   },
   home: {
     hero: {
@@ -265,12 +276,23 @@ const arTranslations = {
   },
   nav: {
     home: 'الرئيسية',
+    about: 'من نحن',
     booking: 'احجز تذاكر',
     myTickets: 'تذاكري',
     scanner: 'الماسح الضوئي',
     admin: 'لوحة التحكم',
     login: 'تسجيل دخول الموظفين',
     logout: 'تسجيل الخروج',
+  },
+  about: {
+    title: 'من نحن',
+    story: {
+      titleAr: 'سوق المفيجر: تراث حي ومستقبل واعد',
+      titleEn: 'Souq Almufaijer: Living Heritage, Promising Future',
+    },
+    vision: {
+      title: 'رؤيتنا',
+    },
   },
   home: {
     hero: {

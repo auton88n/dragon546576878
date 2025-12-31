@@ -24,6 +24,7 @@ const Header = () => {
 
   const navLinks = [
     { href: '/', label: t('nav.home') },
+    { href: '/about', label: t('nav.about') },
     { href: '/book', label: t('nav.booking') },
     { href: '/my-tickets', label: t('nav.myTickets') },
   ];
