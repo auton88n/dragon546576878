@@ -88,7 +88,7 @@ const Index = () => {
                     {isArabic ? 'احجز زيارتك' : 'Book Your Visit'}
                   </Button>
                 </Link>
-                <a href="https://www.google.com/maps?q=23.612384849872548,46.56436420764147" target="_blank" rel="noopener noreferrer">
+                <a href="https://maps.app.goo.gl/g4qJ4mM9ZVqg323t8" target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" className="text-lg px-8 py-6 w-full sm:w-auto border-primary/30 hover:bg-primary/5 bg-card/50 transition-all hover:scale-105">
                     <MapPin className="w-5 h-5 mr-2 rtl:mr-0 rtl:ml-2" />
                     {isArabic ? 'الموقع' : 'Location'}
@@ -214,7 +214,7 @@ const Index = () => {
                       </p>
                     </div>
                   </div>
-                  <a href="https://www.google.com/maps?q=23.612384849872548,46.56436420764147" target="_blank" rel="noopener noreferrer" className="btn-heritage inline-flex items-center justify-center gap-2 hover:scale-105 transition-transform">
+                  <a href="https://maps.app.goo.gl/g4qJ4mM9ZVqg323t8" target="_blank" rel="noopener noreferrer" className="btn-heritage inline-flex items-center justify-center gap-2 hover:scale-105 transition-transform">
                     <MapPin className="w-5 h-5" />
                     {isArabic ? 'عرض على الخريطة' : 'View on Map'}
                   </a>
