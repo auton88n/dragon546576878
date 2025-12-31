@@ -1,75 +1,26 @@
-import { CalendarIcon, Check, Sun, Sparkles, ShoppingBag, Home, Mountain, Landmark, Building2, TreePalm, Palette, Users } from 'lucide-react';
+import { CalendarIcon, Check, Sun, Sparkles, ShoppingBag, Home, Mountain, Landmark, Building2, TreePalm, Palette, Users, Map, Camera, Music, Coffee, Utensils, Star, Heart } from 'lucide-react';
 import { format, isFriday, isBefore, startOfDay } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
+import { usePackages } from '@/hooks/usePackages';
+import { useAttractions } from '@/hooks/useAttractions';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 import PackageCard, { type Package } from './PackageCard';
 
-// Attractions included in the ticket
-const ATTRACTIONS = [
-  { icon: ShoppingBag, nameEn: 'Traditional Market', nameAr: 'السوق الشعبية', descEn: 'Heritage marketplace: traditional foods, incense, honey, handicrafts', descAr: 'سوق منتجات تراثية متنوعة: مأكولات، بخور، عسل، حرف يدوية' },
-  { icon: Home, nameEn: 'Samha', nameAr: 'سمحة', descEn: 'Authentic heritage site reflecting traditional village life', descAr: 'موقع تراثي أصيل يعكس الحياة التقليدية في القرية' },
-  { icon: Mountain, nameEn: 'Al-Adab Area', nameAr: 'منطقة العداب', descEn: 'Stunning natural area to enjoy beautiful surroundings', descAr: 'منطقة طبيعية خلابة للاستمتاع بجمال المحيط' },
-  { icon: Landmark, nameEn: 'Al-Wajah', nameAr: 'الوجاة', descEn: "Distinguished heritage landmark telling ancestors' stories", descAr: 'معلم تراثي مميز يروي قصص الأجداد' },
-  { icon: Building2, nameEn: 'Al-Oud', nameAr: 'العود', descEn: 'Historical site celebrating local heritage', descAr: 'موقع تاريخي يحتفي بالتراث المحلي' },
-  { icon: TreePalm, nameEn: 'Al-Busiteen', nameAr: 'البسيتين', descEn: 'Traditional orchard showcasing heritage agriculture', descAr: 'بستان تقليدي يعرض الزراعة التراثية' },
-  { icon: Palette, nameEn: 'Alya', nameAr: 'عليا', descEn: 'Cultural experiences and heritage activities', descAr: 'تجارب ثقافية وأنشطة تراثية' },
-  { icon: Users, nameEn: 'Al-Sawani', nameAr: 'السواني', descEn: 'Heritage activities and local traditions', descAr: 'أنشطة تراثية وتقاليد محلية' },
-];
-
-// Hardcoded packages - can be moved to database later
-const PACKAGES: Package[] = [
-  {
-    id: 'adult-single',
-    nameEn: 'Adult Ticket',
-    nameAr: 'تذكرة بالغ',
-    descriptionEn: 'Single adult entry',
-    descriptionAr: 'دخول بالغ واحد',
-    adults: 1,
-    children: 0,
-    price: 40,
-  },
-  {
-    id: 'child-single',
-    nameEn: 'Child Ticket',
-    nameAr: 'تذكرة طفل',
-    descriptionEn: 'Single child entry (under 12)',
-    descriptionAr: 'دخول طفل واحد (أقل من 12 سنة)',
-    adults: 0,
-    children: 1,
-    price: 25,
-  },
-  {
-    id: 'family-small',
-    nameEn: 'Small Family',
-    nameAr: 'عائلة صغيرة',
-    descriptionEn: '2 adults + 3 children',
-    descriptionAr: '٢ بالغين + ٣ أطفال',
-    adults: 2,
-    children: 3,
-    price: 149.99,
-    badge: 'value',
-  },
-  {
-    id: 'family-large',
-    nameEn: 'Large Family',
-    nameAr: 'عائلة كبيرة',
-    descriptionEn: '2 adults + 6 children',
-    descriptionAr: '٢ بالغين + ٦ أطفال',
-    adults: 2,
-    children: 6,
-    price: 199.99,
-    badge: 'popular',
-  },
-];
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  ShoppingBag, Home, Mountain, Landmark, Building2, TreePalm, Palette, Users, Map, Camera, Music, Coffee, Utensils, Star, Heart, Sun
+};
 
 const TicketSelector = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
+  const { data: dbPackages, isLoading: packagesLoading } = usePackages();
+  const { data: dbAttractions, isLoading: attractionsLoading } = useAttractions();
   const { 
     packageQuantities,
     setPackageQuantity, 
@@ -85,7 +36,18 @@ const TicketSelector = () => {
   };
 
   const selectedDate = visitDate ? new Date(visitDate) : undefined;
-  const totalTickets = tickets.adult + tickets.child;
+
+  // Map database packages to component format
+  const packages: Package[] = (dbPackages || []).map(pkg => ({
+    id: pkg.id,
+    nameEn: pkg.name_en,
+    nameAr: pkg.name_ar,
+    descriptionEn: pkg.description_en || '',
+    descriptionAr: pkg.description_ar || '',
+    adults: pkg.adult_count,
+    children: pkg.child_count,
+    price: Number(pkg.price),
+  }));
 
   return (
     <div className="space-y-8">
@@ -96,16 +58,22 @@ const TicketSelector = () => {
           {isArabic ? 'اختر الباقة' : 'Choose Package'}
         </h3>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {PACKAGES.map((pkg) => (
-            <PackageCard
-              key={pkg.id}
-              package_={pkg}
-              quantity={getPackageQuantity(pkg.id)}
-              onQuantityChange={(qty) => setPackageQuantity(pkg.id, qty, pkg.adults, pkg.children, pkg.price)}
-            />
-          ))}
-        </div>
+        {packagesLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {packages.map((pkg) => (
+              <PackageCard
+                key={pkg.id}
+                package_={pkg}
+                quantity={getPackageQuantity(pkg.id)}
+                onQuantityChange={(qty) => setPackageQuantity(pkg.id, qty, pkg.adults, pkg.children, pkg.price)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Date Selection */}
@@ -179,27 +147,33 @@ const TicketSelector = () => {
           {isArabic ? 'ماذا ستختبر' : "What You'll Experience"}
         </h3>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {ATTRACTIONS.map((attraction, index) => {
-            const Icon = attraction.icon;
-            return (
-              <div
-                key={index}
-                className="group p-3 rounded-xl border border-border bg-card/50 hover:border-accent/50 hover:bg-accent/5 transition-all duration-300"
-              >
-                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mb-2 group-hover:bg-accent/20 transition-colors">
-                  <Icon className="h-4 w-4 text-accent" />
+        {attractionsLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {(dbAttractions || []).map((attraction) => {
+              const Icon = ICON_MAP[attraction.icon] || Landmark;
+              return (
+                <div
+                  key={attraction.id}
+                  className="group p-3 rounded-xl border border-border bg-card/50 hover:border-accent/50 hover:bg-accent/5 transition-all duration-300"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mb-2 group-hover:bg-accent/20 transition-colors">
+                    <Icon className="h-4 w-4 text-accent" />
+                  </div>
+                  <p className="font-medium text-sm text-foreground leading-tight">
+                    {isArabic ? attraction.name_ar : attraction.name_en}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    {isArabic ? attraction.description_ar : attraction.description_en}
+                  </p>
                 </div>
-                <p className="font-medium text-sm text-foreground leading-tight">
-                  {isArabic ? attraction.nameAr : attraction.nameEn}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                  {isArabic ? attraction.descAr : attraction.descEn}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Summary */}
