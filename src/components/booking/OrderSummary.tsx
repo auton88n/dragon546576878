@@ -1,8 +1,16 @@
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Ticket, Calendar, Sun, Users, ShieldCheck, Sparkles } from 'lucide-react';
+import { Ticket, Calendar, Sun, Users, ShieldCheck, Sparkles, Package } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
+
+// Package names for display
+const PACKAGE_NAMES: Record<string, { en: string; ar: string }> = {
+  'adult-single': { en: 'Adult Ticket', ar: 'تذكرة بالغ' },
+  'child-single': { en: 'Child Ticket', ar: 'تذكرة طفل' },
+  'family-small': { en: 'Small Family Package', ar: 'باقة العائلة الصغيرة' },
+  'family-large': { en: 'Large Family Package', ar: 'باقة العائلة الكبيرة' },
+};
 
 interface OrderSummaryProps {
   compact?: boolean;
@@ -11,7 +19,11 @@ interface OrderSummaryProps {
 const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { tickets, pricing, visitDate, totalAmount } = useBookingStore();
+  const { tickets, pricing, visitDate, totalAmount, selectedPackageId } = useBookingStore();
+  
+  const packageName = selectedPackageId 
+    ? (isArabic ? PACKAGE_NAMES[selectedPackageId]?.ar : PACKAGE_NAMES[selectedPackageId]?.en) 
+    : null;
 
   const ticketItems = [
     { type: 'adult', labelAr: 'بالغ', labelEn: 'Adult', count: tickets.adult, price: pricing.adult },
@@ -79,6 +91,14 @@ const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
                 {isArabic ? 'صالحة طوال اليوم (9 ص - 6 م)' : 'Valid All Day (9 AM - 6 PM)'}
               </span>
             </div>
+          </div>
+        )}
+
+        {/* Package Name */}
+        {packageName && (
+          <div className="flex items-center gap-2 pb-3 border-b border-border">
+            <Package className="h-4 w-4 text-accent" />
+            <span className="font-medium text-foreground">{packageName}</span>
           </div>
         )}
 

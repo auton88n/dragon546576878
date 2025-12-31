@@ -1,4 +1,4 @@
-import { Minus, Plus, Users, Baby, CalendarIcon, Check, Sun } from 'lucide-react';
+import { CalendarIcon, Check, Sun } from 'lucide-react';
 import { format, isFriday, isBefore, startOfDay } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -7,34 +7,64 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import PackageCard, { type Package } from './PackageCard';
+
+// Hardcoded packages - can be moved to database later
+const PACKAGES: Package[] = [
+  {
+    id: 'adult-single',
+    nameEn: 'Adult Ticket',
+    nameAr: 'تذكرة بالغ',
+    descriptionEn: 'Single adult entry',
+    descriptionAr: 'دخول بالغ واحد',
+    adults: 1,
+    children: 0,
+    price: 40,
+  },
+  {
+    id: 'child-single',
+    nameEn: 'Child Ticket',
+    nameAr: 'تذكرة طفل',
+    descriptionEn: 'Single child entry (under 12)',
+    descriptionAr: 'دخول طفل واحد (أقل من 12 سنة)',
+    adults: 0,
+    children: 1,
+    price: 25,
+  },
+  {
+    id: 'family-small',
+    nameEn: 'Small Family',
+    nameAr: 'عائلة صغيرة',
+    descriptionEn: 'Perfect for small families',
+    descriptionAr: 'مثالية للعائلات الصغيرة',
+    adults: 2,
+    children: 2,
+    price: 120,
+    badge: 'value',
+  },
+  {
+    id: 'family-large',
+    nameEn: 'Large Family',
+    nameAr: 'عائلة كبيرة',
+    descriptionEn: 'Great value for larger families',
+    descriptionAr: 'قيمة رائعة للعائلات الكبيرة',
+    adults: 2,
+    children: 4,
+    price: 180,
+    badge: 'popular',
+  },
+];
 
 const TicketSelector = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { tickets, pricing, setTickets, visitDate, setVisitDate } = useBookingStore();
-
-  const ticketTypes = [
-    {
-      type: 'adult' as const,
-      icon: Users,
-      labelAr: 'بالغ',
-      labelEn: 'Adult',
-      descAr: '12 سنة فما فوق',
-      descEn: '12 years and above',
-      price: pricing.adult,
-      count: tickets.adult,
-    },
-    {
-      type: 'child' as const,
-      icon: Baby,
-      labelAr: 'طفل',
-      labelEn: 'Child',
-      descAr: 'أقل من 12 سنة',
-      descEn: 'Under 12 years',
-      price: pricing.child,
-      count: tickets.child,
-    },
-  ];
+  const { 
+    selectedPackageId, 
+    setPackage, 
+    visitDate, 
+    setVisitDate,
+    tickets
+  } = useBookingStore();
 
   const disabledDays = (date: Date) => {
     const today = startOfDay(new Date());
@@ -46,66 +76,21 @@ const TicketSelector = () => {
 
   return (
     <div className="space-y-8">
-      {/* Ticket Selection */}
+      {/* Package Selection */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
           <span className="w-8 h-8 rounded-full gradient-gold text-foreground text-sm flex items-center justify-center font-bold glow-gold">1</span>
-          {isArabic ? 'اختر التذاكر' : 'Select Tickets'}
+          {isArabic ? 'اختر الباقة' : 'Choose Package'}
         </h3>
         
-        <div className="grid sm:grid-cols-2 gap-4">
-          {ticketTypes.map((ticket, index) => (
-            <div
-              key={ticket.type}
-              className={cn(
-                'p-5 rounded-2xl border-2 transition-all duration-300 hover:shadow-lg',
-                ticket.count > 0 
-                  ? 'border-accent bg-accent/5 shadow-md' 
-                  : 'border-border hover:border-accent/50'
-              )}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300',
-                    ticket.count > 0 ? 'gradient-gold glow-gold' : 'bg-secondary'
-                  )}>
-                    <ticket.icon className="h-6 w-6 text-foreground" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-foreground text-lg">
-                      {isArabic ? ticket.labelAr : ticket.labelEn}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {ticket.price} {isArabic ? 'ر.س' : 'SAR'}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 rounded-full border-2 hover:border-accent hover:bg-accent/10 transition-all"
-                    onClick={() => setTickets(ticket.type, ticket.count - 1)}
-                    disabled={ticket.count === 0}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="w-8 text-center font-bold text-xl text-foreground">{ticket.count}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 rounded-full border-2 hover:bg-accent hover:text-foreground hover:border-accent transition-all"
-                    onClick={() => setTickets(ticket.type, ticket.count + 1)}
-                    disabled={ticket.count >= 10}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {PACKAGES.map((pkg) => (
+            <PackageCard
+              key={pkg.id}
+              package_={pkg}
+              isSelected={selectedPackageId === pkg.id}
+              onSelect={() => setPackage(pkg.id, pkg.adults, pkg.children, pkg.price)}
+            />
           ))}
         </div>
       </div>
@@ -126,7 +111,7 @@ const TicketSelector = () => {
                 selectedDate ? 'border-accent bg-accent/5 shadow-sm' : 'border-border hover:border-accent/50'
               )}
             >
-              <CalendarIcon className="mr-3 rtl:ml-3 rtl:mr-0 h-5 w-5 text-accent" />
+              <CalendarIcon className="me-3 h-5 w-5 text-accent" />
               {selectedDate ? (
                 <span className="font-medium">
                   {format(selectedDate, 'EEEE, d MMMM yyyy', { locale: isArabic ? ar : enUS })}
@@ -136,7 +121,7 @@ const TicketSelector = () => {
                   {isArabic ? 'اضغط لاختيار التاريخ' : 'Click to select date'}
                 </span>
               )}
-              {selectedDate && <Check className="h-5 w-5 text-accent ml-auto rtl:mr-auto rtl:ml-0" />}
+              {selectedDate && <Check className="h-5 w-5 text-accent ms-auto" />}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 glass-card" align="start">
@@ -187,7 +172,7 @@ const TicketSelector = () => {
       {totalTickets === 0 && (
         <div className="border-2 border-dashed border-border rounded-2xl p-5 text-center">
           <p className="text-muted-foreground">
-            {isArabic ? 'اختر تذكرة واحدة على الأقل' : 'Select at least one ticket'}
+            {isArabic ? 'اختر باقة للمتابعة' : 'Select a package to continue'}
           </p>
         </div>
       )}
