@@ -97,6 +97,8 @@ const LoginPage = () => {
       // Navigate based on role
       if (roleData.role === 'scanner') {
         navigate('/scan');
+      } else if (roleData.role === 'admin' || roleData.role === 'manager') {
+        navigate('/admin');
       } else {
         navigate(from);
       }
