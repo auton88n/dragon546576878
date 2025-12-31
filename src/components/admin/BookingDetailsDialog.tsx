@@ -130,7 +130,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-accent/20">
         <DialogHeader className="pb-4 border-b border-accent/10">
-          <DialogTitle className="flex items-center justify-between">
+          <DialogTitle className="flex items-center justify-between rtl:flex-row-reverse">
             <span className="text-xl font-bold text-foreground">{isArabic ? 'تفاصيل الحجز' : 'Booking Details'}</span>
             <Badge variant="outline" className={getStatusConfig(booking.booking_status).className}>
               {getStatusConfig(booking.booking_status).label}
@@ -151,34 +151,34 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
 
           {/* Customer Info */}
           <div className="glass-card rounded-xl p-5 border border-accent/10">
-            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
+            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
                 <User className="h-4 w-4 text-blue-600" />
               </div>
               {isArabic ? 'معلومات العميل' : 'Customer Information'}
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
-              <div>
+              <div className="text-start rtl:text-end">
                 <p className="text-sm text-muted-foreground">{isArabic ? 'الاسم' : 'Name'}</p>
                 <p className="font-medium text-foreground">{booking.customer_name}</p>
               </div>
-              <div>
+              <div className="text-start rtl:text-end">
                 <p className="text-sm text-muted-foreground">{isArabic ? 'البريد الإلكتروني' : 'Email'}</p>
-                <p className="font-medium text-foreground flex items-center gap-2">
+                <p className="font-medium text-foreground flex items-center gap-2 rtl:flex-row-reverse rtl:justify-end">
                   <Mail className="h-4 w-4 text-accent" />
                   {booking.customer_email}
                 </p>
               </div>
-              <div>
+              <div className="text-start rtl:text-end">
                 <p className="text-sm text-muted-foreground">{isArabic ? 'الهاتف' : 'Phone'}</p>
-                <p className="font-medium text-foreground flex items-center gap-2">
+                <p className="font-medium text-foreground flex items-center gap-2 rtl:flex-row-reverse rtl:justify-end">
                   <Phone className="h-4 w-4 text-accent" />
                   {booking.customer_phone}
                 </p>
               </div>
-              <div>
+              <div className="text-start rtl:text-end">
                 <p className="text-sm text-muted-foreground">{isArabic ? 'اللغة' : 'Language'}</p>
-                <p className="font-medium text-foreground flex items-center gap-2">
+                <p className="font-medium text-foreground flex items-center gap-2 rtl:flex-row-reverse rtl:justify-end">
                   <Globe className="h-4 w-4 text-accent" />
                   {booking.language === 'ar' ? 'العربية' : 'English'}
                 </p>
@@ -188,20 +188,20 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
 
           {/* Visit Details */}
           <div className="glass-card rounded-xl p-5 border border-accent/10">
-            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
+            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
                 <Calendar className="h-4 w-4 text-purple-600" />
               </div>
               {isArabic ? 'تفاصيل الزيارة' : 'Visit Details'}
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
-              <div>
+              <div className="text-start rtl:text-end">
                 <p className="text-sm text-muted-foreground">{isArabic ? 'التاريخ' : 'Date'}</p>
                 <p className="font-medium text-foreground">{formatDate(booking.visit_date)}</p>
               </div>
-              <div>
+              <div className="text-start rtl:text-end">
                 <p className="text-sm text-muted-foreground">{isArabic ? 'الوقت' : 'Time'}</p>
-                <p className="font-medium text-foreground flex items-center gap-2">
+                <p className="font-medium text-foreground flex items-center gap-2 rtl:flex-row-reverse rtl:justify-end">
                   <Clock className="h-4 w-4 text-accent" />
                   {formatTime(booking.visit_time)}
                 </p>
@@ -211,7 +211,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
 
           {/* Tickets */}
           <div className="glass-card rounded-xl p-5 border border-accent/10">
-            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
+            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
                 <Ticket className="h-4 w-4 text-accent" />
               </div>
@@ -219,24 +219,24 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
             </h3>
             <div className="space-y-3">
               {booking.adult_count > 0 && (
-                <div className="flex justify-between items-center py-2 border-b border-accent/10">
+                <div className="flex justify-between items-center py-2 border-b border-accent/10 rtl:flex-row-reverse">
                   <span className="text-foreground">{isArabic ? 'بالغ' : 'Adult'} × {booking.adult_count}</span>
                   <span className="font-semibold text-accent">{booking.adult_count * Number(booking.adult_price)} SAR</span>
                 </div>
               )}
               {booking.child_count > 0 && (
-                <div className="flex justify-between items-center py-2 border-b border-accent/10">
+                <div className="flex justify-between items-center py-2 border-b border-accent/10 rtl:flex-row-reverse">
                   <span className="text-foreground">{isArabic ? 'طفل' : 'Child'} × {booking.child_count}</span>
                   <span className="font-semibold text-accent">{booking.child_count * Number(booking.child_price)} SAR</span>
                 </div>
               )}
               {(booking.senior_count || 0) > 0 && (
-                <div className="flex justify-between items-center py-2 border-b border-accent/10">
+                <div className="flex justify-between items-center py-2 border-b border-accent/10 rtl:flex-row-reverse">
                   <span className="text-foreground">{isArabic ? 'كبير السن' : 'Senior'} × {booking.senior_count}</span>
                   <span className="font-semibold text-accent">{(booking.senior_count || 0) * Number(booking.senior_price || 0)} SAR</span>
                 </div>
               )}
-              <div className="flex justify-between items-center pt-3">
+              <div className="flex justify-between items-center pt-3 rtl:flex-row-reverse">
                 <span className="text-lg font-bold text-foreground">{isArabic ? 'المجموع' : 'Total'}</span>
                 <span className="text-2xl font-bold text-accent">{booking.total_amount} SAR</span>
               </div>
@@ -245,7 +245,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
 
           {/* Generated Tickets / QR Codes */}
           <div className="glass-card rounded-xl p-5 border border-accent/10">
-            <h3 className="font-semibold mb-4 text-foreground">
+            <h3 className="font-semibold mb-4 text-foreground text-start rtl:text-end">
               {isArabic ? 'رموز QR' : 'QR Codes'} ({tickets.length})
             </h3>
             {loadingTickets ? (
@@ -292,14 +292,14 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
 
           {/* Payment Info */}
           <div className="glass-card rounded-xl p-5 border border-accent/10">
-            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
+            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                 <CreditCard className="h-4 w-4 text-emerald-600" />
               </div>
               {isArabic ? 'معلومات الدفع' : 'Payment Information'}
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
-              <div>
+              <div className="text-start rtl:text-end">
                 <p className="text-sm text-muted-foreground">{isArabic ? 'الحالة' : 'Status'}</p>
                 <Badge 
                   variant="outline" 
@@ -311,7 +311,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
                   {booking.payment_status}
                 </Badge>
               </div>
-              <div>
+              <div className="text-start rtl:text-end">
                 <p className="text-sm text-muted-foreground">{isArabic ? 'معرف الدفع' : 'Payment ID'}</p>
                 <p className="font-mono text-sm text-foreground">{booking.payment_id || '-'}</p>
               </div>
@@ -319,8 +319,8 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
           </div>
 
           {/* Email Status & Actions */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-accent/5 to-transparent border border-accent/10">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-transparent rtl:bg-gradient-to-l border border-accent/10">
+            <div className="flex items-center gap-3 rtl:flex-row-reverse">
               {booking.confirmation_email_sent ? (
                 <>
                   <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
