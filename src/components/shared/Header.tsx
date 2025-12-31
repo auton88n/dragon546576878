@@ -12,7 +12,7 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const isHomePage = location.pathname === '/';
+  const hasHeroSection = location.pathname === '/' || location.pathname === '/about';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,7 +33,7 @@ const Header = () => {
 
   // Determine text colors based on scroll and page - ensure visibility on all backgrounds
   const getTextColor = (isActiveLink: boolean) => {
-    if (isScrolled || !isHomePage) {
+    if (isScrolled || !hasHeroSection) {
       // On solid background - use foreground colors
       return isActiveLink ? 'text-accent font-semibold' : 'text-foreground hover:text-accent';
     }
@@ -46,7 +46,7 @@ const Header = () => {
   return (
       <header 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled || !isHomePage
+          isScrolled || !hasHeroSection
             ? 'bg-card backdrop-blur-xl border-b-2 border-border shadow-md' 
             : 'bg-gradient-to-b from-foreground/30 to-transparent'
         }`}
@@ -54,7 +54,7 @@ const Header = () => {
       <div className="container flex h-16 md:h-20 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3">
-          <Logo variant={isScrolled || !isHomePage ? 'default' : 'light'} />
+          <Logo variant={isScrolled || !hasHeroSection ? 'default' : 'light'} />
         </Link>
 
         {/* Desktop Navigation */}
@@ -87,7 +87,7 @@ const Header = () => {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className={`p-2 rounded-lg transition-colors ${
-              isScrolled || !isHomePage 
+              isScrolled || !hasHeroSection 
                 ? 'text-foreground hover:bg-muted' 
                 : 'text-foreground drop-shadow-md hover:bg-foreground/10'
             }`}
