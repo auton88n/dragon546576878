@@ -51,9 +51,10 @@ const SettingsPanel = () => {
   ];
 
   const toggleClosedDay = (day: number) => {
-    const closedDays = formData.operatingHours.closedDays.includes(day)
-      ? formData.operatingHours.closedDays.filter((d) => d !== day)
-      : [...formData.operatingHours.closedDays, day];
+    const currentClosedDays = formData.operatingHours?.closedDays ?? [];
+    const closedDays = currentClosedDays.includes(day)
+      ? currentClosedDays.filter((d) => d !== day)
+      : [...currentClosedDays, day];
     
     setFormData({
       ...formData,
@@ -209,7 +210,7 @@ const SettingsPanel = () => {
                 <div 
                   key={day.value} 
                   className={`flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 rounded-lg border transition-colors cursor-pointer ${
-                    formData.operatingHours.closedDays.includes(day.value)
+                    (formData.operatingHours?.closedDays ?? []).includes(day.value)
                       ? 'bg-accent/20 border-accent/40'
                       : 'bg-background/50 border-border/50 hover:border-accent/30'
                   }`}
@@ -217,7 +218,7 @@ const SettingsPanel = () => {
                 >
                   <Checkbox
                     id={`day-${day.value}`}
-                    checked={formData.operatingHours.closedDays.includes(day.value)}
+                    checked={(formData.operatingHours?.closedDays ?? []).includes(day.value)}
                     onCheckedChange={() => toggleClosedDay(day.value)}
                     className="border-accent data-[state=checked]:bg-accent"
                   />
