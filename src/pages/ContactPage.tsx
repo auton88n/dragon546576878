@@ -74,8 +74,8 @@ const ContactPage = () => {
       icon: Phone,
       titleEn: 'Phone',
       titleAr: 'الهاتف',
-      contentEn: '+966 XX XXX XXXX',
-      contentAr: '+966 XX XXX XXXX',
+      contentEn: '+966 50 101 8811',
+      contentAr: '+966 50 101 8811',
     },
     {
       icon: Mail,
@@ -254,7 +254,7 @@ const ContactPage = () => {
                 <CardContent className="p-0">
                   <div className="aspect-video bg-muted flex items-center justify-center">
                     <iframe
-                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3654.123456789!2d46.1234567!3d24.1234567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjTCsDA3JzI0LjQiTiA0NsKwMDcnMjQuNCJF!5e0!3m2!1sen!2ssa!4v1234567890"
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3654.5!2d46.56436420764147!3d23.612384849872548!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDM2JzQ0LjYiTiA0NsKwMzMnNTEuNyJF!5e0!3m2!1sen!2ssa!4v1"
                       width="100%"
                       height="100%"
                       style={{ border: 0, minHeight: '300px' }}
