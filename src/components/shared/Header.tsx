@@ -44,13 +44,13 @@ const Header = () => {
   };
 
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled || !isHomePage
-          ? 'bg-card/98 backdrop-blur-xl border-b border-border/50 shadow-sm' 
-          : 'bg-gradient-to-b from-foreground/30 to-transparent'
-      }`}
-    >
+      <header 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled || !isHomePage
+            ? 'bg-card backdrop-blur-xl border-b-2 border-border shadow-md' 
+            : 'bg-gradient-to-b from-foreground/30 to-transparent'
+        }`}
+      >
       <div className="container flex h-16 md:h-20 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3">

@@ -116,34 +116,34 @@ const AboutPage = () => {
                 {isArabic ? (
                   <>
                     <p className="text-foreground/80 leading-loose text-base md:text-lg">
-                      في قلب المملكة العربية السعودية، على بُعد 160 كم جنوب العاصمة الرياض، تقع قرية المفيجر التابعة لمحافظة الحريق. قرية عريقة نابضة بالجمال والأصالة، سُميت بهذا الاسم لتفجرها بالعيون والمياه العذبة.
+                      في قلب المملكة العربية السعودية، على بُعد 160 كم جنوب العاصمة الرياض، تقع قرية المفيجر التابعة لمحافظة الحريق. قرية عريقة نابضة بالجمال والأصالة، سُميت بهذا الاسم لتفجُّرها بالعيون والمياه العذبة.
                     </p>
                     <p className="text-foreground/80 leading-loose text-base md:text-lg">
-                      محافظة الحريق العريقة والمعروفة، كانت ـ وما تزال ـ محل تقدير قادة مملكتنا الحبيبة منذ عهد جلالة الملك المؤسس رحمه الله، وحتى أبناؤه البررة الذين ما فتؤوا يولون هذه المحافظة وما يتبعها من قرى ومراكز عنايتهم المشهودة.
+                      محافظة الحريق العريقة والمعروفة كانت - ولا تزال - محل تقدير قادة مملكتنا الحبيبة منذ عهد جلالة الملك المؤسس عبدالعزيز - رحمه الله - وتوارثها أبناؤه البررة الذين ما فتئوا يُولون هذه المحافظة وما يتبعها من قرى ومراكز رعايتهم واهتمامهم.
                     </p>
                     <p className="text-foreground/80 leading-loose text-base md:text-lg">
-                      قرية المفيجر النابضة بالجمال والأصالة والوداعة.. السخية في عطائها وكرم وطيبة أهلها، والمتفردة بموقعها وغنى أرضها.
+                      قرية المفيجر النابضة بالجمال والأصالة والوداعة، السخية في عطائها وكرم أهلها وطيبتهم، والمتفردة بموقعها وغنى أرضها.
                     </p>
                     <div className="border-s-4 border-accent ps-6 py-2 bg-accent/5 rounded-e-lg">
                       <p className="text-foreground font-medium leading-loose text-base md:text-lg">
-                        من هنا انطلق مشروع سوق المفيجر - مشروع حضاري يستثمر خيرات هذه الأرض المباركة، ويحتفي بإبراز تراث الآباء والأجداد، ليكون فخراً للمنطقة والوطن.
+                        من هنا انطلق مشروع سوق المفيجر - مشروع حضاري يستثمر خيرات هذه الأرض المباركة، ويحتفي بإبراز تراث الآباء والأجداد، ليكون فخرًا للمنطقة والوطن.
                       </p>
                     </div>
                   </>
                 ) : (
                   <>
                     <p className="text-foreground/80 leading-loose text-base md:text-lg">
-                      In the heart of Saudi Arabia, 160 km south of Riyadh, lies Almufaijer village in Al-Hariq Governorate. A historic village pulsing with beauty and authenticity, named for its abundant springs and fresh water.
+                      In the heart of Saudi Arabia, 160 km south of Riyadh, lies Almufaijer Village in Al-Hariq Governorate. A historic village pulsing with beauty and authenticity, named after its abundant springs and freshwater.
                     </p>
                     <p className="text-foreground/80 leading-loose text-base md:text-lg">
-                      Al-Hariq Governorate has been esteemed by Saudi Arabia's leaders since King Abdulaziz, with continued care from his successors for the governorate and its villages.
+                      Al-Hariq Governorate has been cherished by the Kingdom's leaders since the era of King Abdulaziz. His successors have continued to bestow their care upon the governorate and its villages.
                     </p>
                     <p className="text-foreground/80 leading-loose text-base md:text-lg">
-                      Almufaijer village - a place of beauty, authenticity, and tranquility, generous in its offerings and the kindness of its people, distinguished by its location and rich land.
+                      Almufaijer Village - a place of beauty, authenticity, and tranquility. Generous in its offerings, blessed by the warmth of its people, and distinguished by its unique location and fertile land.
                     </p>
                     <div className="border-s-4 border-accent ps-6 py-2 bg-accent/5 rounded-e-lg">
                       <p className="text-foreground font-medium leading-loose text-base md:text-lg">
-                        From here emerged Souq Almufaijer - a cultural endeavor investing in this blessed land's treasures, celebrating our ancestors' heritage, and bringing pride to the region and nation.
+                        From here, Souq Almufaijer was born - a cultural endeavor that harnesses the treasures of this blessed land, celebrates the heritage of our ancestors, and brings pride to the region and the nation.
                       </p>
                     </div>
                   </>
@@ -179,8 +179,8 @@ const AboutPage = () => {
             
             <p className="text-background/70 text-base md:text-lg leading-relaxed max-w-3xl mx-auto">
               {isArabic 
-                ? 'مشروع حضاري تنموي استثماري، يحتفي بإبراز تراث الآباء والأجداد، ويسهم في بناء الوطن عبر منظومة من الأنشطة والفعاليات السياحية والترفيهية المتميزة والفريدة من نوعها. نسعى لنكون جزءاً من رؤية المملكة 2030، المستهدفة لاستقبال 100 مليون زائر.'
-                : 'A cultural, developmental, and investment project celebrating our ancestors\' heritage, contributing to the nation\'s development through unique tourism and entertainment activities. We strive to be part of Saudi Vision 2030, targeting 100 million visitors.'}
+                ? 'مشروع حضاري تنموي استثماري، يحتفي بإبراز تراث الآباء والأجداد، ويُسهم في بناء الوطن عبر منظومة من الأنشطة والفعاليات السياحية والترفيهية المتميزة والفريدة من نوعها. نسعى لنكون جزءًا من رؤية المملكة 2030 التي تستهدف استقبال 100 مليون زائر.'
+                : 'A cultural, developmental, and investment endeavor celebrating the heritage of our forefathers, contributing to the nation\'s growth through exceptional tourism and entertainment experiences. We aspire to be an integral part of Saudi Vision 2030, which aims to welcome 100 million visitors.'}
             </p>
           </div>
         </div>
