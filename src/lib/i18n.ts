@@ -30,6 +30,7 @@ const enTranslations = {
   nav: {
     home: 'Home',
     about: 'About Us',
+    contact: 'Contact Us',
     booking: 'Book Tickets',
     myTickets: 'My Tickets',
     scanner: 'Scanner',
@@ -246,6 +247,32 @@ const enTranslations = {
     unauthorized: 'Unauthorized access',
     paymentFailed: 'Payment failed. Please try again.',
   },
+  contact: {
+    title: 'Contact Us',
+    subtitle: 'We\'d love to hear from you. Send us a message and we\'ll respond as soon as possible.',
+    success: 'Your message has been sent successfully!',
+    error: 'Failed to send message. Please try again.',
+    form: {
+      title: 'Send us a Message',
+      name: 'Full Name',
+      namePlaceholder: 'Enter your full name',
+      email: 'Email Address',
+      emailPlaceholder: 'Enter your email',
+      phone: 'Phone Number (Optional)',
+      subject: 'Subject',
+      subjectPlaceholder: 'How can we help you?',
+      message: 'Message',
+      messagePlaceholder: 'Write your message here...',
+      send: 'Send Message',
+      sending: 'Sending...',
+      successTitle: 'Message Sent!',
+      successMessage: 'Thank you for contacting us. We\'ll get back to you soon.',
+      sendAnother: 'Send Another Message',
+    },
+    map: {
+      title: 'Find Us',
+    },
+  },
 };
 
 // Arabic translations
@@ -277,6 +304,7 @@ const arTranslations = {
   nav: {
     home: 'الرئيسية',
     about: 'من نحن',
+    contact: 'تواصل معنا',
     booking: 'احجز تذاكر',
     myTickets: 'تذاكري',
     scanner: 'الماسح الضوئي',
@@ -492,6 +520,32 @@ const arTranslations = {
     notFound: 'غير موجود',
     unauthorized: 'وصول غير مصرح به',
     paymentFailed: 'فشل الدفع. يرجى المحاولة مرة أخرى.',
+  },
+  contact: {
+    title: 'تواصل معنا',
+    subtitle: 'يسعدنا تواصلكم معنا. أرسل لنا رسالة وسنرد عليك في أقرب وقت ممكن.',
+    success: 'تم إرسال رسالتك بنجاح!',
+    error: 'فشل إرسال الرسالة. يرجى المحاولة مرة أخرى.',
+    form: {
+      title: 'أرسل لنا رسالة',
+      name: 'الاسم الكامل',
+      namePlaceholder: 'أدخل اسمك الكامل',
+      email: 'البريد الإلكتروني',
+      emailPlaceholder: 'أدخل بريدك الإلكتروني',
+      phone: 'رقم الهاتف (اختياري)',
+      subject: 'الموضوع',
+      subjectPlaceholder: 'كيف يمكننا مساعدتك؟',
+      message: 'الرسالة',
+      messagePlaceholder: 'اكتب رسالتك هنا...',
+      send: 'إرسال الرسالة',
+      sending: 'جاري الإرسال...',
+      successTitle: 'تم إرسال الرسالة!',
+      successMessage: 'شكراً لتواصلك معنا. سنرد عليك قريباً.',
+      sendAnother: 'إرسال رسالة أخرى',
+    },
+    map: {
+      title: 'موقعنا',
+    },
   },
 };
 
