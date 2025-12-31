@@ -12,7 +12,7 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const hasHeroSection = location.pathname === '/' || location.pathname === '/about';
+  const hasHeroSection = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/contact';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +25,7 @@ const Header = () => {
   const navLinks = [
     { href: '/', label: t('nav.home') },
     { href: '/about', label: t('nav.about') },
+    { href: '/contact', label: t('nav.contact') },
     { href: '/book', label: t('nav.booking') },
     { href: '/my-tickets', label: t('nav.myTickets') },
   ];
