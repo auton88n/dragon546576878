@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Ticket } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -14,11 +14,21 @@ const Header = () => {
 
   const hasHeroSection = location.pathname === '/' || location.pathname === '/about';
 
+  // Optimized scroll handler with passive listener
   useEffect(() => {
+    let ticking = false;
+    
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 20);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -30,10 +40,10 @@ const Header = () => {
     { href: '/my-tickets', label: t('nav.myTickets') },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = useCallback((path: string) => location.pathname === path, [location.pathname]);
 
   // Determine text colors based on scroll and page - ensure visibility on all backgrounds
-  const getTextColor = (isActiveLink: boolean) => {
+  const getTextColor = useCallback((isActiveLink: boolean) => {
     if (isScrolled || !hasHeroSection) {
       // On solid white background - dark text, hover to darker
       return isActiveLink 
@@ -44,16 +54,19 @@ const Header = () => {
     return isActiveLink 
       ? 'text-white font-semibold drop-shadow-md' 
       : 'text-white/80 drop-shadow-md hover:text-white';
-  };
+  }, [isScrolled, hasHeroSection]);
+
+  const toggleMenu = useCallback(() => setIsOpen(prev => !prev), []);
+  const closeMenu = useCallback(() => setIsOpen(false), []);
 
   return (
-      <header 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled || !hasHeroSection
-            ? 'bg-card backdrop-blur-xl border-b-2 border-border shadow-md' 
-            : 'bg-gradient-to-b from-foreground/30 to-transparent'
-        }`}
-      >
+    <header 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled || !hasHeroSection
+          ? 'bg-card shadow-md border-b border-border' 
+          : 'bg-gradient-to-b from-foreground/30 to-transparent'
+      }`}
+    >
       <div className="container flex h-16 md:h-20 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3">
@@ -88,7 +101,7 @@ const Header = () => {
         <div className="flex md:hidden items-center gap-2">
           <LanguageSwitcher variant="minimal" />
           <button
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={toggleMenu}
             className={`p-2 rounded-lg transition-colors ${
               isScrolled || !hasHeroSection 
                 ? 'text-foreground hover:bg-muted' 
@@ -102,13 +115,13 @@ const Header = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-card/98 backdrop-blur-xl border-b border-border shadow-xl animate-fade-in">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-card border-b border-border shadow-xl animate-fade-in">
           <nav className="container py-6 space-y-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                onClick={() => setIsOpen(false)}
+                onClick={closeMenu}
                 className={`block py-3 px-4 rounded-xl text-base font-medium transition-colors ${
                   isActive(link.href) 
                     ? 'bg-accent/10 text-accent' 
@@ -119,7 +132,7 @@ const Header = () => {
               </Link>
             ))}
             <div className="pt-4 mt-4 border-t border-border">
-              <Link to="/book" onClick={() => setIsOpen(false)}>
+              <Link to="/book" onClick={closeMenu}>
                 <Button className="btn-gold w-full">
                   <Ticket className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" />
                   {t('nav.booking')}
