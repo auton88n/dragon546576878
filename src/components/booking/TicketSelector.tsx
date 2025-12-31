@@ -9,6 +9,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import PackageCard, { type Package } from './PackageCard';
 
+// Package images
+import packageAdult from '@/assets/package-adult.jpg';
+import packageChild from '@/assets/package-child.jpg';
+import packageSmallFamily from '@/assets/package-small-family.jpg';
+import packageLargeFamily from '@/assets/package-large-family.jpg';
+
 // Hardcoded packages - can be moved to database later
 const PACKAGES: Package[] = [
   {
@@ -20,6 +26,7 @@ const PACKAGES: Package[] = [
     adults: 1,
     children: 0,
     price: 40,
+    image: packageAdult,
   },
   {
     id: 'child-single',
@@ -30,6 +37,7 @@ const PACKAGES: Package[] = [
     adults: 0,
     children: 1,
     price: 25,
+    image: packageChild,
   },
   {
     id: 'family-small',
@@ -41,6 +49,7 @@ const PACKAGES: Package[] = [
     children: 2,
     price: 120,
     badge: 'value',
+    image: packageSmallFamily,
   },
   {
     id: 'family-large',
@@ -52,6 +61,7 @@ const PACKAGES: Package[] = [
     children: 4,
     price: 180,
     badge: 'popular',
+    image: packageLargeFamily,
   },
 ];
 
