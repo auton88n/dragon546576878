@@ -122,7 +122,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
   const MobileBookingCard = ({ booking }: { booking: Booking }) => (
     <div className="glass-card rounded-xl border border-accent/20 p-4 space-y-3">
       {/* Header: Reference + Status */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between rtl:flex-row-reverse">
         <span className="font-mono font-semibold text-accent text-sm">
           {booking.booking_reference}
         </span>
@@ -130,18 +130,18 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
       </div>
 
       {/* Customer Info */}
-      <div className="text-start rtl:text-right">
+      <div className="text-start">
         <p className="font-medium text-foreground">{booking.customer_name}</p>
         <p className="text-sm text-muted-foreground truncate">{booking.customer_email}</p>
       </div>
 
       {/* Date, Time, Tickets */}
-      <div className="flex flex-wrap gap-3 text-sm">
-        <div className="flex items-center gap-1.5 text-muted-foreground">
+      <div className="flex flex-wrap gap-3 text-sm rtl:[direction:rtl]">
+        <div className="flex items-center gap-1.5 text-muted-foreground rtl:flex-row-reverse">
           <Calendar className="h-4 w-4 text-accent" />
           <span>{formatDate(booking.visit_date)}</span>
         </div>
-        <div className="flex items-center gap-1.5 text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-muted-foreground rtl:flex-row-reverse">
           <Users className="h-4 w-4 text-accent" />
           <span>{booking.adult_count + booking.child_count + (booking.senior_count || 0)} {isArabic ? 'تذاكر' : 'tickets'}</span>
         </div>

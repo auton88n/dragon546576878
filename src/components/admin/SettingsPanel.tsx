@@ -99,8 +99,8 @@ const SettingsPanel = () => {
             </div>
             {isArabic ? 'أسعار التذاكر (ر.س)' : 'Ticket Prices (SAR)'}
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 rtl:[direction:rtl]">
+            <div className="space-y-2 text-start">
               <Label className="text-muted-foreground">{isArabic ? 'بالغ' : 'Adult'}</Label>
               <Input
                 type="number"
@@ -112,10 +112,10 @@ const SettingsPanel = () => {
                     ticketPricing: { ...formData.ticketPricing, adult: Number(e.target.value) },
                   })
                 }
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-start">
               <Label className="text-muted-foreground">{isArabic ? 'طفل' : 'Child'}</Label>
               <Input
                 type="number"
@@ -127,10 +127,10 @@ const SettingsPanel = () => {
                     ticketPricing: { ...formData.ticketPricing, child: Number(e.target.value) },
                   })
                 }
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-start">
               <Label className="text-muted-foreground">{isArabic ? 'كبير السن' : 'Senior'}</Label>
               <Input
                 type="number"
@@ -142,7 +142,7 @@ const SettingsPanel = () => {
                     ticketPricing: { ...formData.ticketPricing, senior: Number(e.target.value) },
                   })
                 }
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
               />
             </div>
           </div>
@@ -156,8 +156,8 @@ const SettingsPanel = () => {
             </div>
             {isArabic ? 'ساعات العمل' : 'Operating Hours'}
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6 rtl:[direction:rtl]">
+            <div className="space-y-2 text-start">
               <Label className="text-muted-foreground">{isArabic ? 'وقت الافتتاح' : 'Opening Time'}</Label>
               <Input
                 type="time"
@@ -171,7 +171,7 @@ const SettingsPanel = () => {
                 className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-start">
               <Label className="text-muted-foreground">{isArabic ? 'وقت الإغلاق' : 'Closing Time'}</Label>
               <Input
                 type="time"
@@ -185,7 +185,7 @@ const SettingsPanel = () => {
                 className="bg-background/50 border-border/50 focus:border-accent transition-colors"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-start">
               <Label className="text-muted-foreground">{isArabic ? 'فترة الفتحة (دقيقة)' : 'Time Slot (minutes)'}</Label>
               <Input
                 type="number"
@@ -198,18 +198,18 @@ const SettingsPanel = () => {
                     operatingHours: { ...formData.operatingHours, timeSlotInterval: Number(e.target.value) },
                   })
                 }
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
               />
             </div>
           </div>
 
-          <div>
+          <div className="text-start">
             <Label className="mb-3 block text-muted-foreground">{isArabic ? 'أيام الإغلاق' : 'Closed Days'}</Label>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 rtl:[direction:rtl]">
               {daysOfWeek.map((day) => (
                 <div 
                   key={day.value} 
-                  className={`flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 rounded-lg border transition-colors cursor-pointer ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors cursor-pointer rtl:flex-row-reverse ${
                     (formData.operatingHours?.closedDays ?? []).includes(day.value)
                       ? 'bg-accent/20 border-accent/40'
                       : 'bg-background/50 border-border/50 hover:border-accent/30'
@@ -242,8 +242,8 @@ const SettingsPanel = () => {
             </div>
             {isArabic ? 'قواعد الحجز' : 'Booking Rules'}
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 rtl:[direction:rtl]">
+            <div className="space-y-2 text-start">
               <Label className="text-muted-foreground">{isArabic ? 'الحد الأقصى للتذاكر' : 'Max Tickets per Booking'}</Label>
               <Input
                 type="number"
@@ -253,10 +253,10 @@ const SettingsPanel = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, maxTicketsPerBooking: Number(e.target.value) })
                 }
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-start">
               <Label className="text-muted-foreground">{isArabic ? 'أيام الحجز المسبق' : 'Advance Booking Days'}</Label>
               <Input
                 type="number"
@@ -266,10 +266,10 @@ const SettingsPanel = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, advanceBookingDays: Number(e.target.value) })
                 }
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-start">
               <Label className="text-muted-foreground">{isArabic ? 'قطع الحجز في نفس اليوم (ساعة)' : 'Same-Day Cutoff Hour'}</Label>
               <Input
                 type="number"
@@ -279,7 +279,7 @@ const SettingsPanel = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, sameDayCutoffHour: Number(e.target.value) })
                 }
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors"
+                className="bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
               />
             </div>
           </div>

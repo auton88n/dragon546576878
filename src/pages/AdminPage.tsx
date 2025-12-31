@@ -97,7 +97,7 @@ const AdminPage = () => {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 rtl:[direction:rtl]">
             {statsCards.map((stat, index) => (
               <StatsCard key={index} {...stat} loading={statsLoading} />
             ))}
@@ -105,24 +105,24 @@ const AdminPage = () => {
 
           {/* Tabs Navigation */}
           <Tabs defaultValue="bookings" className="space-y-4" activationMode="manual">
-            <TabsList className="glass-card-gold p-1 h-auto flex-wrap">
+            <TabsList className="glass-card-gold p-1 h-auto flex-wrap rtl:[direction:rtl]">
               <TabsTrigger 
                 value="bookings" 
-                className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm"
+                className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse"
               >
                 <Ticket className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 {isArabic ? 'الحجوزات' : 'Bookings'}
               </TabsTrigger>
               <TabsTrigger 
                 value="reports" 
-                className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm"
+                className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse"
               >
                 <BarChart3 className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 {isArabic ? 'التقارير' : 'Reports'}
               </TabsTrigger>
               <TabsTrigger 
                 value="settings" 
-                className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm"
+                className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse"
               >
                 <Settings className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 {isArabic ? 'الإعدادات' : 'Settings'}
