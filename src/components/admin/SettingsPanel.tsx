@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import TestQRGenerator from './TestQRGenerator';
 
 const SettingsPanel = () => {
   const { currentLanguage } = useLanguage();
@@ -298,6 +299,11 @@ const SettingsPanel = () => {
             {isArabic ? 'حفظ الإعدادات' : 'Save Settings'}
           </Button>
         </div>
+
+        <Separator className="my-4" />
+
+        {/* Test QR Generator */}
+        <TestQRGenerator />
       </CardContent>
     </Card>
   );
