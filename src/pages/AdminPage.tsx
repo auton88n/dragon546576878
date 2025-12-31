@@ -10,6 +10,7 @@ import StatsCard from '@/components/admin/StatsCard';
 import BookingTable from '@/components/admin/BookingTable';
 import BookingFilters from '@/components/admin/BookingFilters';
 import BookingDetailsDialog from '@/components/admin/BookingDetailsDialog';
+import ScannerLeaderboard from '@/components/admin/ScannerLeaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const SettingsPanel = lazy(() => import('@/components/admin/SettingsPanel'));
@@ -101,6 +102,11 @@ const AdminPage = () => {
             {statsCards.map((stat, index) => (
               <StatsCard key={index} {...stat} loading={statsLoading} />
             ))}
+          </div>
+
+          {/* Scanner Leaderboard */}
+          <div className="mb-6">
+            <ScannerLeaderboard />
           </div>
 
           {/* Tabs Navigation */}
