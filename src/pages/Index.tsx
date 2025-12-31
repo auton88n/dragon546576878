@@ -8,6 +8,7 @@ import heroImage from '@/assets/hero-heritage.jpg';
 import featureHeritage from '@/assets/feature-heritage.jpg';
 import featureTours from '@/assets/feature-tours.jpg';
 import featureFamily from '@/assets/feature-family.jpg';
+
 const Index = () => {
   const {
     currentLanguage: language,
@@ -41,9 +42,9 @@ const Index = () => {
 
       {/* Hero Section with Background Image */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
+        {/* Background Image - No lazy loading for hero (above fold) */}
         <div className="absolute inset-0">
-          <img src={heroImage} alt="Souq Almufaijer Heritage Site" className="w-full h-full object-cover transition-transform duration-[20s] hover:scale-105" />
+          <img src={heroImage} alt="Souq Almufaijer Heritage Site" className="w-full h-full object-cover" />
           <div className="hero-overlay absolute inset-0" />
         </div>
 
@@ -131,9 +132,14 @@ const Index = () => {
             {features.map((feature, index) => <div key={index} className="group glass-card-gold overflow-hidden hover:-translate-y-3 transition-all duration-500" style={{
             animationDelay: `${index * 0.1}s`
           }}>
-                {/* Image */}
+                {/* Image - Lazy loaded (below fold) */}
                 <div className="relative h-48 overflow-hidden">
-                  <img src={feature.image} alt={isArabic ? feature.titleAr : feature.titleEn} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <img 
+                    src={feature.image} 
+                    alt={isArabic ? feature.titleAr : feature.titleEn} 
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
                   <div className="absolute bottom-4 left-4 rtl:right-4 rtl:left-auto">
                     <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center glow-gold">
@@ -221,12 +227,10 @@ const Index = () => {
 
       {/* CTA Section */}
       <section className="py-24 gradient-heritage text-primary-foreground relative overflow-hidden">
-        {/* Decorative Elements */}
+        {/* Decorative Elements - Simplified for performance */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white/20 blur-3xl animate-float" />
-          <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-white/10 blur-3xl animate-float" style={{
-          animationDelay: '1s'
-        }} />
+          <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white/20 blur-3xl" />
+          <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-white/10 blur-3xl" />
         </div>
         
         <div className="container text-center relative z-10">

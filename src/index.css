@@ -4,18 +4,37 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global scrollbar hide - applies to entire application */
-html, body, * {
-  -ms-overflow-style: none !important;  /* IE and Edge */
-  scrollbar-width: none !important;  /* Firefox */
+/* Optimized scrollbar hide - targets scrollable containers only */
+html, body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 html::-webkit-scrollbar,
-body::-webkit-scrollbar,
-*::-webkit-scrollbar {
-  display: none !important;  /* Chrome, Safari and Opera */
-  width: 0 !important;
-  height: 0 !important;
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Apply to common scrollable containers */
+.overflow-auto::-webkit-scrollbar,
+.overflow-scroll::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+[data-radix-scroll-area-viewport]::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.overflow-auto,
+.overflow-scroll,
+.overflow-y-auto,
+.overflow-x-auto,
+[data-radix-scroll-area-viewport] {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 @layer base {
@@ -172,17 +191,17 @@ body::-webkit-scrollbar,
 }
 
 @layer components {
-  /* Heritage Glass Card */
+  /* Heritage Glass Card - Optimized (reduced blur) */
   .glass-card {
-    @apply bg-card/90 backdrop-blur-xl border border-border/50 shadow-xl rounded-2xl;
+    @apply bg-card/95 border border-border/50 shadow-xl rounded-2xl;
     box-shadow: 
       0 8px 32px rgba(61, 46, 31, 0.08),
       0 0 0 1px rgba(201, 168, 108, 0.1) inset;
   }
 
-  /* Glass card with golden accent */
+  /* Glass card with golden accent - Optimized */
   .glass-card-gold {
-    @apply bg-card/95 backdrop-blur-xl border border-accent/30 shadow-xl rounded-2xl;
+    @apply bg-card border border-accent/30 shadow-xl rounded-2xl;
     box-shadow: 
       0 8px 32px rgba(61, 46, 31, 0.1),
       0 0 0 1px rgba(201, 168, 108, 0.2) inset,
@@ -267,9 +286,10 @@ body::-webkit-scrollbar,
     );
   }
 
+  /* Hero Glass - Optimized (reduced blur intensity) */
   .hero-glass {
-    @apply backdrop-blur-xl border border-white/20 rounded-3xl;
-    background: rgba(255, 253, 249, 0.92);
+    @apply backdrop-blur-md border border-white/20 rounded-3xl;
+    background: rgba(255, 253, 249, 0.95);
     box-shadow: 
       0 25px 50px rgba(61, 46, 31, 0.15),
       0 0 0 1px rgba(201, 168, 108, 0.2) inset;
@@ -328,21 +348,25 @@ body::-webkit-scrollbar,
     direction: ltr;
   }
 
-  /* Animation Utilities */
+  /* Animation Utilities - GPU accelerated with will-change */
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out forwards;
+    will-change: opacity;
   }
 
   .animate-slide-up {
     animation: slideUp 0.5s ease-out forwards;
+    will-change: opacity, transform;
   }
 
   .animate-scale-in {
     animation: scaleIn 0.3s ease-out forwards;
+    will-change: opacity, transform;
   }
 
   .animate-float {
     animation: float 3s ease-in-out infinite;
+    will-change: transform;
   }
 
   @keyframes fadeIn {
@@ -383,6 +407,22 @@ body::-webkit-scrollbar,
     50% {
       transform: translateY(-10px);
     }
+  }
+}
+
+/* Reduced motion support for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-scale-in,
+  .animate-float {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
   }
 }
 
