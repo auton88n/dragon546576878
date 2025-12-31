@@ -87,14 +87,8 @@ const Header = () => {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center">
           <LanguageSwitcher />
-          <Link to="/book">
-            <Button className="btn-gold">
-              <Ticket className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" />
-              {t('nav.booking')}
-            </Button>
-          </Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -131,14 +125,6 @@ const Header = () => {
                 {link.label}
               </Link>
             ))}
-            <div className="pt-4 mt-4 border-t border-border">
-              <Link to="/book" onClick={closeMenu}>
-                <Button className="btn-gold w-full">
-                  <Ticket className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" />
-                  {t('nav.booking')}
-                </Button>
-              </Link>
-            </div>
           </nav>
         </div>
       )}
