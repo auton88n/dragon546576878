@@ -125,7 +125,7 @@ const ConfirmationPage = () => {
     if (!ctx) return;
 
     const width = 900;
-    const height = 1400;
+    const height = 1600;
     canvas.width = width;
     canvas.height = height;
 
@@ -282,22 +282,22 @@ const ConfirmationPage = () => {
     const qrSectionY = totalY + 110;
     ctx.textAlign = 'center';
     
-    // QR card background
+    // QR card background - larger to accommodate bigger QR
     ctx.fillStyle = '#FFFFFF';
-    roundRect(ctx, width/2 - 150, qrSectionY, 300, 340, 20);
+    roundRect(ctx, width/2 - 190, qrSectionY, 380, 420, 20);
     ctx.fill();
     ctx.strokeStyle = '#C9A86C';
     ctx.lineWidth = 3;
-    roundRect(ctx, width/2 - 150, qrSectionY, 300, 340, 20);
+    roundRect(ctx, width/2 - 190, qrSectionY, 380, 420, 20);
     ctx.stroke();
     
-    // Inner QR border
+    // Inner QR border - larger
     ctx.strokeStyle = '#E8DED0';
     ctx.lineWidth = 2;
-    roundRect(ctx, width/2 - 120, qrSectionY + 30, 240, 240, 12);
+    roundRect(ctx, width/2 - 160, qrSectionY + 30, 320, 320, 12);
     ctx.stroke();
 
-    // Draw QR code from FIRST ticket (individual ticket QR with proper code)
+    // Draw QR code from FIRST ticket (individual ticket QR with proper code) - larger
     const firstTicket = tickets[0];
     if (firstTicket?.qr_code_url) {
       const qrImage = new Image();
@@ -307,16 +307,16 @@ const ConfirmationPage = () => {
         qrImage.onload = resolve;
         qrImage.onerror = resolve;
       });
-      ctx.drawImage(qrImage, width/2 - 100, qrSectionY + 50, 200, 200);
+      ctx.drawImage(qrImage, width/2 - 140, qrSectionY + 50, 280, 280);
     }
 
     // QR section text - dark brown for readability
     ctx.fillStyle = '#3D2E1F';
     ctx.font = 'bold 14px Arial, sans-serif';
-    ctx.fillText(isArabic ? 'امسح الرمز عند الدخول' : 'Scan at entrance', width/2, qrSectionY + 300);
+    ctx.fillText(isArabic ? 'امسح الرمز عند الدخول' : 'Scan at entrance', width/2, qrSectionY + 375);
     ctx.font = '12px Arial, sans-serif';
     ctx.fillStyle = '#5C4A3A';
-    ctx.fillText(isArabic ? 'صالحة ليوم الزيارة فقط' : 'Valid for visit date only', width/2, qrSectionY + 322);
+    ctx.fillText(isArabic ? 'صالحة ليوم الزيارة فقط' : 'Valid for visit date only', width/2, qrSectionY + 397);
 
     // Footer
     ctx.fillStyle = '#3D2E1F';
