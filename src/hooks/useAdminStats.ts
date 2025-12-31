@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AdminStats {
@@ -10,6 +10,8 @@ export interface AdminStats {
   pendingEmails: number;
 }
 
+const THROTTLE_MS = 2000;
+
 export const useAdminStats = () => {
   const [stats, setStats] = useState<AdminStats>({
     totalRevenue: 0,
@@ -20,8 +22,9 @@ export const useAdminStats = () => {
     pendingEmails: 0,
   });
   const [loading, setLoading] = useState(true);
+  const lastFetchRef = useRef<number>(0);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
 
@@ -73,30 +76,39 @@ export const useAdminStats = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const throttledFetch = useCallback(() => {
+    const now = Date.now();
+    if (now - lastFetchRef.current > THROTTLE_MS) {
+      lastFetchRef.current = now;
+      fetchStats();
+    }
+  }, [fetchStats]);
 
   useEffect(() => {
     fetchStats();
+  }, [fetchStats]);
 
-    // Set up real-time subscription for bookings
+  useEffect(() => {
     const channel = supabase
       .channel('admin-stats')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'bookings' },
-        () => fetchStats()
+        throttledFetch
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'tickets' },
-        () => fetchStats()
+        throttledFetch
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [throttledFetch]);
 
   return { stats, loading, refetch: fetchStats };
 };

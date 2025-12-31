@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -11,10 +11,13 @@ export interface BookingFilters {
   dateTo: string;
 }
 
+const THROTTLE_MS = 2000;
+
 export const useBookings = (filters: BookingFilters, page: number = 1, pageSize: number = 20) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const lastFetchRef = useRef<number>(0);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -66,21 +69,29 @@ export const useBookings = (filters: BookingFilters, page: number = 1, pageSize:
     fetchBookings();
   }, [fetchBookings]);
 
-  // Real-time updates
+  const throttledFetch = useCallback(() => {
+    const now = Date.now();
+    if (now - lastFetchRef.current > THROTTLE_MS) {
+      lastFetchRef.current = now;
+      fetchBookings();
+    }
+  }, [fetchBookings]);
+
+  // Real-time updates with throttle
   useEffect(() => {
     const channel = supabase
       .channel('bookings-list')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'bookings' },
-        () => fetchBookings()
+        throttledFetch
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchBookings]);
+  }, [throttledFetch]);
 
   return {
     bookings,

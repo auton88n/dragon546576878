@@ -80,7 +80,7 @@ const TestQRGenerator = () => {
           adult_price: 0,
           child_price: 0,
           total_amount: 0,
-          payment_status: 'paid',
+          payment_status: 'completed',
           booking_status: 'confirmed',
           language: 'en',
           qr_codes_generated: true,
