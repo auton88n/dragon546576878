@@ -218,8 +218,8 @@ const ReportsPanel = () => {
                     boxShadow: '0 10px 40px -10px hsl(var(--accent) / 0.2)',
                   }}
                 />
-                <Legend />
-                <Bar
+                  <Legend wrapperStyle={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }} />
+                  <Bar
                   dataKey="visitors"
                   name={isArabic ? 'الزوار' : 'Visitors'}
                   fill="hsl(var(--accent))"

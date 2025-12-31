@@ -48,15 +48,15 @@ const BookingFilters = ({ filters, onFiltersChange, onReset }: BookingFiltersPro
 
   return (
     <div className="glass-card p-4 rounded-xl border border-accent/20">
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-4 rtl:[direction:rtl]">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 -translate-y-1/2 h-4 w-4 text-accent" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent" />
           <Input
             placeholder={isArabic ? 'بحث برقم الحجز أو اسم العميل...' : 'Search by reference or customer...'}
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="pl-10 rtl:pr-10 rtl:pl-3 bg-background/50 border-border/50 focus:border-accent transition-colors"
+            className="ps-10 bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
           />
         </div>
 
@@ -66,7 +66,7 @@ const BookingFilters = ({ filters, onFiltersChange, onReset }: BookingFiltersPro
           onValueChange={(value) => onFiltersChange({ ...filters, status: value })}
         >
           <SelectTrigger className="w-full lg:w-48 bg-background/50 border-border/50">
-            <Filter className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-accent" />
+            <Filter className="h-4 w-4 me-2 text-accent" />
             <SelectValue placeholder={isArabic ? 'الحالة' : 'Status'} />
           </SelectTrigger>
           <SelectContent className="bg-card border-border">
@@ -79,23 +79,23 @@ const BookingFilters = ({ filters, onFiltersChange, onReset }: BookingFiltersPro
 
         {/* Date From */}
         <div className="relative">
-          <Calendar className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
+          <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
           <Input
             type="date"
             value={filters.dateFrom}
             onChange={(e) => onFiltersChange({ ...filters, dateFrom: e.target.value })}
-            className="pl-10 rtl:pr-10 rtl:pl-3 w-full lg:w-44 bg-background/50 border-border/50 focus:border-accent transition-colors"
+            className="ps-10 w-full lg:w-44 bg-background/50 border-border/50 focus:border-accent transition-colors"
           />
         </div>
 
         {/* Date To */}
         <div className="relative">
-          <Calendar className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
+          <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
           <Input
             type="date"
             value={filters.dateTo}
             onChange={(e) => onFiltersChange({ ...filters, dateTo: e.target.value })}
-            className="pl-10 rtl:pr-10 rtl:pl-3 w-full lg:w-44 bg-background/50 border-border/50 focus:border-accent transition-colors"
+            className="ps-10 w-full lg:w-44 bg-background/50 border-border/50 focus:border-accent transition-colors"
           />
         </div>
 
