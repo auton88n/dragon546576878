@@ -4,7 +4,7 @@ import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
 import { Ticket, Target, Compass, MapPin, Mountain, Users } from 'lucide-react';
-import heroImage from '@/assets/hero-heritage.jpg';
+import heroImage from '@/assets/about-hero-tuwayq.jpg';
 
 const AboutPage = () => {
   const { t, isRTL, currentLanguage } = useLanguage();
