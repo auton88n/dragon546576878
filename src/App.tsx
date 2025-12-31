@@ -33,7 +33,7 @@ const queryClient = new QueryClient({
 
 // Suspense fallback component
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
+  <div className="min-h-screen flex items-center justify-center bg-warm-cream">
     <LoadingSpinner size="lg" />
   </div>
 );

@@ -408,6 +408,22 @@ body::-webkit-scrollbar {
       transform: translateY(-10px);
     }
   }
+
+
+  @keyframes logo-breathe {
+    0%, 100% {
+      opacity: 0.6;
+      transform: scale(0.95);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-logo-breathe {
+    animation: logo-breathe 2s ease-in-out infinite;
+  }
 }
 
 /* Reduced motion support for accessibility */
