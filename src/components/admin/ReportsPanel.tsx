@@ -119,19 +119,19 @@ const ReportsPanel = () => {
       </CardHeader>
       <CardContent className="space-y-6 md:space-y-8 p-4 md:p-6 pt-4 md:pt-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 rtl:[direction:rtl]">
           {summaryCards.map((card, index) => (
             <div
               key={index}
-              className={`rounded-xl p-3 md:p-4 bg-gradient-to-br ${card.gradient} border border-accent/10 transition-transform hover:scale-[1.02] text-start rtl:text-right`}
+              className={`rounded-xl p-3 md:p-4 bg-gradient-to-br rtl:bg-gradient-to-bl ${card.gradient} border border-accent/10 transition-transform hover:scale-[1.02]`}
             >
-              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3 rtl:flex-row-reverse rtl:justify-end">
+              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3 rtl:flex-row-reverse">
                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg ${card.iconBg} flex items-center justify-center`}>
                   <card.icon className={`h-4 w-4 md:h-5 md:w-5 ${card.iconColor}`} />
                 </div>
               </div>
-              <p className="text-xs md:text-sm text-muted-foreground mb-1">{card.title}</p>
-              <p className="text-lg md:text-xl font-bold text-foreground">{card.value}</p>
+              <p className="text-xs md:text-sm text-muted-foreground mb-1 text-start">{card.title}</p>
+              <p className="text-lg md:text-xl font-bold text-foreground text-start">{card.value}</p>
             </div>
           ))}
         </div>
@@ -159,6 +159,7 @@ const ReportsPanel = () => {
                   tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                   tickLine={false}
                   axisLine={false}
+                  reversed={isArabic}
                 />
                 <YAxis
                   tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
@@ -175,6 +176,7 @@ const ReportsPanel = () => {
                   }}
                   formatter={(value: number) => [`${value.toLocaleString()} SAR`, isArabic ? 'الإيرادات' : 'Revenue']}
                 />
+                <Legend wrapperStyle={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }} />
                 <Area
                   type="monotone"
                   dataKey="revenue"
@@ -204,6 +206,7 @@ const ReportsPanel = () => {
                   tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                   tickLine={false}
                   axisLine={false}
+                  reversed={isArabic}
                 />
                 <YAxis
                   tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
