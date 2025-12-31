@@ -11,6 +11,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import TestQRGenerator from './TestQRGenerator';
+import PackagesManager from './PackagesManager';
+import AttractionsManager from './AttractionsManager';
 
 const SettingsPanel = () => {
   const { currentLanguage } = useLanguage();
@@ -300,6 +302,16 @@ const SettingsPanel = () => {
             {isArabic ? 'حفظ الإعدادات' : 'Save Settings'}
           </Button>
         </div>
+
+        <Separator className="my-4" />
+
+        {/* Packages Manager */}
+        <PackagesManager />
+
+        <Separator className="my-4" />
+
+        {/* Attractions Manager */}
+        <AttractionsManager />
 
         <Separator className="my-4" />
 
