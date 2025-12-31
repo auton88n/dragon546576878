@@ -2,7 +2,7 @@ import { useState, useRef, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket } from 'lucide-react';
+import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { resendConfirmationEmail } from '@/lib/emailService';
 import { useToast } from '@/hooks/use-toast';
@@ -33,11 +33,11 @@ interface BookingTableProps {
   onViewDetails: (booking: Booking) => void;
 }
 
-const ROW_HEIGHT = 72; // Approximate row height in pixels
-const VIRTUAL_THRESHOLD = 50; // Only use virtual scrolling for lists larger than this
+const ROW_HEIGHT = 72;
+const VIRTUAL_THRESHOLD = 50;
 
 const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTableProps) => {
-  const { currentLanguage } = useLanguage();
+  const { currentLanguage, isRTL } = useLanguage();
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
   const [resendingId, setResendingId] = useState<string | null>(null);
@@ -118,25 +118,99 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
     return `${hour12}:${minutes} ${ampm}`;
   };
 
+  // Mobile Card Component
+  const MobileBookingCard = ({ booking }: { booking: Booking }) => (
+    <div className="glass-card rounded-xl border border-accent/20 p-4 space-y-3">
+      {/* Header: Reference + Status */}
+      <div className="flex items-center justify-between">
+        <span className="font-mono font-semibold text-accent text-sm">
+          {booking.booking_reference}
+        </span>
+        {getStatusBadge(booking.booking_status)}
+      </div>
+
+      {/* Customer Info */}
+      <div className="text-start rtl:text-right">
+        <p className="font-medium text-foreground">{booking.customer_name}</p>
+        <p className="text-sm text-muted-foreground truncate">{booking.customer_email}</p>
+      </div>
+
+      {/* Date, Time, Tickets */}
+      <div className="flex flex-wrap gap-3 text-sm">
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Calendar className="h-4 w-4 text-accent" />
+          <span>{formatDate(booking.visit_date)}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Users className="h-4 w-4 text-accent" />
+          <span>{booking.adult_count + booking.child_count + (booking.senior_count || 0)} {isArabic ? 'تذاكر' : 'tickets'}</span>
+        </div>
+      </div>
+
+      {/* Amount + Email Status + Actions */}
+      <div className="flex items-center justify-between pt-2 border-t border-accent/10">
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-accent">
+            {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
+          </span>
+          {booking.confirmation_email_sent ? (
+            <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+              <MailCheck className="h-3 w-3 text-emerald-600" />
+            </div>
+          ) : (
+            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+              <Mail className="h-3 w-3 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onViewDetails(booking)}
+            className="h-8 text-xs border-accent/30 hover:bg-accent/10"
+          >
+            <Eye className="h-3 w-3 me-1" />
+            {isArabic ? 'عرض' : 'View'}
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleResendEmail(booking)}
+            disabled={resendingId === booking.id}
+            className="h-8 text-xs border-accent/30 hover:bg-accent/10"
+          >
+            {resendingId === booking.id ? (
+              <RefreshCw className="h-3 w-3 animate-spin" />
+            ) : (
+              <Mail className="h-3 w-3" />
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderRow = (booking: Booking) => (
     <>
-      <TableCell className="font-mono font-semibold text-accent">
+      <TableCell className="font-mono font-semibold text-accent text-start rtl:text-right">
         {booking.booking_reference}
       </TableCell>
-      <TableCell>
+      <TableCell className="text-start rtl:text-right">
         <div>
           <p className="font-medium text-foreground">{booking.customer_name}</p>
           <p className="text-sm text-muted-foreground">{booking.customer_email}</p>
         </div>
       </TableCell>
-      <TableCell className="text-foreground">{formatDate(booking.visit_date)}</TableCell>
-      <TableCell className="text-foreground">{formatTime(booking.visit_time)}</TableCell>
+      <TableCell className="text-foreground text-start rtl:text-right">{formatDate(booking.visit_date)}</TableCell>
+      <TableCell className="text-foreground text-start rtl:text-right">{formatTime(booking.visit_time)}</TableCell>
       <TableCell>
         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent/10 text-accent font-semibold">
           {booking.adult_count + booking.child_count + (booking.senior_count || 0)}
         </span>
       </TableCell>
-      <TableCell className="font-semibold text-accent">
+      <TableCell className="font-semibold text-accent text-start rtl:text-right">
         {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
       </TableCell>
       <TableCell>{getStatusBadge(booking.booking_status)}</TableCell>
@@ -151,19 +225,19 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
           </div>
         )}
       </TableCell>
-      <TableCell className="text-right rtl:text-left">
+      <TableCell className="text-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="hover:bg-accent/10">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-card border-border">
+          <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="bg-card border-border">
             <DropdownMenuItem 
               onClick={() => onViewDetails(booking)}
               className="cursor-pointer hover:bg-accent/10"
             >
-              <Eye className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-accent" />
+              <Eye className="h-4 w-4 me-2 text-accent" />
               {isArabic ? 'عرض التفاصيل' : 'View Details'}
             </DropdownMenuItem>
             <DropdownMenuItem 
@@ -172,9 +246,9 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
               className="cursor-pointer hover:bg-accent/10"
             >
               {resendingId === booking.id ? (
-                <RefreshCw className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin text-accent" />
+                <RefreshCw className="h-4 w-4 me-2 animate-spin text-accent" />
               ) : (
-                <Mail className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 text-accent" />
+                <Mail className="h-4 w-4 me-2 text-accent" />
               )}
               {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
             </DropdownMenuItem>
@@ -205,103 +279,109 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
     );
   }
 
-  // Regular table for small datasets
-  if (!useVirtual) {
-    return (
-      <div className="overflow-x-auto scrollbar-hide glass-card rounded-xl border border-accent/20">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-b border-accent/20 hover:bg-transparent">
-              <TableHead className="text-accent font-semibold">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
-              <TableHead className="text-accent font-semibold">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-              <TableHead className="text-accent font-semibold">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
-              <TableHead className="text-accent font-semibold">{isArabic ? 'الوقت' : 'Time'}</TableHead>
-              <TableHead className="text-accent font-semibold">{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
-              <TableHead className="text-accent font-semibold">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-              <TableHead className="text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
-              <TableHead className="text-accent font-semibold">{isArabic ? 'البريد' : 'Email'}</TableHead>
-              <TableHead className="text-right rtl:text-left text-accent font-semibold">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {bookings.map((booking) => (
-              <TableRow 
-                key={booking.id} 
-                className="border-b border-accent/10 hover:bg-accent/5 transition-colors"
-              >
-                {renderRow(booking)}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    );
-  }
-
-  // Virtual scrolling table for large datasets
-  const virtualItems = virtualizer.getVirtualItems();
-
+  // Mobile view - card layout
   return (
-    <div className="glass-card rounded-xl border border-accent/20 overflow-hidden">
-      {/* Fixed header */}
-      <div className="overflow-x-auto scrollbar-hide">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-b border-accent/20 hover:bg-transparent">
-              <TableHead className="text-accent font-semibold min-w-[120px]">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
-              <TableHead className="text-accent font-semibold min-w-[180px]">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-              <TableHead className="text-accent font-semibold min-w-[130px]">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
-              <TableHead className="text-accent font-semibold min-w-[80px]">{isArabic ? 'الوقت' : 'Time'}</TableHead>
-              <TableHead className="text-accent font-semibold min-w-[80px]">{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
-              <TableHead className="text-accent font-semibold min-w-[100px]">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-              <TableHead className="text-accent font-semibold min-w-[100px]">{isArabic ? 'الحالة' : 'Status'}</TableHead>
-              <TableHead className="text-accent font-semibold min-w-[60px]">{isArabic ? 'البريد' : 'Email'}</TableHead>
-              <TableHead className="text-right rtl:text-left text-accent font-semibold min-w-[80px]">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
-            </TableRow>
-          </TableHeader>
-        </Table>
+    <>
+      {/* Mobile Cards - visible on small screens */}
+      <div className="md:hidden space-y-3">
+        {bookings.map((booking) => (
+          <MobileBookingCard key={booking.id} booking={booking} />
+        ))}
       </div>
 
-      {/* Virtualized scrollable body */}
-      <div 
-        ref={parentRef}
-        className="overflow-auto max-h-[500px] scrollbar-hide"
-      >
-        <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: '100%',
-            position: 'relative',
-          }}
-        >
-          <Table>
-            <TableBody>
-              {virtualItems.map((virtualRow) => {
-                const booking = bookings[virtualRow.index];
-                return (
-                  <TableRow
-                    key={booking.id}
-                    data-index={virtualRow.index}
-                    ref={virtualizer.measureElement}
+      {/* Desktop Table - hidden on small screens */}
+      <div className="hidden md:block">
+        {!useVirtual ? (
+          <div className="overflow-x-auto scrollbar-hide glass-card rounded-xl border border-accent/20">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-accent/20 hover:bg-transparent">
+                  <TableHead className="text-accent font-semibold text-start rtl:text-right">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
+                  <TableHead className="text-accent font-semibold text-start rtl:text-right">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+                  <TableHead className="text-accent font-semibold text-start rtl:text-right">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
+                  <TableHead className="text-accent font-semibold text-start rtl:text-right">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+                  <TableHead className="text-accent font-semibold">{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
+                  <TableHead className="text-accent font-semibold text-start rtl:text-right">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                  <TableHead className="text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead className="text-accent font-semibold">{isArabic ? 'البريد' : 'Email'}</TableHead>
+                  <TableHead className="text-end text-accent font-semibold">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bookings.map((booking) => (
+                  <TableRow 
+                    key={booking.id} 
                     className="border-b border-accent/10 hover:bg-accent/5 transition-colors"
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: `${virtualRow.size}px`,
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
                   >
                     {renderRow(booking)}
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          // Virtual scrolling table for large datasets
+          <div className="glass-card rounded-xl border border-accent/20 overflow-hidden">
+            <div className="overflow-x-auto scrollbar-hide">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-accent/20 hover:bg-transparent">
+                    <TableHead className="text-accent font-semibold min-w-[120px] text-start rtl:text-right">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
+                    <TableHead className="text-accent font-semibold min-w-[180px] text-start rtl:text-right">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+                    <TableHead className="text-accent font-semibold min-w-[130px] text-start rtl:text-right">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
+                    <TableHead className="text-accent font-semibold min-w-[80px] text-start rtl:text-right">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+                    <TableHead className="text-accent font-semibold min-w-[80px]">{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
+                    <TableHead className="text-accent font-semibold min-w-[100px] text-start rtl:text-right">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                    <TableHead className="text-accent font-semibold min-w-[100px]">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                    <TableHead className="text-accent font-semibold min-w-[60px]">{isArabic ? 'البريد' : 'Email'}</TableHead>
+                    <TableHead className="text-end text-accent font-semibold min-w-[80px]">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
+                  </TableRow>
+                </TableHeader>
+              </Table>
+            </div>
+
+            <div 
+              ref={parentRef}
+              className="overflow-auto max-h-[500px] scrollbar-hide"
+            >
+              <div
+                style={{
+                  height: `${virtualizer.getTotalSize()}px`,
+                  width: '100%',
+                  position: 'relative',
+                }}
+              >
+                <Table>
+                  <TableBody>
+                    {virtualizer.getVirtualItems().map((virtualRow) => {
+                      const booking = bookings[virtualRow.index];
+                      return (
+                        <TableRow
+                          key={booking.id}
+                          data-index={virtualRow.index}
+                          ref={virtualizer.measureElement}
+                          className="border-b border-accent/10 hover:bg-accent/5 transition-colors"
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: `${virtualRow.size}px`,
+                            transform: `translateY(${virtualRow.start}px)`,
+                          }}
+                        >
+                          {renderRow(booking)}
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 });
 

@@ -24,25 +24,25 @@ const StatsCard = memo(({
 }: StatsCardProps) => {
   return (
     <Card className="glass-card-gold hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-0">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground mb-2">{title}</p>
+      <CardContent className="p-3 md:p-6">
+        <div className="flex items-start justify-between rtl:flex-row-reverse">
+          <div className="text-left rtl:text-right">
+            <p className="text-xs md:text-sm text-muted-foreground mb-1 md:mb-2">{title}</p>
             {loading ? (
-              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-7 md:h-9 w-16 md:w-24" />
             ) : (
-              <p className="text-3xl font-bold text-foreground">
+              <p className="text-xl md:text-3xl font-bold text-foreground">
                 {typeof value === 'number' ? value.toLocaleString() : value}
                 {suffix && (
-                  <span className="text-lg text-muted-foreground mr-1 rtl:ml-1 rtl:mr-0">
+                  <span className="text-sm md:text-lg text-muted-foreground ms-1">
                     {suffix}
                   </span>
                 )}
               </p>
             )}
           </div>
-          <div className={`w-12 h-12 rounded-xl ${bgColor} flex items-center justify-center glow-gold`}>
-            <Icon className={`h-6 w-6 ${color}`} />
+          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl ${bgColor} flex items-center justify-center glow-gold`}>
+            <Icon className={`h-5 w-5 md:h-6 md:w-6 ${color}`} />
           </div>
         </div>
       </CardContent>
