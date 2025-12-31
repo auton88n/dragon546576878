@@ -208,7 +208,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
   // Regular table for small datasets
   if (!useVirtual) {
     return (
-      <div className="overflow-x-auto glass-card rounded-xl border border-accent/20">
+      <div className="overflow-x-auto scrollbar-hide glass-card rounded-xl border border-accent/20">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-accent/20 hover:bg-transparent">
@@ -244,7 +244,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
   return (
     <div className="glass-card rounded-xl border border-accent/20 overflow-hidden">
       {/* Fixed header */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto scrollbar-hide">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-accent/20 hover:bg-transparent">
@@ -265,7 +265,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
       {/* Virtualized scrollable body */}
       <div 
         ref={parentRef}
-        className="overflow-auto max-h-[500px]"
+        className="overflow-auto max-h-[500px] scrollbar-hide"
       >
         <div
           style={{
