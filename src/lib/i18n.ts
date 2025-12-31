@@ -302,7 +302,7 @@ const arTranslations = {
     no: 'لا',
   },
   nav: {
-    home: 'الرئيسية',
+    home: 'المفيجر',
     about: 'من نحن',
     contact: 'تواصل معنا',
     booking: 'احجز تذاكر',
