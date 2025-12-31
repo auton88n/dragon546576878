@@ -400,8 +400,8 @@ async function sendEmailWithRetry(
 
   // Plain text fallback for Gmail safety
   const plainText = isArabic
-    ? `تأكيد الحجز - سوق المفيجر\n\nمرحباً ${booking.customer_name}،\n\nرقم الحجز: ${booking.booking_reference}\nالتاريخ: ${booking.visit_date}\nصالحة طوال اليوم (9 ص - 6 م)\nعدد التذاكر: ${(booking.adult_count || 0) + (booking.child_count || 0) + (booking.senior_count || 0)}\n\nشكراً لحجزك!\n\nPowered by AYN AI`
-    : `Booking Confirmation - Souq Almufaijer\n\nHello ${booking.customer_name},\n\nBooking Reference: ${booking.booking_reference}\nDate: ${booking.visit_date}\nValid All Day (9 AM - 6 PM)\nTickets: ${(booking.adult_count || 0) + (booking.child_count || 0) + (booking.senior_count || 0)}\n\nThank you for your booking!\n\nPowered by AYN AI`;
+    ? `تأكيد الحجز - سوق المفيجر\n\nمرحباً ${booking.customer_name}،\n\nرقم الحجز: ${booking.booking_reference}\nالتاريخ: ${booking.visit_date}\nصالحة طوال اليوم (9 ص - 6 م)\nعدد التذاكر: ${(booking.adult_count || 0) + (booking.child_count || 0) + (booking.senior_count || 0)}\n\nشكراً لحجزك!\n\nPowered by AYN`
+    : `Booking Confirmation - Souq Almufaijer\n\nHello ${booking.customer_name},\n\nBooking Reference: ${booking.booking_reference}\nDate: ${booking.visit_date}\nValid All Day (9 AM - 6 PM)\nTickets: ${(booking.adult_count || 0) + (booking.child_count || 0) + (booking.senior_count || 0)}\n\nThank you for your booking!\n\nPowered by AYN`;
 
   console.log(`📧 Email HTML length: ${emailHtml.length} characters`);
 
