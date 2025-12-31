@@ -8,51 +8,42 @@ import heroImage from '@/assets/hero-heritage.jpg';
 import featureHeritage from '@/assets/feature-heritage.jpg';
 import featureTours from '@/assets/feature-tours.jpg';
 import featureFamily from '@/assets/feature-family.jpg';
-
 const Index = () => {
-  const { currentLanguage: language, isRTL } = useLanguage();
+  const {
+    currentLanguage: language,
+    isRTL
+  } = useLanguage();
   const isArabic = language === 'ar';
-
-  const features = [
-    {
-      icon: Landmark,
-      image: featureHeritage,
-      titleAr: 'التجربة التراثية',
-      titleEn: 'Heritage Experience',
-      descAr: 'استمتع بتجربة فريدة من التراث السعودي الأصيل',
-      descEn: 'Enjoy a unique authentic Saudi heritage experience',
-    },
-    {
-      icon: Users,
-      image: featureTours,
-      titleAr: 'جولات مرشدة',
-      titleEn: 'Guided Tours',
-      descAr: 'اكتشف القرية التراثية مع مرشدين متخصصين',
-      descEn: 'Discover the heritage village with specialized guides',
-    },
-    {
-      icon: Heart,
-      image: featureFamily,
-      titleAr: 'للعائلات',
-      titleEn: 'Family Friendly',
-      descAr: 'مناسبة للعائلات مع أنشطة لجميع الأعمار',
-      descEn: 'Suitable for families with activities for all ages',
-    },
-  ];
-
-  return (
-    <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+  const features = [{
+    icon: Landmark,
+    image: featureHeritage,
+    titleAr: 'التجربة التراثية',
+    titleEn: 'Heritage Experience',
+    descAr: 'استمتع بتجربة فريدة من التراث السعودي الأصيل',
+    descEn: 'Enjoy a unique authentic Saudi heritage experience'
+  }, {
+    icon: Users,
+    image: featureTours,
+    titleAr: 'جولات مرشدة',
+    titleEn: 'Guided Tours',
+    descAr: 'اكتشف القرية التراثية مع مرشدين متخصصين',
+    descEn: 'Discover the heritage village with specialized guides'
+  }, {
+    icon: Heart,
+    image: featureFamily,
+    titleAr: 'للعائلات',
+    titleEn: 'Family Friendly',
+    descAr: 'مناسبة للعائلات مع أنشطة لجميع الأعمار',
+    descEn: 'Suitable for families with activities for all ages'
+  }];
+  return <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
       {/* Hero Section with Background Image */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0">
-          <img 
-            src={heroImage} 
-            alt="Souq Almufaijer Heritage Site"
-            className="w-full h-full object-cover transition-transform duration-[20s] hover:scale-105"
-          />
+          <img src={heroImage} alt="Souq Almufaijer Heritage Site" className="w-full h-full object-cover transition-transform duration-[20s] hover:scale-105" />
           <div className="hero-overlay absolute inset-0" />
         </div>
 
@@ -62,39 +53,42 @@ const Index = () => {
             {/* Glass Card */}
             <div className="hero-glass p-8 md:p-12 text-center">
               {/* Welcome Text */}
-              <p className="text-primary/80 text-lg mb-2 opacity-0 animate-slide-up" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
+              <p className="text-primary/80 text-lg mb-2 opacity-0 animate-slide-up" style={{
+              animationDelay: '0.1s',
+              animationFillMode: 'forwards'
+            }}>
                 {isArabic ? 'مرحباً بكم في' : 'Welcome to'}
               </p>
               
               {/* Site Name */}
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-accent opacity-0 animate-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-accent opacity-0 animate-slide-up" style={{
+              animationDelay: '0.2s',
+              animationFillMode: 'forwards'
+            }}>
                 {isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
               </h1>
               
               {/* Tagline */}
-              <p className="text-muted-foreground text-lg md:text-xl mb-8 opacity-0 animate-slide-up" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
-                {isArabic
-                  ? 'تجربة فريدة في قلب جبال طويق الساحرة'
-                  : 'A unique experience in the enchanting Tuwayq Mountains'}
+              <p className="text-muted-foreground text-lg md:text-xl mb-8 opacity-0 animate-slide-up" style={{
+              animationDelay: '0.3s',
+              animationFillMode: 'forwards'
+            }}>
+                {isArabic ? 'تجربة فريدة في قلب جبال طويق الساحرة' : 'A unique experience in the enchanting Tuwayq Mountains'}
               </p>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 opacity-0 animate-slide-up" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 opacity-0 animate-slide-up" style={{
+              animationDelay: '0.4s',
+              animationFillMode: 'forwards'
+            }}>
                 <Link to="/book">
                   <Button className="btn-gold text-lg px-8 py-6 w-full sm:w-auto group">
                     <Ticket className="w-5 h-5 mr-2 rtl:mr-0 rtl:ml-2 transition-transform group-hover:scale-110" />
                     {isArabic ? 'احجز زيارتك' : 'Book Your Visit'}
                   </Button>
                 </Link>
-                <a
-                  href="https://www.google.com/maps?q=23.612384849872548,46.56436420764147"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button 
-                    variant="outline" 
-                    className="text-lg px-8 py-6 w-full sm:w-auto border-primary/30 hover:bg-primary/5 bg-card/50 transition-all hover:scale-105"
-                  >
+                <a href="https://www.google.com/maps?q=23.612384849872548,46.56436420764147" target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" className="text-lg px-8 py-6 w-full sm:w-auto border-primary/30 hover:bg-primary/5 bg-card/50 transition-all hover:scale-105">
                     <MapPin className="w-5 h-5 mr-2 rtl:mr-0 rtl:ml-2" />
                     {isArabic ? 'الموقع' : 'Location'}
                   </Button>
@@ -102,15 +96,12 @@ const Index = () => {
               </div>
 
               {/* Pricing Pills */}
-              <div className="flex flex-wrap justify-center gap-4 opacity-0 animate-slide-up" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
-                <div className="glass-card rounded-full px-6 py-2 flex items-center gap-2 transition-all hover:scale-105 hover:shadow-lg">
-                  <span className="text-sm text-muted-foreground">{isArabic ? 'بالغ' : 'Adult'}</span>
-                  <span className="font-bold text-accent">100 {isArabic ? 'ر.س' : 'SAR'}</span>
-                </div>
-                <div className="glass-card rounded-full px-6 py-2 flex items-center gap-2 transition-all hover:scale-105 hover:shadow-lg">
-                  <span className="text-sm text-muted-foreground">{isArabic ? 'طفل' : 'Child'}</span>
-                  <span className="font-bold text-accent">50 {isArabic ? 'ر.س' : 'SAR'}</span>
-                </div>
+              <div className="flex flex-wrap justify-center gap-4 opacity-0 animate-slide-up" style={{
+              animationDelay: '0.5s',
+              animationFillMode: 'forwards'
+            }}>
+                
+                
               </div>
             </div>
           </div>
@@ -132,26 +123,17 @@ const Index = () => {
               {isArabic ? 'اكتشف تجربتنا' : 'Discover Our Experience'}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              {isArabic 
-                ? 'استمتع برحلة عبر الزمن في أحد أجمل المواقع التراثية'
-                : 'Enjoy a journey through time at one of the most beautiful heritage sites'}
+              {isArabic ? 'استمتع برحلة عبر الزمن في أحد أجمل المواقع التراثية' : 'Enjoy a journey through time at one of the most beautiful heritage sites'}
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="group glass-card-gold overflow-hidden hover:-translate-y-3 transition-all duration-500"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
+            {features.map((feature, index) => <div key={index} className="group glass-card-gold overflow-hidden hover:-translate-y-3 transition-all duration-500" style={{
+            animationDelay: `${index * 0.1}s`
+          }}>
                 {/* Image */}
                 <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={feature.image} 
-                    alt={isArabic ? feature.titleAr : feature.titleEn}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
+                  <img src={feature.image} alt={isArabic ? feature.titleAr : feature.titleEn} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
                   <div className="absolute bottom-4 left-4 rtl:right-4 rtl:left-auto">
                     <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center glow-gold">
@@ -169,8 +151,7 @@ const Index = () => {
                     {isArabic ? feature.descAr : feature.descEn}
                   </p>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -227,12 +208,7 @@ const Index = () => {
                       </p>
                     </div>
                   </div>
-                  <a
-                    href="https://www.google.com/maps?q=23.612384849872548,46.56436420764147"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-heritage inline-flex items-center justify-center gap-2 hover:scale-105 transition-transform"
-                  >
+                  <a href="https://www.google.com/maps?q=23.612384849872548,46.56436420764147" target="_blank" rel="noopener noreferrer" className="btn-heritage inline-flex items-center justify-center gap-2 hover:scale-105 transition-transform">
                     <MapPin className="w-5 h-5" />
                     {isArabic ? 'عرض على الخريطة' : 'View on Map'}
                   </a>
@@ -248,7 +224,9 @@ const Index = () => {
         {/* Decorative Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white/20 blur-3xl animate-float" />
-          <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-white/10 blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+          <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-white/10 blur-3xl animate-float" style={{
+          animationDelay: '1s'
+        }} />
         </div>
         
         <div className="container text-center relative z-10">
@@ -256,9 +234,7 @@ const Index = () => {
             {isArabic ? 'احجز زيارتك اليوم' : 'Book Your Visit Today'}
           </h2>
           <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto text-lg">
-            {isArabic
-              ? 'انضم إلينا في رحلة استكشافية لا تُنسى'
-              : 'Join us for an unforgettable exploratory journey'}
+            {isArabic ? 'انضم إلينا في رحلة استكشافية لا تُنسى' : 'Join us for an unforgettable exploratory journey'}
           </p>
           <Link to="/book">
             <Button size="lg" className="btn-gold text-lg px-10 py-6 hover:scale-105 transition-transform">
@@ -270,8 +246,6 @@ const Index = () => {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
