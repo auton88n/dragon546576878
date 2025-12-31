@@ -7,8 +7,8 @@ import { Mail, Lock, LogIn, AlertCircle, Home, Shield } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
-import Header from '@/components/shared/Header';
-import Footer from '@/components/shared/Footer';
+import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
+import PoweredByAYN from '@/components/shared/PoweredByAYN';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -111,9 +111,12 @@ const LoginPage = () => {
 
   return (
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <Header />
+      {/* Top bar with language switcher */}
+      <div className="flex justify-end p-4">
+        <LanguageSwitcher />
+      </div>
 
-      <main className="flex-1 flex items-center justify-center pt-24 md:pt-28 pb-8 md:pb-12 px-4 relative overflow-hidden">
+      <main className="flex-1 flex items-center justify-center pb-8 px-4 relative overflow-hidden">
         {/* Background Decorations */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-20 left-4 md:left-10 w-48 md:w-64 h-48 md:h-64 bg-accent/10 rounded-full blur-3xl" />
@@ -248,7 +251,7 @@ const LoginPage = () => {
         </Card>
       </main>
 
-      <Footer />
+      <PoweredByAYN />
     </div>
   );
 };
