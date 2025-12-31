@@ -2,6 +2,7 @@ import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
+import { supabase } from '@/integrations/supabase/client';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Button } from '@/components/ui/button';
 
@@ -14,10 +15,11 @@ const StaffHeader = ({ title, titleAr }: StaffHeaderProps) => {
   const navigate = useNavigate();
   const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { signOut } = useAuthStore();
+  const { reset } = useAuthStore();
 
   const handleLogout = async () => {
-    await signOut();
+    await supabase.auth.signOut();
+    reset();
     navigate('/login');
   };
 

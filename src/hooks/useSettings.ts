@@ -24,9 +24,9 @@ export interface SiteSettings {
 
 const defaultSettings: SiteSettings = {
   ticketPricing: {
-    adult: 100,
-    child: 50,
-    senior: 75,
+    adult: 40,
+    child: 25,
+    senior: 0,
   },
   operatingHours: {
     openTime: '09:00',
