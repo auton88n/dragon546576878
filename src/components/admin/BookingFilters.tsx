@@ -103,7 +103,7 @@ const BookingFilters = ({ filters, onFiltersChange, onReset }: BookingFiltersPro
         <Button 
           variant="outline" 
           onClick={onReset}
-          className="border-accent/30 hover:bg-accent/10 hover:border-accent transition-colors gap-2"
+          className="border-accent/30 hover:bg-accent/10 hover:border-accent transition-colors gap-2 rtl:flex-row-reverse"
         >
           <RotateCcw className="h-4 w-4" />
           {isArabic ? 'إعادة تعيين' : 'Reset'}

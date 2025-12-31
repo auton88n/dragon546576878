@@ -35,13 +35,13 @@ const StaffHeader = ({ title, titleAr }: StaffHeaderProps) => {
         </h1>
 
         {/* Controls */}
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-2 md:gap-3 rtl:flex-row-reverse">
           <LanguageSwitcher />
           <Button
             variant="outline"
             size="sm"
             onClick={handleLogout}
-            className="gap-2 border-accent/30 hover:bg-accent/5 text-xs md:text-sm"
+            className="gap-2 border-accent/30 hover:bg-accent/5 text-xs md:text-sm rtl:flex-row-reverse"
           >
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline">
