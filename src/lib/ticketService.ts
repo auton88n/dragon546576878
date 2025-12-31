@@ -8,7 +8,6 @@ interface GenerateTicketsParams {
   bookingId: string;
   bookingReference: string;
   visitDate: string;
-  visitTime: string;
   adultCount: number;
   childCount: number;
   seniorCount: number;
@@ -29,13 +28,12 @@ const generateTicketCode = (type: string, index: number): string => {
   return `${typePrefix}${timestamp}${random}${index}`;
 };
 
-// Generate QR code data with checksum
-const generateQRData = (ticketCode: string, bookingRef: string, visitDate: string, visitTime: string): string => {
+// Generate QR code data with checksum (NO time - tickets valid all day)
+const generateQRData = (ticketCode: string, bookingRef: string, visitDate: string): string => {
   const data = {
     code: ticketCode,
     ref: bookingRef,
     date: visitDate,
-    time: visitTime,
     ts: Date.now(),
   };
   
@@ -106,7 +104,6 @@ export const generateTicketsForBooking = async (
     bookingId,
     bookingReference,
     visitDate,
-    visitTime,
     adultCount,
     childCount,
     seniorCount,
@@ -119,7 +116,7 @@ export const generateTicketsForBooking = async (
   const createTicketsForType = async (type: 'adult' | 'child' | 'senior', count: number) => {
     for (let i = 0; i < count; i++) {
       const ticketCode = generateTicketCode(type, i + 1);
-      const qrData = generateQRData(ticketCode, bookingReference, visitDate, visitTime);
+      const qrData = generateQRData(ticketCode, bookingReference, visitDate);
       
       // Generate QR code image
       const qrDataUrl = await generateQRCodeImage(qrData);

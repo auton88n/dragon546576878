@@ -64,7 +64,8 @@ const generateEmailTemplate = (
     bookingRef: isArabic ? "رقم الحجز" : "Booking Reference",
     visitDetails: isArabic ? "تفاصيل الزيارة" : "Visit Details",
     date: isArabic ? "التاريخ" : "Date",
-    time: isArabic ? "الوقت" : "Time",
+    validAllDay: isArabic ? "صالحة طوال اليوم" : "Valid All Day",
+    operatingHours: isArabic ? "(9 ص - 6 م)" : "(9 AM - 6 PM)",
     tickets: isArabic ? "التذاكر" : "Tickets",
     adult: isArabic ? "بالغ" : "Adult",
     child: isArabic ? "طفل" : "Child",
@@ -75,8 +76,8 @@ const generateEmailTemplate = (
       ? "قم بإظهار هذه التذاكر عند البوابة"
       : "Present these tickets at the entrance gate",
     validOnly: isArabic 
-      ? "صالحة فقط للتاريخ والوقت المحددين"
-      : "Valid only for the selected date and time",
+      ? "صالحة طوال اليوم - تعال في أي وقت خلال ساعات العمل"
+      : "Valid all day - come anytime during operating hours",
     seeYouSoon: isArabic ? "نراكم قريباً!" : "See you soon!",
     contactUs: isArabic ? "تواصل معنا" : "Contact Us",
     email: "info@almufaijer.com",
@@ -84,7 +85,7 @@ const generateEmailTemplate = (
     confirmed: isArabic ? "تم تأكيد الحجز" : "BOOKING CONFIRMED",
   };
 
-  // Format date
+  // Format date only (no time - tickets valid all day)
   const visitDate = new Date(booking.visit_date);
   const formattedDate = visitDate.toLocaleDateString(isArabic ? 'ar-SA' : 'en-US', {
     weekday: 'long',
@@ -92,8 +93,6 @@ const generateEmailTemplate = (
     month: 'long',
     day: 'numeric',
   });
-
-  // Format time
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
@@ -247,7 +246,7 @@ const generateEmailTemplate = (
                 </tr>
               </table>
               
-              <!-- Visit Details -->
+              <!-- Visit Details - Date Only (Valid All Day) -->
               <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
                 <tr>
                   <td style="padding-bottom: 12px;">
@@ -270,8 +269,8 @@ const generateEmailTemplate = (
                           <p style="color: #3D2E1F; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${formattedDate}</p>
                         </td>
                         <td width="50%" style="padding: 14px 16px; ${borderStart} vertical-align: top;">
-                          <p style="color: #666666; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">🕐 ${translations.time}</p>
-                          <p style="color: #3D2E1F; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${formatTime(booking.visit_time)}</p>
+                          <p style="color: #666666; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">☀️ ${translations.validAllDay}</p>
+                          <p style="color: #C9A86C; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${translations.operatingHours}</p>
                         </td>
                       </tr>
                     </table>
@@ -371,10 +370,10 @@ const generateEmailTemplate = (
               <p style="color: #8B7355; margin: 0 0 8px; font-size: 11px; font-family: Arial, sans-serif;">
                 © ${new Date().getFullYear()} Souq Almufaijer. ${isArabic ? 'جميع الحقوق محفوظة' : 'All rights reserved'}.
               </p>
-              <!-- AYN Branding -->
-              <p style="color: #8B7355; margin: 0; font-size: 10px; font-family: Arial, sans-serif;">
-                Powered by <span style="font-weight: 600; color: #3D2E1F;">AYN</span>
-              </p>
+              <!-- AYN AI Branding -->
+              <a href="https://ayn-ai.com" target="_blank" style="color: #8B7355; margin: 0; font-size: 10px; font-family: Arial, sans-serif; text-decoration: none;">
+                Powered by <span style="font-weight: 600; color: #3D2E1F;">AYN AI</span>
+              </a>
             </td>
           </tr>
         </table>
@@ -401,8 +400,8 @@ async function sendEmailWithRetry(
 
   // Plain text fallback for Gmail safety
   const plainText = isArabic
-    ? `تأكيد الحجز - سوق المفيجر\n\nمرحباً ${booking.customer_name}،\n\nرقم الحجز: ${booking.booking_reference}\nالتاريخ: ${booking.visit_date}\nالوقت: ${booking.visit_time}\nعدد التذاكر: ${(booking.adult_count || 0) + (booking.child_count || 0) + (booking.senior_count || 0)}\n\nشكراً لحجزك!`
-    : `Booking Confirmation - Souq Almufaijer\n\nHello ${booking.customer_name},\n\nBooking Reference: ${booking.booking_reference}\nDate: ${booking.visit_date}\nTime: ${booking.visit_time}\nTickets: ${(booking.adult_count || 0) + (booking.child_count || 0) + (booking.senior_count || 0)}\n\nThank you for your booking!`;
+    ? `تأكيد الحجز - سوق المفيجر\n\nمرحباً ${booking.customer_name}،\n\nرقم الحجز: ${booking.booking_reference}\nالتاريخ: ${booking.visit_date}\nصالحة طوال اليوم (9 ص - 6 م)\nعدد التذاكر: ${(booking.adult_count || 0) + (booking.child_count || 0) + (booking.senior_count || 0)}\n\nشكراً لحجزك!\n\nPowered by AYN AI`
+    : `Booking Confirmation - Souq Almufaijer\n\nHello ${booking.customer_name},\n\nBooking Reference: ${booking.booking_reference}\nDate: ${booking.visit_date}\nValid All Day (9 AM - 6 PM)\nTickets: ${(booking.adult_count || 0) + (booking.child_count || 0) + (booking.senior_count || 0)}\n\nThank you for your booking!\n\nPowered by AYN AI`;
 
   console.log(`📧 Email HTML length: ${emailHtml.length} characters`);
 

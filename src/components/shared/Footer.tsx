@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import Logo from './Logo';
+import PoweredByAYN from './PoweredByAYN';
 
 const Footer = () => {
   const { currentLanguage: language } = useLanguage();
@@ -92,6 +93,8 @@ const Footer = () => {
           >
             {isArabic ? 'بوابة الموظفين' : 'Staff Portal'}
           </Link>
+          {/* Powered by AYN AI */}
+          <PoweredByAYN className="mt-4" />
         </div>
       </div>
     </footer>
