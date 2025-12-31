@@ -366,7 +366,8 @@ const ScannerPage = () => {
         scannerRef.current = new Html5Qrcode('qr-reader');
       }
 
-      const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 };
+      // Optimized for faster screen-to-screen scanning
+      const qrConfig = { fps: 15, qrbox: { width: 300, height: 300 }, aspectRatio: 1 };
       let cameraId: string | { facingMode: string } = { facingMode: 'environment' };
       
       try {

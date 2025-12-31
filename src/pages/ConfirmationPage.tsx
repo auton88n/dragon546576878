@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { 
   CheckCircle, Download, Calendar, Clock, Users, Mail, 
-  Ticket, Home, MapPin, Sparkles, Share2, RefreshCw, QrCode
+  Ticket, Home, MapPin, Sparkles, Share2, RefreshCw, QrCode, Maximize2
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,8 @@ import { resendConfirmationEmail } from '@/lib/emailService';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import FullscreenQRModal from '@/components/shared/FullscreenQRModal';
+import ScanningTips from '@/components/shared/ScanningTips';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -54,6 +56,7 @@ const ConfirmationPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(true);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [fullscreenQR, setFullscreenQR] = useState<{ url: string; code: string } | null>(null);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -446,6 +449,15 @@ const ConfirmationPage = () => {
   return (
     <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
+      
+      {/* Fullscreen QR Modal */}
+      <FullscreenQRModal
+        isOpen={!!fullscreenQR}
+        onClose={() => setFullscreenQR(null)}
+        qrCodeUrl={fullscreenQR?.url || ''}
+        ticketCode={fullscreenQR?.code || ''}
+        guestName={booking?.customer_name}
+      />
 
       {/* Confetti Animation - Heritage colors */}
       {showConfetti && (
@@ -593,24 +605,32 @@ const ConfirmationPage = () => {
                     <div className="absolute -right-6 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background" />
                   </div>
 
-                  {/* Right Side - QR Code (use first ticket's scannable QR) */}
+                  {/* Right Side - QR Code (use first ticket's scannable QR) - TAP FOR FULLSCREEN */}
                   <div className="flex flex-col items-center justify-center md:w-48">
                     {tickets[0]?.qr_code_url ? (
-                      <div className="p-3 bg-white rounded-2xl shadow-inner border-2 border-accent/20">
+                      <button
+                        onClick={() => setFullscreenQR({ url: tickets[0].qr_code_url!, code: tickets[0].ticket_code })}
+                        className="p-3 bg-white rounded-2xl shadow-inner border-2 border-accent/20 hover:border-accent/40 hover:shadow-lg transition-all cursor-pointer group relative"
+                        aria-label={isArabic ? 'اضغط لتكبير رمز QR' : 'Tap to enlarge QR code'}
+                      >
                         <img 
                           src={tickets[0].qr_code_url} 
                           alt="QR Code" 
-                          className="w-32 h-32 md:w-40 md:h-40"
+                          className="w-40 h-40 md:w-48 md:h-48"
                         />
-                      </div>
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 rounded-2xl transition-colors">
+                          <Maximize2 className="h-8 w-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
+                        </div>
+                      </button>
                     ) : (
-                      <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-muted flex items-center justify-center">
+                      <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl bg-muted flex items-center justify-center">
                         <QrCode className="h-12 w-12 text-muted-foreground" />
                       </div>
                     )}
                     <Badge className="mt-3 bg-accent/20 text-accent border-accent/30">
-                      {isArabic ? 'امسح عند الدخول' : 'SCAN AT ENTRANCE'}
+                      {isArabic ? 'اضغط للتكبير' : 'TAP TO ENLARGE'}
                     </Badge>
+                    <ScanningTips className="mt-3 w-full max-w-[200px]" />
                   </div>
                 </div>
               </div>

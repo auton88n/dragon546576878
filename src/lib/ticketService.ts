@@ -46,16 +46,16 @@ const generateQRData = (ticketCode: string, bookingRef: string, visitDate: strin
   });
 };
 
-// Generate QR code image as data URL
+// Generate QR code image as data URL - OPTIMIZED FOR SCREEN-TO-SCREEN SCANNING
 const generateQRCodeImage = async (data: string): Promise<string> => {
   return await QRCode.toDataURL(data, {
-    width: 400,
-    margin: 2,
+    width: 600,              // Larger for better screen scanning
+    margin: 4,               // More white space for edge detection
     color: {
-      dark: '#2C2416',
-      light: '#FFFFFF',
+      dark: '#000000',       // Pure black for maximum contrast
+      light: '#FFFFFF',      // Pure white background
     },
-    errorCorrectionLevel: 'H',
+    errorCorrectionLevel: 'H', // Highest - recovers from 30% damage (glare/moiré)
   });
 };
 
