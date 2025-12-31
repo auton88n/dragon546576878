@@ -12,7 +12,7 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const hasHeroSection = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/contact';
+  const hasHeroSection = location.pathname === '/' || location.pathname === '/about';
 
   useEffect(() => {
     const handleScroll = () => {
