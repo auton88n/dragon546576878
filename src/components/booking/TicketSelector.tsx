@@ -35,10 +35,10 @@ const PACKAGES: Package[] = [
     id: 'family-small',
     nameEn: 'Small Family',
     nameAr: 'عائلة صغيرة',
-    descriptionEn: 'Perfect for small families',
-    descriptionAr: 'مثالية للعائلات الصغيرة',
+    descriptionEn: '2 adults + 3 children',
+    descriptionAr: '٢ بالغين + ٣ أطفال',
     adults: 2,
-    children: 2,
+    children: 3,
     price: 149.99,
     badge: 'value',
   },
@@ -46,10 +46,10 @@ const PACKAGES: Package[] = [
     id: 'family-large',
     nameEn: 'Large Family',
     nameAr: 'عائلة كبيرة',
-    descriptionEn: 'Great value for larger families',
-    descriptionAr: 'قيمة رائعة للعائلات الكبيرة',
+    descriptionEn: '2 adults + 6 children',
+    descriptionAr: '٢ بالغين + ٦ أطفال',
     adults: 2,
-    children: 4,
+    children: 6,
     price: 199.99,
     badge: 'popular',
   },
@@ -59,8 +59,9 @@ const TicketSelector = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { 
-    selectedPackageId, 
-    setPackage, 
+    packageQuantities,
+    setPackageQuantity, 
+    getPackageQuantity,
     visitDate, 
     setVisitDate,
     tickets
@@ -88,8 +89,8 @@ const TicketSelector = () => {
             <PackageCard
               key={pkg.id}
               package_={pkg}
-              isSelected={selectedPackageId === pkg.id}
-              onSelect={() => setPackage(pkg.id, pkg.adults, pkg.children, pkg.price)}
+              quantity={getPackageQuantity(pkg.id)}
+              onQuantityChange={(qty) => setPackageQuantity(pkg.id, qty, pkg.adults, pkg.children, pkg.price)}
             />
           ))}
         </div>
@@ -158,7 +159,7 @@ const TicketSelector = () => {
       </div>
 
       {/* Summary */}
-      {totalTickets > 0 && visitDate && (
+      {packageQuantities.length > 0 && visitDate && (
         <div className="bg-accent/10 border-2 border-accent/30 rounded-2xl p-5 text-center animate-scale-in">
           <div className="flex items-center justify-center gap-2 text-accent">
             <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
@@ -169,7 +170,7 @@ const TicketSelector = () => {
         </div>
       )}
 
-      {totalTickets === 0 && (
+      {packageQuantities.length === 0 && (
         <div className="border-2 border-dashed border-border rounded-2xl p-5 text-center">
           <p className="text-muted-foreground">
             {isArabic ? 'اختر باقة للمتابعة' : 'Select a package to continue'}

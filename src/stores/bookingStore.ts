@@ -2,14 +2,22 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { BookingFormState, TicketPricing } from '@/types';
 
+interface PackageQuantity {
+  packageId: string;
+  quantity: number;
+  adults: number;
+  children: number;
+  price: number;
+}
+
 interface BookingStore extends Omit<BookingFormState, 'visitTime'> {
-  // Package selection
-  selectedPackageId: string | null;
+  // Package quantities (multiple packages)
+  packageQuantities: PackageQuantity[];
   
   // Actions - Now 2 steps only
   setStep: (step: 1 | 2) => void;
   setTickets: (type: 'adult' | 'child' | 'senior', count: number) => void;
-  setPackage: (packageId: string, adults: number, children: number, price: number) => void;
+  setPackageQuantity: (packageId: string, quantity: number, adults: number, children: number, price: number) => void;
   setPricing: (pricing: TicketPricing) => void;
   setVisitDate: (date: string) => void;
   setCustomerInfo: (info: Partial<BookingFormState['customerInfo']>) => void;
@@ -17,11 +25,12 @@ interface BookingStore extends Omit<BookingFormState, 'visitTime'> {
   calculateTotal: () => void;
   reset: () => void;
   canProceed: () => boolean;
+  getPackageQuantity: (packageId: string) => number;
 }
 
-const initialState: Omit<BookingFormState, 'visitTime'> & { selectedPackageId: string | null } = {
+const initialState: Omit<BookingFormState, 'visitTime'> & { packageQuantities: PackageQuantity[] } = {
   step: 1,
-  selectedPackageId: null,
+  packageQuantities: [],
   tickets: {
     adult: 0,
     child: 0,
@@ -54,17 +63,49 @@ export const useBookingStore = create<BookingStore>()(
         const newCount = Math.max(0, Math.min(10, count));
         set((state) => ({
           tickets: { ...state.tickets, [type]: newCount },
-          selectedPackageId: null, // Clear package when manually setting tickets
+          packageQuantities: [],
         }));
         get().calculateTotal();
       },
 
-      setPackage: (packageId, adults, children, price) => {
-        set({
-          selectedPackageId: packageId,
-          tickets: { adult: adults, child: children, senior: 0 },
-          totalAmount: price,
+      setPackageQuantity: (packageId, quantity, adults, children, price) => {
+        set((state) => {
+          let newPackageQuantities = [...state.packageQuantities];
+          const existingIndex = newPackageQuantities.findIndex(p => p.packageId === packageId);
+          
+          if (quantity <= 0) {
+            // Remove package if quantity is 0
+            newPackageQuantities = newPackageQuantities.filter(p => p.packageId !== packageId);
+          } else if (existingIndex >= 0) {
+            // Update existing
+            newPackageQuantities[existingIndex] = { packageId, quantity, adults, children, price };
+          } else {
+            // Add new
+            newPackageQuantities.push({ packageId, quantity, adults, children, price });
+          }
+          
+          // Calculate totals from all packages
+          let totalAdults = 0;
+          let totalChildren = 0;
+          let totalAmount = 0;
+          
+          newPackageQuantities.forEach(pkg => {
+            totalAdults += pkg.adults * pkg.quantity;
+            totalChildren += pkg.children * pkg.quantity;
+            totalAmount += pkg.price * pkg.quantity;
+          });
+          
+          return {
+            packageQuantities: newPackageQuantities,
+            tickets: { adult: totalAdults, child: totalChildren, senior: 0 },
+            totalAmount,
+          };
         });
+      },
+
+      getPackageQuantity: (packageId) => {
+        const pkg = get().packageQuantities.find(p => p.packageId === packageId);
+        return pkg?.quantity || 0;
       },
 
       setPricing: (pricing) => {
@@ -96,9 +137,9 @@ export const useBookingStore = create<BookingStore>()(
         const state = get();
         switch (state.step) {
           case 1:
-            // Step 1: Package selected + Date selected
+            // Step 1: At least one package selected + Date selected
             return (
-              state.tickets.adult + state.tickets.child + state.tickets.senior > 0 &&
+              state.packageQuantities.length > 0 &&
               !!state.visitDate
             );
           case 2:
@@ -116,7 +157,7 @@ export const useBookingStore = create<BookingStore>()(
     {
       name: 'almufaijer-booking',
       partialize: (state) => ({
-        selectedPackageId: state.selectedPackageId,
+        packageQuantities: state.packageQuantities,
         tickets: state.tickets,
         visitDate: state.visitDate,
         customerInfo: state.customerInfo,
