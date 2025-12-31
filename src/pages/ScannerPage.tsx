@@ -22,6 +22,53 @@ interface ScanResult {
   ticketType?: string;
 }
 
+// Constants for stability
+const RESULT_DISPLAY_TIMEOUT = 2000; // 2 seconds for faster throughput
+const DUPLICATE_SCAN_THRESHOLD = 5000; // 5 seconds to prevent duplicate scans
+const SCANNER_RESTART_THRESHOLD = 500; // Restart scanner every 500 scans
+const STATS_STORAGE_KEY = 'scanner_daily_stats';
+const RECENT_SCANS_STORAGE_KEY = 'scanner_recent_scans';
+
+// Helper to get today's date key
+const getTodayKey = () => new Date().toISOString().split('T')[0];
+
+// Load stats from localStorage
+const loadStoredStats = () => {
+  try {
+    const stored = localStorage.getItem(STATS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Only use if same day
+      if (parsed.date === getTodayKey()) {
+        return parsed.stats;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load stored stats:', e);
+  }
+  return { totalScans: 0, validScans: 0, invalidScans: 0, usedScans: 0 };
+};
+
+// Load recent scans from localStorage
+const loadStoredRecentScans = (): ScanResult[] => {
+  try {
+    const stored = localStorage.getItem(RECENT_SCANS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Only use if same day and convert timestamps
+      if (parsed.date === getTodayKey()) {
+        return parsed.scans.map((s: any) => ({
+          ...s,
+          timestamp: new Date(s.timestamp)
+        }));
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load recent scans:', e);
+  }
+  return [];
+};
+
 const ScannerPage = () => {
   const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
@@ -34,13 +81,8 @@ const ScannerPage = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [currentResult, setCurrentResult] = useState<TicketValidationResult | null>(null);
   const [showResultOverlay, setShowResultOverlay] = useState(false);
-  const [recentScans, setRecentScans] = useState<ScanResult[]>([]);
-  const [todayStats, setTodayStats] = useState({
-    totalScans: 0,
-    validScans: 0,
-    invalidScans: 0,
-    usedScans: 0,
-  });
+  const [recentScans, setRecentScans] = useState<ScanResult[]>(loadStoredRecentScans);
+  const [todayStats, setTodayStats] = useState(loadStoredStats);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<TicketValidationResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -50,6 +92,25 @@ const ScannerPage = () => {
   const resultTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const lastScannedCodeRef = useRef<string | null>(null);
+  const lastScanTimeRef = useRef<number>(0);
+  const scanCountSinceRestartRef = useRef<number>(0);
+
+  // Persist stats to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify({
+      date: getTodayKey(),
+      stats: todayStats
+    }));
+  }, [todayStats]);
+
+  // Persist recent scans to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(RECENT_SCANS_STORAGE_KEY, JSON.stringify({
+      date: getTodayKey(),
+      scans: recentScans
+    }));
+  }, [recentScans]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -77,16 +138,58 @@ const ScannerPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showManualLookup]);
 
-  // Play feedback sound with distinct tones
+  // Initialize AudioContext once and handle suspended state
+  const initAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    // Resume if suspended (required for mobile browsers)
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
+    return audioContextRef.current;
+  }, []);
+
+  // Cleanup AudioContext on unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+    };
+  }, []);
+
+  // Haptic feedback for mobile
+  const triggerHaptic = useCallback((type: 'success' | 'error' | 'warning') => {
+    if (!('vibrate' in navigator)) return;
+    
+    try {
+      switch (type) {
+        case 'success':
+          // Short single vibration
+          navigator.vibrate(100);
+          break;
+        case 'warning':
+          // Double vibration
+          navigator.vibrate([100, 50, 100]);
+          break;
+        case 'error':
+          // Long vibration
+          navigator.vibrate(300);
+          break;
+      }
+    } catch (e) {
+      // Ignore vibration errors
+    }
+  }, []);
+
+  // Play feedback sound with distinct tones (reuses single AudioContext)
   const playSound = useCallback((type: 'success' | 'error' | 'warning') => {
     if (!soundEnabled) return;
     
     try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
-      
-      const ctx = audioContextRef.current;
+      const ctx = initAudioContext();
       
       if (type === 'success') {
         // Two-tone ascending beep for valid
@@ -133,7 +236,31 @@ const ScannerPage = () => {
     } catch (err) {
       console.error('Error playing sound:', err);
     }
-  }, [soundEnabled]);
+  }, [soundEnabled, initAudioContext]);
+
+  // Combined feedback (sound + haptic)
+  const playFeedback = useCallback((type: 'success' | 'error' | 'warning') => {
+    playSound(type);
+    triggerHaptic(type);
+  }, [playSound, triggerHaptic]);
+
+  // Dismiss result overlay (tap to continue)
+  const dismissResult = useCallback(() => {
+    if (resultTimeoutRef.current) {
+      clearTimeout(resultTimeoutRef.current);
+    }
+    setShowResultOverlay(false);
+    setCurrentResult(null);
+    
+    // Resume scanning
+    if (scannerRef.current) {
+      try {
+        scannerRef.current.resume();
+      } catch (e) {
+        // Ignore resume errors
+      }
+    }
+  }, []);
 
   // Manual ticket lookup
   const handleManualLookup = useCallback(async () => {
@@ -156,14 +283,14 @@ const ScannerPage = () => {
     setShowResultOverlay(true);
     
     if (result.isValid) {
-      playSound('success');
+      playFeedback('success');
       if (result.ticket) {
         await markTicketAsUsed(result.ticket.id, user?.id, 'main_entrance');
       }
     } else if (result.status === 'used') {
-      playSound('warning');
+      playFeedback('warning');
     } else {
-      playSound('error');
+      playFeedback('error');
     }
 
     await logScanAttempt(result.ticket?.id || null, result.status, user?.id, 'manual_lookup');
@@ -189,8 +316,8 @@ const ScannerPage = () => {
     resultTimeoutRef.current = setTimeout(() => {
       setShowResultOverlay(false);
       setCurrentResult(null);
-    }, 3000);
-  }, [playSound, user, handleManualLookup]);
+    }, RESULT_DISPLAY_TIMEOUT);
+  }, [playFeedback, user, handleManualLookup]);
 
   // Manual sync for offline queue
   const handleManualSync = useCallback(async () => {
@@ -206,8 +333,43 @@ const ScannerPage = () => {
     }
   }, [isOnline, queueLength, isSyncing, syncQueue, isArabic]);
 
+  // Auto-restart scanner for memory management
+  const restartScannerIfNeeded = useCallback(async () => {
+    if (scanCountSinceRestartRef.current >= SCANNER_RESTART_THRESHOLD) {
+      console.log('Auto-restarting scanner for memory optimization...');
+      scanCountSinceRestartRef.current = 0;
+      
+      if (scannerRef.current) {
+        try {
+          await scannerRef.current.stop();
+          // Brief pause before restart
+          await new Promise(resolve => setTimeout(resolve, 100));
+          await startScanning();
+        } catch (e) {
+          console.error('Error during scanner restart:', e);
+        }
+      }
+    }
+  }, []);
+
   // Handle QR code scan result
   const onScanSuccess = useCallback(async (decodedText: string) => {
+    const now = Date.now();
+    
+    // Duplicate scan prevention
+    if (
+      lastScannedCodeRef.current === decodedText &&
+      now - lastScanTimeRef.current < DUPLICATE_SCAN_THRESHOLD
+    ) {
+      console.log('Duplicate scan prevented:', decodedText);
+      return;
+    }
+    
+    // Update last scan tracking
+    lastScannedCodeRef.current = decodedText;
+    lastScanTimeRef.current = now;
+    scanCountSinceRestartRef.current++;
+
     // Pause scanning while processing
     if (scannerRef.current) {
       try {
@@ -222,9 +384,9 @@ const ScannerPage = () => {
     setCurrentResult(result);
     setShowResultOverlay(true);
 
-    // Play appropriate sound
+    // Play appropriate feedback (sound + haptic)
     if (result.isValid) {
-      playSound('success');
+      playFeedback('success');
       // Mark ticket as used - queue if offline
       if (result.ticket) {
         if (isOnline) {
@@ -235,9 +397,9 @@ const ScannerPage = () => {
         }
       }
     } else if (result.status === 'used') {
-      playSound('warning');
+      playFeedback('warning');
     } else {
-      playSound('error');
+      playFeedback('error');
     }
 
     // Update stats
@@ -268,13 +430,18 @@ const ScannerPage = () => {
           // Ignore resume errors
         }
       }
-    }, 3000);
-  }, [playSound, user, isOnline, addToQueue]);
+      // Check if scanner needs restart
+      await restartScannerIfNeeded();
+    }, RESULT_DISPLAY_TIMEOUT);
+  }, [playFeedback, user, isOnline, addToQueue, restartScannerIfNeeded]);
 
   // Start camera scanning with back camera preference
   const startScanning = async () => {
     setCameraError(null);
     setIsScanning(true); // Show scanner area immediately
+    
+    // Initialize AudioContext on first user interaction
+    initAudioContext();
     
     try {
       // Create scanner if not exists
@@ -383,6 +550,10 @@ const ScannerPage = () => {
           // Ignore cleanup errors
         }
       }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
     };
   }, []);
 
@@ -422,12 +593,18 @@ const ScannerPage = () => {
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      {/* Result Overlay */}
+      {/* Result Overlay - Tap to dismiss */}
       {showResultOverlay && currentResult && (
-        <div className={cn(
-          'fixed inset-0 z-50 flex flex-col items-center justify-center text-white p-8 animate-fade-in',
-          getStatusColor(currentResult.status)
-        )}>
+        <div 
+          className={cn(
+            'fixed inset-0 z-50 flex flex-col items-center justify-center text-white p-8 animate-fade-in cursor-pointer',
+            getStatusColor(currentResult.status)
+          )}
+          onClick={dismissResult}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && dismissResult()}
+        >
           {getStatusIcon(currentResult.status)}
           <h2 className="text-3xl font-bold mt-6 mb-2">
             {getStatusText(currentResult.status)}
@@ -443,7 +620,7 @@ const ScannerPage = () => {
             </div>
           )}
           <p className="mt-6 opacity-60 text-sm">
-            {isArabic ? 'استئناف تلقائي خلال 3 ثوان...' : 'Auto-resuming in 3 seconds...'}
+            {isArabic ? 'اضغط للمتابعة أو انتظر...' : 'Tap to continue or wait...'}
           </p>
         </div>
       )}
@@ -723,6 +900,7 @@ const ScannerPage = () => {
               <div className="mt-3 space-y-3">
                 <div className="flex gap-2">
                   <Input
+                    ref={searchInputRef}
                     placeholder={isArabic ? 'رقم الحجز أو كود التذكرة...' : 'Booking ref or ticket code...'}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -846,11 +1024,26 @@ const ScannerPage = () => {
 
       <Footer />
 
-      {/* Scan line animation */}
       <style>{`
         @keyframes scan-line {
-          0%, 100% { transform: translateY(0); opacity: 0.5; }
-          50% { transform: translateY(250px); opacity: 1; }
+          0%, 100% {
+            transform: translateY(0);
+            opacity: 0.5;
+          }
+          50% {
+            transform: translateY(250px);
+            opacity: 1;
+          }
+        }
+        
+        .qr-scanner-container video {
+          object-fit: cover !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+        
+        .qr-scanner-container #qr-shaded-region {
+          border-color: transparent !important;
         }
       `}</style>
     </div>
