@@ -18,7 +18,7 @@ const OptimizedImage = ({
 }: OptimizedImageProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const imgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (priority) {
@@ -48,6 +48,10 @@ const OptimizedImage = ({
     onLoad?.();
   };
 
+  // Generate WebP source path
+  const webpSrc = src.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+  const hasWebpVersion = /\.(jpg|jpeg|png)$/i.test(src);
+
   return (
     <div ref={imgRef} className={cn('relative overflow-hidden bg-muted', className)}>
       {/* Skeleton placeholder */}
@@ -55,20 +59,25 @@ const OptimizedImage = ({
         <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted/80 to-muted animate-pulse" />
       )}
       
-      {/* Actual image */}
+      {/* Actual image with WebP support */}
       {isInView && (
-        <img
-          src={src}
-          alt={alt}
-          onLoad={handleLoad}
-          loading={priority ? 'eager' : 'lazy'}
-          decoding={priority ? 'sync' : 'async'}
-          fetchPriority={priority ? 'high' : 'auto'}
-          className={cn(
-            'w-full h-full object-cover transition-opacity duration-500',
-            isLoaded ? 'opacity-100' : 'opacity-0'
+        <picture>
+          {hasWebpVersion && (
+            <source srcSet={webpSrc} type="image/webp" />
           )}
-        />
+          <img
+            src={src}
+            alt={alt}
+            onLoad={handleLoad}
+            loading={priority ? 'eager' : 'lazy'}
+            decoding={priority ? 'sync' : 'async'}
+            fetchPriority={priority ? 'high' : 'auto'}
+            className={cn(
+              'w-full h-full object-cover transition-opacity duration-500',
+              isLoaded ? 'opacity-100' : 'opacity-0'
+            )}
+          />
+        </picture>
       )}
     </div>
   );

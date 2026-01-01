@@ -70,6 +70,7 @@ export type Database = {
           customer_phone: string
           id: string
           language: string
+          last_email_sent_at: string | null
           paid_at: string | null
           payment_id: string | null
           payment_method: string | null
@@ -100,6 +101,7 @@ export type Database = {
           customer_phone: string
           id?: string
           language?: string
+          last_email_sent_at?: string | null
           paid_at?: string | null
           payment_id?: string | null
           payment_method?: string | null
@@ -130,6 +132,7 @@ export type Database = {
           customer_phone?: string
           id?: string
           language?: string
+          last_email_sent_at?: string | null
           paid_at?: string | null
           payment_id?: string | null
           payment_method?: string | null
