@@ -74,43 +74,18 @@ const MyTicketsPage = () => {
     setSearchError(null);
 
     try {
-      // Fetch bookings by email
-      const { data: bookingsData, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('customer_email', values.email.toLowerCase().trim())
-        .order('created_at', { ascending: false });
+      // Use secure database function instead of direct table access
+      const { data, error: fetchError } = await supabase
+        .rpc('get_bookings_by_email', { customer_email_input: values.email.toLowerCase().trim() });
 
-      if (bookingsError) {
-        console.error('Error fetching bookings:', bookingsError);
-        throw bookingsError;
+      if (fetchError) {
+        console.error('Error fetching bookings:', fetchError);
+        throw fetchError;
       }
 
-      if (!bookingsData || bookingsData.length === 0) {
-        setBookings([]);
-        setHasSearched(true);
-        setIsSearching(false);
-        return;
-      }
-
-      // Fetch tickets for each booking
-      const bookingIds = bookingsData.map(b => b.id);
-      const { data: ticketsData, error: ticketsError } = await supabase
-        .from('tickets')
-        .select('*')
-        .in('booking_id', bookingIds);
-
-      if (ticketsError) {
-        console.error('Error fetching tickets:', ticketsError);
-      }
-
-      // Combine bookings with their tickets
-      const bookingsWithTickets: BookingWithTickets[] = bookingsData.map(booking => ({
-        ...booking,
-        tickets: (ticketsData || []).filter(ticket => ticket.booking_id === booking.id),
-      }));
-
-      setBookings(bookingsWithTickets);
+      // The function returns JSON array of bookings with tickets
+      const bookingsData = (data as unknown as BookingWithTickets[]) || [];
+      setBookings(bookingsData);
       setHasSearched(true);
     } catch (error) {
       console.error('Search error:', error);
