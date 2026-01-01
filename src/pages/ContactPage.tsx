@@ -98,11 +98,7 @@ const ContactPage = () => {
       
       {/* Hero Section */}
       <section className="relative h-[40vh] min-h-[280px] max-h-[400px] overflow-hidden">
-        <OptimizedImage
-          src={heroImage}
-          alt="Souq Almufaijer"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <OptimizedImage src={heroImage} alt="Souq Almufaijer" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/20" />
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" />
         
@@ -199,7 +195,7 @@ const ContactPage = () => {
                       <h3 className="font-semibold text-foreground">
                           {currentLanguage === 'ar' ? info.titleAr : info.titleEn}
                         </h3>
-                        <p className="text-sm text-muted-foreground whitespace-pre-line" dir={info.dirType}>
+                        <p dir={info.dirType} className="text-sm text-muted-foreground whitespace-pre-line mx-[22px]">
                           {currentLanguage === 'ar' ? info.contentAr : info.contentEn}
                         </p>
                       </div>
