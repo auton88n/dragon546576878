@@ -375,8 +375,39 @@ const ConfirmationPage = () => {
       url: window.location.href,
     };
     
-    if (navigator.share) {
-      await navigator.share(shareData);
+    // Check if Web Share API is available and can share
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // User cancelled or error - fall back to clipboard
+        if ((err as Error).name !== 'AbortError') {
+          copyToClipboard();
+        }
+      }
+    } else {
+      // Desktop fallback - copy to clipboard
+      copyToClipboard();
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: isArabic ? 'تم النسخ' : 'Link Copied',
+        description: isArabic 
+          ? 'تم نسخ رابط التذكرة إلى الحافظة'
+          : 'Ticket link copied to clipboard',
+      });
+    } catch {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic 
+          ? 'فشل نسخ الرابط'
+          : 'Failed to copy link',
+        variant: 'destructive',
+      });
     }
   };
 
