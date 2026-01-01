@@ -2,10 +2,7 @@ import { useEffect, useState, useLayoutEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { 
-  CheckCircle, Download, Calendar, Clock, Users, Mail, 
-  Ticket, Home, MapPin, Sparkles, Share2, RefreshCw, QrCode, Maximize2
-} from 'lucide-react';
+import { CheckCircle, Download, Calendar, Clock, Users, Mail, Ticket, Home, MapPin, Share2, RefreshCw, QrCode, Maximize2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { resendConfirmationEmail } from '@/lib/emailService';
@@ -17,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-
 interface BookingDetails {
   id: string;
   booking_reference: string;
@@ -35,7 +31,6 @@ interface BookingDetails {
   confirmation_email_sent: boolean;
   last_email_sent_at?: string | null;
 }
-
 interface TicketDetails {
   id: string;
   ticket_code: string;
@@ -44,26 +39,37 @@ interface TicketDetails {
   qr_code_data: string;
   is_used: boolean;
 }
-
 const ConfirmationPage = () => {
-  const { bookingId } = useParams();
-  const { toast } = useToast();
-  const { currentLanguage, isRTL } = useLanguage();
+  const {
+    bookingId
+  } = useParams();
+  const {
+    toast
+  } = useToast();
+  const {
+    currentLanguage,
+    isRTL
+  } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [tickets, setTickets] = useState<TicketDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(true);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
-  const [fullscreenQR, setFullscreenQR] = useState<{ url: string; code: string } | null>(null);
+  const [fullscreenQR, setFullscreenQR] = useState<{
+    url: string;
+    code: string;
+  } | null>(null);
 
   // Scroll to top on mount to prevent weird scroll restoration
   useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'auto'
+    });
   }, [bookingId]);
-
   useEffect(() => {
     const fetchBooking = async () => {
       if (!bookingId) {
@@ -71,12 +77,14 @@ const ConfirmationPage = () => {
         setIsLoading(false);
         return;
       }
-
       try {
         // Use secure database function instead of direct table access
-        const { data, error: fetchError } = await supabase
-          .rpc('get_booking_with_tickets', { booking_uuid: bookingId });
-
+        const {
+          data,
+          error: fetchError
+        } = await supabase.rpc('get_booking_with_tickets', {
+          booking_uuid: bookingId
+        });
         if (fetchError) throw fetchError;
         if (!data) throw new Error('Booking not found');
 
@@ -101,7 +109,6 @@ const ConfirmationPage = () => {
           language: string;
           tickets: TicketDetails[];
         };
-
         setBooking({
           id: bookingData.id,
           booking_reference: bookingData.booking_reference,
@@ -112,19 +119,18 @@ const ConfirmationPage = () => {
           adult_count: bookingData.adult_count,
           child_count: bookingData.child_count,
           senior_count: bookingData.senior_count || 0,
-          adult_price: 0, // Not exposed in secure function
+          adult_price: 0,
+          // Not exposed in secure function
           child_price: 0,
           senior_price: 0,
           total_amount: bookingData.total_amount,
           confirmation_email_sent: bookingData.confirmation_email_sent,
-          last_email_sent_at: bookingData.last_email_sent_at,
+          last_email_sent_at: bookingData.last_email_sent_at
         });
-
         setTickets(bookingData.tickets || []);
 
         // Hide confetti after animation
         setTimeout(() => setShowConfetti(false), 3000);
-
       } catch (err) {
         console.error('Error fetching booking:', err);
         setError(isArabic ? 'لم يتم العثور على الحجز' : 'Booking not found');
@@ -132,10 +138,8 @@ const ConfirmationPage = () => {
         setIsLoading(false);
       }
     };
-
     fetchBooking();
   }, [bookingId, isArabic]);
-
   const formatTimeDisplay = (time: string) => {
     const hour = parseInt(time.split(':')[0]);
     if (isArabic) {
@@ -143,7 +147,6 @@ const ConfirmationPage = () => {
     }
     return hour < 12 ? `${hour}:00 AM` : `${hour === 12 ? 12 : hour - 12}:00 PM`;
   };
-
   const handleDownloadTicket = async () => {
     if (!booking) return;
 
@@ -151,7 +154,6 @@ const ConfirmationPage = () => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
     const width = 900;
     const height = 1600;
     canvas.width = width;
@@ -178,12 +180,11 @@ const ConfirmationPage = () => {
     // Load and draw logo
     const logoImg = new Image();
     logoImg.crossOrigin = 'anonymous';
-
-    await new Promise<void>((resolve) => {
+    await new Promise<void>(resolve => {
       logoImg.onload = () => {
         // Draw logo centered with a bit more presence
         const logoHeight = 78;
-        const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
+        const logoWidth = logoImg.width / logoImg.height * logoHeight;
         ctx.drawImage(logoImg, (width - logoWidth) / 2, 26, logoWidth, logoHeight);
         resolve();
       };
@@ -218,13 +219,13 @@ const ConfirmationPage = () => {
     ctx.fillStyle = '#3D2E1F';
     roundRect(ctx, 60, refCardY, width - 120, 100, 16);
     ctx.fill();
-    
+
     // Label in light color
     ctx.fillStyle = '#E8DED0';
     ctx.font = 'bold 14px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(isArabic ? 'رقم الحجز' : 'BOOKING REFERENCE', width / 2, refCardY + 35);
-    
+
     // Reference number in WHITE
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 36px Courier New, monospace';
@@ -234,7 +235,7 @@ const ConfirmationPage = () => {
     const detailsY = 350;
     ctx.textAlign = isArabic ? 'right' : 'left';
     const textX = isArabic ? width - 90 : 90;
-    
+
     // Guest name
     ctx.font = 'bold 13px Arial, sans-serif';
     ctx.fillStyle = '#5C4A3A';
@@ -249,8 +250,8 @@ const ConfirmationPage = () => {
     ctx.fillText(isArabic ? 'التاريخ' : 'DATE', textX, detailsY + 80);
     ctx.font = 'bold 22px Arial, sans-serif';
     ctx.fillStyle = '#3D2E1F';
-    ctx.fillText(format(new Date(booking.visit_date), 'EEEE, d MMMM yyyy', { 
-      locale: isArabic ? ar : enUS 
+    ctx.fillText(format(new Date(booking.visit_date), 'EEEE, d MMMM yyyy', {
+      locale: isArabic ? ar : enUS
     }), textX, detailsY + 110);
 
     // Time
@@ -270,11 +271,9 @@ const ConfirmationPage = () => {
     ctx.lineWidth = 2;
     roundRect(ctx, 60, ticketCardY, width - 120, 140, 16);
     ctx.stroke();
-    
     ctx.font = 'bold 13px Arial, sans-serif';
     ctx.fillStyle = '#5C4A3A';
     ctx.fillText(isArabic ? 'التذاكر' : 'TICKETS', textX, ticketCardY + 30);
-    
     let ticketYPos = ticketCardY + 55;
     ctx.font = '18px Arial, sans-serif';
     ctx.fillStyle = '#3D2E1F';
@@ -295,11 +294,10 @@ const ConfirmationPage = () => {
     ctx.fillStyle = '#3D2E1F';
     roundRect(ctx, 60, totalY, width - 120, 70, 16);
     ctx.fill();
-    
     ctx.font = 'bold 14px Arial, sans-serif';
     ctx.fillStyle = '#E8DED0';
     ctx.fillText(isArabic ? 'المبلغ المدفوع' : 'TOTAL PAID', textX, totalY + 28);
-    
+
     // Total amount on the opposite side
     ctx.textAlign = isArabic ? 'left' : 'right';
     ctx.font = 'bold 32px Arial, sans-serif';
@@ -309,20 +307,20 @@ const ConfirmationPage = () => {
     // QR Code section - use FIRST ticket's QR code (the scannable one)
     const qrSectionY = totalY + 110;
     ctx.textAlign = 'center';
-    
+
     // QR card background - larger to accommodate bigger QR
     ctx.fillStyle = '#FFFFFF';
-    roundRect(ctx, width/2 - 190, qrSectionY, 380, 420, 20);
+    roundRect(ctx, width / 2 - 190, qrSectionY, 380, 420, 20);
     ctx.fill();
     ctx.strokeStyle = '#C9A86C';
     ctx.lineWidth = 3;
-    roundRect(ctx, width/2 - 190, qrSectionY, 380, 420, 20);
+    roundRect(ctx, width / 2 - 190, qrSectionY, 380, 420, 20);
     ctx.stroke();
-    
+
     // Inner QR border - larger
     ctx.strokeStyle = '#E8DED0';
     ctx.lineWidth = 2;
-    roundRect(ctx, width/2 - 160, qrSectionY + 30, 320, 320, 12);
+    roundRect(ctx, width / 2 - 160, qrSectionY + 30, 320, 320, 12);
     ctx.stroke();
 
     // Draw QR code from FIRST ticket (individual ticket QR with proper code) - larger
@@ -331,37 +329,36 @@ const ConfirmationPage = () => {
       const qrImage = new Image();
       qrImage.crossOrigin = 'anonymous';
       qrImage.src = firstTicket.qr_code_url;
-      await new Promise((resolve) => {
+      await new Promise(resolve => {
         qrImage.onload = resolve;
         qrImage.onerror = resolve;
       });
-      ctx.drawImage(qrImage, width/2 - 140, qrSectionY + 50, 280, 280);
+      ctx.drawImage(qrImage, width / 2 - 140, qrSectionY + 50, 280, 280);
     }
 
     // QR section text - dark brown for readability
     ctx.fillStyle = '#3D2E1F';
     ctx.font = 'bold 14px Arial, sans-serif';
-    ctx.fillText(isArabic ? 'امسح الرمز عند الدخول' : 'Scan at entrance', width/2, qrSectionY + 375);
+    ctx.fillText(isArabic ? 'امسح الرمز عند الدخول' : 'Scan at entrance', width / 2, qrSectionY + 375);
     ctx.font = '12px Arial, sans-serif';
     ctx.fillStyle = '#5C4A3A';
-    ctx.fillText(isArabic ? 'صالحة ليوم الزيارة فقط' : 'Valid for visit date only', width/2, qrSectionY + 397);
+    ctx.fillText(isArabic ? 'صالحة ليوم الزيارة فقط' : 'Valid for visit date only', width / 2, qrSectionY + 397);
 
     // Footer
     ctx.fillStyle = '#3D2E1F';
     ctx.fillRect(0, height - 80, width, 80);
-    
+
     // Decorative footer line
     ctx.fillStyle = '#C9A86C';
     ctx.fillRect(0, height - 80, width, 4);
-    
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 16px Arial, sans-serif';
-    ctx.fillText(isArabic ? 'شكراً لزيارتكم سوق المفيجر' : 'Thank you for visiting Souq Almufaijer', width/2, height - 45);
-    
+    ctx.fillText(isArabic ? 'شكراً لزيارتكم سوق المفيجر' : 'Thank you for visiting Souq Almufaijer', width / 2, height - 45);
+
     // Powered by AYN branding
     ctx.font = '10px Arial, sans-serif';
     ctx.fillStyle = '#8B7355';
-    ctx.fillText('Powered by AYN', width/2, height - 20);
+    ctx.fillText('Powered by AYN', width / 2, height - 20);
 
     // Download
     const link = document.createElement('a');
@@ -384,7 +381,6 @@ const ConfirmationPage = () => {
     ctx.quadraticCurveTo(x, y, x + r, y);
     ctx.closePath();
   };
-
   const handleDownloadSingleTicket = (ticket: TicketDetails) => {
     if (!ticket.qr_code_url) return;
     const link = document.createElement('a');
@@ -392,17 +388,14 @@ const ConfirmationPage = () => {
     link.href = ticket.qr_code_url;
     link.click();
   };
-
   const handleShare = async () => {
     if (!booking) return;
     const shareData = {
       title: isArabic ? 'تذكرة سوق المفيجر' : 'Souq Almufaijer Ticket',
-      text: isArabic 
-        ? `حجزي في سوق المفيجر - ${booking.booking_reference}`
-        : `My booking at Souq Almufaijer - ${booking.booking_reference}`,
-      url: window.location.href,
+      text: isArabic ? `حجزي في سوق المفيجر - ${booking.booking_reference}` : `My booking at Souq Almufaijer - ${booking.booking_reference}`,
+      url: window.location.href
     };
-    
+
     // Check if Web Share API is available and can share
     if (navigator.share && navigator.canShare?.(shareData)) {
       try {
@@ -418,60 +411,51 @@ const ConfirmationPage = () => {
       copyToClipboard();
     }
   };
-
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       toast({
         title: isArabic ? 'تم النسخ' : 'Link Copied',
-        description: isArabic 
-          ? 'تم نسخ رابط التذكرة إلى الحافظة'
-          : 'Ticket link copied to clipboard',
+        description: isArabic ? 'تم نسخ رابط التذكرة إلى الحافظة' : 'Ticket link copied to clipboard'
       });
     } catch {
       toast({
         title: isArabic ? 'خطأ' : 'Error',
-        description: isArabic 
-          ? 'فشل نسخ الرابط'
-          : 'Failed to copy link',
-        variant: 'destructive',
+        description: isArabic ? 'فشل نسخ الرابط' : 'Failed to copy link',
+        variant: 'destructive'
       });
     }
   };
-
   const handleResendEmail = async () => {
     if (!booking) return;
-    
+
     // Client-side rate limiting check (5 min cooldown)
     if (booking.last_email_sent_at) {
       const lastSent = new Date(booking.last_email_sent_at).getTime();
       const cooldownMs = 5 * 60 * 1000;
       const timeSince = Date.now() - lastSent;
-      
       if (timeSince < cooldownMs) {
         const remainingMins = Math.ceil((cooldownMs - timeSince) / 60000);
         toast({
           title: isArabic ? 'يرجى الانتظار' : 'Please Wait',
-          description: isArabic 
-            ? `يمكنك إعادة إرسال البريد بعد ${remainingMins} دقائق`
-            : `You can resend email in ${remainingMins} minute${remainingMins > 1 ? 's' : ''}`,
-          variant: 'destructive',
+          description: isArabic ? `يمكنك إعادة إرسال البريد بعد ${remainingMins} دقائق` : `You can resend email in ${remainingMins} minute${remainingMins > 1 ? 's' : ''}`,
+          variant: 'destructive'
         });
         return;
       }
     }
-    
     setIsResendingEmail(true);
     try {
       const success = await resendConfirmationEmail(booking.id);
       if (success) {
         // Update local state to track new send time
-        setBooking(prev => prev ? { ...prev, last_email_sent_at: new Date().toISOString() } : null);
+        setBooking(prev => prev ? {
+          ...prev,
+          last_email_sent_at: new Date().toISOString()
+        } : null);
         toast({
           title: isArabic ? 'تم الإرسال' : 'Email Sent',
-          description: isArabic 
-            ? 'تم إرسال رسالة التأكيد إلى بريدك الإلكتروني'
-            : 'Confirmation email has been sent to your email',
+          description: isArabic ? 'تم إرسال رسالة التأكيد إلى بريدك الإلكتروني' : 'Confirmation email has been sent to your email'
         });
       } else {
         throw new Error('Failed to send email');
@@ -480,19 +464,15 @@ const ConfirmationPage = () => {
       console.error('Error resending email:', error);
       toast({
         title: isArabic ? 'خطأ' : 'Error',
-        description: isArabic 
-          ? 'فشل إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى.'
-          : 'Failed to send email. Please try again.',
-        variant: 'destructive',
+        description: isArabic ? 'فشل إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى.' : 'Failed to send email. Please try again.',
+        variant: 'destructive'
       });
     } finally {
       setIsResendingEmail(false);
     }
   };
-
   if (isLoading) {
-    return (
-      <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    return <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <Header />
         <main className="flex-1 pt-24 pb-12">
           <div className="container max-w-2xl">
@@ -511,12 +491,10 @@ const ConfirmationPage = () => {
               <div className="p-6 bg-card">
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="flex-1 space-y-6">
-                    {[1, 2, 3, 4].map(i => (
-                      <div key={i} className="space-y-2">
+                    {[1, 2, 3, 4].map(i => <div key={i} className="space-y-2">
                         <Skeleton className="h-3 w-20" />
                         <Skeleton className="h-6 w-32" />
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                   <div className="md:w-48 flex justify-center">
                     <Skeleton className="w-40 h-40 md:w-48 md:h-48 rounded-2xl" />
@@ -536,13 +514,10 @@ const ConfirmationPage = () => {
           </div>
         </main>
         <Footer />
-      </div>
-    );
+      </div>;
   }
-
   if (error || !booking) {
-    return (
-      <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    return <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <Header />
         <main className="flex-1 pt-24 pb-12">
           <div className="container max-w-2xl flex items-center justify-center min-h-[60vh]">
@@ -560,42 +535,24 @@ const ConfirmationPage = () => {
           </div>
         </main>
         <Footer />
-      </div>
-    );
+      </div>;
   }
-
   const totalTickets = booking.adult_count + booking.child_count + (booking.senior_count || 0);
-
-  return (
-    <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+  return <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
       {/* Fullscreen QR Modal */}
-      <FullscreenQRModal
-        isOpen={!!fullscreenQR}
-        onClose={() => setFullscreenQR(null)}
-        qrCodeUrl={fullscreenQR?.url || ''}
-        ticketCode={fullscreenQR?.code || ''}
-        guestName={booking?.customer_name}
-      />
+      <FullscreenQRModal isOpen={!!fullscreenQR} onClose={() => setFullscreenQR(null)} qrCodeUrl={fullscreenQR?.url || ''} ticketCode={fullscreenQR?.code || ''} guestName={booking?.customer_name} />
 
       {/* Confetti Animation - Heritage colors */}
-      {showConfetti && (
-        <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-          {[...Array(50)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-3 h-3 rounded-full animate-confetti"
-              style={{
-                left: `${Math.random() * 100}%`,
-                backgroundColor: ['#C9A86C', '#8B7355', '#D4C5B0', '#4A3625', '#F5EDE4'][Math.floor(Math.random() * 5)],
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${2 + Math.random() * 2}s`,
-              }}
-            />
-          ))}
-        </div>
-      )}
+      {showConfetti && <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+          {[...Array(50)].map((_, i) => <div key={i} className="absolute w-3 h-3 rounded-full animate-confetti" style={{
+        left: `${Math.random() * 100}%`,
+        backgroundColor: ['#C9A86C', '#8B7355', '#D4C5B0', '#4A3625', '#F5EDE4'][Math.floor(Math.random() * 5)],
+        animationDelay: `${Math.random() * 2}s`,
+        animationDuration: `${2 + Math.random() * 2}s`
+      }} />)}
+        </div>}
 
       <main className="flex-1 pt-24 pb-12">
         <div className="container max-w-2xl">
@@ -605,20 +562,20 @@ const ConfirmationPage = () => {
               <div className="w-24 h-24 rounded-full gradient-gold flex items-center justify-center animate-scale-in glow-gold">
                 <CheckCircle className="h-12 w-12 text-foreground" />
               </div>
-              <Sparkles className="absolute -top-2 -right-2 h-8 w-8 text-accent animate-pulse" />
+              
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
               {isArabic ? 'تم تأكيد حجزك!' : 'Booking Confirmed!'}
             </h1>
             <p className="text-muted-foreground text-lg">
-              {isArabic 
-                ? 'شكراً لحجزك في سوق المفيجر'
-                : 'Thank you for booking with Souq Almufaijer'}
+              {isArabic ? 'شكراً لحجزك في سوق المفيجر' : 'Thank you for booking with Souq Almufaijer'}
             </p>
           </div>
 
           {/* Heritage Style Ticket Card */}
-          <div className="relative mb-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <div className="relative mb-8 animate-slide-up" style={{
+          animationDelay: '0.2s'
+        }}>
             {/* Main Ticket */}
             <div className="glass-card-gold overflow-hidden">
               {/* Ticket Header */}
@@ -674,9 +631,9 @@ const ConfirmationPage = () => {
                           {isArabic ? 'التاريخ' : 'Date'}
                         </div>
                         <div className="font-semibold text-foreground">
-                          {format(new Date(booking.visit_date), 'd MMM yyyy', { 
-                            locale: isArabic ? ar : enUS 
-                          })}
+                          {format(new Date(booking.visit_date), 'd MMM yyyy', {
+                          locale: isArabic ? ar : enUS
+                        })}
                         </div>
                       </div>
                       <div>
@@ -727,26 +684,17 @@ const ConfirmationPage = () => {
 
                   {/* Right Side - QR Code (use first ticket's scannable QR) - TAP FOR FULLSCREEN */}
                   <div className="flex flex-col items-center justify-center md:w-48">
-                    {tickets[0]?.qr_code_url ? (
-                      <button
-                        onClick={() => setFullscreenQR({ url: tickets[0].qr_code_url!, code: tickets[0].ticket_code })}
-                        className="p-3 bg-white rounded-2xl shadow-inner border-2 border-accent/20 hover:border-accent/40 hover:shadow-lg transition-all cursor-pointer group relative"
-                        aria-label={isArabic ? 'اضغط لتكبير رمز QR' : 'Tap to enlarge QR code'}
-                      >
-                        <img 
-                          src={tickets[0].qr_code_url} 
-                          alt="QR Code" 
-                          className="w-40 h-40 md:w-48 md:h-48"
-                        />
+                    {tickets[0]?.qr_code_url ? <button onClick={() => setFullscreenQR({
+                    url: tickets[0].qr_code_url!,
+                    code: tickets[0].ticket_code
+                  })} className="p-3 bg-white rounded-2xl shadow-inner border-2 border-accent/20 hover:border-accent/40 hover:shadow-lg transition-all cursor-pointer group relative" aria-label={isArabic ? 'اضغط لتكبير رمز QR' : 'Tap to enlarge QR code'}>
+                        <img src={tickets[0].qr_code_url} alt="QR Code" className="w-40 h-40 md:w-48 md:h-48" />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 rounded-2xl transition-colors">
                           <Maximize2 className="h-8 w-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
                         </div>
-                      </button>
-                    ) : (
-                      <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl bg-muted flex items-center justify-center">
+                      </button> : <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl bg-muted flex items-center justify-center">
                         <QrCode className="h-12 w-12 text-muted-foreground" />
-                      </div>
-                    )}
+                      </div>}
                     <Badge className="mt-3 bg-accent/20 text-accent border-accent/30">
                       {isArabic ? 'اضغط للتكبير' : 'TAP TO ENLARGE'}
                     </Badge>
@@ -776,8 +724,9 @@ const ConfirmationPage = () => {
           </div>
 
           {/* Individual Tickets Section - THESE ARE THE SCANNABLE QR CODES */}
-          {tickets.length > 1 && (
-            <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+          {tickets.length > 1 && <div className="mb-8 animate-slide-up" style={{
+          animationDelay: '0.25s'
+        }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <QrCode className="h-5 w-5 text-accent" />
@@ -788,115 +737,60 @@ const ConfirmationPage = () => {
                 </Badge>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {tickets.map((ticket, index) => (
-                  <div 
-                    key={ticket.id}
-                    className={`glass-card p-3 rounded-xl border text-center ${
-                      ticket.is_used 
-                        ? 'bg-muted/50 border-muted opacity-60' 
-                        : 'border-accent/20'
-                    }`}
-                  >
-                    {ticket.qr_code_url ? (
-                      <img 
-                        src={ticket.qr_code_url} 
-                        alt={`Ticket ${index + 1}`}
-                        className="w-full aspect-square rounded-lg mb-2"
-                      />
-                    ) : (
-                      <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center mb-2">
+                {tickets.map((ticket, index) => <div key={ticket.id} className={`glass-card p-3 rounded-xl border text-center ${ticket.is_used ? 'bg-muted/50 border-muted opacity-60' : 'border-accent/20'}`}>
+                    {ticket.qr_code_url ? <img src={ticket.qr_code_url} alt={`Ticket ${index + 1}`} className="w-full aspect-square rounded-lg mb-2" /> : <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center mb-2">
                         <QrCode className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
+                      </div>}
                     <div className="text-xs font-mono text-muted-foreground truncate mb-1">
                       {ticket.ticket_code}
                     </div>
-                    <Badge 
-                      variant={ticket.is_used ? 'secondary' : 'outline'} 
-                      className="text-[10px]"
-                    >
-                      {ticket.is_used 
-                        ? (isArabic ? 'مستخدمة' : 'Used')
-                        : (isArabic 
-                            ? (ticket.ticket_type === 'adult' ? 'بالغ' : 'طفل')
-                            : ticket.ticket_type.charAt(0).toUpperCase() + ticket.ticket_type.slice(1)
-                          )
-                      }
+                    <Badge variant={ticket.is_used ? 'secondary' : 'outline'} className="text-[10px]">
+                      {ticket.is_used ? isArabic ? 'مستخدمة' : 'Used' : isArabic ? ticket.ticket_type === 'adult' ? 'بالغ' : 'طفل' : ticket.ticket_type.charAt(0).toUpperCase() + ticket.ticket_type.slice(1)}
                     </Badge>
-                    {ticket.qr_code_url && !ticket.is_used && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="mt-2 w-full h-7 text-xs"
-                        onClick={() => handleDownloadSingleTicket(ticket)}
-                      >
+                    {ticket.qr_code_url && !ticket.is_used && <Button size="sm" variant="ghost" className="mt-2 w-full h-7 text-xs" onClick={() => handleDownloadSingleTicket(ticket)}>
                         <Download className="h-3 w-3 mr-1" />
                         {isArabic ? 'تحميل' : 'Download'}
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                      </Button>}
+                  </div>)}
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-            <Button 
-              onClick={handleDownloadTicket}
-              className="flex-1 gap-2 btn-gold h-12"
-            >
+          <div className="flex flex-col sm:flex-row gap-3 mb-8 animate-slide-up" style={{
+          animationDelay: '0.3s'
+        }}>
+            <Button onClick={handleDownloadTicket} className="flex-1 gap-2 btn-gold h-12">
               <Download className="h-5 w-5" />
               {isArabic ? 'تحميل التذكرة' : 'Download Ticket'}
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={handleShare}
-              className="flex-1 gap-2 h-12 border-2 border-accent/30 hover:bg-accent/5"
-            >
+            <Button variant="outline" onClick={handleShare} className="flex-1 gap-2 h-12 border-2 border-accent/30 hover:bg-accent/5">
               <Share2 className="h-5 w-5" />
               {isArabic ? 'مشاركة' : 'Share'}
             </Button>
           </div>
 
           {/* Email Notice with Resend Button */}
-          <div 
-            className="flex flex-col sm:flex-row items-center gap-3 p-4 glass-card-gold rounded-2xl mb-8 animate-slide-up" 
-            style={{ animationDelay: '0.4s' }}
-          >
+          <div className="flex flex-col sm:flex-row items-center gap-3 p-4 glass-card-gold rounded-2xl mb-8 animate-slide-up" style={{
+          animationDelay: '0.4s'
+        }}>
             <div className="flex items-center gap-3 flex-1">
               <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center shrink-0">
                 <Mail className="h-5 w-5 text-foreground" />
               </div>
               <p className="text-sm text-muted-foreground">
-                {booking.confirmation_email_sent
-                  ? (isArabic 
-                      ? `تم إرسال تأكيد الحجز والتذاكر إلى ${booking.customer_email}`
-                      : `Confirmation and tickets have been sent to ${booking.customer_email}`)
-                  : (isArabic
-                      ? `لم يتم إرسال البريد الإلكتروني بعد. يرجى المحاولة مرة أخرى.`
-                      : `Email not sent yet. Please try again.`)
-                }
+                {booking.confirmation_email_sent ? isArabic ? `تم إرسال تأكيد الحجز والتذاكر إلى ${booking.customer_email}` : `Confirmation and tickets have been sent to ${booking.customer_email}` : isArabic ? `لم يتم إرسال البريد الإلكتروني بعد. يرجى المحاولة مرة أخرى.` : `Email not sent yet. Please try again.`}
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResendEmail}
-              disabled={isResendingEmail}
-              className="gap-2 border-accent/30 hover:bg-accent/5"
-            >
-              {isResendingEmail ? (
-                <div className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
+            <Button variant="outline" size="sm" onClick={handleResendEmail} disabled={isResendingEmail} className="gap-2 border-accent/30 hover:bg-accent/5">
+              {isResendingEmail ? <div className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               {isArabic ? 'إعادة الإرسال' : 'Resend'}
             </Button>
           </div>
 
           {/* Navigation */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.5s' }}>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{
+          animationDelay: '0.5s'
+        }}>
             <Link to="/my-tickets">
               <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 border-2 border-accent/30 hover:bg-accent/5">
                 <Ticket className="h-5 w-5" />
@@ -931,8 +825,6 @@ const ConfirmationPage = () => {
           animation: confetti 4s ease-out forwards;
         }
       `}</style>
-    </div>
-  );
+    </div>;
 };
-
 export default ConfirmationPage;
