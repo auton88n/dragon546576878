@@ -5,10 +5,10 @@ import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
 import OptimizedImage from '@/components/shared/OptimizedImage';
 import { Clock, MapPin, Landmark, Heart, Calendar, Users, Ticket } from 'lucide-react';
-import heroImage from '@/assets/hero-heritage.jpg';
-import featureHeritage from '@/assets/feature-heritage.jpg';
-import featureTours from '@/assets/feature-tours.jpg';
-import featureFamily from '@/assets/feature-family.jpg';
+import heroImage from '@/assets/hero-heritage.webp';
+import featureHeritage from '@/assets/feature-heritage.webp';
+import featureTours from '@/assets/feature-tours.webp';
+import featureFamily from '@/assets/feature-family.webp';
 const Index = () => {
   const {
     currentLanguage: language,

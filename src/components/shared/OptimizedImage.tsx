@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface OptimizedImageProps {
@@ -9,62 +9,50 @@ interface OptimizedImageProps {
   onLoad?: () => void;
 }
 
-const OptimizedImage = ({ 
-  src, 
-  alt, 
-  className = '', 
-  priority = false,
-  onLoad 
-}: OptimizedImageProps) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(priority);
-  const imgRef = useRef<HTMLDivElement>(null);
+const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
+  ({ src, alt, className = '', priority = false, onLoad }, ref) => {
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [isInView, setIsInView] = useState(priority);
+    const internalRef = useRef<HTMLDivElement>(null);
+    const containerRef = (ref as React.RefObject<HTMLDivElement>) || internalRef;
 
-  useEffect(() => {
-    if (priority) {
-      setIsInView(true);
-      return;
-    }
+    useEffect(() => {
+      if (priority) {
+        setIsInView(true);
+        return;
+      }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '200px' }
-    );
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            observer.disconnect();
+          }
+        },
+        { rootMargin: '200px' }
+      );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
-    }
+      if (containerRef.current) {
+        observer.observe(containerRef.current);
+      }
 
-    return () => observer.disconnect();
-  }, [priority]);
+      return () => observer.disconnect();
+    }, [priority, containerRef]);
 
-  const handleLoad = () => {
-    setIsLoaded(true);
-    onLoad?.();
-  };
+    const handleLoad = () => {
+      setIsLoaded(true);
+      onLoad?.();
+    };
 
-  // Generate WebP source path
-  const webpSrc = src.replace(/\.(jpg|jpeg|png)$/i, '.webp');
-  const hasWebpVersion = /\.(jpg|jpeg|png)$/i.test(src);
-
-  return (
-    <div ref={imgRef} className={cn('relative overflow-hidden bg-muted', className)}>
-      {/* Skeleton placeholder */}
-      {!isLoaded && (
-        <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted/80 to-muted animate-pulse" />
-      )}
-      
-      {/* Actual image with WebP support */}
-      {isInView && (
-        <picture>
-          {hasWebpVersion && (
-            <source srcSet={webpSrc} type="image/webp" />
-          )}
+    return (
+      <div ref={containerRef} className={cn('relative overflow-hidden bg-muted', className)}>
+        {/* Skeleton placeholder */}
+        {!isLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted/80 to-muted animate-pulse" />
+        )}
+        
+        {/* Actual image */}
+        {isInView && (
           <img
             src={src}
             alt={alt}
@@ -77,10 +65,12 @@ const OptimizedImage = ({
               isLoaded ? 'opacity-100' : 'opacity-0'
             )}
           />
-        </picture>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
+    );
+  }
+);
+
+OptimizedImage.displayName = 'OptimizedImage';
 
 export default OptimizedImage;
