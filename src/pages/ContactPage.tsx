@@ -102,11 +102,11 @@ const ContactPage = () => {
 
         {/* Hero Content */}
         <div className="relative z-10 text-center px-4">
-          <div className="inline-block px-8 py-6 md:px-12 md:py-8 bg-black/30 backdrop-blur-md rounded-2xl border border-white/20">
-            <h1 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">
+          <div className="inline-block px-6 py-4 md:px-8 md:py-5 bg-black/30 backdrop-blur-md rounded-xl border border-white/20">
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
               {t('contact.title')}
             </h1>
-            <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-white/90 max-w-xl mx-auto">
               {t('contact.subtitle')}
             </p>
           </div>
