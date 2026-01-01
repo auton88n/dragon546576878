@@ -3,12 +3,12 @@ import { useLanguage } from '@/hooks/useLanguage';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
+import OptimizedImage from '@/components/shared/OptimizedImage';
 import { Clock, MapPin, Landmark, Heart, Calendar, Users, Ticket } from 'lucide-react';
 import heroImage from '@/assets/hero-heritage.jpg';
 import featureHeritage from '@/assets/feature-heritage.jpg';
 import featureTours from '@/assets/feature-tours.jpg';
 import featureFamily from '@/assets/feature-family.jpg';
-
 const Index = () => {
   const {
     currentLanguage: language,
@@ -42,9 +42,14 @@ const Index = () => {
 
       {/* Hero Section with Background Image */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Image - No lazy loading for hero (above fold) */}
+        {/* Background Image - Priority loading for hero (above fold) */}
         <div className="absolute inset-0">
-          <img src={heroImage} alt="Souq Almufaijer Heritage Site" className="w-full h-full object-cover" />
+          <OptimizedImage 
+            src={heroImage} 
+            alt="Souq Almufaijer Heritage Site" 
+            className="w-full h-full"
+            priority 
+          />
           <div className="hero-overlay absolute inset-0" />
         </div>
 
@@ -134,11 +139,10 @@ const Index = () => {
           }}>
                 {/* Image - Lazy loaded (below fold) */}
                 <div className="relative h-48 overflow-hidden">
-                  <img 
+                  <OptimizedImage 
                     src={feature.image} 
                     alt={isArabic ? feature.titleAr : feature.titleEn} 
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                    className="w-full h-full transition-transform duration-500 group-hover:scale-110" 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
                   <div className="absolute bottom-4 left-4 rtl:right-4 rtl:left-auto">
