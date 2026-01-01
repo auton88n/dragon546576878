@@ -122,7 +122,7 @@ const ContactPage = () => {
 
         {/* Hero Content */}
         <div className="relative z-10 text-center pb-16 md:pb-20 px-4">
-          <div className="glass-card-gold inline-block px-8 py-6 md:px-12 md:py-8">
+          <div className="inline-block px-8 py-6 md:px-12 md:py-8 bg-black/30 backdrop-blur-md rounded-2xl border border-white/20">
             <h1 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">
               {t('contact.title')}
             </h1>
