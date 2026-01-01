@@ -206,11 +206,11 @@ const GroupBookingsPage = () => {
             </div>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-              {isArabic ? 'حجوزات المجموعات والشركات' : 'Group & Corporate Bookings'}
+              {isArabic ? 'حجوزات الشركات' : 'Corporate Bookings'}
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground">
-              {isArabic 
+              {isArabic
                 ? 'هل تخططون لزيارة جماعية؟ دعونا نصمم لكم تجربة استثنائية!'
                 : 'Planning a group visit? Let us create a custom experience for you!'}
             </p>

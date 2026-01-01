@@ -13,7 +13,7 @@ const Footer = () => {
     { href: '/', label: isArabic ? 'الرئيسية' : 'Home' },
     { href: '/about', label: isArabic ? 'من نحن' : 'About Us' },
     { href: '/book', label: isArabic ? 'احجز تذكرتك' : 'Book Tickets' },
-    { href: '/group-bookings', label: isArabic ? 'حجوزات المجموعات' : 'Group Bookings' },
+    { href: '/group-bookings', label: isArabic ? 'حجوزات الشركات' : 'Corporate Bookings' },
     { href: '/my-tickets', label: isArabic ? 'تذاكري' : 'My Tickets' },
   ];
 
