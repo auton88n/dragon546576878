@@ -5,7 +5,7 @@ import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
 import OptimizedImage from '@/components/shared/OptimizedImage';
 import { Ticket, MapPin, Mountain, Star, ChevronDown } from 'lucide-react';
-import heroImage from '@/assets/about-hero-tuwayq.webp';
+import heroImage from '@/assets/about-hero-tuwayq.jpg';
 
 const AboutPage = () => {
   const { t, isRTL, currentLanguage } = useLanguage();
