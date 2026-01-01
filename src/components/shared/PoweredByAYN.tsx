@@ -1,17 +1,21 @@
-import { useLanguage } from '@/hooks/useLanguage';
+import { forwardRef } from 'react';
 
 interface PoweredByAYNProps {
   className?: string;
 }
 
-const PoweredByAYN = ({ className = '' }: PoweredByAYNProps) => {
-  return (
-    <div className={`text-center py-3 ${className}`}>
-      <span className="text-[11px] text-[#8B7355]">
-        Powered by <span className="font-semibold">AYN</span>
-      </span>
-    </div>
-  );
-};
+const PoweredByAYN = forwardRef<HTMLDivElement, PoweredByAYNProps>(
+  ({ className = '' }, ref) => {
+    return (
+      <div ref={ref} className={`text-center py-3 ${className}`}>
+        <span className="text-[11px] text-[#8B7355]">
+          Powered by <span className="font-semibold">AYN</span>
+        </span>
+      </div>
+    );
+  }
+);
+
+PoweredByAYN.displayName = 'PoweredByAYN';
 
 export default PoweredByAYN;

@@ -33,6 +33,7 @@ interface BookingDetails {
   senior_price: number;
   total_amount: number;
   confirmation_email_sent: boolean;
+  last_email_sent_at?: string | null;
 }
 
 interface TicketDetails {
@@ -414,10 +415,31 @@ const ConfirmationPage = () => {
   const handleResendEmail = async () => {
     if (!booking) return;
     
+    // Client-side rate limiting check (5 min cooldown)
+    if (booking.last_email_sent_at) {
+      const lastSent = new Date(booking.last_email_sent_at).getTime();
+      const cooldownMs = 5 * 60 * 1000;
+      const timeSince = Date.now() - lastSent;
+      
+      if (timeSince < cooldownMs) {
+        const remainingMins = Math.ceil((cooldownMs - timeSince) / 60000);
+        toast({
+          title: isArabic ? 'يرجى الانتظار' : 'Please Wait',
+          description: isArabic 
+            ? `يمكنك إعادة إرسال البريد بعد ${remainingMins} دقائق`
+            : `You can resend email in ${remainingMins} minute${remainingMins > 1 ? 's' : ''}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+    
     setIsResendingEmail(true);
     try {
       const success = await resendConfirmationEmail(booking.id);
       if (success) {
+        // Update local state to track new send time
+        setBooking(prev => prev ? { ...prev, last_email_sent_at: new Date().toISOString() } : null);
         toast({
           title: isArabic ? 'تم الإرسال' : 'Email Sent',
           description: isArabic 

@@ -441,7 +441,10 @@ async function sendEmailWithRetry(
 
       await supabase
         .from("bookings")
-        .update({ confirmation_email_sent: true })
+        .update({ 
+          confirmation_email_sent: true,
+          last_email_sent_at: new Date().toISOString()
+        })
         .eq("id", booking.id);
 
       return { success: true };
@@ -464,6 +467,9 @@ async function sendEmailWithRetry(
 
   return { success: false, error: lastError };
 }
+
+// Rate limiting: 5 minutes cooldown between email resends
+const EMAIL_COOLDOWN_MS = 5 * 60 * 1000;
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -501,6 +507,34 @@ const handler = async (req: Request): Promise<Response> => {
       .select("*")
       .eq("id", bookingId)
       .single();
+    
+    if (bookingError || !booking) {
+      console.error("Booking fetch error:", bookingError);
+      throw new Error(`Booking not found: ${bookingId}`);
+    }
+
+    // Rate limiting check
+    if (booking.last_email_sent_at) {
+      const lastSentTime = new Date(booking.last_email_sent_at).getTime();
+      const timeSinceLastEmail = Date.now() - lastSentTime;
+      
+      if (timeSinceLastEmail < EMAIL_COOLDOWN_MS) {
+        const remainingSeconds = Math.ceil((EMAIL_COOLDOWN_MS - timeSinceLastEmail) / 1000);
+        console.log(`⏳ Rate limited: ${remainingSeconds}s remaining`);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "rate_limited",
+            remainingSeconds,
+            message: `Please wait ${Math.ceil(remainingSeconds / 60)} minutes before requesting another email`,
+          }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
 
     if (bookingError || !booking) {
       console.error("Booking fetch error:", bookingError);
