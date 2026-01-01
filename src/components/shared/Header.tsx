@@ -99,10 +99,7 @@ const Header = () => {
 
         {/* Mobile Menu Button */}
         <div className="flex md:hidden items-center gap-2">
-          <LanguageSwitcher 
-            variant="minimal" 
-            className={isScrolled || !hasHeroSection ? 'text-foreground' : 'text-white drop-shadow-md'}
-          />
+          <LanguageSwitcher />
           <button
             onClick={toggleMenu}
             className={`p-2 rounded-lg transition-colors ${
