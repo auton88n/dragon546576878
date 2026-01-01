@@ -293,7 +293,7 @@ const ContactSubmissionsPanel = () => {
 
               <div className="border-t pt-4">
                 <span className="text-sm text-muted-foreground">
-                  {t('admin.messages.adminNotes')}:</span>
+                  {t('admin.messages.adminNotes')}:
                 </span>
                 <Textarea
                   value={adminNotes}
