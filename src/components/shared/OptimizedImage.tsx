@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect, forwardRef } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, forwardRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
 interface OptimizedImageProps {
@@ -16,6 +16,15 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
     const internalRef = useRef<HTMLDivElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
 
+    // Callback ref to check if image is already loaded when mounted
+    const imgCallbackRef = useCallback((node: HTMLImageElement | null) => {
+      imgRef.current = node;
+      if (node?.complete && node?.naturalHeight !== 0) {
+        setIsLoaded(true);
+        onLoad?.();
+      }
+    }, [onLoad]);
+
     // Synchronously check if element is in viewport before first paint
     useLayoutEffect(() => {
       if (priority) {
@@ -23,37 +32,50 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
         return;
       }
 
-      // Synchronous check for above-the-fold images
       if (internalRef.current) {
         const rect = internalRef.current.getBoundingClientRect();
         const isVisible = rect.top < window.innerHeight + 200;
         if (isVisible) {
           setIsInView(true);
-          return;
         }
       }
     }, [priority]);
 
-    // Check if image is already cached
-    useLayoutEffect(() => {
-      if (!isInView) return;
-      
-      // Check if image is already in browser cache
-      const img = new Image();
-      img.src = src;
+    // Backup: check if image loaded and add event listener
+    useEffect(() => {
+      const img = imgRef.current;
+      if (!img || isLoaded || !isInView) return;
+
+      // Check if already loaded
       if (img.complete && img.naturalHeight !== 0) {
         setIsLoaded(true);
         onLoad?.();
+        return;
       }
-    }, [src, isInView, onLoad]);
 
-    // Double-check on mount for images that loaded during render
-    useEffect(() => {
-      if (imgRef.current?.complete && imgRef.current?.naturalHeight !== 0) {
+      // Add load event listener as backup
+      const handleLoad = () => {
         setIsLoaded(true);
         onLoad?.();
-      }
-    }, [src, onLoad]);
+      };
+      
+      img.addEventListener('load', handleLoad);
+      return () => img.removeEventListener('load', handleLoad);
+    }, [isInView, isLoaded, onLoad]);
+
+    // Fallback timeout - if image is in view but not marked loaded after 500ms, check again
+    useEffect(() => {
+      if (!isInView || isLoaded) return;
+      
+      const timeout = setTimeout(() => {
+        if (imgRef.current?.complete && imgRef.current?.naturalHeight !== 0) {
+          setIsLoaded(true);
+          onLoad?.();
+        }
+      }, 500);
+      
+      return () => clearTimeout(timeout);
+    }, [isInView, isLoaded, onLoad]);
 
     // IntersectionObserver for lazy loading (below-the-fold images)
     useEffect(() => {
@@ -93,11 +115,10 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
         }} 
         className={cn(
           'relative overflow-hidden',
-          !isLoaded && 'bg-secondary/50',
           className
         )}
       >
-        {/* Placeholder - only show when actively loading (in view but not loaded) */}
+        {/* Placeholder - only show when actively loading */}
         {isInView && !isLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/95 to-accent/5" />
         )}
@@ -105,7 +126,7 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
         {/* Actual image */}
         {isInView && (
           <img
-            ref={imgRef}
+            ref={imgCallbackRef}
             src={src}
             alt={alt}
             onLoad={handleLoad}
@@ -114,9 +135,7 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
             fetchPriority={priority ? 'high' : 'auto'}
             className={cn(
               'w-full h-full object-cover',
-              isLoaded 
-                ? 'opacity-100' 
-                : 'opacity-0'
+              isLoaded ? 'opacity-100' : 'opacity-0'
             )}
           />
         )}
