@@ -96,7 +96,7 @@ const groupTypeLabels: Record<string, { en: string; ar: string }> = {
 };
 
 const GroupBookingsPanel = () => {
-  const { isRTL, currentLanguage } = useLanguage();
+  const { isRTL, currentLanguage, t } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   
   const [requests, setRequests] = useState<GroupBookingRequest[]>([]);
@@ -226,13 +226,13 @@ const GroupBookingsPanel = () => {
         <div className="flex items-center gap-2">
           <Building2 className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-semibold">
-            {isArabic ? 'طلبات الشركات' : 'Corporate Requests'}
+            {t('admin.corporate.title')}
           </h2>
           <Badge variant="secondary">{requests.length}</Badge>
         </div>
         <Button variant="outline" size="sm" onClick={fetchRequests}>
           <RefreshCw className="w-4 h-4 me-2" />
-          {isArabic ? 'تحديث' : 'Refresh'}
+          {t('common.refresh')}
         </Button>
       </div>
 
@@ -266,7 +266,7 @@ const GroupBookingsPanel = () => {
       {filteredRequests.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            {isArabic ? 'لا توجد طلبات' : 'No requests found'}
+            {t('admin.corporate.noRequests')}
           </CardContent>
         </Card>
       ) : (
@@ -274,13 +274,13 @@ const GroupBookingsPanel = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{isArabic ? 'المنظمة' : 'Organization'}</TableHead>
-                <TableHead>{isArabic ? 'المسؤول' : 'Contact'}</TableHead>
-                <TableHead className="hidden md:table-cell">{isArabic ? 'الحجم' : 'Size'}</TableHead>
-                <TableHead className="hidden lg:table-cell">{isArabic ? 'النوع' : 'Type'}</TableHead>
-                <TableHead>{isArabic ? 'الحالة' : 'Status'}</TableHead>
-                <TableHead className="hidden md:table-cell">{isArabic ? 'التاريخ' : 'Date'}</TableHead>
-                <TableHead className="text-end">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
+                <TableHead>{t('admin.corporate.organization')}</TableHead>
+                <TableHead>{t('admin.corporate.contactPerson')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('admin.corporate.groupSize')}</TableHead>
+                <TableHead className="hidden lg:table-cell">{t('admin.corporate.groupType')}</TableHead>
+                <TableHead>{t('common.status')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('common.date')}</TableHead>
+                <TableHead className="text-end">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -345,7 +345,7 @@ const GroupBookingsPanel = () => {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {isArabic ? 'تفاصيل الطلب' : 'Request Details'}
+              {t('admin.corporate.requestDetails')}
             </DialogTitle>
           </DialogHeader>
           
@@ -355,7 +355,7 @@ const GroupBookingsPanel = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    {isArabic ? 'المنظمة' : 'Organization'}
+                    {t('admin.corporate.organization')}
                   </Label>
                   <p className="font-medium flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-primary" />
@@ -364,13 +364,13 @@ const GroupBookingsPanel = () => {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    {isArabic ? 'المسؤول' : 'Contact Person'}
+                    {t('admin.corporate.contactPerson')}
                   </Label>
                   <p className="font-medium">{selectedRequest.contact_person}</p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    {isArabic ? 'البريد الإلكتروني' : 'Email'}
+                    {t('common.email')}
                   </Label>
                   <p className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-muted-foreground" />
@@ -381,7 +381,7 @@ const GroupBookingsPanel = () => {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    {isArabic ? 'الهاتف' : 'Phone'}
+                    {t('common.phone')}
                   </Label>
                   <p className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-muted-foreground" />
@@ -398,16 +398,16 @@ const GroupBookingsPanel = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    {isArabic ? 'عدد الأشخاص' : 'Group Size'}
+                    {t('admin.corporate.groupSize')}
                   </Label>
                   <p className="font-medium flex items-center gap-2">
                     <Users className="w-4 h-4 text-primary" />
-                    {selectedRequest.group_size} {isArabic ? 'شخص' : 'people'}
+                    {selectedRequest.group_size} {t('admin.corporate.people')}
                   </p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    {isArabic ? 'نوع المجموعة' : 'Group Type'}
+                    {t('admin.corporate.groupType')}
                   </Label>
                   <p className="font-medium">
                     {isArabic 
@@ -419,7 +419,7 @@ const GroupBookingsPanel = () => {
 
               <div className="space-y-1">
                 <Label className="text-muted-foreground text-xs">
-                  {isArabic ? 'التواريخ المفضلة' : 'Preferred Dates'}
+                  {t('admin.corporate.preferredDates')}
                 </Label>
                 <div className="flex flex-wrap gap-2">
                   {selectedRequest.preferred_dates.map((date, index) => (
@@ -434,7 +434,7 @@ const GroupBookingsPanel = () => {
               {selectedRequest.special_requirements && (
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    {isArabic ? 'متطلبات خاصة' : 'Special Requirements'}
+                    {t('admin.corporate.specialRequirements')}
                   </Label>
                   <p className="text-sm bg-muted p-3 rounded-lg">
                     {selectedRequest.special_requirements}

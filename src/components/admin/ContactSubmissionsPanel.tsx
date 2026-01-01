@@ -49,6 +49,7 @@ interface ContactSubmission {
 
 const ContactSubmissionsPanel = () => {
   const { t, currentLanguage: language } = useLanguage();
+  const isArabic = language === 'ar';
   const queryClient = useQueryClient();
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
@@ -81,10 +82,10 @@ const ContactSubmissionsPanel = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contact-submissions'] });
-      toast.success(language === 'ar' ? 'تم تحديث الحالة' : 'Status updated');
+      toast.success(t('admin.settings.saved'));
     },
     onError: () => {
-      toast.error(language === 'ar' ? 'حدث خطأ' : 'Error updating status');
+      toast.error(t('errors.generic'));
     },
   });
 
@@ -99,11 +100,11 @@ const ContactSubmissionsPanel = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contact-submissions'] });
-      toast.success(language === 'ar' ? 'تم الحذف' : 'Deleted successfully');
+      toast.success(isArabic ? 'تم الحذف' : 'Deleted successfully');
       setDeleteId(null);
     },
     onError: () => {
-      toast.error(language === 'ar' ? 'حدث خطأ' : 'Error deleting');
+      toast.error(t('errors.generic'));
     },
   });
 
@@ -142,11 +143,11 @@ const ContactSubmissionsPanel = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'unread':
-        return <Badge variant="destructive">{language === 'ar' ? 'غير مقروء' : 'Unread'}</Badge>;
+        return <Badge variant="destructive">{t('admin.messages.unread')}</Badge>;
       case 'read':
-        return <Badge variant="secondary">{language === 'ar' ? 'مقروء' : 'Read'}</Badge>;
+        return <Badge variant="secondary">{t('admin.messages.read')}</Badge>;
       case 'resolved':
-        return <Badge className="bg-green-500">{language === 'ar' ? 'تم الرد' : 'Resolved'}</Badge>;
+        return <Badge className="bg-green-500">{t('admin.messages.resolved')}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -158,7 +159,7 @@ const ContactSubmissionsPanel = () => {
     return (
       <Card className="glass-card-gold border-0">
         <CardContent className="p-8 text-center">
-          <div className="animate-pulse">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
+          <div className="animate-pulse">{t('common.loading')}</div>
         </CardContent>
       </Card>
     );
@@ -172,7 +173,7 @@ const ContactSubmissionsPanel = () => {
             <MessageSquare className="h-4 w-4 md:h-5 md:w-5 text-foreground" />
           </div>
           <span className="text-foreground">
-            {language === 'ar' ? 'رسائل التواصل' : 'Contact Messages'}
+            {t('admin.messages.title')}
           </span>
           {unreadCount > 0 && (
             <Badge variant="destructive" className="ms-2">
@@ -187,11 +188,11 @@ const ContactSubmissionsPanel = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
-                <TableHead>{language === 'ar' ? 'الاسم' : 'Name'}</TableHead>
-                <TableHead>{language === 'ar' ? 'الموضوع' : 'Subject'}</TableHead>
-                <TableHead>{language === 'ar' ? 'التاريخ' : 'Date'}</TableHead>
-                <TableHead>{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
+                <TableHead>{t('common.status')}</TableHead>
+                <TableHead>{t('common.name')}</TableHead>
+                <TableHead>{t('admin.messages.subject')}</TableHead>
+                <TableHead>{t('admin.messages.date')}</TableHead>
+                <TableHead>{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -239,7 +240,7 @@ const ContactSubmissionsPanel = () => {
         ) : (
           <div className="p-8 text-center text-muted-foreground">
             <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-30" />
-            <p>{language === 'ar' ? 'لا توجد رسائل' : 'No messages yet'}</p>
+            <p>{t('admin.messages.noMessages')}</p>
           </div>
         )}
       </CardContent>
@@ -262,21 +263,21 @@ const ContactSubmissionsPanel = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">{language === 'ar' ? 'الاسم:' : 'Name:'}</span>
+                  <span className="text-muted-foreground">{t('common.name')}:</span>
                   <p className="font-medium">{selectedSubmission.name}</p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">{language === 'ar' ? 'البريد:' : 'Email:'}</span>
+                  <span className="text-muted-foreground">{t('common.email')}:</span>
                   <p className="font-medium">{selectedSubmission.email}</p>
                 </div>
                 {selectedSubmission.phone && (
                   <div>
-                    <span className="text-muted-foreground">{language === 'ar' ? 'الهاتف:' : 'Phone:'}</span>
+                    <span className="text-muted-foreground">{t('common.phone')}:</span>
                     <p className="font-medium">{selectedSubmission.phone}</p>
                   </div>
                 )}
                 <div>
-                  <span className="text-muted-foreground">{language === 'ar' ? 'التاريخ:' : 'Date:'}</span>
+                  <span className="text-muted-foreground">{t('common.date')}:</span>
                   <p className="font-medium">
                     {format(new Date(selectedSubmission.created_at), 'PPpp')}
                   </p>
@@ -284,7 +285,7 @@ const ContactSubmissionsPanel = () => {
               </div>
 
               <div className="border-t pt-4">
-                <span className="text-sm text-muted-foreground">{language === 'ar' ? 'الرسالة:' : 'Message:'}</span>
+                <span className="text-sm text-muted-foreground">{isArabic ? 'الرسالة:' : 'Message:'}</span>
                 <p className="mt-2 p-4 bg-muted rounded-lg whitespace-pre-wrap">
                   {selectedSubmission.message}
                 </p>
@@ -292,12 +293,12 @@ const ContactSubmissionsPanel = () => {
 
               <div className="border-t pt-4">
                 <span className="text-sm text-muted-foreground">
-                  {language === 'ar' ? 'ملاحظات المدير:' : 'Admin Notes:'}
+                  {t('admin.messages.adminNotes')}:</span>
                 </span>
                 <Textarea
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder={language === 'ar' ? 'أضف ملاحظاتك هنا...' : 'Add your notes here...'}
+                  placeholder={isArabic ? 'أضف ملاحظاتك هنا...' : 'Add your notes here...'}
                   className="mt-2"
                   rows={3}
                 />
@@ -307,13 +308,13 @@ const ContactSubmissionsPanel = () => {
 
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setSelectedSubmission(null)}>
-              {language === 'ar' ? 'إغلاق' : 'Close'}
+              {t('common.close')}
             </Button>
             <Button variant="secondary" onClick={handleSaveNotes}>
-              {language === 'ar' ? 'حفظ الملاحظات' : 'Save Notes'}
+              {t('admin.messages.saveNotes')}
             </Button>
             <Button onClick={handleMarkResolved} className="btn-gold">
-              {language === 'ar' ? 'تم الرد' : 'Mark Resolved'}
+              {t('admin.messages.markResolved')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -324,22 +325,19 @@ const ContactSubmissionsPanel = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {language === 'ar' ? 'تأكيد الحذف' : 'Confirm Delete'}
+              {t('admin.messages.confirmDelete')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {language === 'ar' 
-                ? 'هل أنت متأكد من حذف هذه الرسالة؟ لا يمكن التراجع عن هذا الإجراء.'
-                : 'Are you sure you want to delete this message? This action cannot be undone.'
-              }
+              {t('admin.messages.deleteMessage')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{language === 'ar' ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId && deleteMutation.mutate(deleteId)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {language === 'ar' ? 'حذف' : 'Delete'}
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
