@@ -88,7 +88,7 @@ const Header = () => {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
-          <LanguageSwitcher />
+          <LanguageSwitcher variant={isScrolled || !hasHeroSection ? 'default' : 'light'} />
           <Link to="/book">
             <Button className="btn-gold">
               <Ticket className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" />
@@ -99,7 +99,7 @@ const Header = () => {
 
         {/* Mobile Menu Button */}
         <div className="flex md:hidden items-center gap-2">
-          <LanguageSwitcher />
+          <LanguageSwitcher variant={isScrolled || !hasHeroSection ? 'default' : 'light'} />
           <button
             onClick={toggleMenu}
             className={`p-2 rounded-lg transition-colors ${
