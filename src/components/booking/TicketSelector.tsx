@@ -144,7 +144,7 @@ const TicketSelector = () => {
           <span className="w-8 h-8 rounded-full gradient-gold text-foreground text-sm flex items-center justify-center font-bold glow-gold">
             <Sparkles className="h-4 w-4" />
           </span>
-          {isArabic ? 'ماذا ستختبر' : "What You'll Experience"}
+          {isArabic ? 'الفعاليات' : 'Events'}
         </h3>
         
         {attractionsLoading ? (
