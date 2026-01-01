@@ -146,7 +146,7 @@ const BookingPage = () => {
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" />
         
         {/* Hero Content */}
-        <div className="absolute inset-0 flex items-end justify-center pb-16 md:pb-20">
+        <div className="absolute inset-0 flex items-end justify-center pb-8 md:pb-10">
           <div className="text-center px-4">
             <div className="inline-block backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-8 py-6 shadow-2xl">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
