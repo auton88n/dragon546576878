@@ -448,7 +448,7 @@ const GroupBookingsPanel = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>{isArabic ? 'الحالة' : 'Status'}</Label>
+                    <Label>{t('common.status')}</Label>
                     <Select value={editStatus} onValueChange={setEditStatus}>
                       <SelectTrigger>
                         <SelectValue />
@@ -463,7 +463,7 @@ const GroupBookingsPanel = () => {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>{isArabic ? 'السعر المقترح (ريال)' : 'Quoted Amount (SAR)'}</Label>
+                    <Label>{t('admin.corporate.quotedAmount')} ({t('common.currency')})</Label>
                     <Input
                       type="number"
                       value={editQuotedAmount}
@@ -474,7 +474,7 @@ const GroupBookingsPanel = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'ملاحظات المسؤول' : 'Admin Notes'}</Label>
+                  <Label>{t('admin.messages.adminNotes')}</Label>
                   <Textarea
                     value={editNotes}
                     onChange={(e) => setEditNotes(e.target.value)}
@@ -483,10 +483,10 @@ const GroupBookingsPanel = () => {
                   />
                 </div>
 
-                <Button onClick={handleUpdate} disabled={updating} className="w-full">
+                <Button onClick={handleUpdate} disabled={updating} className="w-full btn-gold">
                   {updating 
-                    ? (isArabic ? 'جاري الحفظ...' : 'Saving...') 
-                    : (isArabic ? 'حفظ التغييرات' : 'Save Changes')}
+                    ? t('common.loading')
+                    : t('common.save')}
                 </Button>
               </div>
             </div>
@@ -499,18 +499,16 @@ const GroupBookingsPanel = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {isArabic ? 'تأكيد الحذف' : 'Confirm Deletion'}
+              {t('admin.messages.confirmDelete')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {isArabic 
-                ? 'هل أنت متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.'
-                : 'Are you sure you want to delete this request? This action cannot be undone.'}
+              {t('admin.messages.deleteMessage')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{isArabic ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {isArabic ? 'حذف' : 'Delete'}
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
