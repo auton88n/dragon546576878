@@ -35,6 +35,7 @@ const Header = () => {
   const navLinks = [
     { href: '/', label: t('nav.home') },
     { href: '/about', label: t('nav.about') },
+    { href: '/group-bookings', label: t('nav.corporateBookings') },
     { href: '/my-tickets', label: t('nav.myTickets') },
     { href: '/contact', label: t('nav.contact') },
   ];

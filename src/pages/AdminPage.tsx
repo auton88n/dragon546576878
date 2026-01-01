@@ -139,7 +139,7 @@ const AdminPage = () => {
                 className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse"
               >
                 <Building2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                {isArabic ? 'المجموعات' : 'Groups'}
+                {isArabic ? 'الشركات' : 'Corporate'}
               </TabsTrigger>
             </TabsList>
 

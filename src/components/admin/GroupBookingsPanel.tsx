@@ -226,7 +226,7 @@ const GroupBookingsPanel = () => {
         <div className="flex items-center gap-2">
           <Building2 className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-semibold">
-            {isArabic ? 'طلبات المجموعات' : 'Group Requests'}
+            {isArabic ? 'طلبات الشركات' : 'Corporate Requests'}
           </h2>
           <Badge variant="secondary">{requests.length}</Badge>
         </div>
