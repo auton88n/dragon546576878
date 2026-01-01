@@ -156,7 +156,7 @@ const ContactSubmissionsPanel = () => {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="glass-card-gold border-0">
         <CardContent className="p-8 text-center">
           <div className="animate-pulse">{language === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
         </CardContent>
@@ -165,88 +165,84 @@ const ContactSubmissionsPanel = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Stats */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <MessageSquare className="h-6 w-6 text-accent" />
-          <div>
-            <h2 className="text-xl font-semibold">
-              {language === 'ar' ? 'رسائل التواصل' : 'Contact Messages'}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {language === 'ar' 
-                ? `${submissions?.length || 0} رسالة، ${unreadCount} غير مقروءة`
-                : `${submissions?.length || 0} messages, ${unreadCount} unread`
-              }
-            </p>
+    <Card className="glass-card-gold border-0">
+      <CardHeader className="border-b border-border/50 p-3 sm:p-4 md:p-6">
+        <CardTitle className="flex items-center gap-2 text-base md:text-lg rtl:flex-row-reverse rtl:justify-end">
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl gradient-gold flex items-center justify-center">
+            <MessageSquare className="h-4 w-4 md:h-5 md:w-5 text-foreground" />
           </div>
-        </div>
-      </div>
-
-      {/* Messages Table */}
-      <Card>
-        <CardContent className="p-0">
-          {submissions && submissions.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
-                  <TableHead>{language === 'ar' ? 'الاسم' : 'Name'}</TableHead>
-                  <TableHead>{language === 'ar' ? 'الموضوع' : 'Subject'}</TableHead>
-                  <TableHead>{language === 'ar' ? 'التاريخ' : 'Date'}</TableHead>
-                  <TableHead>{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {submissions.map((submission) => (
-                  <TableRow 
-                    key={submission.id}
-                    className={submission.status === 'unread' ? 'bg-accent/5' : ''}
-                  >
-                    <TableCell>{getStatusBadge(submission.status)}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{submission.name}</p>
-                        <p className="text-sm text-muted-foreground">{submission.email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">
-                      {submission.subject}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(submission.created_at), 'MMM dd, yyyy HH:mm')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleViewSubmission(submission)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setDeleteId(submission.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="p-8 text-center text-muted-foreground">
-              {language === 'ar' ? 'لا توجد رسائل' : 'No messages yet'}
-            </div>
+          <span className="text-foreground">
+            {language === 'ar' ? 'رسائل التواصل' : 'Contact Messages'}
+          </span>
+          {unreadCount > 0 && (
+            <Badge variant="destructive" className="ms-2">
+              {unreadCount}
+            </Badge>
           )}
-        </CardContent>
-      </Card>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-3 sm:p-4 md:p-6">
+
+        {submissions && submissions.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{language === 'ar' ? 'الحالة' : 'Status'}</TableHead>
+                <TableHead>{language === 'ar' ? 'الاسم' : 'Name'}</TableHead>
+                <TableHead>{language === 'ar' ? 'الموضوع' : 'Subject'}</TableHead>
+                <TableHead>{language === 'ar' ? 'التاريخ' : 'Date'}</TableHead>
+                <TableHead>{language === 'ar' ? 'الإجراءات' : 'Actions'}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {submissions.map((submission) => (
+                <TableRow 
+                  key={submission.id}
+                  className={submission.status === 'unread' ? 'bg-accent/5' : ''}
+                >
+                  <TableCell>{getStatusBadge(submission.status)}</TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{submission.name}</p>
+                      <p className="text-sm text-muted-foreground">{submission.email}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {submission.subject}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(submission.created_at), 'MMM dd, yyyy HH:mm')}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleViewSubmission(submission)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setDeleteId(submission.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="p-8 text-center text-muted-foreground">
+            <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-30" />
+            <p>{language === 'ar' ? 'لا توجد رسائل' : 'No messages yet'}</p>
+          </div>
+        )}
+      </CardContent>
 
       {/* View Submission Dialog */}
       <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
@@ -348,7 +344,7 @@ const ContactSubmissionsPanel = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </Card>
   );
 };
 
