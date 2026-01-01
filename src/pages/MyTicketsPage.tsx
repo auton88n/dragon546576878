@@ -258,208 +258,250 @@ const MyTicketsPage = () => {
             </Card>
           )}
 
-          {/* Results Area */}
-          {hasSearched && (
-            <div className="space-y-6 animate-fade-in">
-              {bookings.length === 0 ? (
-                <Card className="glass-card border-accent/20">
-                  <CardContent className="pt-6">
-                    <div className="text-center py-8 md:py-12">
-                      <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 md:mb-6 rounded-full bg-muted/50 flex items-center justify-center">
-                        <span className="icon-wrapper">
-                          <Ticket className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/40" aria-hidden="true" />
-                        </span>
+          {/* Content Area with stable min-height to prevent layout shifts */}
+          <div className="min-h-[300px]">
+            {/* Skeleton Loading State */}
+            {isSearching && (
+              <div className="space-y-6">
+                {/* Skeleton for booking card */}
+                <Card className="glass-card border-accent/20 overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-accent/10 to-transparent border-b border-accent/10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="h-6 w-32 bg-accent/10 rounded animate-pulse" />
+                        <div className="h-4 w-24 bg-accent/5 rounded animate-pulse mt-2" />
                       </div>
-                      <h3 className="text-xl font-semibold text-foreground mb-2">
-                        {isArabic ? 'لم يتم العثور على تذاكر' : 'No Tickets Found'}
-                      </h3>
-                      <p className="text-muted-foreground mb-8">
-                        {isArabic 
-                          ? 'لا توجد تذاكر مرتبطة بهذا البريد الإلكتروني'
-                          : 'No tickets are associated with this email'}
-                      </p>
-                      <Link to="/book">
-                        <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
-                          <span className="icon-wrapper">
-                            <Calendar className="h-4 w-4" aria-hidden="true" />
-                          </span>
-                          {isArabic ? 'احجز زيارة جديدة' : 'Book a New Visit'}
-                        </Button>
-                      </Link>
+                      <div className="h-6 w-20 bg-accent/10 rounded-full animate-pulse" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="space-y-2">
+                          <div className="h-3 w-12 bg-accent/5 rounded animate-pulse" />
+                          <div className="h-5 w-20 bg-accent/10 rounded animate-pulse" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border-t border-border pt-4">
+                      <div className="h-4 w-16 bg-accent/5 rounded animate-pulse mb-3" />
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {[1, 2].map((i) => (
+                          <div key={i} className="p-3 rounded-xl border bg-background border-accent/20">
+                            <div className="w-full aspect-square rounded-lg bg-accent/5 animate-pulse mb-2" />
+                            <div className="h-3 w-16 mx-auto bg-accent/5 rounded animate-pulse" />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
-              ) : (
-                <>
-                  <div className="text-sm text-muted-foreground mb-4">
-                    {isArabic 
-                      ? `تم العثور على ${bookings.length} حجز`
-                      : `Found ${bookings.length} booking${bookings.length > 1 ? 's' : ''}`}
-                  </div>
-                  
-                  {bookings.map((booking) => (
-                    <Card key={booking.id} className="glass-card-gold border-accent/20 overflow-hidden">
-                      {/* Booking Header */}
-                      <CardHeader className="bg-gradient-to-r from-accent/10 to-transparent border-b border-accent/10">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <div>
-                            <CardTitle className="text-lg font-mono text-accent">
-                              {booking.booking_reference}
-                            </CardTitle>
-                            <CardDescription>
-                              {isArabic ? 'رقم الحجز' : 'Booking Reference'}
-                            </CardDescription>
-                          </div>
-                          {getStatusBadge(booking.booking_status)}
-                        </div>
-                      </CardHeader>
-                      
-                      <CardContent className="pt-6">
-                        {/* Booking Details */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                          <div>
-                            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {isArabic ? 'التاريخ' : 'Date'}
-                            </div>
-                            <div className="font-semibold text-foreground">
-                              {format(new Date(booking.visit_date), 'd MMM yyyy', { 
-                                locale: isArabic ? ar : enUS 
-                              })}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {isArabic ? 'الوقت' : 'Time'}
-                            </div>
-                            <div className="font-semibold text-foreground">
-                              {formatTimeDisplay(booking.visit_time)}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
-                              <Users className="h-3 w-3" />
-                              {isArabic ? 'التذاكر' : 'Tickets'}
-                            </div>
-                            <div className="font-semibold text-foreground">
-                              {booking.adult_count + booking.child_count + (booking.senior_count || 0)}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                              {isArabic ? 'المبلغ' : 'Amount'}
-                            </div>
-                            <div className="font-semibold text-accent">
-                              {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
-                            </div>
-                          </div>
-                        </div>
+              </div>
+            )}
 
-                        {/* Tickets Grid */}
-                        {booking.tickets.length > 0 && (
-                          <div className="border-t border-border pt-4">
-                            <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                              <QrCode className="h-4 w-4 text-accent" />
-                              {isArabic ? 'التذاكر' : 'Tickets'}
-                            </h4>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                              {booking.tickets.map((ticket) => (
-                                <div 
-                                  key={ticket.id} 
-                                  className={`p-3 rounded-xl border text-center ${
-                                    ticket.is_used 
-                                      ? 'bg-muted/50 border-muted' 
-                                      : 'bg-background border-accent/20'
-                                  }`}
-                                >
-                                  {ticket.qr_code_url ? (
-                                    <img 
-                                      src={ticket.qr_code_url} 
-                                      alt={`Ticket ${ticket.ticket_code}`}
-                                      className={`w-full aspect-square rounded-lg mb-2 ${ticket.is_used ? 'opacity-50' : ''}`}
-                                    />
-                                  ) : (
-                                    <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center mb-2">
-                                      <QrCode className="h-8 w-8 text-muted-foreground" />
-                                    </div>
-                                  )}
-                                  <div className="text-xs font-mono text-muted-foreground truncate">
-                                    {ticket.ticket_code}
-                                  </div>
-                                  <Badge 
-                                    variant={ticket.is_used ? 'secondary' : 'outline'} 
-                                    className="mt-1 text-[10px]"
+            {/* Results Area */}
+            {hasSearched && !isSearching && (
+              <div className="space-y-6 animate-fade-in">
+                {bookings.length === 0 ? (
+                  <Card className="glass-card border-accent/20">
+                    <CardContent className="pt-6">
+                      <div className="text-center py-8 md:py-12">
+                        <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 md:mb-6 rounded-full bg-muted/50 flex items-center justify-center">
+                          <span className="icon-wrapper">
+                            <Ticket className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/40" aria-hidden="true" />
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-semibold text-foreground mb-2">
+                          {isArabic ? 'لم يتم العثور على تذاكر' : 'No Tickets Found'}
+                        </h3>
+                        <p className="text-muted-foreground mb-8">
+                          {isArabic 
+                            ? 'لا توجد تذاكر مرتبطة بهذا البريد الإلكتروني'
+                            : 'No tickets are associated with this email'}
+                        </p>
+                        <Link to="/book">
+                          <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
+                            <span className="icon-wrapper">
+                              <Calendar className="h-4 w-4" aria-hidden="true" />
+                            </span>
+                            {isArabic ? 'احجز زيارة جديدة' : 'Book a New Visit'}
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    <div className="text-sm text-muted-foreground mb-4">
+                      {isArabic 
+                        ? `تم العثور على ${bookings.length} حجز`
+                        : `Found ${bookings.length} booking${bookings.length > 1 ? 's' : ''}`}
+                    </div>
+                    
+                    {bookings.map((booking) => (
+                      <Card key={booking.id} className="glass-card-gold border-accent/20 overflow-hidden">
+                        {/* Booking Header */}
+                        <CardHeader className="bg-gradient-to-r from-accent/10 to-transparent border-b border-accent/10">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div>
+                              <CardTitle className="text-lg font-mono text-accent">
+                                {booking.booking_reference}
+                              </CardTitle>
+                              <CardDescription>
+                                {isArabic ? 'رقم الحجز' : 'Booking Reference'}
+                              </CardDescription>
+                            </div>
+                            {getStatusBadge(booking.booking_status)}
+                          </div>
+                        </CardHeader>
+                        
+                        <CardContent className="pt-6">
+                          {/* Booking Details */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div>
+                              <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {isArabic ? 'التاريخ' : 'Date'}
+                              </div>
+                              <div className="font-semibold text-foreground">
+                                {format(new Date(booking.visit_date), 'd MMM yyyy', { 
+                                  locale: isArabic ? ar : enUS 
+                                })}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {isArabic ? 'الوقت' : 'Time'}
+                              </div>
+                              <div className="font-semibold text-foreground">
+                                {formatTimeDisplay(booking.visit_time)}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
+                                <Users className="h-3 w-3" />
+                                {isArabic ? 'التذاكر' : 'Tickets'}
+                              </div>
+                              <div className="font-semibold text-foreground">
+                                {booking.adult_count + booking.child_count + (booking.senior_count || 0)}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                                {isArabic ? 'المبلغ' : 'Amount'}
+                              </div>
+                              <div className="font-semibold text-accent">
+                                {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Tickets Grid */}
+                          {booking.tickets.length > 0 && (
+                            <div className="border-t border-border pt-4">
+                              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                                <QrCode className="h-4 w-4 text-accent" />
+                                {isArabic ? 'التذاكر' : 'Tickets'}
+                              </h4>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                {booking.tickets.map((ticket) => (
+                                  <div 
+                                    key={ticket.id} 
+                                    className={`p-3 rounded-xl border text-center ${
+                                      ticket.is_used 
+                                        ? 'bg-muted/50 border-muted' 
+                                        : 'bg-background border-accent/20'
+                                    }`}
                                   >
-                                    {ticket.is_used 
-                                      ? (isArabic ? 'مستخدمة' : 'Used')
-                                      : (isArabic 
-                                          ? (ticket.ticket_type === 'adult' ? 'بالغ' : 'طفل')
-                                          : ticket.ticket_type.charAt(0).toUpperCase() + ticket.ticket_type.slice(1)
-                                        )
-                                    }
-                                  </Badge>
-                                  {ticket.qr_code_url && !ticket.is_used && (
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="mt-2 w-full h-7 text-xs"
-                                      onClick={() => handleDownloadQR(ticket.qr_code_url!, ticket.ticket_code)}
+                                    {ticket.qr_code_url ? (
+                                      <img 
+                                        src={ticket.qr_code_url} 
+                                        alt={`Ticket ${ticket.ticket_code}`}
+                                        className={`w-full aspect-square rounded-lg mb-2 ${ticket.is_used ? 'opacity-50' : ''}`}
+                                      />
+                                    ) : (
+                                      <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center mb-2">
+                                        <QrCode className="h-8 w-8 text-muted-foreground" />
+                                      </div>
+                                    )}
+                                    <div className="text-xs font-mono text-muted-foreground truncate">
+                                      {ticket.ticket_code}
+                                    </div>
+                                    <Badge 
+                                      variant={ticket.is_used ? 'secondary' : 'outline'} 
+                                      className="mt-1 text-[10px]"
                                     >
-                                      <Download className="h-3 w-3 mr-1" />
-                                      {isArabic ? 'تحميل' : 'Download'}
-                                    </Button>
-                                  )}
-                                </div>
-                              ))}
+                                      {ticket.is_used 
+                                        ? (isArabic ? 'مستخدمة' : 'Used')
+                                        : (isArabic 
+                                            ? (ticket.ticket_type === 'adult' ? 'بالغ' : 'طفل')
+                                            : ticket.ticket_type.charAt(0).toUpperCase() + ticket.ticket_type.slice(1)
+                                          )
+                                      }
+                                    </Badge>
+                                    {ticket.qr_code_url && !ticket.is_used && (
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="mt-2 w-full h-7 text-xs"
+                                        onClick={() => handleDownloadQR(ticket.qr_code_url!, ticket.ticket_code)}
+                                      >
+                                        <Download className="h-3 w-3 mr-1" />
+                                        {isArabic ? 'تحميل' : 'Download'}
+                                      </Button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
+                          )}
+
+                          {booking.tickets.length === 0 && (
+                            <div className="border-t border-border pt-4">
+                              <p className="text-sm text-muted-foreground text-center py-4">
+                                {isArabic 
+                                  ? 'لم يتم إنشاء التذاكر بعد'
+                                  : 'Tickets not yet generated'}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* View Details Link */}
+                          <div className="mt-4 pt-4 border-t border-border">
+                            <Link to={`/confirmation/${booking.id}`}>
+                              <Button variant="outline" className="w-full border-accent/30 hover:bg-accent/5">
+                                {isArabic ? 'عرض تفاصيل الحجز' : 'View Booking Details'}
+                              </Button>
+                            </Link>
                           </div>
-                        )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
 
-                        {booking.tickets.length === 0 && (
-                          <div className="border-t border-border pt-4">
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                              {isArabic 
-                                ? 'لم يتم إنشاء التذاكر بعد'
-                                : 'Tickets not yet generated'}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* View Details Link */}
-                        <div className="mt-4 pt-4 border-t border-border">
-                          <Link to={`/confirmation/${booking.id}`}>
-                            <Button variant="outline" className="w-full border-accent/30 hover:bg-accent/5">
-                              {isArabic ? 'عرض تفاصيل الحجز' : 'View Booking Details'}
-                            </Button>
-                          </Link>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Help Section */}
-          {!hasSearched && (
-            <div className="text-center glass-card p-6 md:p-8 rounded-xl border border-accent/10">
-              <p className="text-muted-foreground mb-4 text-base md:text-lg">
-                {isArabic 
-                  ? 'لم تحجز بعد؟'
-                  : "Haven't booked yet?"}
-              </p>
-              <Link to="/book">
-                <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 px-6 md:px-8 py-5 md:py-6 text-base md:text-lg">
-                  <span className="icon-wrapper">
-                    <Calendar className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  {isArabic ? 'احجز زيارتك الآن' : 'Book Your Visit Now'}
-                </Button>
-              </Link>
-            </div>
-          )}
+            {/* Help Section */}
+            {!hasSearched && !isSearching && (
+              <div className="text-center glass-card p-6 md:p-8 rounded-xl border border-accent/10">
+                <p className="text-muted-foreground mb-4 text-base md:text-lg">
+                  {isArabic 
+                    ? 'لم تحجز بعد؟'
+                    : "Haven't booked yet?"}
+                </p>
+                <Link to="/book">
+                  <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 px-6 md:px-8 py-5 md:py-6 text-base md:text-lg">
+                    <span className="icon-wrapper">
+                      <Calendar className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    {isArabic ? 'احجز زيارتك الآن' : 'Book Your Visit Now'}
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
