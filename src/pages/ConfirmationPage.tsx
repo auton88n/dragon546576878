@@ -73,32 +73,54 @@ const ConfirmationPage = () => {
       }
 
       try {
-        // Fetch booking
+        // Use secure database function instead of direct table access
         const { data, error: fetchError } = await supabase
-          .from('bookings')
-          .select('*')
-          .eq('id', bookingId)
-          .single();
+          .rpc('get_booking_with_tickets', { booking_uuid: bookingId });
 
         if (fetchError) throw fetchError;
         if (!data) throw new Error('Booking not found');
 
-        setBooking(data);
+        // Parse the JSON response
+        const bookingData = data as unknown as {
+          id: string;
+          booking_reference: string;
+          customer_name: string;
+          customer_email: string;
+          customer_phone: string;
+          visit_date: string;
+          visit_time: string;
+          adult_count: number;
+          child_count: number;
+          senior_count: number;
+          total_amount: number;
+          currency: string;
+          booking_status: string;
+          payment_status: string;
+          confirmation_email_sent: boolean;
+          last_email_sent_at: string | null;
+          language: string;
+          tickets: TicketDetails[];
+        };
 
-        // Fetch tickets for this booking
-        const { data: ticketsData, error: ticketsError } = await supabase
-          .from('tickets')
-          .select('*')
-          .eq('booking_id', bookingId);
+        setBooking({
+          id: bookingData.id,
+          booking_reference: bookingData.booking_reference,
+          customer_name: bookingData.customer_name,
+          customer_email: bookingData.customer_email,
+          visit_date: bookingData.visit_date,
+          visit_time: bookingData.visit_time,
+          adult_count: bookingData.adult_count,
+          child_count: bookingData.child_count,
+          senior_count: bookingData.senior_count || 0,
+          adult_price: 0, // Not exposed in secure function
+          child_price: 0,
+          senior_price: 0,
+          total_amount: bookingData.total_amount,
+          confirmation_email_sent: bookingData.confirmation_email_sent,
+          last_email_sent_at: bookingData.last_email_sent_at,
+        });
 
-        if (ticketsError) {
-          console.error('Error fetching tickets:', ticketsError);
-        } else {
-          setTickets(ticketsData || []);
-        }
-
-        // Note: Individual ticket QR codes are fetched from the tickets table
-        // and used directly for display and download
+        setTickets(bookingData.tickets || []);
 
         // Hide confetti after animation
         setTimeout(() => setShowConfetti(false), 3000);

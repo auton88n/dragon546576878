@@ -541,6 +541,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_booking_with_tickets: {
+        Args: { booking_uuid: string }
+        Returns: Json
+      }
+      get_bookings_by_email: {
+        Args: { customer_email_input: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
