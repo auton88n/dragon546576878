@@ -200,7 +200,7 @@ const ContactPage = () => {
                       <h3 className="font-semibold text-foreground">
                           {currentLanguage === 'ar' ? info.titleAr : info.titleEn}
                         </h3>
-                        <p className="text-sm text-muted-foreground whitespace-pre-line">
+                        <p className="text-sm text-muted-foreground whitespace-pre-line" dir="ltr">
                           {currentLanguage === 'ar' ? info.contentAr : info.contentEn}
                         </p>
                       </div>
