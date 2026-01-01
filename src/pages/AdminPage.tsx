@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
-import { LayoutDashboard, Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2 } from 'lucide-react';
+import { LayoutDashboard, Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const SettingsPanel = lazy(() => import('@/components/admin/SettingsPanel'));
 const ReportsPanel = lazy(() => import('@/components/admin/ReportsPanel'));
 const GroupBookingsPanel = lazy(() => import('@/components/admin/GroupBookingsPanel'));
+const ContactSubmissionsPanel = lazy(() => import('@/components/admin/ContactSubmissionsPanel'));
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -56,7 +57,7 @@ const AdminPage = () => {
       value: stats.totalRevenue,
       suffix: isArabic ? 'ر.س' : 'SAR',
       icon: DollarSign,
-      color: 'text-accent',
+      color: 'text-foreground',
       bgColor: 'gradient-gold',
     },
     {
@@ -141,6 +142,13 @@ const AdminPage = () => {
                 <Building2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 {isArabic ? 'الشركات' : 'Corporate'}
               </TabsTrigger>
+              <TabsTrigger 
+                value="messages" 
+                className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse"
+              >
+                <MessageSquare className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                {isArabic ? 'الرسائل' : 'Messages'}
+              </TabsTrigger>
             </TabsList>
 
             {/* Bookings Tab */}
@@ -217,6 +225,13 @@ const AdminPage = () => {
             <TabsContent value="groups" className="animate-fade-in">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
                 <GroupBookingsPanel />
+              </Suspense>
+            </TabsContent>
+
+            {/* Messages Tab */}
+            <TabsContent value="messages" className="animate-fade-in">
+              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                <ContactSubmissionsPanel />
               </Suspense>
             </TabsContent>
           </Tabs>
