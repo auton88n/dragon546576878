@@ -10,11 +10,10 @@ interface OptimizedImageProps {
 }
 
 const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
-  ({ src, alt, className = '', priority = false, onLoad }, ref) => {
+  ({ src, alt, className = '', priority = false, onLoad }, forwardedRef) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isInView, setIsInView] = useState(priority);
     const internalRef = useRef<HTMLDivElement>(null);
-    const containerRef = (ref as React.RefObject<HTMLDivElement>) || internalRef;
 
     useEffect(() => {
       if (priority) {
@@ -32,12 +31,12 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
         { rootMargin: '200px' }
       );
 
-      if (containerRef.current) {
-        observer.observe(containerRef.current);
+      if (internalRef.current) {
+        observer.observe(internalRef.current);
       }
 
       return () => observer.disconnect();
-    }, [priority, containerRef]);
+    }, [priority]);
 
     const handleLoad = () => {
       setIsLoaded(true);
@@ -45,7 +44,17 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
     };
 
     return (
-      <div ref={containerRef} className={cn('relative overflow-hidden bg-muted', className)}>
+      <div 
+        ref={(node) => {
+          (internalRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+          if (typeof forwardedRef === 'function') {
+            forwardedRef(node);
+          } else if (forwardedRef) {
+            forwardedRef.current = node;
+          }
+        }} 
+        className={cn('relative overflow-hidden bg-muted', className)}
+      >
         {/* Skeleton placeholder */}
         {!isLoaded && (
           <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted/80 to-muted animate-pulse" />
