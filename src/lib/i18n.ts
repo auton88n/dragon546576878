@@ -305,7 +305,7 @@ const arTranslations = {
     home: 'المفيجر',
     about: 'من نحن',
     contact: 'تواصل معنا',
-    booking: 'احجز تذاكر',
+    booking: 'احجز مكانك',
     myTickets: 'تذاكري',
     scanner: 'الماسح الضوئي',
     admin: 'لوحة التحكم',
