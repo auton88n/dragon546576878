@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, forwardRef } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface OptimizedImageProps {
@@ -11,17 +11,41 @@ interface OptimizedImageProps {
 
 const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
   ({ src, alt, className = '', priority = false, onLoad }, forwardedRef) => {
-    // Check cache synchronously for initial state to avoid placeholder flash
-    const [isLoaded, setIsLoaded] = useState(() => {
-      if (typeof window === 'undefined') return false;
-      const img = new Image();
-      img.src = src;
-      return img.complete && img.naturalHeight !== 0;
-    });
-    
-    const [isInView, setIsInView] = useState(priority);
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [isInView, setIsInView] = useState(false);
     const internalRef = useRef<HTMLDivElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
+
+    // Synchronously check if element is in viewport before first paint
+    useLayoutEffect(() => {
+      if (priority) {
+        setIsInView(true);
+        return;
+      }
+
+      // Synchronous check for above-the-fold images
+      if (internalRef.current) {
+        const rect = internalRef.current.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight + 200;
+        if (isVisible) {
+          setIsInView(true);
+          return;
+        }
+      }
+    }, [priority]);
+
+    // Check if image is already cached
+    useLayoutEffect(() => {
+      if (!isInView) return;
+      
+      // Check if image is already in browser cache
+      const img = new Image();
+      img.src = src;
+      if (img.complete && img.naturalHeight !== 0) {
+        setIsLoaded(true);
+        onLoad?.();
+      }
+    }, [src, isInView, onLoad]);
 
     // Double-check on mount for images that loaded during render
     useEffect(() => {
@@ -31,11 +55,9 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
       }
     }, [src, onLoad]);
 
+    // IntersectionObserver for lazy loading (below-the-fold images)
     useEffect(() => {
-      if (priority) {
-        setIsInView(true);
-        return;
-      }
+      if (priority || isInView) return;
 
       const observer = new IntersectionObserver(
         ([entry]) => {
@@ -52,7 +74,7 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
       }
 
       return () => observer.disconnect();
-    }, [priority]);
+    }, [priority, isInView]);
 
     const handleLoad = () => {
       setIsLoaded(true);
@@ -69,14 +91,18 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
             forwardedRef.current = node;
           }
         }} 
-        className={cn('relative overflow-hidden bg-secondary/50', className)}
+        className={cn(
+          'relative overflow-hidden',
+          !isLoaded && 'bg-secondary/50',
+          className
+        )}
       >
-        {/* Subtle heritage-colored placeholder - no animation */}
-        {!isLoaded && (
+        {/* Placeholder - only show when actively loading (in view but not loaded) */}
+        {isInView && !isLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/95 to-accent/5" />
         )}
         
-        {/* Actual image with faster transition for cached images */}
+        {/* Actual image */}
         {isInView && (
           <img
             ref={imgRef}
@@ -89,7 +115,7 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
             className={cn(
               'w-full h-full object-cover',
               isLoaded 
-                ? 'opacity-100 transition-opacity duration-100' 
+                ? 'opacity-100' 
                 : 'opacity-0'
             )}
           />

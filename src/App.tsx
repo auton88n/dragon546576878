@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,21 +7,29 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "@/lib/i18n";
 import LoadingSpinner from "./components/shared/LoadingSpinner";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { lazyWithPreload, registerPreloader } from "./lib/lazyWithPreload";
 
 // Eager load - critical path (homepage)
 import Index from "./pages/Index";
 
-// Lazy load - secondary pages for faster initial load
-const AboutPage = lazy(() => import('./pages/AboutPage'));
-const ContactPage = lazy(() => import('./pages/ContactPage'));
-const BookingPage = lazy(() => import('./pages/BookingPage'));
-const ConfirmationPage = lazy(() => import('./pages/ConfirmationPage'));
-const MyTicketsPage = lazy(() => import('./pages/MyTicketsPage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const ScannerPage = lazy(() => import('./pages/ScannerPage'));
-const AdminPage = lazy(() => import('./pages/AdminPage'));
-const GroupBookingsPage = lazy(() => import('./pages/GroupBookingsPage'));
-const NotFound = lazy(() => import('./pages/NotFound'));
+// Lazy load with preload capability - secondary pages
+const { Component: AboutPage, preload: preloadAbout } = lazyWithPreload(() => import('./pages/AboutPage'));
+const { Component: ContactPage, preload: preloadContact } = lazyWithPreload(() => import('./pages/ContactPage'));
+const { Component: BookingPage, preload: preloadBooking } = lazyWithPreload(() => import('./pages/BookingPage'));
+const { Component: ConfirmationPage } = lazyWithPreload(() => import('./pages/ConfirmationPage'));
+const { Component: MyTicketsPage, preload: preloadMyTickets } = lazyWithPreload(() => import('./pages/MyTicketsPage'));
+const { Component: LoginPage } = lazyWithPreload(() => import('./pages/LoginPage'));
+const { Component: ScannerPage } = lazyWithPreload(() => import('./pages/ScannerPage'));
+const { Component: AdminPage } = lazyWithPreload(() => import('./pages/AdminPage'));
+const { Component: GroupBookingsPage, preload: preloadGroupBookings } = lazyWithPreload(() => import('./pages/GroupBookingsPage'));
+const { Component: NotFound } = lazyWithPreload(() => import('./pages/NotFound'));
+
+// Register preloaders for header navigation
+registerPreloader('/about', preloadAbout);
+registerPreloader('/contact', preloadContact);
+registerPreloader('/book', preloadBooking);
+registerPreloader('/my-tickets', preloadMyTickets);
+registerPreloader('/group-bookings', preloadGroupBookings);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,9 +40,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// Suspense fallback component
+// Minimal suspense fallback - just the loading spinner centered
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-warm-cream">
+  <div className="min-h-screen flex items-center justify-center bg-background">
     <LoadingSpinner size="lg" />
   </div>
 );
