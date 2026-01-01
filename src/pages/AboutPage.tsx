@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import Header from '@/components/shared/Header';
@@ -10,6 +11,33 @@ import heroImage from '@/assets/about-hero-tuwayq.jpg';
 const AboutPage = () => {
   const { t, isRTL, currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            video.play().catch(() => {
+              // Handle autoplay restrictions gracefully
+            });
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -120,8 +148,12 @@ const AboutPage = () => {
             <div className="mb-12">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-video max-w-4xl mx-auto">
                 <video 
+                  ref={videoRef}
                   className="w-full h-full object-cover"
                   controls
+                  muted
+                  playsInline
+                  loop
                   preload="metadata"
                 >
                   <source 
