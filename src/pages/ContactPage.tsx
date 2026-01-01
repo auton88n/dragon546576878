@@ -93,28 +93,27 @@ const ContactPage = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative h-[60vh] min-h-[400px] flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <OptimizedImage src={heroImage} alt="Souq Almufaijer" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60 my-0" />
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 text-center px-4">
-          <div className="inline-block px-6 py-4 md:px-8 md:py-5 bg-black/30 backdrop-blur-md rounded-xl border border-white/20">
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
-              {t('contact.title')}
-            </h1>
-            <p className="text-base md:text-lg text-white/90 max-w-xl mx-auto">
-              {t('contact.subtitle')}
-            </p>
+      <section className="relative h-[40vh] min-h-[280px] max-h-[400px] overflow-hidden">
+        <OptimizedImage
+          src={heroImage}
+          alt="Souq Almufaijer"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/20" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" />
+        
+        {/* Hero Content - positioned at bottom */}
+        <div className="absolute inset-0 flex items-end justify-center pb-8 md:pb-10">
+          <div className="text-center px-4">
+            <div className="inline-block backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-8 py-6 shadow-2xl">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
+                {t('contact.title')}
+              </h1>
+              <p className="text-white/80 text-sm md:text-base max-w-xl mx-auto">
+                {t('contact.subtitle')}
+              </p>
+            </div>
           </div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          
         </div>
       </section>
 
