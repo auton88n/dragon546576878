@@ -20,6 +20,7 @@ const MyTicketsPage = lazy(() => import('./pages/MyTicketsPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const ScannerPage = lazy(() => import('./pages/ScannerPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
+const GroupBookingsPage = lazy(() => import('./pages/GroupBookingsPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/book" element={<BookingPage />} />
             <Route path="/confirmation/:bookingId" element={<ConfirmationPage />} />
             <Route path="/my-tickets" element={<MyTicketsPage />} />
+            <Route path="/group-bookings" element={<GroupBookingsPage />} />
             <Route path="/login" element={<LoginPage />} />
             
             {/* Protected Routes - Scanner */}

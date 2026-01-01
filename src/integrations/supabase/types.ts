@@ -250,6 +250,57 @@ export type Database = {
           },
         ]
       }
+      group_booking_requests: {
+        Row: {
+          admin_notes: string | null
+          contact_person: string
+          created_at: string | null
+          email: string
+          group_size: number
+          group_type: string
+          id: string
+          organization_name: string
+          phone: string
+          preferred_dates: Json
+          quoted_amount: number | null
+          special_requirements: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          contact_person: string
+          created_at?: string | null
+          email: string
+          group_size: number
+          group_type: string
+          id?: string
+          organization_name: string
+          phone: string
+          preferred_dates?: Json
+          quoted_amount?: number | null
+          special_requirements?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          contact_person?: string
+          created_at?: string | null
+          email?: string
+          group_size?: number
+          group_type?: string
+          id?: string
+          organization_name?: string
+          phone?: string
+          preferred_dates?: Json
+          quoted_amount?: number | null
+          special_requirements?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       packages: {
         Row: {
           adult_count: number
