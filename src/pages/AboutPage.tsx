@@ -3,6 +3,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
+import OptimizedImage from '@/components/shared/OptimizedImage';
 import { Ticket, MapPin, Mountain, Star, ChevronDown } from 'lucide-react';
 import heroImage from '@/assets/about-hero-tuwayq.jpg';
 
@@ -16,11 +17,15 @@ const AboutPage = () => {
       
       {/* Hero Section - Extended with integrated highlights */}
       <section className="relative min-h-screen flex flex-col">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        />
+        {/* Background Image - Optimized */}
+        <div className="absolute inset-0">
+          <OptimizedImage 
+            src={heroImage} 
+            alt="Tuwayq Mountains Landscape" 
+            className="w-full h-full"
+            priority 
+          />
+        </div>
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
         
