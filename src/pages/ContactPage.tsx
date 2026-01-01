@@ -191,12 +191,12 @@ const ContactPage = () => {
               {/* Contact Cards */}
               <div className="grid sm:grid-cols-2 gap-4">
                 {contactInfo.map((info, index) => <Card key={index} className="border-border/50">
-                    <CardContent className="p-4 flex items-start gap-4">
-                      <div className="p-2 rounded-lg bg-accent/10">
+                    <CardContent className="p-4 flex items-start gap-4 rtl:flex-row-reverse">
+                      <div className="p-2 rounded-lg bg-accent/10 shrink-0">
                         <info.icon className="h-5 w-5 text-accent" />
                       </div>
-                      <div>
-                      <h3 className="font-semibold text-foreground">
+                      <div className="text-start">
+                        <h3 className="font-semibold text-foreground">
                           {currentLanguage === 'ar' ? info.titleAr : info.titleEn}
                         </h3>
                         <p className="text-sm text-muted-foreground whitespace-pre-line" dir={info.dirType}>
