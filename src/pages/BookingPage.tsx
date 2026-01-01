@@ -9,6 +9,8 @@ import { sendBookingConfirmation } from '@/lib/emailService';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import StepIndicator from '@/components/booking/StepIndicator';
+import OptimizedImage from '@/components/shared/OptimizedImage';
+import heroImage from '@/assets/hero-heritage.jpg';
 import TicketSelector from '@/components/booking/TicketSelector';
 import DetailsAndPayment from '@/components/booking/DetailsAndPayment';
 import OrderSummary from '@/components/booking/OrderSummary';
@@ -132,17 +134,33 @@ const BookingPage = () => {
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
-      <main className="flex-1 pt-24 md:pt-28 pb-12 md:pb-16 px-4 md:px-6">
-        <div className="container max-w-5xl px-0">
-          {/* Page Title */}
-          <div className="text-center mb-6 md:mb-8 animate-fade-in">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-accent">
-              {isArabic ? 'احجز تذكرتك' : 'Book Your Ticket'}
-            </h1>
-            <p className="text-muted-foreground text-sm md:text-base">
-              {isArabic ? 'اتبع الخطوات لإتمام حجزك' : 'Follow the steps to complete your booking'}
-            </p>
+      {/* Hero Banner */}
+      <section className="relative h-[30vh] min-h-[200px] max-h-[300px] overflow-hidden">
+        <OptimizedImage
+          src={heroImage}
+          alt={isArabic ? 'سوق المفيجر التراثي' : 'Souq Almufaijer Heritage'}
+          className="absolute inset-0 w-full h-full"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-background" />
+        
+        {/* Hero Content */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center px-4">
+            <div className="inline-block backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-8 py-6 shadow-2xl">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
+                {isArabic ? 'احجز تذكرتك' : 'Book Your Ticket'}
+              </h1>
+              <p className="text-white/80 text-sm md:text-base">
+                {isArabic ? 'اتبع الخطوات لإتمام حجزك' : 'Follow the steps to complete your booking'}
+              </p>
+            </div>
           </div>
+        </div>
+      </section>
+
+      <main className="flex-1 py-8 md:py-12 px-4 md:px-6">
+        <div className="container max-w-5xl px-0">
 
           {/* Step Indicator */}
           <div className="mb-6 md:mb-10">
