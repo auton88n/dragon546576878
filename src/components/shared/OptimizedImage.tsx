@@ -118,8 +118,8 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
           className
         )}
       >
-        {/* Placeholder - only show when actively loading */}
-        {isInView && !isLoaded && (
+        {/* Placeholder - only show for non-priority images */}
+        {isInView && !isLoaded && !priority && (
           <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/95 to-accent/5" />
         )}
         
@@ -131,10 +131,10 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
             alt={alt}
             onLoad={handleLoad}
             loading={priority ? 'eager' : 'lazy'}
-            decoding={priority ? 'sync' : 'async'}
+            decoding="async"
             fetchPriority={priority ? 'high' : 'auto'}
             className={cn(
-              'w-full h-full object-cover',
+              'w-full h-full object-cover transition-opacity duration-300',
               isLoaded ? 'opacity-100' : 'opacity-0'
             )}
           />
