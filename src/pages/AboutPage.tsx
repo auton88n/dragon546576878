@@ -97,26 +97,46 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Our Story Section - Clean two-column layout */}
+      {/* Our Story Section */}
       <section className="py-20 md:py-28 bg-background">
         <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start max-w-6xl mx-auto">
-            {/* Left Column - Title */}
-            <div className="lg:col-span-4 lg:sticky lg:top-32">
+          <div className="max-w-6xl mx-auto">
+            
+            {/* Title Row */}
+            <div className="text-center mb-12">
               <span className="text-accent text-sm font-medium tracking-widest uppercase mb-3 block">
                 {isArabic ? 'قصتنا' : 'Our Story'}
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 {isArabic ? 'تراث حي ومستقبل واعد' : 'Living Heritage, Promising Future'}
               </h2>
-              <div className="w-16 h-1 bg-accent rounded-full mb-6" />
+              <div className="w-16 h-1 bg-accent rounded-full mx-auto mb-4" />
               <p className="text-accent/80 text-lg font-medium italic">
                 {isArabic ? 'ماضينا • حاضرنا • مستقبلنا' : 'Our Past • Our Present • Our Future'}
               </p>
             </div>
 
-            {/* Right Column - Content */}
-            <div className="lg:col-span-8">
+            {/* Video Section */}
+            <div className="mb-12">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-video max-w-4xl mx-auto">
+                <video 
+                  className="w-full h-full object-cover"
+                  controls
+                  preload="metadata"
+                >
+                  <source 
+                    src="https://hekgkfdunwpxqbrotfpn.supabase.co/storage/v1/object/public/videos/souq-almufaijer-video.mp4" 
+                    type="video/mp4" 
+                  />
+                  {isArabic 
+                    ? 'متصفحك لا يدعم عرض الفيديو' 
+                    : 'Your browser does not support video playback'}
+                </video>
+              </div>
+            </div>
+
+            {/* Story Content Card */}
+            <div className="max-w-4xl mx-auto">
               <div className="glass-card p-8 md:p-10 space-y-6">
                 {isArabic ? (
                   <>
