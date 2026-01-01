@@ -11,18 +11,25 @@ interface OptimizedImageProps {
 
 const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
   ({ src, alt, className = '', priority = false, onLoad }, forwardedRef) => {
-    const [isLoaded, setIsLoaded] = useState(false);
+    // Check cache synchronously for initial state to avoid placeholder flash
+    const [isLoaded, setIsLoaded] = useState(() => {
+      if (typeof window === 'undefined') return false;
+      const img = new Image();
+      img.src = src;
+      return img.complete && img.naturalHeight !== 0;
+    });
+    
     const [isInView, setIsInView] = useState(priority);
     const internalRef = useRef<HTMLDivElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
 
-    // Check if image is already cached on mount
+    // Double-check on mount for images that loaded during render
     useEffect(() => {
       if (imgRef.current?.complete && imgRef.current?.naturalHeight !== 0) {
         setIsLoaded(true);
         onLoad?.();
       }
-    }, [src]);
+    }, [src, onLoad]);
 
     useEffect(() => {
       if (priority) {
@@ -62,14 +69,14 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
             forwardedRef.current = node;
           }
         }} 
-        className={cn('relative overflow-hidden bg-secondary', className)}
+        className={cn('relative overflow-hidden bg-secondary/50', className)}
       >
-        {/* Heritage-colored placeholder */}
+        {/* Subtle heritage-colored placeholder - no animation */}
         {!isLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/90 to-accent/10 animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/95 to-accent/5" />
         )}
         
-        {/* Actual image */}
+        {/* Actual image with faster transition for cached images */}
         {isInView && (
           <img
             ref={imgRef}
@@ -80,8 +87,10 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
             decoding={priority ? 'sync' : 'async'}
             fetchPriority={priority ? 'high' : 'auto'}
             className={cn(
-              'w-full h-full object-cover transition-opacity duration-200',
-              isLoaded ? 'opacity-100' : 'opacity-0'
+              'w-full h-full object-cover',
+              isLoaded 
+                ? 'opacity-100 transition-opacity duration-100' 
+                : 'opacity-0'
             )}
           />
         )}
