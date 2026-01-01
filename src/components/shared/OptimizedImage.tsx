@@ -14,6 +14,15 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
     const [isLoaded, setIsLoaded] = useState(false);
     const [isInView, setIsInView] = useState(priority);
     const internalRef = useRef<HTMLDivElement>(null);
+    const imgRef = useRef<HTMLImageElement>(null);
+
+    // Check if image is already cached on mount
+    useEffect(() => {
+      if (imgRef.current?.complete && imgRef.current?.naturalHeight !== 0) {
+        setIsLoaded(true);
+        onLoad?.();
+      }
+    }, [src]);
 
     useEffect(() => {
       if (priority) {
@@ -53,16 +62,17 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
             forwardedRef.current = node;
           }
         }} 
-        className={cn('relative overflow-hidden bg-muted', className)}
+        className={cn('relative overflow-hidden bg-secondary', className)}
       >
-        {/* Skeleton placeholder */}
+        {/* Heritage-colored placeholder */}
         {!isLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted/80 to-muted animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/90 to-accent/10 animate-pulse" />
         )}
         
         {/* Actual image */}
         {isInView && (
           <img
+            ref={imgRef}
             src={src}
             alt={alt}
             onLoad={handleLoad}
@@ -70,7 +80,7 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
             decoding={priority ? 'sync' : 'async'}
             fetchPriority={priority ? 'high' : 'auto'}
             className={cn(
-              'w-full h-full object-cover transition-opacity duration-500',
+              'w-full h-full object-cover transition-opacity duration-200',
               isLoaded ? 'opacity-100' : 'opacity-0'
             )}
           />
