@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle, ChevronDown } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import OptimizedImage from '@/components/shared/OptimizedImage';
+import heroImage from '@/assets/hero-heritage.webp';
 const contactSchema = z.object({
   name: z.string().trim().min(3, 'Name must be at least 3 characters').max(100),
   email: z.string().trim().email('Please enter a valid email').max(255),
@@ -91,16 +93,32 @@ const ContactPage = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative pt-24 md:pt-28 pb-16 bg-gradient-to-b from-primary/10 to-background">
-        <div className="container">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+      <section className="relative h-[60vh] min-h-[400px] flex items-center justify-center overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <OptimizedImage
+            src={heroImage}
+            alt="Souq Almufaijer"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative z-10 text-center px-4">
+          <div className="inline-block px-8 py-6 md:px-12 md:py-8 bg-black/30 backdrop-blur-md rounded-2xl border border-white/20">
+            <h1 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">
               {t('contact.title')}
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
               {t('contact.subtitle')}
             </p>
           </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <ChevronDown className="h-8 w-8 text-white/70" />
         </div>
       </section>
 
@@ -128,7 +146,18 @@ const ContactPage = () => {
                       {t('contact.form.sendAnother')}
                     </Button>
                   </div> : <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">{t('contact.form.name')} *</Label>
+                        <Input id="name" {...register('name')} placeholder={t('contact.form.namePlaceholder')} className={errors.name ? 'border-destructive' : ''} />
+                        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">{t('contact.form.email')} *</Label>
+                        <Input id="email" type="email" {...register('email')} placeholder={t('contact.form.emailPlaceholder')} className={errors.email ? 'border-destructive' : ''} />
+                        {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+                      </div>
+                    </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
