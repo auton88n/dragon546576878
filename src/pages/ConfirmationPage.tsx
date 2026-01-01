@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useLayoutEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -11,11 +11,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { resendConfirmationEmail } from '@/lib/emailService';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import FullscreenQRModal from '@/components/shared/FullscreenQRModal';
 import ScanningTips from '@/components/shared/ScanningTips';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
 interface BookingDetails {
@@ -58,6 +58,11 @@ const ConfirmationPage = () => {
   const [showConfetti, setShowConfetti] = useState(true);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [fullscreenQR, setFullscreenQR] = useState<{ url: string; code: string } | null>(null);
+
+  // Scroll to top on mount to prevent weird scroll restoration
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [bookingId]);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -465,11 +470,49 @@ const ConfirmationPage = () => {
 
   if (isLoading) {
     return (
-      <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <Header />
-        <div className="flex-1 flex items-center justify-center">
-          <LoadingSpinner size="lg" />
-        </div>
+        <main className="flex-1 pt-24 pb-12">
+          <div className="container max-w-2xl">
+            {/* Success Header Skeleton */}
+            <div className="text-center mb-8">
+              <Skeleton className="w-24 h-24 rounded-full mx-auto mb-6" />
+              <Skeleton className="h-8 w-64 mx-auto mb-3" />
+              <Skeleton className="h-5 w-48 mx-auto" />
+            </div>
+            
+            {/* Ticket Card Skeleton */}
+            <div className="glass-card-gold overflow-hidden mb-8">
+              <div className="gradient-heritage p-6">
+                <Skeleton className="h-12 w-48 bg-primary-foreground/10" />
+              </div>
+              <div className="p-6 bg-card">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1 space-y-6">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="space-y-2">
+                        <Skeleton className="h-3 w-20" />
+                        <Skeleton className="h-6 w-32" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="md:w-48 flex justify-center">
+                    <Skeleton className="w-40 h-40 md:w-48 md:h-48 rounded-2xl" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons Skeleton */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <Skeleton className="flex-1 h-12 rounded-xl" />
+              <Skeleton className="flex-1 h-12 rounded-xl" />
+            </div>
+            
+            {/* Email Notice Skeleton */}
+            <Skeleton className="h-20 w-full rounded-2xl" />
+          </div>
+        </main>
         <Footer />
       </div>
     );
@@ -477,21 +520,23 @@ const ConfirmationPage = () => {
 
   if (error || !booking) {
     return (
-      <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <Header />
-        <div className="flex-1 flex items-center justify-center pt-20">
-          <div className="glass-card-gold rounded-3xl p-8 text-center max-w-md mx-4">
-            <h2 className="text-2xl font-bold text-foreground mb-4">
-              {isArabic ? 'خطأ' : 'Error'}
-            </h2>
-            <p className="text-muted-foreground mb-6">{error}</p>
-            <Link to="/">
-              <Button className="btn-gold">
-                {isArabic ? 'العودة للرئيسية' : 'Back to Home'}
-              </Button>
-            </Link>
+        <main className="flex-1 pt-24 pb-12">
+          <div className="container max-w-2xl flex items-center justify-center min-h-[60vh]">
+            <div className="glass-card-gold rounded-3xl p-8 text-center max-w-md mx-4">
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                {isArabic ? 'خطأ' : 'Error'}
+              </h2>
+              <p className="text-muted-foreground mb-6">{error}</p>
+              <Link to="/">
+                <Button className="btn-gold">
+                  {isArabic ? 'العودة للرئيسية' : 'Back to Home'}
+                </Button>
+              </Link>
+            </div>
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     );
