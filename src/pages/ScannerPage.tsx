@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
@@ -82,11 +82,15 @@ const ScannerPage = () => {
   const [searchResults, setSearchResults] = useState<TicketValidationResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showManualLookup, setShowManualLookup] = useState(false);
+  const [showCodeEntry, setShowCodeEntry] = useState(false);
+  const [enteredCode, setEnteredCode] = useState('');
+  const [isValidatingCode, setIsValidatingCode] = useState(false);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const resultTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const codeEntryInputRef = useRef<HTMLInputElement | null>(null);
   const lastScannedCodeRef = useRef<string | null>(null);
   const lastScanTimeRef = useRef<number>(0);
   const scanCountSinceRestartRef = useRef<number>(0);
@@ -116,16 +120,27 @@ const ScannerPage = () => {
           }
         }, 100);
       }
-      if (e.key === 'Escape' && showManualLookup) {
-        setShowManualLookup(false);
-        setSearchQuery('');
-        setSearchResults([]);
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        setShowCodeEntry(true);
+        setTimeout(() => codeEntryInputRef.current?.focus(), 100);
+      }
+      if (e.key === 'Escape') {
+        if (showCodeEntry) {
+          setShowCodeEntry(false);
+          setEnteredCode('');
+        }
+        if (showManualLookup) {
+          setShowManualLookup(false);
+          setSearchQuery('');
+          setSearchResults([]);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showManualLookup]);
+  }, [showManualLookup, showCodeEntry]);
 
   const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
@@ -296,6 +311,33 @@ const ScannerPage = () => {
       setCurrentResult(null);
     }, RESULT_DISPLAY_TIMEOUT);
   }, [playFeedback, user, handleManualLookup]);
+
+  const handleDirectCodeValidation = useCallback(async () => {
+    if (!enteredCode.trim()) return;
+    setIsValidatingCode(true);
+    
+    try {
+      const results = await lookupTicket(enteredCode.trim());
+      const exactMatch = results.find(r => 
+        r.ticket?.ticketCode.toUpperCase() === enteredCode.trim().toUpperCase()
+      );
+      
+      if (exactMatch) {
+        await handleProcessTicket(exactMatch);
+        setShowCodeEntry(false);
+        setEnteredCode('');
+      } else {
+        toast.error(isArabic ? 'الرمز غير موجود - تحقق من الكتابة' : 'Code not found - check for typos');
+        setEnteredCode('');
+        codeEntryInputRef.current?.focus();
+      }
+    } catch (err) {
+      console.error('Code validation error:', err);
+      toast.error(isArabic ? 'خطأ في التحقق' : 'Validation error');
+    } finally {
+      setIsValidatingCode(false);
+    }
+  }, [enteredCode, isArabic, handleProcessTicket]);
 
   const handleManualSync = useCallback(async () => {
     if (!isOnline || queueLength === 0 || isSyncing) return;
@@ -520,6 +562,60 @@ const ScannerPage = () => {
         </div>
       )}
 
+      {/* Direct Code Entry Dialog */}
+      {showCodeEntry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => { setShowCodeEntry(false); setEnteredCode(''); }}>
+          <div 
+            className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center">
+                <Keyboard className="h-6 w-6 text-foreground" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">{isArabic ? 'إدخال رمز التذكرة' : 'Enter Ticket Code'}</h3>
+                <p className="text-sm text-muted-foreground">{isArabic ? 'أدخل الرمز المطبوع أسفل QR' : 'Type the code printed below QR'}</p>
+              </div>
+            </div>
+            
+            <Input
+              ref={codeEntryInputRef}
+              placeholder={isArabic ? 'مثال: A1ABC2XY3Z1' : 'e.g., A1ABC2XY3Z1'}
+              value={enteredCode}
+              onChange={(e) => setEnteredCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === 'Enter' && handleDirectCodeValidation()}
+              className="text-center text-xl font-mono tracking-widest h-14 mb-4"
+              autoFocus
+              autoComplete="off"
+              autoCapitalize="characters"
+            />
+            
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                className="flex-1" 
+                onClick={() => { setShowCodeEntry(false); setEnteredCode(''); }}
+              >
+                {isArabic ? 'إلغاء' : 'Cancel'}
+              </Button>
+              <Button 
+                className="flex-1 btn-gold gap-2" 
+                onClick={handleDirectCodeValidation}
+                disabled={!enteredCode.trim() || isValidatingCode}
+              >
+                {isValidatingCode ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="h-4 w-4" />
+                )}
+                {isArabic ? 'تحقق' : 'Validate'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 pt-20 pb-4 px-4">
         <div className="container max-w-4xl px-0">
           {/* Status & Controls */}
@@ -612,7 +708,19 @@ const ScannerPage = () => {
                 </Button>
               </div>
 
-              <div className="p-3 border-t border-border/50">
+              <div className="p-3 border-t border-border/50 space-y-2">
+                <Button 
+                  variant="secondary" 
+                  className="w-full gap-2 bg-accent/10 hover:bg-accent/20 border border-accent/30" 
+                  onClick={() => {
+                    setShowCodeEntry(true);
+                    setTimeout(() => codeEntryInputRef.current?.focus(), 100);
+                  }}
+                >
+                  <Keyboard className="h-4 w-4" />
+                  {isArabic ? 'إدخال الرمز' : 'Enter Code'}
+                  <span className="text-xs opacity-60 hidden sm:inline">(Ctrl+E)</span>
+                </Button>
                 <Button variant="outline" className="w-full gap-2" onClick={() => setShowManualLookup(!showManualLookup)}>
                   <Search className="h-4 w-4" />
                   {isArabic ? 'بحث يدوي' : 'Manual Lookup'}
