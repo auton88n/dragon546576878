@@ -135,7 +135,7 @@ const BookingPage = () => {
       <Header />
 
       {/* Hero Banner */}
-      <section className="relative h-[30vh] min-h-[200px] max-h-[300px] overflow-hidden">
+      <section className="relative h-[40vh] min-h-[280px] max-h-[400px] overflow-hidden">
         <OptimizedImage
           src={heroImage}
           alt={isArabic ? 'سوق المفيجر التراثي' : 'Souq Almufaijer Heritage'}
@@ -143,7 +143,7 @@ const BookingPage = () => {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/20" />
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-background" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" />
         
         {/* Hero Content */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -160,7 +160,7 @@ const BookingPage = () => {
         </div>
       </section>
 
-      <main className="flex-1 py-8 md:py-12 px-4 md:px-6">
+      <main className="flex-1 pt-4 pb-8 md:pt-6 md:pb-12 px-4 md:px-6">
         <div className="container max-w-5xl px-0">
 
           {/* Step Indicator */}
