@@ -5,6 +5,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import Logo from './Logo';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Button } from '@/components/ui/button';
+import { preloadRoute } from '@/lib/lazyWithPreload';
 
 const Header = () => {
   const { t, isRTL } = useLanguage();
@@ -79,6 +80,9 @@ const Header = () => {
             <Link
               key={link.href}
               to={link.href}
+              onMouseEnter={() => preloadRoute(link.href)}
+              onFocus={() => preloadRoute(link.href)}
+              onTouchStart={() => preloadRoute(link.href)}
               className={`text-sm font-medium transition-colors ${getTextColor(isActive(link.href))}`}
             >
               {link.label}
@@ -89,7 +93,11 @@ const Header = () => {
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
           <LanguageSwitcher variant={isScrolled || !hasHeroSection ? 'default' : 'light'} />
-          <Link to="/book">
+          <Link 
+            to="/book"
+            onMouseEnter={() => preloadRoute('/book')}
+            onFocus={() => preloadRoute('/book')}
+          >
             <Button className="btn-gold">
               <Ticket className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" />
               {t('nav.booking')}
@@ -122,6 +130,7 @@ const Header = () => {
                 key={link.href}
                 to={link.href}
                 onClick={closeMenu}
+                onTouchStart={() => preloadRoute(link.href)}
                 className={`block py-3 px-4 rounded-xl text-base font-medium transition-colors ${
                   isActive(link.href) 
                     ? 'bg-accent/10 text-accent' 
@@ -132,7 +141,11 @@ const Header = () => {
               </Link>
             ))}
             <div className="pt-4 mt-4 border-t border-border">
-              <Link to="/book" onClick={closeMenu}>
+              <Link 
+                to="/book" 
+                onClick={closeMenu}
+                onTouchStart={() => preloadRoute('/book')}
+              >
                 <Button className="btn-gold w-full">
                   <Ticket className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" />
                   {t('nav.booking')}
