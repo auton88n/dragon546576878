@@ -69,25 +69,29 @@ const ContactPage = () => {
     titleEn: 'Location',
     titleAr: 'الموقع',
     contentEn: 'Almufaijer Village, Al-Hariq Governorate, Riyadh Region, Saudi Arabia',
-    contentAr: 'قرية المفيجر، محافظة الحريق، منطقة الرياض، المملكة العربية السعودية'
+    contentAr: 'قرية المفيجر، محافظة الحريق، منطقة الرياض، المملكة العربية السعودية',
+    dirType: 'auto' as const
   }, {
     icon: Phone,
     titleEn: 'Phone',
     titleAr: 'الهاتف',
     contentEn: '+966 50 101 8811',
-    contentAr: '+966 50 101 8811'
+    contentAr: '+966 50 101 8811',
+    dirType: 'ltr' as const
   }, {
     icon: Mail,
     titleEn: 'Email',
     titleAr: 'البريد الإلكتروني',
     contentEn: 'info@almufaijer.com',
-    contentAr: 'info@almufaijer.com'
+    contentAr: 'info@almufaijer.com',
+    dirType: 'ltr' as const
   }, {
     icon: Clock,
     titleEn: 'Operating Hours',
     titleAr: 'ساعات العمل',
     contentEn: 'Saturday - Thursday: 9:00 AM - 6:00 PM\nFriday: Closed',
-    contentAr: 'السبت - الخميس: ٩:٠٠ ص - ٦:٠٠ م\nالجمعة: مغلق'
+    contentAr: 'السبت - الخميس: ٩:٠٠ ص - ٦:٠٠ م\nالجمعة: مغلق',
+    dirType: 'auto' as const
   }];
   return <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
@@ -195,7 +199,7 @@ const ContactPage = () => {
                       <h3 className="font-semibold text-foreground">
                           {currentLanguage === 'ar' ? info.titleAr : info.titleEn}
                         </h3>
-                        <p className="text-sm text-muted-foreground whitespace-pre-line" dir="ltr">
+                        <p className="text-sm text-muted-foreground whitespace-pre-line" dir={info.dirType}>
                           {currentLanguage === 'ar' ? info.contentAr : info.contentEn}
                         </p>
                       </div>
