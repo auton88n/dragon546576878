@@ -55,12 +55,21 @@ const generateEmailTemplate = (
   const marginStart = isArabic ? "margin-right: 8px;" : "margin-left: 8px;";
   const borderStart = isArabic ? "border-right: 1px solid #E8DED0;" : "border-left: 1px solid #E8DED0;";
   
+  // Payment status awareness
+  const isPending = booking.payment_status === 'pending';
+  
   const translations = {
-    title: isArabic ? "تأكيد الحجز" : "Booking Confirmation",
+    title: isPending 
+      ? (isArabic ? "تم حفظ الحجز - في انتظار الدفع" : "Reservation Saved - Payment Pending")
+      : (isArabic ? "تأكيد الحجز" : "Booking Confirmation"),
     greeting: isArabic ? `مرحباً ${booking.customer_name}،` : `Hello ${booking.customer_name},`,
-    thankYou: isArabic 
-      ? "شكراً لحجزك في سوق المفيجر! نحن سعداء باستضافتك في رحلة عبر التراث الأصيل."
-      : "Thank you for booking at Souq Almufaijer! We're delighted to host you on a journey through authentic heritage.",
+    thankYou: isPending
+      ? (isArabic 
+          ? "شكراً لحجزك في سوق المفيجر! تم حفظ حجزك وهو في انتظار إتمام الدفع."
+          : "Thank you for booking at Souq Almufaijer! Your reservation has been saved and is awaiting payment.")
+      : (isArabic 
+          ? "شكراً لحجزك في سوق المفيجر! نحن سعداء باستضافتك في رحلة عبر التراث الأصيل."
+          : "Thank you for booking at Souq Almufaijer! We're delighted to host you on a journey through authentic heritage."),
     bookingRef: isArabic ? "رقم الحجز" : "Booking Reference",
     visitDetails: isArabic ? "تفاصيل الزيارة" : "Visit Details",
     date: isArabic ? "التاريخ" : "Date",
@@ -70,19 +79,32 @@ const generateEmailTemplate = (
     adult: isArabic ? "بالغ" : "Adult",
     child: isArabic ? "طفل" : "Child",
     senior: isArabic ? "كبير السن" : "Senior",
-    total: isArabic ? "المجموع" : "Total",
+    total: isPending 
+      ? (isArabic ? "المبلغ المستحق" : "Amount Due")
+      : (isArabic ? "المجموع" : "Total"),
     qrCodes: isArabic ? "تذاكر الدخول" : "Entry Tickets",
     instructions: isArabic 
       ? "قم بإظهار هذه التذاكر عند البوابة"
       : "Present these tickets at the entrance gate",
-    validOnly: isArabic 
-      ? "صالحة طوال اليوم - تعال في أي وقت خلال ساعات العمل"
-      : "Valid all day - come anytime during operating hours",
+    validOnly: isPending
+      ? (isArabic 
+          ? "التذاكر صالحة بعد إتمام الدفع"
+          : "Tickets will be valid after payment is completed")
+      : (isArabic 
+          ? "صالحة طوال اليوم - تعال في أي وقت خلال ساعات العمل"
+          : "Valid all day - come anytime during operating hours"),
     seeYouSoon: isArabic ? "نراكم قريباً!" : "See you soon!",
     contactUs: isArabic ? "تواصل معنا" : "Contact Us",
     email: "info@almufaijer.com",
     address: isArabic ? "سوق المفيجر، المملكة العربية السعودية" : "Souq Almufaijer, Kingdom of Saudi Arabia",
-    confirmed: isArabic ? "تم تأكيد الحجز" : "BOOKING CONFIRMED",
+    confirmed: isPending 
+      ? (isArabic ? "حجز محفوظ - في انتظار الدفع" : "RESERVATION PENDING")
+      : (isArabic ? "تم تأكيد الحجز" : "BOOKING CONFIRMED"),
+    pendingNote: isPending
+      ? (isArabic 
+          ? "يرجى إتمام الدفع لتأكيد حجزك. سيتم إلغاء الحجز تلقائياً إذا لم يتم الدفع."
+          : "Please complete payment to confirm your reservation. Booking will be automatically cancelled if payment is not received.")
+      : "",
   };
 
   // Format date only (no time - tickets valid all day)
@@ -100,6 +122,10 @@ const generateEmailTemplate = (
     const hour12 = hour % 12 || 12;
     return `${hour12}:${minutes} ${ampm}`;
   };
+  
+  // Header colors based on payment status
+  const headerBg = isPending ? "#B45309" : "#5C4A3A"; // amber-700 vs heritage brown
+  const headerAccent = isPending ? "#FCD34D" : "#C9A86C"; // amber-300 vs gold
 
   // Generate ticket items
   const ticketItems: Array<{type: string, count: number, price: number, subtotal: number}> = [];
@@ -199,12 +225,12 @@ const generateEmailTemplate = (
           
           <!-- Header - Text-based branding (no images for best email compatibility) -->
           <tr>
-            <td align="center" style="background-color: #5C4A3A; padding: 32px 24px; border-radius: 16px 16px 0 0;">
+            <td align="center" style="background-color: ${headerBg}; padding: 32px 24px; border-radius: 16px 16px 0 0;">
               <table cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center" style="padding-bottom: 4px;">
                     <!-- Arabic brand name -->
-                    <h1 style="color: #C9A86C; font-size: 32px; margin: 0; font-weight: 700; font-family: 'Times New Roman', serif;">سوق المفيجر</h1>
+                    <h1 style="color: ${headerAccent}; font-size: 32px; margin: 0; font-weight: 700; font-family: 'Times New Roman', serif;">سوق المفيجر</h1>
                   </td>
                 </tr>
                 <tr>
@@ -216,7 +242,7 @@ const generateEmailTemplate = (
                 <tr>
                   <td align="center" style="padding-bottom: 16px;">
                     <!-- Decorative gold line -->
-                    <div style="width: 60px; height: 2px; background-color: #C9A86C; margin: 0 auto;"></div>
+                    <div style="width: 60px; height: 2px; background-color: ${headerAccent}; margin: 0 auto;"></div>
                   </td>
                 </tr>
                 <tr>
@@ -234,7 +260,20 @@ const generateEmailTemplate = (
               
               <!-- Greeting -->
               <h2 style="color: #3D2E1F; margin: 0 0 10px; font-size: 20px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.greeting}</h2>
-              <p style="color: #5C4A3A; margin: 0 0 24px; line-height: 1.6; font-size: 15px; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.thankYou}</p>
+              <p style="color: #5C4A3A; margin: 0 0 16px; line-height: 1.6; font-size: 15px; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.thankYou}</p>
+              
+              ${isPending ? `
+              <!-- Payment Pending Notice -->
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
+                <tr>
+                  <td align="center" style="background-color: #FEF3C7; padding: 16px; border-radius: 12px; border: 2px solid #F59E0B;">
+                    <p style="color: #B45309; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">
+                      ⚠️ ${translations.pendingNote}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
               
               <!-- Booking Reference -->
               <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
