@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import QRCode from "https://esm.sh/qrcode@1.5.4";
+import { qrcode } from "https://deno.land/x/qrcode@v2.0.0/mod.ts";
+
+// Version stamp for deployment verification
+const CREATE_BOOKING_VERSION = "2026-01-02-v3-deno-qr";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,17 +64,13 @@ const generateQRData = (ticketCode: string, bookingRef: string, visitDate: strin
   });
 };
 
-// Generate QR code image as data URL
-const generateQRCodeImage = async (data: string): Promise<string> => {
-  return await QRCode.toDataURL(data, {
-    width: 600,
-    margin: 4,
-    color: {
-      dark: "#000000",
-      light: "#FFFFFF",
-    },
-    errorCorrectionLevel: "H",
-  });
+// Generate QR code image as base64 using Deno-native library
+const generateQRCodeImage = async (data: string): Promise<{ base64: string; format: string }> => {
+  // This generates a base64 GIF data URL
+  const qrResult = await qrcode(data, { size: 600, errorCorrectLevel: "H" });
+  // The library returns a QRCode object, we need to get the string representation
+  const qrDataUrl = qrResult.toString();
+  return { base64: qrDataUrl, format: "gif" };
 };
 
 // Convert data URL to Uint8Array for upload
@@ -86,6 +85,8 @@ const dataURLtoUint8Array = (dataUrl: string): Uint8Array => {
 };
 
 serve(async (req) => {
+  console.log("create-booking version:", CREATE_BOOKING_VERSION);
+  
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -113,6 +114,11 @@ serve(async (req) => {
     const bookingReference = generateBookingReference();
     console.log("Generated booking reference:", bookingReference);
 
+    // Booking status values allowed by DB constraint: confirmed, cancelled, completed, no_show
+    const bookingStatus = "confirmed";
+    const paymentStatus = "pending";
+    console.log("Inserting booking with status:", bookingStatus, "payment_status:", paymentStatus);
+
     // Create booking
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
@@ -131,8 +137,8 @@ serve(async (req) => {
         child_price: body.childPrice || 0,
         senior_price: 0,
         total_amount: body.totalAmount,
-        payment_status: "pending",
-        booking_status: "confirmed", // Valid values: confirmed, cancelled, completed, no_show
+        payment_status: paymentStatus,
+        booking_status: bookingStatus,
         language: body.language || "ar",
         qr_codes_generated: false,
         confirmation_email_sent: false,
@@ -159,16 +165,20 @@ serve(async (req) => {
         const ticketCode = generateTicketCode(type, i + 1);
         const qrData = generateQRData(ticketCode, bookingReference, body.visitDate);
         
-        // Generate QR code image
-        const qrDataUrl = await generateQRCodeImage(qrData);
+        console.log(`Generating QR for ticket ${ticketCode}...`);
+        
+        // Generate QR code image using Deno-native library
+        const { base64: qrDataUrl, format } = await generateQRCodeImage(qrData);
         const qrBytes = dataURLtoUint8Array(qrDataUrl);
         
+        console.log(`QR generated, uploading to storage...`);
+        
         // Upload to storage
-        const fileName = `${booking.id}/${ticketCode}.png`;
+        const fileName = `${booking.id}/${ticketCode}.${format}`;
         const { error: uploadError } = await supabase.storage
           .from("tickets")
           .upload(fileName, qrBytes, {
-            contentType: "image/png",
+            contentType: `image/${format}`,
             upsert: true,
           });
 
@@ -182,6 +192,7 @@ serve(async (req) => {
           .getPublicUrl(fileName);
 
         const qrCodeUrl = urlData?.publicUrl || null;
+        console.log(`QR uploaded: ${qrCodeUrl}`);
 
         ticketsToInsert.push({
           booking_id: booking.id,
@@ -197,10 +208,16 @@ serve(async (req) => {
     };
 
     // Generate tickets for each type
-    await createTicketsForType("adult", body.adultCount || 0);
-    await createTicketsForType("child", body.childCount || 0);
-
-    console.log(`Generated ${ticketsToInsert.length} tickets`);
+    try {
+      await createTicketsForType("adult", body.adultCount || 0);
+      await createTicketsForType("child", body.childCount || 0);
+      console.log(`Generated ${ticketsToInsert.length} tickets`);
+    } catch (qrError) {
+      console.error("QR generation failed, cleaning up booking:", qrError);
+      // Cleanup: delete the booking if QR generation fails
+      await supabase.from("bookings").delete().eq("id", booking.id);
+      throw qrError;
+    }
 
     // Insert all tickets
     if (ticketsToInsert.length > 0) {
@@ -211,6 +228,9 @@ serve(async (req) => {
 
       if (ticketsError) {
         console.error("Error inserting tickets:", ticketsError);
+        // Cleanup on ticket insert failure
+        await supabase.from("bookings").delete().eq("id", booking.id);
+        throw new Error(`Failed to insert tickets: ${ticketsError.message}`);
       } else if (insertedTickets) {
         generatedTickets.push(
           ...insertedTickets.map((t: any) => ({
