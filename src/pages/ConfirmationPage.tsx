@@ -2,7 +2,7 @@ import { useEffect, useState, useLayoutEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { CheckCircle, Download, Calendar, Clock, Users, Mail, Ticket, Home, MapPin, Share2, RefreshCw, QrCode, Maximize2 } from 'lucide-react';
+import { CheckCircle, Download, Calendar, Clock, Users, Mail, Ticket, Home, MapPin, Share2, RefreshCw, QrCode, Maximize2, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { resendConfirmationEmail } from '@/lib/emailService';
@@ -28,6 +28,7 @@ interface BookingDetails {
   child_price: number;
   senior_price: number;
   total_amount: number;
+  payment_status: string;
   confirmation_email_sent: boolean;
   last_email_sent_at?: string | null;
 }
@@ -120,10 +121,10 @@ const ConfirmationPage = () => {
           child_count: bookingData.child_count,
           senior_count: bookingData.senior_count || 0,
           adult_price: 0,
-          // Not exposed in secure function
           child_price: 0,
           senior_price: 0,
           total_amount: bookingData.total_amount,
+          payment_status: bookingData.payment_status,
           confirmation_email_sent: bookingData.confirmation_email_sent,
           last_email_sent_at: bookingData.last_email_sent_at
         });
@@ -556,20 +557,35 @@ const ConfirmationPage = () => {
 
       <main className="flex-1 pt-24 pb-12">
         <div className="container max-w-2xl">
-          {/* Success Header */}
+          {/* Success Header - Payment Status Aware */}
           <div className="text-center mb-8 animate-fade-in">
             <div className="relative inline-block mb-6">
-              <div className="w-24 h-24 rounded-full gradient-gold flex items-center justify-center animate-scale-in glow-gold">
-                <CheckCircle className="h-12 w-12 text-foreground" />
-              </div>
-              
+              {booking.payment_status === 'pending' ? (
+                <div className="w-24 h-24 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center animate-scale-in border-4 border-amber-300 dark:border-amber-700">
+                  <AlertCircle className="h-12 w-12 text-amber-600 dark:text-amber-400" />
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-full gradient-gold flex items-center justify-center animate-scale-in glow-gold">
+                  <CheckCircle className="h-12 w-12 text-foreground" />
+                </div>
+              )}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-              {isArabic ? 'تم تأكيد حجزك!' : 'Booking Confirmed!'}
+              {booking.payment_status === 'pending' 
+                ? (isArabic ? 'تم حفظ حجزك!' : 'Reservation Saved!')
+                : (isArabic ? 'تم تأكيد حجزك!' : 'Booking Confirmed!')}
             </h1>
             <p className="text-muted-foreground text-lg">
-              {isArabic ? 'شكراً لحجزك في سوق المفيجر' : 'Thank you for booking with Souq Almufaijer'}
+              {booking.payment_status === 'pending'
+                ? (isArabic ? 'يرجى إتمام الدفع لتأكيد حجزك' : 'Please complete payment to confirm your booking')
+                : (isArabic ? 'شكراً لحجزك في سوق المفيجر' : 'Thank you for booking with Souq Almufaijer')}
             </p>
+            {booking.payment_status === 'pending' && (
+              <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full text-sm font-medium">
+                <Clock className="h-4 w-4" />
+                {isArabic ? 'في انتظار الدفع' : 'Awaiting Payment'}
+              </div>
+            )}
           </div>
 
           {/* Heritage Style Ticket Card */}
@@ -709,9 +725,11 @@ const ConfirmationPage = () => {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Ticket className="h-4 w-4 text-accent" />
                     <span>
-                      {isArabic ? 'المبلغ المدفوع:' : 'Amount Paid:'}
+                      {booking.payment_status === 'pending'
+                        ? (isArabic ? 'المبلغ المستحق:' : 'Amount Due:')
+                        : (isArabic ? 'المبلغ المدفوع:' : 'Amount Paid:')}
                     </span>
-                    <span className="font-bold text-accent">
+                    <span className={`font-bold ${booking.payment_status === 'pending' ? 'text-amber-600' : 'text-accent'}`}>
                       {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
                     </span>
                   </div>

@@ -114,6 +114,15 @@ serve(async (req) => {
     const bookingReference = generateBookingReference();
     console.log("Generated booking reference:", bookingReference);
 
+    // Calculate total server-side (don't trust client value if 0)
+    const adultCount = body.adultCount || 0;
+    const childCount = body.childCount || 0;
+    const adultPrice = body.adultPrice || 0;
+    const childPrice = body.childPrice || 0;
+    const calculatedTotal = (adultCount * adultPrice) + (childCount * childPrice);
+    const finalTotal = calculatedTotal > 0 ? calculatedTotal : body.totalAmount;
+    console.log(`Calculated total: ${adultCount} x ${adultPrice} + ${childCount} x ${childPrice} = ${calculatedTotal}, using: ${finalTotal}`);
+
     // Booking status values allowed by DB constraint: confirmed, cancelled, completed, no_show
     const bookingStatus = "confirmed";
     const paymentStatus = "pending";
@@ -130,13 +139,13 @@ serve(async (req) => {
         special_requests: body.specialRequests || null,
         visit_date: body.visitDate,
         visit_time: body.visitTime || "09:00",
-        adult_count: body.adultCount || 0,
-        child_count: body.childCount || 0,
+        adult_count: adultCount,
+        child_count: childCount,
         senior_count: 0,
-        adult_price: body.adultPrice || 0,
-        child_price: body.childPrice || 0,
+        adult_price: adultPrice,
+        child_price: childPrice,
         senior_price: 0,
-        total_amount: body.totalAmount,
+        total_amount: finalTotal,
         payment_status: paymentStatus,
         booking_status: bookingStatus,
         language: body.language || "ar",
