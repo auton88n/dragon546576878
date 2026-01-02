@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe } from 'lucide-react';
+import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe, CheckCircle, Ban } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { resendConfirmationEmail } from '@/lib/emailService';
@@ -25,15 +25,18 @@ interface BookingDetailsDialogProps {
   booking: Booking | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onBookingUpdated?: () => void;
 }
 
-const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDialogProps) => {
+const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }: BookingDetailsDialogProps) => {
   const { currentLanguage } = useLanguage();
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
   const [resending, setResending] = useState(false);
+  const [markingPaid, setMarkingPaid] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (booking && open) {
@@ -82,6 +85,44 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
       });
     } finally {
       setResending(false);
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    if (!booking) return;
+    setMarkingPaid(true);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ payment_status: 'completed', paid_at: new Date().toISOString(), booking_status: 'confirmed' })
+        .eq('id', booking.id);
+      if (error) throw error;
+      toast({ title: isArabic ? 'تم التحديث' : 'Updated', description: isArabic ? 'تم تحديث حالة الدفع' : 'Payment marked as paid' });
+      onBookingUpdated?.();
+      onOpenChange(false);
+    } catch {
+      toast({ title: isArabic ? 'خطأ' : 'Error', description: isArabic ? 'فشل التحديث' : 'Failed to update', variant: 'destructive' });
+    } finally {
+      setMarkingPaid(false);
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    if (!booking) return;
+    setCancelling(true);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ booking_status: 'cancelled', cancelled_at: new Date().toISOString() })
+        .eq('id', booking.id);
+      if (error) throw error;
+      toast({ title: isArabic ? 'تم الإلغاء' : 'Cancelled', description: isArabic ? 'تم إلغاء الحجز' : 'Booking cancelled' });
+      onBookingUpdated?.();
+      onOpenChange(false);
+    } catch {
+      toast({ title: isArabic ? 'خطأ' : 'Error', description: isArabic ? 'فشل الإلغاء' : 'Failed to cancel', variant: 'destructive' });
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -354,6 +395,29 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange }: BookingDetailsDia
               {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
             </Button>
           </div>
+
+          {/* Admin Actions for pending payments */}
+          {booking.payment_status === 'pending' && booking.booking_status !== 'cancelled' && (
+            <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <Button 
+                onClick={handleMarkAsPaid} 
+                disabled={markingPaid}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+              >
+                {markingPaid ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                {isArabic ? 'تأكيد الدفع' : 'Mark as Paid'}
+              </Button>
+              <Button 
+                onClick={handleCancelBooking} 
+                disabled={cancelling}
+                variant="destructive"
+                className="flex-1 gap-2"
+              >
+                {cancelling ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                {isArabic ? 'إلغاء الحجز' : 'Cancel Booking'}
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

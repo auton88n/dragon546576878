@@ -32,11 +32,12 @@ const AdminPage = () => {
   const [filters, setFilters] = useState({
     search: '',
     status: 'all',
+    paymentStatus: 'all',
     dateFrom: '',
     dateTo: '',
   });
   const [page, setPage] = useState(1);
-  const { bookings, loading: bookingsLoading, totalPages } = useBookings(filters, page);
+  const { bookings, loading: bookingsLoading, totalPages, refetch } = useBookings(filters, page);
   
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -47,7 +48,7 @@ const AdminPage = () => {
   };
 
   const handleResetFilters = () => {
-    setFilters({ search: '', status: 'all', dateFrom: '', dateTo: '' });
+    setFilters({ search: '', status: 'all', paymentStatus: 'all', dateFrom: '', dateTo: '' });
     setPage(1);
   };
 
@@ -245,6 +246,7 @@ const AdminPage = () => {
         booking={selectedBooking}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
+        onBookingUpdated={refetch}
       />
     </div>
   );
