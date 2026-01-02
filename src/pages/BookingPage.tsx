@@ -55,7 +55,7 @@ const BookingPage = () => {
     }
   };
 
-  const handlePaymentComplete = async (paymentId: string) => {
+  const handlePaymentComplete = async () => {
     setIsProcessing(true);
     
     try {
@@ -78,10 +78,10 @@ const BookingPage = () => {
           child_price: pricing.child,
           senior_price: 0,
           total_amount: totalAmount,
-          payment_id: paymentId,
-          payment_status: 'completed',
-          payment_method: 'card',
-          booking_status: 'confirmed',
+          payment_id: null,
+          payment_status: 'pending',
+          payment_method: null,
+          booking_status: 'pending_payment',
           language: currentLanguage,
         })
         .select()

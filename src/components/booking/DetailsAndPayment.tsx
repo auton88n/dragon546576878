@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Phone, CreditCard, Lock, Shield, CheckCircle, Sparkles } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Clock, CheckCircle, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import {
   Form,
   FormControl,
@@ -39,12 +38,7 @@ type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymentProps) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { customerInfo, setCustomerInfo, totalAmount, canProceed } = useBookingStore();
-
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [cardName, setCardName] = useState('');
+  const { customerInfo, setCustomerInfo, totalAmount } = useBookingStore();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(createFormSchema(isArabic)),
@@ -69,33 +63,12 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     return () => subscription.unsubscribe();
   }, [form, setCustomerInfo]);
 
-  const formatCardNumber = (value: string) => {
-    const cleaned = value.replace(/\D/g, '').slice(0, 16);
-    return cleaned.replace(/(.{4})/g, '$1 ').trim();
-  };
-
-  const formatExpiryDate = (value: string) => {
-    const cleaned = value.replace(/\D/g, '').slice(0, 4);
-    if (cleaned.length >= 2) {
-      return cleaned.slice(0, 2) + '/' + cleaned.slice(2);
-    }
-    return cleaned;
-  };
-
-  const isCardValid = 
-    cardNumber.replace(/\s/g, '').length === 16 &&
-    expiryDate.length === 5 &&
-    cvv.length >= 3 &&
-    cardName.length >= 3;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || !isCardValid) return;
-    const mockPaymentId = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    onPaymentComplete(mockPaymentId);
+    if (!isValid) return;
+    // No payment - just confirm booking
+    onPaymentComplete('PENDING');
   };
-
-  const isFormComplete = isValid && isCardValid;
 
   return (
     <div className="space-y-8">
@@ -184,89 +157,41 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         </Form>
       </div>
 
-      {/* Payment Information */}
+      {/* Pending Payment Notice */}
       <div className="space-y-5">
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
           <span className="w-8 h-8 rounded-full gradient-gold text-foreground text-sm flex items-center justify-center font-bold glow-gold">2</span>
-          {isArabic ? 'معلومات الدفع' : 'Payment Information'}
+          {isArabic ? 'تأكيد الحجز' : 'Confirm Reservation'}
         </h3>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {isArabic ? 'رقم البطاقة' : 'Card Number'}
-            </Label>
-            <div className="relative group">
-              <CreditCard className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
-              <Input
-                value={cardNumber}
-                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                placeholder="1234 5678 9012 3456"
-                className="pl-11 rtl:pr-11 rtl:pl-4 h-12 rounded-xl border-2 focus:border-accent font-mono transition-all"
-                dir="ltr"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {isArabic ? 'الاسم على البطاقة' : 'Name on Card'}
-            </Label>
-            <Input
-              value={cardName}
-              onChange={(e) => setCardName(e.target.value)}
-              placeholder={isArabic ? 'الاسم كما يظهر على البطاقة' : 'Name as it appears on card'}
-              className="h-12 rounded-xl border-2 focus:border-accent transition-all"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                {isArabic ? 'تاريخ الانتهاء' : 'Expiry'}
-              </Label>
-              <Input
-                value={expiryDate}
-                onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
-                placeholder="MM/YY"
-                className="h-12 rounded-xl border-2 focus:border-accent font-mono transition-all"
-                dir="ltr"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">CVV</Label>
-              <Input
-                value={cvv}
-                onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                placeholder="•••"
-                type="password"
-                className="h-12 rounded-xl border-2 focus:border-accent font-mono transition-all"
-                dir="ltr"
-              />
-            </div>
-          </div>
-
-          {/* Security Notice */}
-          <div className="flex items-center gap-3 p-4 bg-accent/10 border border-accent/20 rounded-xl">
-            <Lock className="h-5 w-5 text-accent shrink-0" />
-            <p className="text-sm text-muted-foreground">
+        <div className="p-5 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
+          <div className="flex items-center gap-3">
+            <Clock className="h-5 w-5 text-amber-600 shrink-0" />
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
               {isArabic 
-                ? 'معلومات بطاقتك محمية بتشفير SSL'
-                : 'Your card information is protected with SSL encryption'}
+                ? 'سيتم إرسال رابط الدفع لاحقاً'
+                : 'Payment link will be sent later'}
             </p>
           </div>
+          <p className="text-sm text-muted-foreground">
+            {isArabic 
+              ? 'أكد حجزك الآن وسنرسل لك رابط الدفع عبر البريد الإلكتروني قريباً. حجزك محفوظ حتى يتم الدفع.'
+              : 'Confirm your reservation now and we will send you a payment link via email soon. Your booking is held until payment is completed.'}
+          </p>
+        </div>
 
-          {/* Pay Button */}
+        <form onSubmit={handleSubmit}>
+          {/* Confirm Button */}
           <Button
             type="submit"
             size="lg"
             className={cn(
               'w-full h-14 text-lg rounded-xl transition-all duration-300',
-              isFormComplete && !isProcessing 
+              isValid && !isProcessing 
                 ? 'btn-gold' 
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
-            disabled={!isFormComplete || isProcessing}
+            disabled={!isValid || isProcessing}
           >
             {isProcessing ? (
               <span className="flex items-center gap-3">
@@ -276,14 +201,17 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
             ) : (
               <span className="flex items-center gap-3">
                 <Sparkles className="h-5 w-5" />
-                {isArabic ? `ادفع ${totalAmount} ر.س` : `Pay ${totalAmount} SAR`}
+                {isArabic ? 'تأكيد الحجز' : 'Confirm Booking'}
               </span>
             )}
           </Button>
 
-          {/* Demo Notice */}
-          <div className="text-center text-xs text-muted-foreground">
-            ⚠️ {isArabic ? 'نموذج تجريبي' : 'Demo mode'}
+          {/* Amount Display */}
+          <div className="mt-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              {isArabic ? 'المبلغ المستحق:' : 'Amount due:'}{' '}
+              <span className="font-semibold text-accent">{totalAmount} {isArabic ? 'ر.س' : 'SAR'}</span>
+            </p>
           </div>
         </form>
       </div>
@@ -292,21 +220,21 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
       <div className="flex items-center justify-center gap-8 pt-4">
         <div className="flex items-center gap-2 text-muted-foreground group">
           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110">
-            <Shield className="h-4 w-4 text-accent" />
+            <Calendar className="h-4 w-4 text-accent" />
           </div>
-          <span className="text-xs font-medium">{isArabic ? 'آمن' : 'Secure'}</span>
+          <span className="text-xs font-medium">{isArabic ? 'حجز فوري' : 'Instant'}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground group">
           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110">
-            <Lock className="h-4 w-4 text-accent" />
+            <Mail className="h-4 w-4 text-accent" />
           </div>
-          <span className="text-xs font-medium">{isArabic ? 'مشفر' : 'Encrypted'}</span>
+          <span className="text-xs font-medium">{isArabic ? 'تأكيد بريدي' : 'Email Confirm'}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground group">
           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110">
             <CheckCircle className="h-4 w-4 text-accent" />
           </div>
-          <span className="text-xs font-medium">{isArabic ? 'موثوق' : 'Trusted'}</span>
+          <span className="text-xs font-medium">{isArabic ? 'محفوظ' : 'Reserved'}</span>
         </div>
       </div>
     </div>

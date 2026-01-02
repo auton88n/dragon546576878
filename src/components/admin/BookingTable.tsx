@@ -80,7 +80,16 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, paymentStatus?: string) => {
+    // Handle pending_payment status
+    if (status === 'pending_payment' || paymentStatus === 'pending') {
+      return (
+        <Badge variant="outline" className="bg-amber-500/20 text-amber-700 border-amber-500/30 dark:text-amber-400">
+          {isArabic ? 'في انتظار الدفع' : 'Awaiting Payment'}
+        </Badge>
+      );
+    }
+    
     const config: Record<string, { className: string; labelAr: string; labelEn: string }> = {
       confirmed: { 
         className: 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30 dark:text-emerald-400',
@@ -126,7 +135,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
         <span className="font-mono font-semibold text-accent text-sm">
           {booking.booking_reference}
         </span>
-        {getStatusBadge(booking.booking_status)}
+        {getStatusBadge(booking.booking_status, booking.payment_status)}
       </div>
 
       {/* Customer Info */}
@@ -213,7 +222,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
       <TableCell className="font-semibold text-accent text-start">
         {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
       </TableCell>
-      <TableCell>{getStatusBadge(booking.booking_status)}</TableCell>
+      <TableCell>{getStatusBadge(booking.booking_status, booking.payment_status)}</TableCell>
       <TableCell>
         {booking.confirmation_email_sent ? (
           <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
