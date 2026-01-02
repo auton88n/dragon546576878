@@ -1,0 +1,282 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import QRCode from "https://esm.sh/qrcode@1.5.4";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface BookingRequest {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  specialRequests?: string;
+  visitDate: string;
+  visitTime: string;
+  adultCount: number;
+  childCount: number;
+  adultPrice: number;
+  childPrice: number;
+  totalAmount: number;
+  language: string;
+}
+
+interface GeneratedTicket {
+  id: string;
+  ticketCode: string;
+  ticketType: string;
+  qrCodeUrl: string;
+}
+
+// Generate a unique booking reference
+const generateBookingReference = (): string => {
+  const year = new Date().getFullYear();
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `ALM-${year}-${random}`;
+};
+
+// Generate a unique ticket code
+const generateTicketCode = (type: string, index: number): string => {
+  const typePrefix = type.charAt(0).toUpperCase();
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `${typePrefix}${timestamp}${random}${index}`;
+};
+
+// Generate QR code data with checksum
+const generateQRData = (ticketCode: string, bookingRef: string, visitDate: string): string => {
+  const data = {
+    code: ticketCode,
+    ref: bookingRef,
+    date: visitDate,
+    ts: Date.now(),
+  };
+  
+  const checksum = btoa(JSON.stringify(data)).slice(-8);
+  
+  return JSON.stringify({
+    ...data,
+    cs: checksum,
+  });
+};
+
+// Generate QR code image as data URL
+const generateQRCodeImage = async (data: string): Promise<string> => {
+  return await QRCode.toDataURL(data, {
+    width: 600,
+    margin: 4,
+    color: {
+      dark: "#000000",
+      light: "#FFFFFF",
+    },
+    errorCorrectionLevel: "H",
+  });
+};
+
+// Convert data URL to Uint8Array for upload
+const dataURLtoUint8Array = (dataUrl: string): Uint8Array => {
+  const base64 = dataUrl.split(",")[1];
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+};
+
+serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    // Create service role client (bypasses RLS)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const body: BookingRequest = await req.json();
+    console.log("Received booking request:", JSON.stringify(body, null, 2));
+
+    // Validate required fields
+    if (!body.customerName || !body.customerEmail || !body.customerPhone || !body.visitDate) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing required fields" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Generate booking reference
+    const bookingReference = generateBookingReference();
+    console.log("Generated booking reference:", bookingReference);
+
+    // Create booking
+    const { data: booking, error: bookingError } = await supabase
+      .from("bookings")
+      .insert({
+        booking_reference: bookingReference,
+        customer_name: body.customerName,
+        customer_email: body.customerEmail,
+        customer_phone: body.customerPhone,
+        special_requests: body.specialRequests || null,
+        visit_date: body.visitDate,
+        visit_time: body.visitTime || "09:00",
+        adult_count: body.adultCount || 0,
+        child_count: body.childCount || 0,
+        senior_count: 0,
+        adult_price: body.adultPrice || 0,
+        child_price: body.childPrice || 0,
+        senior_price: 0,
+        total_amount: body.totalAmount,
+        payment_status: "pending",
+        booking_status: "pending_payment",
+        language: body.language || "ar",
+        qr_codes_generated: false,
+        confirmation_email_sent: false,
+      })
+      .select()
+      .single();
+
+    if (bookingError) {
+      console.error("Error creating booking:", bookingError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Failed to create booking", details: bookingError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Booking created:", booking.id);
+
+    // Generate tickets
+    const generatedTickets: GeneratedTicket[] = [];
+    const ticketsToInsert: any[] = [];
+
+    const createTicketsForType = async (type: "adult" | "child", count: number) => {
+      for (let i = 0; i < count; i++) {
+        const ticketCode = generateTicketCode(type, i + 1);
+        const qrData = generateQRData(ticketCode, bookingReference, body.visitDate);
+        
+        // Generate QR code image
+        const qrDataUrl = await generateQRCodeImage(qrData);
+        const qrBytes = dataURLtoUint8Array(qrDataUrl);
+        
+        // Upload to storage
+        const fileName = `${booking.id}/${ticketCode}.png`;
+        const { error: uploadError } = await supabase.storage
+          .from("tickets")
+          .upload(fileName, qrBytes, {
+            contentType: "image/png",
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error("Error uploading QR code:", uploadError);
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from("tickets")
+          .getPublicUrl(fileName);
+
+        const qrCodeUrl = urlData?.publicUrl || null;
+
+        ticketsToInsert.push({
+          booking_id: booking.id,
+          ticket_code: ticketCode,
+          ticket_type: type,
+          qr_code_data: qrData,
+          qr_code_url: qrCodeUrl,
+          valid_from: body.visitDate,
+          valid_until: body.visitDate,
+          is_used: false,
+        });
+      }
+    };
+
+    // Generate tickets for each type
+    await createTicketsForType("adult", body.adultCount || 0);
+    await createTicketsForType("child", body.childCount || 0);
+
+    console.log(`Generated ${ticketsToInsert.length} tickets`);
+
+    // Insert all tickets
+    if (ticketsToInsert.length > 0) {
+      const { data: insertedTickets, error: ticketsError } = await supabase
+        .from("tickets")
+        .insert(ticketsToInsert)
+        .select();
+
+      if (ticketsError) {
+        console.error("Error inserting tickets:", ticketsError);
+      } else if (insertedTickets) {
+        generatedTickets.push(
+          ...insertedTickets.map((t: any) => ({
+            id: t.id,
+            ticketCode: t.ticket_code,
+            ticketType: t.ticket_type,
+            qrCodeUrl: t.qr_code_url || "",
+          }))
+        );
+      }
+    }
+
+    // Update booking to mark QR codes as generated
+    await supabase
+      .from("bookings")
+      .update({ qr_codes_generated: true })
+      .eq("id", booking.id);
+
+    console.log("QR codes generated and marked");
+
+    // Send confirmation email by invoking the email function
+    try {
+      const { error: emailError } = await supabase.functions.invoke("send-booking-confirmation", {
+        body: { bookingId: booking.id },
+      });
+
+      if (emailError) {
+        console.error("Error sending confirmation email:", emailError);
+      } else {
+        console.log("Confirmation email sent");
+        
+        // Update email sent status
+        await supabase
+          .from("bookings")
+          .update({ 
+            confirmation_email_sent: true,
+            last_email_sent_at: new Date().toISOString()
+          })
+          .eq("id", booking.id);
+      }
+    } catch (emailErr) {
+      console.error("Error invoking email function:", emailErr);
+    }
+
+    // Return success response
+    return new Response(
+      JSON.stringify({
+        success: true,
+        bookingId: booking.id,
+        bookingReference: bookingReference,
+        tickets: generatedTickets,
+        paymentUrl: null, // Will be populated when payment API is integrated
+        emailSent: true,
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
+    );
+
+  } catch (error: unknown) {
+    console.error("Error in create-booking function:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    return new Response(
+      JSON.stringify({ success: false, error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

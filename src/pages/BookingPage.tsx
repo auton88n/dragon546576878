@@ -4,8 +4,6 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { supabase } from '@/integrations/supabase/client';
-import { generateTicketsForBooking } from '@/lib/ticketService';
-import { sendBookingConfirmation } from '@/lib/emailService';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import StepIndicator from '@/components/booking/StepIndicator';
@@ -59,62 +57,37 @@ const BookingPage = () => {
     setIsProcessing(true);
     
     try {
-      const bookingReference = generateBookingReference();
-      
-      const { data: booking, error } = await supabase
-        .from('bookings')
-        .insert({
-          booking_reference: bookingReference,
-          customer_name: customerInfo.name,
-          customer_email: customerInfo.email,
-          customer_phone: customerInfo.phone,
-          special_requests: customerInfo.specialRequests || null,
-          visit_date: visitDate!,
-          visit_time: '09:00', // Default time - tickets valid all day
-          adult_count: tickets.adult,
-          child_count: tickets.child,
-          senior_count: 0,
-          adult_price: pricing.adult,
-          child_price: pricing.child,
-          senior_price: 0,
-          total_amount: totalAmount,
-          payment_id: null,
-          payment_status: 'pending',
-          payment_method: null,
-          booking_status: 'pending_payment',
-          language: currentLanguage,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      try {
-        await generateTicketsForBooking({
-          bookingId: booking.id,
-          bookingReference: bookingReference,
+      // Call edge function to create booking with tickets
+      const { data, error } = await supabase.functions.invoke('create-booking', {
+        body: {
+          customerName: customerInfo.name,
+          customerEmail: customerInfo.email,
+          customerPhone: customerInfo.phone,
+          specialRequests: customerInfo.specialRequests || null,
           visitDate: visitDate!,
+          visitTime: '09:00',
           adultCount: tickets.adult,
           childCount: tickets.child,
-          seniorCount: 0,
-        });
-
-        // Update qr_codes_generated flag
-        await supabase
-          .from('bookings')
-          .update({ qr_codes_generated: true })
-          .eq('id', booking.id);
-
-        const emailSent = await sendBookingConfirmation(booking.id);
-        if (!emailSent) {
-          console.warn('Confirmation email failed to send');
+          adultPrice: pricing.adult,
+          childPrice: pricing.child,
+          totalAmount: totalAmount,
+          language: currentLanguage,
         }
-      } catch (ticketError) {
-        console.error('Error generating tickets:', ticketError);
+      });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Booking failed');
       }
 
+      if (!data?.success) {
+        throw new Error(data?.error || 'Booking failed');
+      }
+
+      console.log('Booking created successfully:', data);
+
       reset();
-      navigate(`/confirmation/${booking.id}`);
+      navigate(`/confirmation/${data.bookingId}`);
       
     } catch (error) {
       console.error('Booking error:', error);
