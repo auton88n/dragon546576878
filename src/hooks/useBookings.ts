@@ -7,6 +7,7 @@ type Booking = Tables<'bookings'>;
 export interface BookingFilters {
   search: string;
   status: string;
+  paymentStatus: string;
   dateFrom: string;
   dateTo: string;
 }
@@ -34,9 +35,14 @@ export const useBookings = (filters: BookingFilters, page: number = 1, pageSize:
         );
       }
 
-      // Apply status filter
+      // Apply booking status filter
       if (filters.status && filters.status !== 'all') {
         query = query.eq('booking_status', filters.status);
+      }
+
+      // Apply payment status filter
+      if (filters.paymentStatus && filters.paymentStatus !== 'all') {
+        query = query.eq('payment_status', filters.paymentStatus);
       }
 
       // Apply date filters

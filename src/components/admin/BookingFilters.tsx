@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Calendar, Filter, RotateCcw } from 'lucide-react';
+import { Search, Calendar, Filter, RotateCcw, CreditCard } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import {
 export interface BookingFiltersState {
   search: string;
   status: string;
+  paymentStatus: string;
   dateFrom: string;
   dateTo: string;
 }
@@ -60,12 +61,12 @@ const BookingFilters = ({ filters, onFiltersChange, onReset }: BookingFiltersPro
           />
         </div>
 
-        {/* Status Filter */}
+        {/* Booking Status Filter */}
         <Select
           value={filters.status}
           onValueChange={(value) => onFiltersChange({ ...filters, status: value })}
         >
-          <SelectTrigger className="w-full lg:w-48 bg-background/50 border-border/50">
+          <SelectTrigger className="w-full lg:w-40 bg-background/50 border-border/50">
             <Filter className="h-4 w-4 me-2 text-accent" />
             <SelectValue placeholder={isArabic ? 'الحالة' : 'Status'} />
           </SelectTrigger>
@@ -74,6 +75,22 @@ const BookingFilters = ({ filters, onFiltersChange, onReset }: BookingFiltersPro
             <SelectItem value="confirmed">{isArabic ? 'مؤكد' : 'Confirmed'}</SelectItem>
             <SelectItem value="pending">{isArabic ? 'معلق' : 'Pending'}</SelectItem>
             <SelectItem value="cancelled">{isArabic ? 'ملغي' : 'Cancelled'}</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Payment Status Filter */}
+        <Select
+          value={filters.paymentStatus}
+          onValueChange={(value) => onFiltersChange({ ...filters, paymentStatus: value })}
+        >
+          <SelectTrigger className="w-full lg:w-44 bg-background/50 border-border/50">
+            <CreditCard className="h-4 w-4 me-2 text-accent" />
+            <SelectValue placeholder={isArabic ? 'الدفع' : 'Payment'} />
+          </SelectTrigger>
+          <SelectContent className="bg-card border-border">
+            <SelectItem value="all">{isArabic ? 'الكل' : 'All'}</SelectItem>
+            <SelectItem value="pending">{isArabic ? 'في انتظار الدفع' : 'Awaiting Payment'}</SelectItem>
+            <SelectItem value="completed">{isArabic ? 'مدفوع' : 'Paid'}</SelectItem>
           </SelectContent>
         </Select>
 
