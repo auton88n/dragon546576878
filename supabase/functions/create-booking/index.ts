@@ -132,7 +132,7 @@ serve(async (req) => {
         senior_price: 0,
         total_amount: body.totalAmount,
         payment_status: "pending",
-        booking_status: "pending_payment",
+        booking_status: "confirmed", // Valid values: confirmed, cancelled, completed, no_show
         language: body.language || "ar",
         qr_codes_generated: false,
         confirmation_email_sent: false,
