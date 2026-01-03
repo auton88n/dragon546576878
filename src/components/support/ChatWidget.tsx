@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { MessageCircle, X, RotateCcw, Send, User } from 'lucide-react';
+import { MessageCircle, X, RotateCcw, Send, User, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useChatbot, ChatMessage, ChatButton } from '@/hooks/useChatbot';
@@ -110,7 +110,15 @@ const TypingIndicator = () => (
   </div>
 );
 
-const LiveSupportBanner = ({ conversationId, isArabic }: { conversationId: string | null; isArabic: boolean }) => (
+const LiveSupportBanner = ({ 
+  conversationId, 
+  isArabic,
+  onStartNew 
+}: { 
+  conversationId: string | null; 
+  isArabic: boolean;
+  onStartNew: () => void;
+}) => (
   <div className="mx-4 mt-3 p-3 bg-green-50 border border-green-200 rounded-xl">
     <div className="flex items-center gap-2 mb-1">
       <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
@@ -128,6 +136,14 @@ const LiveSupportBanner = ({ conversationId, isArabic }: { conversationId: strin
         {isArabic ? 'المرجع:' : 'Ref:'} {conversationId.slice(0, 8).toUpperCase()}
       </p>
     )}
+    <Button
+      onClick={onStartNew}
+      size="sm"
+      className="mt-3 w-full bg-amber-500 hover:bg-amber-600 text-white border-0 font-medium"
+    >
+      <Plus className="w-4 h-4 me-2" />
+      {isArabic ? 'بدء محادثة جديدة' : 'Start New Conversation'}
+    </Button>
   </div>
 );
 
@@ -148,6 +164,7 @@ const ChatWidget = () => {
     handleButtonClick,
     handleUserInput,
     resetChat,
+    startNewConversation,
   } = useChatbot();
 
   // Auto-scroll to bottom
@@ -240,7 +257,11 @@ const ChatWidget = () => {
 
           {/* Live Support Banner */}
           {state === 'transferred' && (
-            <LiveSupportBanner conversationId={conversationId} isArabic={isArabic} />
+            <LiveSupportBanner 
+              conversationId={conversationId} 
+              isArabic={isArabic} 
+              onStartNew={startNewConversation}
+            />
           )}
 
           {/* Messages */}

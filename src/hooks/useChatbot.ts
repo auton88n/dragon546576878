@@ -637,6 +637,22 @@ export function useChatbot() {
     }, 100);
   }, [t, addBotMessage, getMainMenuButtons]);
 
+  // Start a fresh conversation (clears current one but keeps history in DB)
+  const startNewConversation = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setConversationId(null);
+    setCustomerInfo({ name: '', email: '' });
+    setState('menu');
+    setMessages([{
+      id: generateId(),
+      type: 'bot',
+      role: 'bot',
+      content: t('welcome'),
+      buttons: getMainMenuButtonsDirect(),
+      timestamp: new Date()
+    }]);
+  }, [t]);
+
   return {
     messages,
     isOpen,
@@ -648,5 +664,6 @@ export function useChatbot() {
     handleButtonClick,
     handleUserInput,
     resetChat,
+    startNewConversation,
   };
 }
