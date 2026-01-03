@@ -23,6 +23,7 @@ const { Component: ScannerPage } = lazyWithPreload(() => import('./pages/Scanner
 const { Component: AdminPage } = lazyWithPreload(() => import('./pages/AdminPage'));
 const { Component: GroupBookingsPage, preload: preloadGroupBookings } = lazyWithPreload(() => import('./pages/GroupBookingsPage'));
 const { Component: SupportPage, preload: preloadSupport } = lazyWithPreload(() => import('./pages/SupportPage'));
+const { Component: TermsPage, preload: preloadTerms } = lazyWithPreload(() => import('./pages/TermsPage'));
 const { Component: NotFound } = lazyWithPreload(() => import('./pages/NotFound'));
 
 // Lazy load chat widget
@@ -35,6 +36,7 @@ registerPreloader('/book', preloadBooking);
 registerPreloader('/my-tickets', preloadMyTickets);
 registerPreloader('/group-bookings', preloadGroupBookings);
 registerPreloader('/support', preloadSupport);
+registerPreloader('/terms', preloadTerms);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +71,7 @@ const App = () => (
             <Route path="/my-tickets" element={<MyTicketsPage />} />
             <Route path="/group-bookings" element={<GroupBookingsPage />} />
             <Route path="/support" element={<SupportPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/login" element={<LoginPage />} />
             
