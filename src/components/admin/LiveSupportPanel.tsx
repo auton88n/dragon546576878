@@ -220,50 +220,52 @@ const LiveSupportPanel = () => {
           {conversations.map((conv) => (
             <div
               key={conv.id}
-              className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow"
+              className="bg-card border border-border rounded-xl p-5 hover:shadow-md transition-shadow"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <User className="w-6 h-6 text-primary" />
+              {/* Main content */}
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="w-6 h-6 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold text-foreground truncate">
+                      {conv.customer_name || (isArabic ? 'زائر' : 'Visitor')}
+                    </h3>
+                    {getStatusBadge(conv.status)}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-foreground truncate">
-                        {conv.customer_name || (isArabic ? 'زائر' : 'Visitor')}
-                      </h3>
-                      {getStatusBadge(conv.status)}
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {conv.customer_email || '-'}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      {format(new Date(conv.created_at), 'MMM d, yyyy h:mm a')}
-                      <span className="mx-1">•</span>
-                      <MessageCircle className="w-3 h-3" />
-                      {conv.messages?.length || 0} {isArabic ? 'رسائل' : 'messages'}
-                    </div>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {conv.customer_email || '-'}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    {format(new Date(conv.created_at), 'MMM d, yyyy h:mm a')}
+                    <span className="mx-1">•</span>
+                    <MessageCircle className="w-3 h-3" />
+                    {conv.messages?.length || 0} {isArabic ? 'رسائل' : 'messages'}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleViewConversation(conv)}
-                  >
-                    <Eye className="w-4 h-4 me-1" />
-                    {isArabic ? 'عرض' : 'View'}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => setDeleteId(conv.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+              </div>
+              
+              {/* Actions - separate row with proper spacing */}
+              <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-border/50">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => handleViewConversation(conv)}
+                >
+                  <Eye className="w-4 h-4" />
+                  {isArabic ? 'عرض' : 'View'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setDeleteId(conv.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           ))}
@@ -279,15 +281,15 @@ const LiveSupportPanel = () => {
 
       {/* Conversation Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col pt-10">
+          <DialogHeader className="pe-12">
             <DialogTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <User className="w-5 h-5 text-primary" />
               </div>
-              <div>
-                <span className="block">{selectedConversation?.customer_name || (isArabic ? 'زائر' : 'Visitor')}</span>
-                <span className="text-sm font-normal text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <span className="block truncate">{selectedConversation?.customer_name || (isArabic ? 'زائر' : 'Visitor')}</span>
+                <span className="text-sm font-normal text-muted-foreground truncate block">
                   {selectedConversation?.customer_email}
                 </span>
               </div>

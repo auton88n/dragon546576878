@@ -55,11 +55,11 @@ const FullscreenQRModal = ({ isOpen, onClose, qrCodeUrl, ticketCode, guestName }
     >
       {/* Close button - top right */}
       <button 
-        className="absolute top-4 right-4 p-3 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
+        className="absolute top-6 right-6 p-3 rounded-full bg-foreground/10 hover:bg-foreground/20 shadow-lg transition-all"
         onClick={onClose}
         aria-label={isArabic ? 'إغلاق' : 'Close'}
       >
-        <X className="h-6 w-6 text-black" />
+        <X className="h-6 w-6 text-foreground" />
       </button>
 
       {/* QR Code - Maximum size for easy scanning */}
