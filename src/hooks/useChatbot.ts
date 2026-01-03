@@ -91,8 +91,8 @@ export function useChatbot() {
         ar: "لحجز التذاكر:\n\n1. اضغط على 'احجز مكانك' في القائمة\n2. اختر نوع التذكرة والكمية\n3. اختر تاريخ ووقت الزيارة\n4. أدخل بياناتك وأكمل الدفع\n\nهل تحتاج مساعدة أكثر؟"
       },
       paymentInfo: {
-        en: "For payment issues:\n\n• We accept Visa, Mastercard, and mada cards\n• If payment failed, please try again or use a different card\n• For refunds, contact our support team\n• Payments are processed securely\n\nStill having issues?",
-        ar: "لمشاكل الدفع:\n\n• نقبل فيزا، ماستركارد، ومدى\n• إذا فشل الدفع، حاول مرة أخرى أو استخدم بطاقة مختلفة\n• للاسترداد، تواصل مع فريق الدعم\n• المدفوعات تتم بشكل آمن\n\nهل لديك مشاكل أخرى؟"
+        en: "💳 Payment & Exchange Policy:\n\n• We accept Visa, Mastercard, and mada cards\n• Payments are processed securely\n\n⚠️ IMPORTANT:\n• ❌ NO REFUNDS - All ticket sales are final\n• ✅ Date exchange available ONCE if you contact us at least 3 days before your visit\n• 📝 Exchange requests ONLY via: almufaijer.com/contact\n\n📄 Read full policy: /terms\n\nStill having issues?",
+        ar: "💳 سياسة الدفع والاستبدال:\n\n• نقبل فيزا، ماستركارد، ومدى\n• المدفوعات تتم بشكل آمن\n\n⚠️ مهم:\n• ❌ لا يوجد استرداد - جميع مبيعات التذاكر نهائية\n• ✅ استبدال التاريخ متاح مرة واحدة إذا تواصلت معنا قبل 3 أيام من موعد الزيارة\n• 📝 طلبات الاستبدال فقط عبر: almufaijer.com/contact\n\n📄 اقرأ السياسة الكاملة: /terms\n\nهل لديك مشاكل أخرى؟"
       },
       ticketsInfo: {
         en: "For tickets and QR codes:\n\n• Check your email for the confirmation\n• Go to 'My Tickets' and enter your email\n• Download or screenshot your QR code\n• Show QR code at the entrance\n\nCan't find your ticket?",
