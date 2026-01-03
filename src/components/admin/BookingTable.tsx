@@ -2,9 +2,9 @@ import { useState, useRef, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users, CheckCircle, Ban, Bell, Download, Loader2 } from 'lucide-react';
+import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users, CheckCircle, Ban, Bell, Download, Loader2, Pencil } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { resendConfirmationEmail } from '@/lib/emailService';
+import { resendConfirmationEmail, sendPaymentReminder } from '@/lib/emailService';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
@@ -37,12 +37,13 @@ interface BookingTableProps {
   selectedIds?: string[];
   onSelectionChange?: (ids: string[]) => void;
   onBookingUpdated?: () => void;
+  onEditBooking?: (booking: Booking) => void;
 }
 
 const ROW_HEIGHT = 72;
 const VIRTUAL_THRESHOLD = 50;
 
-const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [], onSelectionChange, onBookingUpdated }: BookingTableProps) => {
+const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [], onSelectionChange, onBookingUpdated, onEditBooking }: BookingTableProps) => {
   const { currentLanguage, isRTL } = useLanguage();
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
@@ -145,8 +146,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
   const handleSendReminder = async (booking: Booking) => {
     setActionLoadingId(booking.id);
     try {
-      // For now, resend the confirmation email as a reminder
-      const success = await resendConfirmationEmail(booking.id);
+      const success = await sendPaymentReminder(booking.id);
       if (success) {
         toast({
           title: isArabic ? 'تم الإرسال' : 'Reminder Sent',
@@ -417,6 +417,15 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
               <Eye className="h-4 w-4 me-2 text-accent" />
               {isArabic ? 'عرض التفاصيل' : 'View Details'}
             </DropdownMenuItem>
+            {onEditBooking && booking.booking_status !== 'cancelled' && (
+              <DropdownMenuItem 
+                onClick={() => onEditBooking(booking)}
+                className="cursor-pointer hover:bg-accent/10"
+              >
+                <Pencil className="h-4 w-4 me-2 text-blue-500" />
+                {isArabic ? 'تعديل الحجز' : 'Edit Booking'}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             {booking.payment_status === 'pending' && booking.booking_status !== 'cancelled' && (
               <>

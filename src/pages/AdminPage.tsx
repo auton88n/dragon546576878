@@ -12,6 +12,7 @@ import StatsCard from '@/components/admin/StatsCard';
 import BookingTable from '@/components/admin/BookingTable';
 import BookingFilters from '@/components/admin/BookingFilters';
 import BookingDetailsDialog from '@/components/admin/BookingDetailsDialog';
+import EditBookingDialog from '@/components/admin/EditBookingDialog';
 import BulkActionsBar from '@/components/admin/BulkActionsBar';
 import ScannerLeaderboard from '@/components/admin/ScannerLeaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,12 +46,19 @@ const AdminPage = () => {
   
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [editBooking, setEditBooking] = useState<Booking | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [exporting, setExporting] = useState(false);
 
   const handleViewDetails = (booking: Booking) => {
     setSelectedBooking(booking);
     setDetailsOpen(true);
+  };
+
+  const handleEditBooking = (booking: Booking) => {
+    setEditBooking(booking);
+    setEditOpen(true);
   };
 
   const handleResetFilters = () => {
@@ -223,6 +231,7 @@ const AdminPage = () => {
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
                     onBookingUpdated={handleBookingUpdated}
+                    onEditBooking={handleEditBooking}
                   />
 
                   {/* Pagination */}
@@ -302,6 +311,13 @@ const AdminPage = () => {
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         onBookingUpdated={refetch}
+      />
+
+      <EditBookingDialog
+        booking={editBooking}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onBookingUpdated={handleBookingUpdated}
       />
     </div>
   );
