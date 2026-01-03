@@ -266,26 +266,37 @@ const SupportPage = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-12 md:pt-32 md:pb-16 bg-gradient-to-b from-primary/10 to-background">
-        <div className="container text-center">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            {isArabic ? 'المساعدة والدعم' : 'Help & Support'}
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            {isArabic 
-              ? 'ابحث عن إجابات لأسئلتك أو تحدث مع فريق الدعم'
-              : 'Find answers to your questions or chat with our support team'}
-          </p>
-          
-          {/* Search Bar */}
-          <div className="max-w-xl mx-auto relative">
-            <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={isArabic ? 'ابحث عن مساعدة...' : 'Search for help...'}
-              className="ps-12 h-12 text-base rounded-xl"
-            />
+      <section className="relative h-[40vh] min-h-[280px] max-h-[400px] bg-foreground overflow-hidden">
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-foreground/90 via-foreground to-foreground" />
+        
+        {/* Hero Content - positioned at bottom */}
+        <div className="absolute inset-0 flex items-end justify-center pb-8 md:pb-10">
+          <div className="text-center px-4 w-full max-w-2xl">
+            <div className="inline-block backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-8 py-6 shadow-2xl mb-6">
+              <div className="flex items-center justify-center gap-4 mb-2">
+                <HelpCircle className="h-8 w-8 text-accent" />
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+                  {isArabic ? 'المساعدة والدعم' : 'Help & Support'}
+                </h1>
+              </div>
+              <p className="text-white/70 text-sm md:text-base">
+                {isArabic 
+                  ? 'ابحث عن إجابات لأسئلتك أو تحدث مع فريق الدعم'
+                  : 'Find answers to your questions or chat with our support team'}
+              </p>
+            </div>
+            
+            {/* Search Bar */}
+            <div className="max-w-xl mx-auto relative">
+              <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={isArabic ? 'ابحث عن مساعدة...' : 'Search for help...'}
+                className="ps-12 h-12 text-base rounded-xl bg-white shadow-lg"
+              />
+            </div>
           </div>
         </div>
       </section>
