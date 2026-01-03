@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLanguage } from './useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -37,6 +37,7 @@ export function useChatbot() {
   const [isTyping, setIsTyping] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({ name: '', email: '' });
   const [unreadCount, setUnreadCount] = useState(0);
+  const hasInitialized = useRef(false);
 
   // Translations
   const t = useCallback((key: string) => {
@@ -141,9 +142,10 @@ export function useChatbot() {
     return translations[key]?.[isArabic ? 'ar' : 'en'] || key;
   }, [isArabic]);
 
-  // Initialize with welcome message
+  // Initialize with welcome message (only once)
   useEffect(() => {
-    if (messages.length === 0) {
+    if (!hasInitialized.current && messages.length === 0) {
+      hasInitialized.current = true;
       addBotMessage(t('welcome'), getMainMenuButtons());
     }
   }, []);
@@ -326,7 +328,7 @@ export function useChatbot() {
 
     const keywords = {
       booking: ['book', 'reserve', 'ticket', 'حجز', 'تذكرة', 'احجز'],
-      payment: ['pay', 'price', 'cost', 'money', 'refund', 'دفع', 'سعر', 'مال', 'استرداد'],
+      payment: ['pay', 'price', 'cost', 'money', 'refund', 'cancel', 'exchange', 'return', 'دفع', 'سعر', 'مال', 'استرداد', 'إلغاء', 'استبدال', 'ارجاع', 'تغيير'],
       tickets: ['qr', 'code', 'download', 'email', 'confirmation', 'رمز', 'تحميل', 'تأكيد'],
       hours: ['hour', 'open', 'close', 'time', 'when', 'ساعة', 'متى', 'مواعيد', 'وقت'],
       location: ['where', 'location', 'address', 'map', 'direction', 'أين', 'موقع', 'عنوان', 'خريطة'],

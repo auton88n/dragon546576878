@@ -1,12 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Phone, Calendar, Clock, CheckCircle, Sparkles } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Clock, CheckCircle, Sparkles, FileText } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -16,6 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface DetailsAndPaymentProps {
   onPaymentComplete: (paymentId: string) => void;
@@ -51,6 +53,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
   });
 
   const { formState: { errors, isValid } } = form;
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     const subscription = form.watch((values) => {
@@ -65,10 +68,12 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid) return;
+    if (!isValid || !termsAccepted) return;
     // No payment - just confirm booking
     onPaymentComplete('PENDING');
   };
+
+  const canSubmit = isValid && termsAccepted && !isProcessing;
 
   return (
     <div className="space-y-8">
@@ -180,18 +185,50 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Terms Acceptance */}
+          <div className="p-4 bg-muted/50 border border-border rounded-xl">
+            <div className="flex items-start gap-3">
+              <Checkbox 
+                id="terms" 
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                className="mt-1"
+              />
+              <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
+                <FileText className="inline h-4 w-4 text-accent mr-1 rtl:ml-1 rtl:mr-0" />
+                {isArabic ? (
+                  <>
+                    لقد قرأت وأوافق على{' '}
+                    <Link to="/terms" target="_blank" className="text-accent hover:underline font-medium">
+                      سياسة الاستبدال والشروط
+                    </Link>
+                    {' '}(لا يوجد استرداد، استبدال التاريخ قبل 3 أيام فقط)
+                  </>
+                ) : (
+                  <>
+                    I have read and agree to the{' '}
+                    <Link to="/terms" target="_blank" className="text-accent hover:underline font-medium">
+                      Exchange Policy & Terms
+                    </Link>
+                    {' '}(No refunds, date exchange 3 days before only)
+                  </>
+                )}
+              </label>
+            </div>
+          </div>
+
           {/* Confirm Button */}
           <Button
             type="submit"
             size="lg"
             className={cn(
               'w-full h-14 text-lg rounded-xl transition-all duration-300',
-              isValid && !isProcessing 
+              canSubmit 
                 ? 'btn-gold' 
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
-            disabled={!isValid || isProcessing}
+            disabled={!canSubmit}
           >
             {isProcessing ? (
               <span className="flex items-center gap-3">

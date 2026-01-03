@@ -16,6 +16,7 @@ const Footer = () => {
     { href: '/group-bookings', label: isArabic ? 'حجوزات الشركات' : 'Corporate Bookings' },
     { href: '/support', label: isArabic ? 'المساعدة والدعم' : 'Help & Support' },
     { href: '/my-tickets', label: isArabic ? 'تذاكري' : 'My Tickets' },
+    { href: '/terms', label: isArabic ? 'سياسة الاستبدال' : 'Exchange Policy' },
   ];
 
   return (
