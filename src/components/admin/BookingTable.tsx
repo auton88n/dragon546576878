@@ -2,9 +2,10 @@ import { useState, useRef, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users } from 'lucide-react';
+import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users, CheckCircle, Ban, Bell, Download, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { resendConfirmationEmail } from '@/lib/emailService';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 import {
@@ -17,10 +18,12 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,16 +34,20 @@ interface BookingTableProps {
   bookings: Booking[];
   loading: boolean;
   onViewDetails: (booking: Booking) => void;
+  selectedIds?: string[];
+  onSelectionChange?: (ids: string[]) => void;
+  onBookingUpdated?: () => void;
 }
 
 const ROW_HEIGHT = 72;
 const VIRTUAL_THRESHOLD = 50;
 
-const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTableProps) => {
+const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [], onSelectionChange, onBookingUpdated }: BookingTableProps) => {
   const { currentLanguage, isRTL } = useLanguage();
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const parentRef = useRef<HTMLDivElement>(null);
 
   const useVirtual = bookings.length > VIRTUAL_THRESHOLD;
@@ -77,6 +84,105 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
       });
     } finally {
       setResendingId(null);
+    }
+  };
+
+  const handleMarkAsPaid = async (booking: Booking) => {
+    setActionLoadingId(booking.id);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          payment_status: 'completed', 
+          paid_at: new Date().toISOString(),
+          booking_status: 'confirmed'
+        })
+        .eq('id', booking.id);
+      if (error) throw error;
+      toast({
+        title: isArabic ? 'تم التحديث' : 'Updated',
+        description: isArabic ? 'تم تحديث حالة الدفع' : 'Payment marked as paid',
+      });
+      onBookingUpdated?.();
+    } catch {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل التحديث' : 'Failed to update',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleCancelBooking = async (booking: Booking) => {
+    setActionLoadingId(booking.id);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          booking_status: 'cancelled', 
+          cancelled_at: new Date().toISOString() 
+        })
+        .eq('id', booking.id);
+      if (error) throw error;
+      toast({
+        title: isArabic ? 'تم الإلغاء' : 'Cancelled',
+        description: isArabic ? 'تم إلغاء الحجز' : 'Booking cancelled',
+      });
+      onBookingUpdated?.();
+    } catch {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل الإلغاء' : 'Failed to cancel',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleSendReminder = async (booking: Booking) => {
+    setActionLoadingId(booking.id);
+    try {
+      // For now, resend the confirmation email as a reminder
+      const success = await resendConfirmationEmail(booking.id);
+      if (success) {
+        toast({
+          title: isArabic ? 'تم الإرسال' : 'Reminder Sent',
+          description: isArabic 
+            ? 'تم إرسال تذكير الدفع'
+            : 'Payment reminder sent successfully',
+        });
+      } else {
+        throw new Error('Failed');
+      }
+    } catch {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل إرسال التذكير' : 'Failed to send reminder',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (!onSelectionChange) return;
+    if (selectedIds.length === bookings.length) {
+      onSelectionChange([]);
+    } else {
+      onSelectionChange(bookings.map(b => b.id));
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    if (!onSelectionChange) return;
+    if (selectedIds.includes(id)) {
+      onSelectionChange(selectedIds.filter(sid => sid !== id));
+    } else {
+      onSelectionChange([...selectedIds, id]);
     }
   };
 
@@ -130,11 +236,20 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
   // Mobile Card Component
   const MobileBookingCard = ({ booking }: { booking: Booking }) => (
     <div className="glass-card rounded-xl border border-accent/20 p-4 space-y-3">
-      {/* Header: Reference + Status */}
+      {/* Selection + Header */}
       <div className="flex items-center justify-between rtl:flex-row-reverse">
-        <span className="font-mono font-semibold text-accent text-sm">
-          {booking.booking_reference}
-        </span>
+        <div className="flex items-center gap-3 rtl:flex-row-reverse">
+          {onSelectionChange && (
+            <Checkbox
+              checked={selectedIds.includes(booking.id)}
+              onCheckedChange={() => handleSelectOne(booking.id)}
+              className="border-accent/50"
+            />
+          )}
+          <span className="font-mono font-semibold text-accent text-sm">
+            {booking.booking_reference}
+          </span>
+        </div>
         {getStatusBadge(booking.booking_status, booking.payment_status)}
       </div>
 
@@ -183,19 +298,59 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
             <Eye className="h-3 w-3 me-1" />
             {isArabic ? 'عرض' : 'View'}
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => handleResendEmail(booking)}
-            disabled={resendingId === booking.id}
-            className="h-8 text-xs border-accent/30 hover:bg-accent/10"
-          >
-            {resendingId === booking.id ? (
-              <RefreshCw className="h-3 w-3 animate-spin" />
-            ) : (
-              <Mail className="h-3 w-3" />
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-accent/30 hover:bg-accent/10">
+                {actionLoadingId === booking.id ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <MoreHorizontal className="h-3 w-3" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="bg-card border-border">
+              {booking.payment_status === 'pending' && booking.booking_status !== 'cancelled' && (
+                <>
+                  <DropdownMenuItem 
+                    onClick={() => handleMarkAsPaid(booking)}
+                    className="cursor-pointer text-emerald-600 hover:bg-emerald-500/10"
+                  >
+                    <CheckCircle className="h-4 w-4 me-2" />
+                    {isArabic ? 'تأكيد الدفع' : 'Mark as Paid'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleSendReminder(booking)}
+                    className="cursor-pointer text-amber-600 hover:bg-amber-500/10"
+                  >
+                    <Bell className="h-4 w-4 me-2" />
+                    {isArabic ? 'إرسال تذكير' : 'Send Reminder'}
+                  </DropdownMenuItem>
+                </>
+              )}
+              {booking.booking_status !== 'cancelled' && (
+                <DropdownMenuItem 
+                  onClick={() => handleCancelBooking(booking)}
+                  className="cursor-pointer text-red-600 hover:bg-red-500/10"
+                >
+                  <Ban className="h-4 w-4 me-2" />
+                  {isArabic ? 'إلغاء الحجز' : 'Cancel Booking'}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => handleResendEmail(booking)}
+                disabled={resendingId === booking.id}
+                className="cursor-pointer hover:bg-accent/10"
+              >
+                {resendingId === booking.id ? (
+                  <RefreshCw className="h-4 w-4 me-2 animate-spin" />
+                ) : (
+                  <Mail className="h-4 w-4 me-2 text-accent" />
+                )}
+                {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>
@@ -203,6 +358,15 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
 
   const renderRow = (booking: Booking) => (
     <>
+      {onSelectionChange && (
+        <TableCell className="w-12">
+          <Checkbox
+            checked={selectedIds.includes(booking.id)}
+            onCheckedChange={() => handleSelectOne(booking.id)}
+            className="border-accent/50"
+          />
+        </TableCell>
+      )}
       <TableCell className="font-mono font-semibold text-accent text-start">
         {booking.booking_reference}
       </TableCell>
@@ -238,7 +402,11 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="hover:bg-accent/10">
-              <MoreHorizontal className="h-4 w-4" />
+              {actionLoadingId === booking.id ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <MoreHorizontal className="h-4 w-4" />
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="bg-card border-border">
@@ -249,6 +417,35 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
               <Eye className="h-4 w-4 me-2 text-accent" />
               {isArabic ? 'عرض التفاصيل' : 'View Details'}
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {booking.payment_status === 'pending' && booking.booking_status !== 'cancelled' && (
+              <>
+                <DropdownMenuItem 
+                  onClick={() => handleMarkAsPaid(booking)}
+                  className="cursor-pointer text-emerald-600 hover:bg-emerald-500/10"
+                >
+                  <CheckCircle className="h-4 w-4 me-2" />
+                  {isArabic ? 'تأكيد الدفع' : 'Mark as Paid'}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => handleSendReminder(booking)}
+                  className="cursor-pointer text-amber-600 hover:bg-amber-500/10"
+                >
+                  <Bell className="h-4 w-4 me-2" />
+                  {isArabic ? 'إرسال تذكير' : 'Send Reminder'}
+                </DropdownMenuItem>
+              </>
+            )}
+            {booking.booking_status !== 'cancelled' && (
+              <DropdownMenuItem 
+                onClick={() => handleCancelBooking(booking)}
+                className="cursor-pointer text-red-600 hover:bg-red-500/10"
+              >
+                <Ban className="h-4 w-4 me-2" />
+                {isArabic ? 'إلغاء الحجز' : 'Cancel Booking'}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
             <DropdownMenuItem 
               onClick={() => handleResendEmail(booking)}
               disabled={resendingId === booking.id}
@@ -305,6 +502,15 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
             <Table dir={isRTL ? 'rtl' : 'ltr'}>
               <TableHeader>
                 <TableRow className="border-b border-accent/20 hover:bg-transparent">
+                  {onSelectionChange && (
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedIds.length === bookings.length && bookings.length > 0}
+                        onCheckedChange={handleSelectAll}
+                        className="border-accent/50"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead className="text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
                   <TableHead className="text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
                   <TableHead className="text-accent font-semibold text-start">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
@@ -335,6 +541,15 @@ const BookingTable = memo(({ bookings, loading, onViewDetails }: BookingTablePro
               <Table dir={isRTL ? 'rtl' : 'ltr'}>
                 <TableHeader>
                   <TableRow className="border-b border-accent/20 hover:bg-transparent">
+                    {onSelectionChange && (
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedIds.length === bookings.length && bookings.length > 0}
+                          onCheckedChange={handleSelectAll}
+                          className="border-accent/50"
+                        />
+                      </TableHead>
+                    )}
                     <TableHead className="text-accent font-semibold min-w-[120px] text-start">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
                     <TableHead className="text-accent font-semibold min-w-[180px] text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
                     <TableHead className="text-accent font-semibold min-w-[130px] text-start">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
