@@ -4,12 +4,15 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import { useBookings } from '@/hooks/useBookings';
+import { useToast } from '@/hooks/use-toast';
+import { exportToCSV, exportToExcel } from '@/lib/exportBookings';
 import StaffHeader from '@/components/shared/StaffHeader';
 import PoweredByAYN from '@/components/shared/PoweredByAYN';
 import StatsCard from '@/components/admin/StatsCard';
 import BookingTable from '@/components/admin/BookingTable';
 import BookingFilters from '@/components/admin/BookingFilters';
 import BookingDetailsDialog from '@/components/admin/BookingDetailsDialog';
+import BulkActionsBar from '@/components/admin/BulkActionsBar';
 import ScannerLeaderboard from '@/components/admin/ScannerLeaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -26,6 +29,7 @@ type Booking = Tables<'bookings'>;
 
 const AdminPage = () => {
   const { currentLanguage, isRTL } = useLanguage();
+  const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
   const { stats, loading: statsLoading } = useAdminStats();
   
@@ -41,6 +45,8 @@ const AdminPage = () => {
   
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [exporting, setExporting] = useState(false);
 
   const handleViewDetails = (booking: Booking) => {
     setSelectedBooking(booking);
@@ -50,6 +56,42 @@ const AdminPage = () => {
   const handleResetFilters = () => {
     setFilters({ search: '', status: 'all', paymentStatus: 'all', dateFrom: '', dateTo: '' });
     setPage(1);
+  };
+
+  const handleExport = async (format: 'csv' | 'excel') => {
+    setExporting(true);
+    try {
+      // Export either selected bookings or all filtered bookings
+      const dataToExport = selectedIds.length > 0 
+        ? bookings.filter(b => selectedIds.includes(b.id))
+        : bookings;
+      
+      if (format === 'csv') {
+        exportToCSV(dataToExport, 'souq-almufaijer-bookings');
+      } else {
+        exportToExcel(dataToExport, 'souq-almufaijer-bookings');
+      }
+      
+      toast({
+        title: isArabic ? 'تم التصدير' : 'Exported',
+        description: isArabic 
+          ? `تم تصدير ${dataToExport.length} حجز` 
+          : `Exported ${dataToExport.length} booking(s)`,
+      });
+    } catch {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل التصدير' : 'Export failed',
+        variant: 'destructive',
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleBookingUpdated = () => {
+    refetch();
+    setSelectedIds([]);
   };
 
   const statsCards = [
@@ -170,12 +212,17 @@ const AdminPage = () => {
                     filters={filters}
                     onFiltersChange={setFilters}
                     onReset={handleResetFilters}
+                    onExport={handleExport}
+                    exporting={exporting}
                   />
                   
                   <BookingTable
                     bookings={bookings}
                     loading={bookingsLoading}
                     onViewDetails={handleViewDetails}
+                    selectedIds={selectedIds}
+                    onSelectionChange={setSelectedIds}
+                    onBookingUpdated={handleBookingUpdated}
                   />
 
                   {/* Pagination */}
@@ -241,6 +288,14 @@ const AdminPage = () => {
 
       {/* Powered by AYN Footer */}
       <PoweredByAYN className="border-t border-border" />
+
+      {/* Bulk Actions Bar */}
+      <BulkActionsBar
+        selectedIds={selectedIds}
+        bookings={bookings}
+        onClearSelection={() => setSelectedIds([])}
+        onBookingUpdated={handleBookingUpdated}
+      />
 
       <BookingDetailsDialog
         booking={selectedBooking}
