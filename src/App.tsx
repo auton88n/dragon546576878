@@ -21,6 +21,7 @@ const { Component: MyTicketsPage, preload: preloadMyTickets } = lazyWithPreload(
 const { Component: LoginPage } = lazyWithPreload(() => import('./pages/LoginPage'));
 const { Component: ScannerPage } = lazyWithPreload(() => import('./pages/ScannerPage'));
 const { Component: AdminPage } = lazyWithPreload(() => import('./pages/AdminPage'));
+const { Component: SupportDashboardPage } = lazyWithPreload(() => import('./pages/SupportDashboardPage'));
 const { Component: GroupBookingsPage, preload: preloadGroupBookings } = lazyWithPreload(() => import('./pages/GroupBookingsPage'));
 const { Component: SupportPage, preload: preloadSupport } = lazyWithPreload(() => import('./pages/SupportPage'));
 const { Component: TermsPage, preload: preloadTerms } = lazyWithPreload(() => import('./pages/TermsPage'));
@@ -91,6 +92,16 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['admin', 'manager']}>
                   <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Protected Routes - Support */}
+            <Route
+              path="/support-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['support', 'admin', 'manager']}>
+                  <SupportDashboardPage />
                 </ProtectedRoute>
               }
             />
