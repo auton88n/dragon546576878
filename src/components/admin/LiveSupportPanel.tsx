@@ -3,15 +3,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useNotificationSound } from '@/hooks/useNotificationSound';
-import { MessageCircle, User, Clock, CheckCircle, Trash2, Eye, Send, X } from 'lucide-react';
+import { MessageCircle, User, Clock, CheckCircle, Trash2, Eye, Send, ChevronDown, ChevronUp, Ticket, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-
 interface ChatMessage {
   type: 'bot' | 'user' | 'admin';
   content: string;
@@ -37,6 +37,18 @@ interface LiveSupportPanelProps {
   soundEnabled?: boolean;
 }
 
+interface CustomerBooking {
+  id: string;
+  booking_reference: string;
+  visit_date: string;
+  visit_time: string;
+  adult_count: number;
+  child_count: number;
+  total_amount: number;
+  payment_status: string;
+  booking_status: string;
+}
+
 const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
@@ -49,7 +61,7 @@ const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [replyMessage, setReplyMessage] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
-
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   // Fetch conversations
   const { data: conversations, isLoading } = useQuery({
     queryKey: ['support-conversations'],
@@ -65,6 +77,24 @@ const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
         messages: (typeof item.messages === 'string' ? JSON.parse(item.messages) : item.messages) as ChatMessage[]
       })) as SupportConversation[];
     }
+  });
+
+  // Fetch customer bookings when a conversation is selected
+  const { data: customerBookings, isLoading: isLoadingBookings } = useQuery({
+    queryKey: ['customer-bookings', selectedConversation?.customer_email],
+    queryFn: async () => {
+      if (!selectedConversation?.customer_email) return [];
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('id, booking_reference, visit_date, visit_time, adult_count, child_count, total_amount, payment_status, booking_status')
+        .ilike('customer_email', selectedConversation.customer_email)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      return data as CustomerBooking[];
+    },
+    enabled: !!selectedConversation?.customer_email && isDialogOpen
   });
 
   // Initialize audio on first user interaction
@@ -339,6 +369,75 @@ const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
               </div>
             </DialogTitle>
           </DialogHeader>
+
+          {/* Customer Booking History */}
+          {selectedConversation?.customer_email && (
+            <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen} className="border rounded-lg">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full flex items-center justify-between p-3 h-auto">
+                  <div className="flex items-center gap-2">
+                    <Ticket className="w-4 h-4 text-primary" />
+                    <span className="font-medium text-sm">
+                      {isArabic ? 'سجل الحجوزات' : 'Booking History'}
+                    </span>
+                    {customerBookings && customerBookings.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {customerBookings.length}
+                      </Badge>
+                    )}
+                  </div>
+                  {isHistoryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3">
+                {isLoadingBookings ? (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+                  </div>
+                ) : customerBookings && customerBookings.length > 0 ? (
+                  <div className="space-y-2">
+                    {customerBookings.map((booking) => (
+                      <div key={booking.id} className="bg-secondary/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-mono font-medium text-primary">
+                            #{booking.booking_reference}
+                          </span>
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              booking.payment_status === 'completed' 
+                                ? 'bg-green-50 text-green-700 border-green-200' 
+                                : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            }
+                          >
+                            {booking.payment_status === 'completed' 
+                              ? (isArabic ? 'مدفوع' : 'Paid')
+                              : (isArabic ? 'معلق' : 'Pending')}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Calendar className="w-3 h-3" />
+                          <span>{format(new Date(booking.visit_date), 'MMM d, yyyy')}</span>
+                          <span>•</span>
+                          <span>{booking.visit_time}</span>
+                        </div>
+                        <div className="text-muted-foreground mt-1">
+                          {booking.adult_count} {isArabic ? 'بالغ' : 'Adult'}
+                          {booking.child_count > 0 && `, ${booking.child_count} ${isArabic ? 'طفل' : 'Child'}`}
+                          <span className="mx-2">•</span>
+                          <span className="font-medium text-foreground">{booking.total_amount} SAR</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-3">
+                    {isArabic ? 'لا توجد حجوزات سابقة' : 'No previous bookings'}
+                  </p>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto py-4 space-y-3 min-h-[200px] max-h-[300px]">
