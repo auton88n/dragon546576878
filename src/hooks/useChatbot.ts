@@ -279,9 +279,13 @@ export function useChatbot() {
       if (customerInfo.name && !customerInfo.email && emailMatch) {
         // Validate email and save conversation
         try {
-          const { data, error } = await supabase
+          // Generate UUID client-side to avoid needing SELECT after INSERT
+          const newId = crypto.randomUUID();
+
+          const { error } = await supabase
             .from('support_conversations')
             .insert([{
+              id: newId,
               customer_name: customerInfo.name,
               customer_email: emailMatch[0],
               messages: JSON.stringify(messages.map(m => ({
@@ -291,16 +295,14 @@ export function useChatbot() {
               }))),
               status: 'transferred',
               transferred_at: new Date().toISOString()
-            }])
-            .select('id')
-            .single();
+            }]);
 
           if (error) throw error;
 
-          setConversationId(data.id);
+          setConversationId(newId);
           setState('transferred');
           addBotMessage(
-            t('transferSuccess') + data.id.slice(0, 8).toUpperCase(),
+            t('transferSuccess') + newId.slice(0, 8).toUpperCase(),
             getMainMenuButtons()
           );
         } catch (err) {
