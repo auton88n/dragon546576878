@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useNotificationSound } from '@/hooks/useNotificationSound';
 import { MessageCircle, User, Clock, CheckCircle, Trash2, Eye, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,10 +33,16 @@ interface SupportConversation {
   updated_at: string;
 }
 
-const LiveSupportPanel = () => {
+interface LiveSupportPanelProps {
+  soundEnabled?: boolean;
+}
+
+const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const queryClient = useQueryClient();
+  const { playNotification, initAudio } = useNotificationSound(soundEnabled);
+  const previousCountRef = useRef<number | null>(null);
 
   const [selectedConversation, setSelectedConversation] = useState<SupportConversation | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -60,14 +67,51 @@ const LiveSupportPanel = () => {
     }
   });
 
-  // Subscribe to realtime updates
+  // Initialize audio on first user interaction
+  useEffect(() => {
+    const handleInteraction = () => {
+      initAudio();
+      document.removeEventListener('click', handleInteraction);
+    };
+    document.addEventListener('click', handleInteraction);
+    return () => document.removeEventListener('click', handleInteraction);
+  }, [initAudio]);
+
+  // Subscribe to realtime updates with sound notification
   useEffect(() => {
     const channel = supabase
       .channel('support-conversations-changes')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
+          schema: 'public',
+          table: 'support_conversations'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['support-conversations'] });
+          // Play sound on new conversation
+          playNotification();
+          toast.info(isArabic ? 'محادثة جديدة!' : 'New conversation!', {
+            duration: 5000,
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'support_conversations'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['support-conversations'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
           schema: 'public',
           table: 'support_conversations'
         },
@@ -80,7 +124,7 @@ const LiveSupportPanel = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, playNotification, isArabic]);
 
   // Update conversation mutation
   const updateMutation = useMutation({

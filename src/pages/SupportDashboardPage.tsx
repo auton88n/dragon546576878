@@ -211,7 +211,7 @@ const SupportDashboardPage = () => {
 
                 <TabsContent value="live-chat" className="animate-fade-in mt-4">
                   <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                    <LiveSupportPanel />
+                    <LiveSupportPanel soundEnabled={soundEnabled} />
                   </Suspense>
                 </TabsContent>
 
