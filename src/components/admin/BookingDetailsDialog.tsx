@@ -169,8 +169,8 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-accent/20">
-        <DialogHeader className="pb-4 border-b border-accent/10">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-accent/20 pt-10">
+        <DialogHeader className="pb-4 border-b border-accent/10 pe-12">
           <DialogTitle className="flex items-center justify-between rtl:flex-row-reverse">
             <span className="text-xl font-bold text-foreground">{isArabic ? 'تفاصيل الحجز' : 'Booking Details'}</span>
             <Badge variant="outline" className={getStatusConfig(booking.booking_status).className}>
