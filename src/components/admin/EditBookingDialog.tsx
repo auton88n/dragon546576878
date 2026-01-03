@@ -121,8 +121,8 @@ const EditBookingDialog = ({ booking, open, onOpenChange, onBookingUpdated }: Ed
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg glass-card border-accent/20">
-        <DialogHeader className="pb-4 border-b border-accent/10">
+      <DialogContent className="max-w-lg glass-card border-accent/20 pt-10">
+        <DialogHeader className="pb-4 border-b border-accent/10 pe-12">
           <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground rtl:flex-row-reverse">
             <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
               <User className="h-5 w-5 text-accent" />
