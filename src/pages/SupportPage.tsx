@@ -278,21 +278,21 @@ const SupportPage = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative h-[40vh] min-h-[280px] max-h-[400px] bg-foreground overflow-hidden">
+      <section className="relative h-[40vh] min-h-[320px] max-h-[450px] bg-foreground overflow-hidden">
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-foreground/90 via-foreground to-foreground" />
         
-        {/* Hero Content - centered */}
-        <div className="absolute inset-0 flex items-center justify-center pt-16">
+        {/* Hero Content - bottom aligned with proper spacing */}
+        <div className="absolute inset-0 flex items-end justify-center pb-10 md:pb-12">
           <div className="text-center px-4 w-full max-w-2xl">
-            <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-6 py-6 shadow-2xl">
-              <div className="flex items-center justify-center gap-4 mb-3">
-                <HelpCircle className="h-8 w-8 text-accent" />
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+            <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-6 py-5 shadow-2xl">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <HelpCircle className="h-7 w-7 text-accent" />
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
                   {isArabic ? 'المساعدة والدعم' : 'Help & Support'}
                 </h1>
               </div>
-              <p className="text-white/70 text-sm md:text-base mb-5">
+              <p className="text-white/70 text-sm mb-4">
                 {isArabic 
                   ? 'ابحث عن إجابات لأسئلتك أو تحدث مع فريق الدعم'
                   : 'Find answers to your questions or chat with our support team'}
@@ -305,7 +305,7 @@ const SupportPage = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={isArabic ? 'ابحث عن مساعدة...' : 'Search for help...'}
-                  className="ps-12 h-12 text-base rounded-xl bg-white shadow-lg"
+                  className="ps-12 h-11 text-base rounded-xl bg-white shadow-lg"
                 />
               </div>
             </div>
