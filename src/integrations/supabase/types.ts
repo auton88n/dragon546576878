@@ -459,6 +459,51 @@ export type Database = {
         }
         Relationships: []
       }
+      support_conversations: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          messages: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          transferred_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          messages?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          transferred_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          messages?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          transferred_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           booking_id: string

@@ -22,7 +22,11 @@ const { Component: LoginPage } = lazyWithPreload(() => import('./pages/LoginPage
 const { Component: ScannerPage } = lazyWithPreload(() => import('./pages/ScannerPage'));
 const { Component: AdminPage } = lazyWithPreload(() => import('./pages/AdminPage'));
 const { Component: GroupBookingsPage, preload: preloadGroupBookings } = lazyWithPreload(() => import('./pages/GroupBookingsPage'));
+const { Component: SupportPage, preload: preloadSupport } = lazyWithPreload(() => import('./pages/SupportPage'));
 const { Component: NotFound } = lazyWithPreload(() => import('./pages/NotFound'));
+
+// Lazy load chat widget
+const ChatWidget = lazyWithPreload(() => import('./components/support/ChatWidget')).Component;
 
 // Register preloaders for header navigation
 registerPreloader('/about', preloadAbout);
@@ -30,6 +34,7 @@ registerPreloader('/contact', preloadContact);
 registerPreloader('/book', preloadBooking);
 registerPreloader('/my-tickets', preloadMyTickets);
 registerPreloader('/group-bookings', preloadGroupBookings);
+registerPreloader('/support', preloadSupport);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +68,8 @@ const App = () => (
             <Route path="/confirmation/:bookingId" element={<ConfirmationPage />} />
             <Route path="/my-tickets" element={<MyTicketsPage />} />
             <Route path="/group-bookings" element={<GroupBookingsPage />} />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/login" element={<LoginPage />} />
             
             {/* Protected Routes - Scanner */}
@@ -88,6 +95,7 @@ const App = () => (
             {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <ChatWidget />
         </Suspense>
       </BrowserRouter>
     </TooltipProvider>
