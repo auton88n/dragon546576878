@@ -62,7 +62,7 @@ const StaffManager = () => {
     password: '',
     fullName: '',
     phone: '',
-    role: 'scanner' as 'scanner' | 'manager',
+    role: 'scanner' as 'scanner' | 'manager' | 'support',
   });
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -70,7 +70,7 @@ const StaffManager = () => {
   const [editForm, setEditForm] = useState({
     fullName: '',
     phone: '',
-    role: 'scanner' as 'scanner' | 'manager',
+    role: 'scanner' as 'scanner' | 'manager' | 'support',
   });
 
   const handleAddStaff = async () => {
@@ -99,7 +99,7 @@ const StaffManager = () => {
         description: isArabic ? 'تم إضافة الموظف بنجاح' : 'Staff member added successfully',
       });
       setAddDialogOpen(false);
-      setNewStaff({ email: '', password: '', fullName: '', phone: '', role: 'scanner' });
+      setNewStaff({ email: '', password: '', fullName: '', phone: '', role: 'scanner' as 'scanner' | 'manager' | 'support' });
     }
   };
 
@@ -180,7 +180,7 @@ const StaffManager = () => {
     setEditForm({
       fullName: member.fullName,
       phone: member.phone || '',
-      role: member.role === 'admin' ? 'manager' : member.role,
+      role: member.role === 'admin' ? 'manager' : member.role as 'scanner' | 'manager' | 'support',
     });
     setEditDialogOpen(true);
   };
@@ -198,6 +198,8 @@ const StaffManager = () => {
         return <Badge variant="secondary">{isArabic ? 'مشرف' : 'Manager'}</Badge>;
       case 'scanner':
         return <Badge variant="outline">{isArabic ? 'ماسح' : 'Scanner'}</Badge>;
+      case 'support':
+        return <Badge variant="outline" className="border-blue-500 text-blue-600">{isArabic ? 'دعم العملاء' : 'Support'}</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
@@ -401,7 +403,7 @@ const StaffManager = () => {
               <Label>{isArabic ? 'الدور' : 'Role'} *</Label>
               <Select
                 value={newStaff.role}
-                onValueChange={(value: 'scanner' | 'manager') => setNewStaff({ ...newStaff, role: value })}
+                onValueChange={(value: 'scanner' | 'manager' | 'support') => setNewStaff({ ...newStaff, role: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -409,6 +411,7 @@ const StaffManager = () => {
                 <SelectContent>
                   <SelectItem value="scanner">{isArabic ? 'ماسح التذاكر' : 'Scanner'}</SelectItem>
                   <SelectItem value="manager">{isArabic ? 'مشرف' : 'Manager'}</SelectItem>
+                  <SelectItem value="support">{isArabic ? 'دعم العملاء' : 'Customer Support'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -509,7 +512,7 @@ const StaffManager = () => {
               <Label>{isArabic ? 'الدور' : 'Role'}</Label>
               <Select
                 value={editForm.role}
-                onValueChange={(value: 'scanner' | 'manager') => setEditForm({ ...editForm, role: value })}
+                onValueChange={(value: 'scanner' | 'manager' | 'support') => setEditForm({ ...editForm, role: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -517,6 +520,7 @@ const StaffManager = () => {
                 <SelectContent>
                   <SelectItem value="scanner">{isArabic ? 'ماسح التذاكر' : 'Scanner'}</SelectItem>
                   <SelectItem value="manager">{isArabic ? 'مشرف' : 'Manager'}</SelectItem>
+                  <SelectItem value="support">{isArabic ? 'دعم العملاء' : 'Customer Support'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

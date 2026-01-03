@@ -3,7 +3,7 @@
 // ============================================
 
 // Database types
-export type AppRole = 'admin' | 'scanner' | 'manager';
+export type AppRole = 'admin' | 'scanner' | 'manager' | 'support';
 
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 

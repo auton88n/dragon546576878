@@ -7,7 +7,7 @@ export interface StaffMember {
   email: string;
   fullName: string;
   phone: string | null;
-  role: 'admin' | 'scanner' | 'manager';
+  role: 'admin' | 'scanner' | 'manager' | 'support';
   isActive: boolean;
   lastLogin: string | null;
   createdAt: string | null;
@@ -18,13 +18,13 @@ interface CreateStaffData {
   password: string;
   fullName: string;
   phone?: string;
-  role: 'scanner' | 'manager';
+  role: 'scanner' | 'manager' | 'support';
 }
 
 interface UpdateProfileData {
   fullName?: string;
   phone?: string;
-  role?: 'scanner' | 'manager';
+  role?: 'scanner' | 'manager' | 'support';
 }
 
 export function useStaff() {
@@ -61,7 +61,7 @@ export function useStaff() {
             email: profile.email,
             fullName: profile.full_name,
             phone: profile.phone,
-            role: userRole.role as 'admin' | 'scanner' | 'manager',
+            role: userRole.role as 'admin' | 'scanner' | 'manager' | 'support',
             isActive: profile.is_active ?? true,
             lastLogin: profile.last_login,
             createdAt: profile.created_at,

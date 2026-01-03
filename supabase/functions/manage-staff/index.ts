@@ -13,7 +13,7 @@ interface StaffAction {
   password?: string;
   fullName?: string;
   phone?: string;
-  role?: "scanner" | "manager";
+  role?: "scanner" | "manager" | "support";
   isActive?: boolean;
 }
 

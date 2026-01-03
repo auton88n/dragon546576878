@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
-import { LayoutDashboard, Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, MessageSquare, Mail, Headphones } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
@@ -21,6 +21,7 @@ const SettingsPanel = lazy(() => import('@/components/admin/SettingsPanel'));
 const ReportsPanel = lazy(() => import('@/components/admin/ReportsPanel'));
 const GroupBookingsPanel = lazy(() => import('@/components/admin/GroupBookingsPanel'));
 const ContactSubmissionsPanel = lazy(() => import('@/components/admin/ContactSubmissionsPanel'));
+const LiveSupportPanel = lazy(() => import('@/components/admin/LiveSupportPanel'));
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -285,10 +286,35 @@ const AdminPage = () => {
               </Suspense>
             </TabsContent>
 
-            {/* Messages Tab */}
+            {/* Messages Tab with Subtabs */}
             <TabsContent value="messages" className="animate-fade-in">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <ContactSubmissionsPanel />
+                <Tabs defaultValue="live-chat" className="space-y-4">
+                  <TabsList className="glass-card p-1 h-auto">
+                    <TabsTrigger 
+                      value="live-chat" 
+                      className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-4 py-2 rounded-lg transition-all text-xs md:text-sm"
+                    >
+                      <Headphones className="h-4 w-4" />
+                      {isArabic ? 'المحادثات المباشرة' : 'Live Chat'}
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="contact-forms" 
+                      className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-4 py-2 rounded-lg transition-all text-xs md:text-sm"
+                    >
+                      <Mail className="h-4 w-4" />
+                      {isArabic ? 'نماذج التواصل' : 'Contact Forms'}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="live-chat" className="mt-4">
+                    <LiveSupportPanel />
+                  </TabsContent>
+
+                  <TabsContent value="contact-forms" className="mt-4">
+                    <ContactSubmissionsPanel />
+                  </TabsContent>
+                </Tabs>
               </Suspense>
             </TabsContent>
           </Tabs>
