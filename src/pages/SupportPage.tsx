@@ -32,12 +32,12 @@ const faqData: FAQItem[] = [
     id: 'booking-2',
     category: 'booking',
     question: {
-      en: 'Can I cancel or change my booking?',
-      ar: 'هل يمكنني إلغاء أو تغيير حجزي؟'
+      en: 'Can I change my booking date?',
+      ar: 'هل يمكنني تغيير تاريخ حجزي؟'
     },
     answer: {
-      en: 'Bookings can be modified or cancelled up to 24 hours before your visit. Please contact our support team with your booking reference for assistance.',
-      ar: 'يمكن تعديل أو إلغاء الحجوزات قبل ٢٤ ساعة من موعد الزيارة. يرجى التواصل مع فريق الدعم مع رقم الحجز للمساعدة.'
+      en: 'Yes, you can exchange your ticket for a different date if you contact us at least 3 days before your original visit date. Please note that all ticket sales are final and no refunds are available. Contact our support team via the Contact page with your booking reference to request a date exchange.',
+      ar: 'نعم، يمكنك استبدال تذكرتك بتاريخ مختلف إذا تواصلت معنا قبل ٣ أيام على الأقل من تاريخ زيارتك الأصلي. يرجى ملاحظة أن جميع مبيعات التذاكر نهائية ولا يتوفر استرداد. تواصل مع فريق الدعم عبر صفحة التواصل مع رقم الحجز لطلب استبدال التاريخ.'
     }
   },
   {
@@ -130,12 +130,24 @@ const faqData: FAQItem[] = [
     id: 'payments-3',
     category: 'payments',
     question: {
-      en: 'How do I get a refund?',
-      ar: 'كيف أحصل على استرداد؟'
+      en: 'What is your refund policy?',
+      ar: 'ما هي سياسة الاسترداد؟'
     },
     answer: {
-      en: 'Refunds are processed within 7-14 business days for cancellations made at least 24 hours before your visit. Contact our support team with your booking reference.',
-      ar: 'يتم معالجة الاسترداد خلال ٧-١٤ يوم عمل للإلغاءات التي تتم قبل ٢٤ ساعة على الأقل من الزيارة. تواصل مع فريق الدعم مع رقم الحجز.'
+      en: 'All ticket sales are final and non-refundable. However, you may exchange your ticket for a different date if you notify us at least 3 days before your scheduled visit. For date exchanges, please contact our support team via the Contact page with your booking reference.',
+      ar: 'جميع مبيعات التذاكر نهائية وغير قابلة للاسترداد. ومع ذلك، يمكنك استبدال تذكرتك بتاريخ مختلف إذا أبلغتنا قبل ٣ أيام على الأقل من موعد زيارتك. لاستبدال التاريخ، يرجى التواصل مع فريق الدعم عبر صفحة التواصل مع رقم الحجز.'
+    }
+  },
+  {
+    id: 'payments-4',
+    category: 'payments',
+    question: {
+      en: 'What happens if I miss my visit date?',
+      ar: 'ماذا يحدث إذا فاتني موعد زيارتي؟'
+    },
+    answer: {
+      en: 'If you miss your scheduled visit date without contacting us at least 3 days in advance, your ticket will expire and no refund or exchange will be available. We recommend setting a reminder for your visit date.',
+      ar: 'إذا فاتك موعد زيارتك المحدد دون التواصل معنا قبل ٣ أيام على الأقل، ستنتهي صلاحية تذكرتك ولن يتوفر استرداد أو استبدال. ننصح بضبط تذكير لموعد زيارتك.'
     }
   },
   // Visiting Information
@@ -270,32 +282,32 @@ const SupportPage = () => {
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-foreground/90 via-foreground to-foreground" />
         
-        {/* Hero Content - positioned at bottom */}
-        <div className="absolute inset-0 flex items-end justify-center pb-8 md:pb-10">
+        {/* Hero Content - centered */}
+        <div className="absolute inset-0 flex items-center justify-center pt-16">
           <div className="text-center px-4 w-full max-w-2xl">
-            <div className="inline-block backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-8 py-6 shadow-2xl mb-6">
-              <div className="flex items-center justify-center gap-4 mb-2">
+            <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-6 py-6 shadow-2xl">
+              <div className="flex items-center justify-center gap-4 mb-3">
                 <HelpCircle className="h-8 w-8 text-accent" />
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
                   {isArabic ? 'المساعدة والدعم' : 'Help & Support'}
                 </h1>
               </div>
-              <p className="text-white/70 text-sm md:text-base">
+              <p className="text-white/70 text-sm md:text-base mb-5">
                 {isArabic 
                   ? 'ابحث عن إجابات لأسئلتك أو تحدث مع فريق الدعم'
                   : 'Find answers to your questions or chat with our support team'}
               </p>
-            </div>
-            
-            {/* Search Bar */}
-            <div className="max-w-xl mx-auto relative">
-              <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={isArabic ? 'ابحث عن مساعدة...' : 'Search for help...'}
-                className="ps-12 h-12 text-base rounded-xl bg-white shadow-lg"
-              />
+              
+              {/* Search Bar - inside card */}
+              <div className="relative max-w-md mx-auto">
+                <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={isArabic ? 'ابحث عن مساعدة...' : 'Search for help...'}
+                  className="ps-12 h-12 text-base rounded-xl bg-white shadow-lg"
+                />
+              </div>
             </div>
           </div>
         </div>
