@@ -198,6 +198,7 @@ export function useChatbot() {
     { id: 'hours', label: isArabic ? '🕐 ساعات العمل' : '🕐 Operating Hours', action: 'hours' },
     { id: 'location', label: isArabic ? '📍 الموقع' : '📍 Location', action: 'location' },
     { id: 'transfer', label: isArabic ? '💬 تحدث مع الدعم' : '💬 Talk to Support', action: 'transfer' },
+    { id: 'find_conversation', label: isArabic ? '📧 ابحث عن محادثتي' : '📧 Find My Conversation', action: 'email_lookup' },
   ];
 
   // Restore conversation from database
@@ -357,6 +358,7 @@ export function useChatbot() {
     { id: 'hours', label: t('hours'), action: 'hours' },
     { id: 'location', label: t('location'), action: 'location' },
     { id: 'transfer', label: t('talkToSupport'), action: 'transfer' },
+    { id: 'find_conversation', label: t('existingConversation'), action: 'email_lookup' },
   ], [t]);
 
   const getHelpfulButtons = useCallback((): ChatButton[] => [
