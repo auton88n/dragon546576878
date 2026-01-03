@@ -69,3 +69,25 @@ export const checkEmailStatus = async (bookingId: string): Promise<{
 export const resendConfirmationEmail = async (bookingId: string): Promise<boolean> => {
   return sendBookingConfirmation(bookingId);
 };
+
+/**
+ * Send payment reminder email
+ */
+export const sendPaymentReminder = async (bookingId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-payment-reminder', {
+      body: { bookingId },
+    });
+
+    if (error) {
+      console.error('Error sending payment reminder:', error);
+      return false;
+    }
+
+    console.log('Payment reminder sent:', data);
+    return data?.success ?? false;
+  } catch (error) {
+    console.error('Error invoking payment reminder function:', error);
+    return false;
+  }
+};
