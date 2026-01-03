@@ -1,29 +1,85 @@
 import { useEffect, useRef } from 'react';
-import { MessageCircle, X, RotateCcw, Send } from 'lucide-react';
+import { MessageCircle, X, RotateCcw, Send, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useChatbot, ChatMessage, ChatButton } from '@/hooks/useChatbot';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useState } from 'react';
+import { format, isToday, isYesterday } from 'date-fns';
+import { ar, enUS } from 'date-fns/locale';
 
-const ChatBubble = ({ message, onButtonClick }: { 
+const formatMessageTime = (date: Date, isArabic: boolean) => {
+  return format(date, 'h:mm a', { locale: isArabic ? ar : enUS });
+};
+
+const formatDateLabel = (date: Date, isArabic: boolean) => {
+  if (isToday(date)) return isArabic ? 'اليوم' : 'Today';
+  if (isYesterday(date)) return isArabic ? 'أمس' : 'Yesterday';
+  return format(date, 'dd MMM yyyy', { locale: isArabic ? ar : enUS });
+};
+
+const DateSeparator = ({ date, isArabic }: { date: Date; isArabic: boolean }) => (
+  <div className="flex items-center justify-center my-4">
+    <div className="px-3 py-1 bg-muted rounded-full text-xs text-muted-foreground">
+      {formatDateLabel(date, isArabic)}
+    </div>
+  </div>
+);
+
+const ChatBubble = ({ message, onButtonClick, isArabic }: { 
   message: ChatMessage; 
   onButtonClick: (action: string) => void;
+  isArabic: boolean;
 }) => {
   const isBot = message.type === 'bot';
+  const isAdmin = message.role === 'admin';
   
   return (
     <div className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-3`}>
-      <div className={`max-w-[85%] ${isBot ? 'order-2' : ''}`}>
+      {/* Admin avatar */}
+      {isAdmin && (
+        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-2 rtl:mr-0 rtl:ml-2 shrink-0">
+          <User className="w-4 h-4 text-green-600" />
+        </div>
+      )}
+      
+      <div className="max-w-[85%]">
+        {/* Admin header with name and time */}
+        {isAdmin && (
+          <div className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
+            <span className="font-medium text-green-700">
+              {message.senderName || (isArabic ? 'فريق الدعم' : 'Support Team')}
+            </span>
+            <span>{formatMessageTime(message.timestamp, isArabic)}</span>
+          </div>
+        )}
+        
         <div
           className={`px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap ${
-            isBot
-              ? 'bg-secondary text-secondary-foreground rounded-tl-sm'
-              : 'bg-primary text-white rounded-tr-sm'
+            isAdmin
+              ? 'bg-green-50 border border-green-200 text-green-900 rounded-tl-sm'
+              : isBot
+                ? 'bg-secondary text-secondary-foreground rounded-tl-sm'
+                : 'bg-primary text-white rounded-tr-sm'
           }`}
         >
           {message.content}
         </div>
+        
+        {/* Timestamp for non-admin bot messages */}
+        {isBot && !isAdmin && (
+          <div className="text-[10px] text-muted-foreground mt-1">
+            {formatMessageTime(message.timestamp, isArabic)}
+          </div>
+        )}
+        
+        {/* Timestamp for user messages */}
+        {!isBot && (
+          <div className={`text-[10px] text-muted-foreground mt-1 ${isArabic ? 'text-left' : 'text-right'}`}>
+            {formatMessageTime(message.timestamp, isArabic)}
+          </div>
+        )}
+        
         {message.buttons && message.buttons.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
             {message.buttons.map((btn: ChatButton) => (
@@ -54,6 +110,27 @@ const TypingIndicator = () => (
   </div>
 );
 
+const LiveSupportBanner = ({ conversationId, isArabic }: { conversationId: string | null; isArabic: boolean }) => (
+  <div className="mx-4 mt-3 p-3 bg-green-50 border border-green-200 rounded-xl">
+    <div className="flex items-center gap-2 mb-1">
+      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+      <span className="text-sm font-medium text-green-800">
+        {isArabic ? 'متصل بالدعم المباشر' : 'Connected to Live Support'}
+      </span>
+    </div>
+    <p className="text-xs text-green-600">
+      {isArabic 
+        ? 'سيرد فريق الدعم هنا مباشرة' 
+        : 'Support team will reply here directly'}
+    </p>
+    {conversationId && (
+      <p className="text-xs text-muted-foreground mt-1">
+        {isArabic ? 'المرجع:' : 'Ref:'} {conversationId.slice(0, 8).toUpperCase()}
+      </p>
+    )}
+  </div>
+);
+
 const ChatWidget = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
@@ -64,6 +141,8 @@ const ChatWidget = () => {
     messages,
     isOpen,
     isTyping,
+    state,
+    conversationId,
     unreadCount,
     toggleChat,
     handleButtonClick,
@@ -84,6 +163,29 @@ const ChatWidget = () => {
     }
   };
 
+  // Group messages by date for separators
+  const getMessagesWithDateSeparators = () => {
+    const result: (ChatMessage | { type: 'date-separator'; date: Date; id: string })[] = [];
+    let lastDate: string | null = null;
+
+    messages.forEach((message) => {
+      const messageDate = format(message.timestamp, 'yyyy-MM-dd');
+      if (messageDate !== lastDate) {
+        result.push({
+          type: 'date-separator',
+          date: message.timestamp,
+          id: `date-${messageDate}`
+        });
+        lastDate = messageDate;
+      }
+      result.push(message);
+    });
+
+    return result;
+  };
+
+  const messagesWithSeparators = getMessagesWithDateSeparators();
+
   return (
     <>
       {/* Chat Dialog */}
@@ -103,8 +205,15 @@ const ChatWidget = () => {
                 <h3 className="font-semibold text-sm">
                   {isArabic ? 'دعم سوق المفيجر' : 'Souq Almufaijer Support'}
                 </h3>
-                <p className="text-xs text-primary-foreground/70">
-                  {isArabic ? 'نحن هنا للمساعدة' : "We're here to help"}
+                <p className="text-xs text-primary-foreground/70 flex items-center gap-1">
+                  {state === 'transferred' ? (
+                    <>
+                      <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                      {isArabic ? 'دعم مباشر' : 'Live Support'}
+                    </>
+                  ) : (
+                    isArabic ? 'نحن هنا للمساعدة' : "We're here to help"
+                  )}
                 </p>
               </div>
             </div>
@@ -129,15 +238,27 @@ const ChatWidget = () => {
             </div>
           </div>
 
+          {/* Live Support Banner */}
+          {state === 'transferred' && (
+            <LiveSupportBanner conversationId={conversationId} isArabic={isArabic} />
+          )}
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-1">
-            {messages.map((message) => (
-              <ChatBubble 
-                key={message.id} 
-                message={message} 
-                onButtonClick={handleButtonClick}
-              />
-            ))}
+            {messagesWithSeparators.map((item) => {
+              if ('type' in item && item.type === 'date-separator') {
+                return <DateSeparator key={item.id} date={item.date} isArabic={isArabic} />;
+              }
+              const message = item as ChatMessage;
+              return (
+                <ChatBubble 
+                  key={message.id} 
+                  message={message} 
+                  onButtonClick={handleButtonClick}
+                  isArabic={isArabic}
+                />
+              );
+            })}
             {isTyping && <TypingIndicator />}
             <div ref={messagesEndRef} />
           </div>
