@@ -215,18 +215,19 @@ const ContactSubmissionsPanel = () => {
                     {format(new Date(submission.created_at), 'MMM dd, yyyy HH:mm')}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <Button
-                        size="sm"
+                        size="icon"
                         variant="ghost"
+                        className="h-9 w-9 hover:bg-secondary"
                         onClick={() => handleViewSubmission(submission)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button
-                        size="sm"
+                        size="icon"
                         variant="ghost"
-                        className="text-destructive hover:text-destructive"
+                        className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => setDeleteId(submission.id)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -247,15 +248,17 @@ const ContactSubmissionsPanel = () => {
 
       {/* View Submission Dialog */}
       <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedSubmission?.status === 'unread' ? (
-                <Mail className="h-5 w-5" />
-              ) : (
-                <MailOpen className="h-5 w-5" />
-              )}
-              {selectedSubmission?.subject}
+        <DialogContent className="max-w-2xl pt-10">
+          <DialogHeader className="pe-12">
+            <DialogTitle className="flex items-center gap-3">
+              <div className="shrink-0">
+                {selectedSubmission?.status === 'unread' ? (
+                  <Mail className="h-5 w-5" />
+                ) : (
+                  <MailOpen className="h-5 w-5" />
+                )}
+              </div>
+              <span className="truncate">{selectedSubmission?.subject}</span>
             </DialogTitle>
           </DialogHeader>
           

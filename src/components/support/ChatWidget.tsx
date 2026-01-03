@@ -108,11 +108,11 @@ const ChatWidget = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10"
+                className="h-9 w-9 text-primary-foreground hover:bg-primary-foreground/20 rounded-lg"
                 onClick={resetChat}
                 title={isArabic ? 'إعادة بدء المحادثة' : 'Restart chat'}
               >
@@ -121,7 +121,7 @@ const ChatWidget = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10"
+                className="h-9 w-9 text-primary-foreground hover:bg-primary-foreground/20 rounded-lg"
                 onClick={toggleChat}
               >
                 <X className="w-5 h-5" />
