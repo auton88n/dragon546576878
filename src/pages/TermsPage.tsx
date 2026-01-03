@@ -13,19 +13,27 @@ const TermsPage = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative bg-foreground text-background py-16">
-        <div className="container">
-          <div className="flex items-center gap-4 mb-4">
-            <FileText className="h-10 w-10 text-accent" />
-            <h1 className="text-3xl md:text-4xl font-bold">
-              {isArabic ? 'سياسة الاستبدال والشروط' : 'Exchange Policy & Terms'}
-            </h1>
+      <section className="relative h-[40vh] min-h-[280px] max-h-[400px] bg-foreground overflow-hidden">
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-foreground/90 via-foreground to-foreground" />
+        
+        {/* Hero Content - positioned at bottom */}
+        <div className="absolute inset-0 flex items-end justify-center pb-8 md:pb-10">
+          <div className="text-center px-4">
+            <div className="inline-block backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-8 py-6 shadow-2xl">
+              <div className="flex items-center justify-center gap-4 mb-2">
+                <FileText className="h-8 w-8 text-accent" />
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+                  {isArabic ? 'سياسة الاستبدال والشروط' : 'Exchange Policy & Terms'}
+                </h1>
+              </div>
+              <p className="text-white/70 text-sm md:text-base">
+                {isArabic 
+                  ? 'آخر تحديث: 3 يناير 2026'
+                  : 'Last Updated: January 3, 2026'}
+              </p>
+            </div>
           </div>
-          <p className="text-background/70 text-lg">
-            {isArabic 
-              ? 'آخر تحديث: 3 يناير 2026'
-              : 'Last Updated: January 3, 2026'}
-          </p>
         </div>
       </section>
 
