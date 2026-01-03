@@ -281,9 +281,9 @@ const LiveSupportPanel = () => {
 
       {/* Conversation Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col pt-10">
-          <DialogHeader className="pe-12">
-            <DialogTitle className="flex items-center gap-3">
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col pt-12">
+          <DialogHeader className="pe-14">
+            <DialogTitle className="flex items-center gap-3 mt-2">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <User className="w-5 h-5 text-primary" />
               </div>
@@ -306,7 +306,7 @@ const LiveSupportPanel = () => {
                 <div
                   className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${
                     msg.type === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                      ? 'bg-primary text-white rounded-tr-sm'
                       : msg.type === 'admin'
                       ? 'bg-green-100 text-green-900 rounded-tl-sm border border-green-200'
                       : 'bg-secondary text-secondary-foreground rounded-tl-sm'
