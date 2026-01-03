@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Mail, MailOpen, Trash2, MessageSquare, Eye } from 'lucide-react';
@@ -67,6 +67,24 @@ const ContactSubmissionsPanel = () => {
       return data as ContactSubmission[];
     },
   });
+
+  // Real-time subscription for instant updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('contact-submissions-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contact_submissions' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['contact-submissions'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes?: string }) => {

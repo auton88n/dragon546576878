@@ -1,7 +1,7 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense, useEffect } from 'react';
 import { MessageSquare, Mail, Headphones, Volume2, VolumeX } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import StaffHeader from '@/components/shared/StaffHeader';
 import PoweredByAYN from '@/components/shared/PoweredByAYN';
@@ -18,6 +18,32 @@ const SupportDashboardPage = () => {
   const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Real-time subscription for instant updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('support-dashboard-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_conversations' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['live-chat-count'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contact_submissions' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['contact-forms-count'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Fetch counts for badges
   const { data: liveChatCount = 0 } = useQuery({

@@ -150,6 +150,55 @@ export function useChatbot() {
     }
   }, []);
 
+  // Subscribe to conversation updates for admin replies
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const channel = supabase
+      .channel(`conversation-${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'support_conversations',
+          filter: `id=eq.${conversationId}`
+        },
+        (payload) => {
+          const updatedConversation = payload.new as { messages?: string | unknown[] };
+          const newMessages = typeof updatedConversation.messages === 'string'
+            ? JSON.parse(updatedConversation.messages)
+            : updatedConversation.messages || [];
+          
+          // Find any new admin messages not already in our chat
+          const adminMessages = newMessages.filter(
+            (m: { type: string; content: string }) => 
+              m.type === 'admin' && 
+              !messages.some(existing => 
+                existing.content.includes(m.content) && 
+                existing.type === 'bot'
+              )
+          );
+          
+          // Add new admin messages to chat
+          adminMessages.forEach((adminMsg: { content: string; timestamp: string }) => {
+            setMessages(prev => [...prev, {
+              id: generateId(),
+              type: 'bot',
+              content: `👤 ${isArabic ? 'الدعم' : 'Support'}: ${adminMsg.content}`,
+              timestamp: new Date(adminMsg.timestamp)
+            }]);
+            if (!isOpen) setUnreadCount(prev => prev + 1);
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, isOpen, isArabic]);
+
   const getMainMenuButtons = useCallback((): ChatButton[] => [
     { id: 'booking', label: t('booking'), action: 'booking' },
     { id: 'payment', label: t('payment'), action: 'payment' },
