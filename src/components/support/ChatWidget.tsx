@@ -19,7 +19,7 @@ const ChatBubble = ({ message, onButtonClick }: {
           className={`px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap ${
             isBot
               ? 'bg-secondary text-secondary-foreground rounded-tl-sm'
-              : 'bg-primary text-primary-foreground rounded-tr-sm'
+              : 'bg-primary text-white rounded-tr-sm'
           }`}
         >
           {message.content}
