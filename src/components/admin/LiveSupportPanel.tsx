@@ -361,7 +361,7 @@ const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
                       {isArabic ? 'رد الدعم' : 'Support Reply'}
                     </span>
                   )}
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  <span className="whitespace-pre-wrap text-inherit block">{msg.content}</span>
                   <span className="text-xs opacity-70 mt-1 block">
                     {format(new Date(msg.timestamp), 'h:mm a')}
                   </span>
