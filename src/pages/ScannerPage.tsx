@@ -566,14 +566,22 @@ const ScannerPage = () => {
       {showCodeEntry && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => { setShowCodeEntry(false); setEnteredCode(''); }}>
           <div 
-            className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md p-6"
+            className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 pt-10 relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center">
+            {/* Close Button */}
+            <button
+              onClick={() => { setShowCodeEntry(false); setEnteredCode(''); }}
+              className="absolute right-5 top-5 p-2 rounded-lg bg-secondary/80 hover:bg-secondary text-foreground/70 hover:text-foreground transition-all"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-4 pe-10">
+              <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center shrink-0">
                 <Keyboard className="h-6 w-6 text-foreground" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-xl font-bold">{isArabic ? 'إدخال رمز التذكرة' : 'Enter Ticket Code'}</h3>
                 <p className="text-sm text-muted-foreground">{isArabic ? 'أدخل الرمز المطبوع أسفل QR' : 'Type the code printed below QR'}</p>
               </div>
