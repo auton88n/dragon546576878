@@ -18,7 +18,6 @@ import { ar, enUS } from 'date-fns/locale';
 import { Users, Calendar as CalendarIcon, DollarSign, Headphones, UtensilsCrossed, Building2, CheckCircle, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CooldownNotice from '@/components/shared/CooldownNotice';
-import { useRecaptcha } from '@/hooks/useRecaptcha';
 import { checkRateLimit, recordAttempt, RATE_LIMITS } from '@/lib/rateLimiter';
 const groupBookingSchema = z.object({
   organization_name: z.string().min(3, 'Organization name must be at least 3 characters').max(100),
@@ -38,9 +37,6 @@ const GroupBookingsPage = () => {
     currentLanguage
   } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const {
-    executeRecaptcha
-  } = useRecaptcha();
   const [formData, setFormData] = useState<Partial<GroupBookingForm>>({
     organization_name: '',
     contact_person: '',
@@ -130,27 +126,6 @@ const GroupBookingsPage = () => {
         group_size: Number(formData.group_size)
       });
       setIsSubmitting(true);
-
-      // Get reCAPTCHA token
-      const recaptchaToken = await executeRecaptcha('group_booking');
-      if (recaptchaToken) {
-        // Verify with server
-        const {
-          data: verifyData,
-          error: verifyError
-        } = await supabase.functions.invoke('verify-recaptcha', {
-          body: {
-            token: recaptchaToken,
-            action: 'group_booking'
-          }
-        });
-        if (verifyError || !verifyData?.success) {
-          console.error('reCAPTCHA verification failed:', verifyError || verifyData);
-          toast.error(isArabic ? 'فشل التحقق. يرجى المحاولة مرة أخرى.' : 'Verification failed. Please try again.');
-          setIsSubmitting(false);
-          return;
-        }
-      }
 
       // Record the attempt before submission
       recordAttempt(RATE_LIMITS.GROUP_BOOKING.key);

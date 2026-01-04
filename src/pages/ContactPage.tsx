@@ -15,7 +15,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import OptimizedImage from '@/components/shared/OptimizedImage';
 import CooldownNotice from '@/components/shared/CooldownNotice';
-import { useRecaptcha } from '@/hooks/useRecaptcha';
 import { checkRateLimit, recordAttempt, RATE_LIMITS } from '@/lib/rateLimiter';
 const heroImage = '/images/hero-contact.webp';
 const contactSchema = z.object({
@@ -33,9 +32,6 @@ const ContactPage = () => {
     currentLanguage
   } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const {
-    executeRecaptcha
-  } = useRecaptcha();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [honeypot, setHoneypot] = useState('');
@@ -65,29 +61,6 @@ const ContactPage = () => {
     }
     setIsSubmitting(true);
     try {
-      // Get reCAPTCHA token - required on production
-      const recaptchaToken = await executeRecaptcha('contact_form');
-
-      // Verify with server (only if token exists - means we're on allowed domain)
-      if (recaptchaToken) {
-        const {
-          data: verifyData,
-          error: verifyError
-        } = await supabase.functions.invoke('verify-recaptcha', {
-          body: {
-            token: recaptchaToken,
-            action: 'contact_form'
-          }
-        });
-        if (verifyError || !verifyData?.success) {
-          console.error('reCAPTCHA verification failed:', verifyError || verifyData);
-          toast.error(isArabic ? 'فشل التحقق. يرجى المحاولة مرة أخرى.' : 'Verification failed. Please try again.');
-          setIsSubmitting(false);
-          return;
-        }
-      }
-      // Note: On dev/preview domains, reCAPTCHA is skipped but honeypot + rate limiting still protect
-
       // Record the attempt before submission
       recordAttempt(RATE_LIMITS.CONTACT_FORM.key);
       const {
