@@ -17,7 +17,7 @@ import OptimizedImage from '@/components/shared/OptimizedImage';
 import CooldownNotice from '@/components/shared/CooldownNotice';
 import { useRecaptcha } from '@/hooks/useRecaptcha';
 import { checkRateLimit, recordAttempt, RATE_LIMITS } from '@/lib/rateLimiter';
-import heroImage from '@/assets/hero-heritage.webp';
+const heroImage = '/images/hero-contact.webp';
 const contactSchema = z.object({
   name: z.string().trim().min(3, 'Name must be at least 3 characters').max(100),
   email: z.string().trim().email('Please enter a valid email').max(255),

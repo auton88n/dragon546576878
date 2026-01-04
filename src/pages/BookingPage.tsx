@@ -9,7 +9,7 @@ import Footer from '@/components/shared/Footer';
 import StepIndicator from '@/components/booking/StepIndicator';
 import OptimizedImage from '@/components/shared/OptimizedImage';
 
-const heroImage = '/images/hero-heritage.webp';
+const heroImage = '/images/hero-booking.webp';
 import TicketSelector from '@/components/booking/TicketSelector';
 import DetailsAndPayment from '@/components/booking/DetailsAndPayment';
 
