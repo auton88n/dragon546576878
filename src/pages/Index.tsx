@@ -48,10 +48,11 @@ const Index = () => {
           <OptimizedImage 
             src={heroImage} 
             alt="Souq Almufaijer Heritage Site" 
-            className="w-full h-full"
+            className="w-full h-full hero-ken-burns"
             priority 
           />
           <div className="hero-overlay absolute inset-0" />
+          <div className="hero-vignette absolute inset-0" />
         </div>
 
         {/* Content */}
