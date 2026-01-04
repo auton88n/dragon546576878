@@ -1,11 +1,8 @@
-import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import Header from '@/components/shared/Header';
+import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
-
-// Lazy load below-the-fold component
-const Footer = lazy(() => import('@/components/shared/Footer'));
 import OptimizedImage from '@/components/shared/OptimizedImage';
 import { Clock, MapPin, Landmark, Heart, Calendar, Users, Ticket } from 'lucide-react';
 import featureHeritage from '@/assets/feature-heritage.webp';
@@ -257,9 +254,7 @@ const Index = () => {
         </div>
       </section>
 
-      <Suspense fallback={null}>
-        <Footer />
-      </Suspense>
+      <Footer />
     </div>;
 };
 export default Index;
