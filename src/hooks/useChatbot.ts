@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLanguage } from './useLanguage';
 import { supabase } from '@/integrations/supabase/client';
-
+import { checkRateLimit, recordAttempt, RATE_LIMITS } from '@/lib/rateLimiter';
 export interface ChatMessage {
   id: string;
   type: 'bot' | 'user';
@@ -437,6 +437,18 @@ export function useChatbot() {
         break;
       case 'transfer':
         addUserMessage(t('talkToSupport'));
+        // Rate limit check for transfers
+        const rateLimitResult = checkRateLimit(RATE_LIMITS.SUPPORT_TRANSFER);
+        if (!rateLimitResult.allowed) {
+          addBotMessage(
+            isArabic 
+              ? `يرجى الانتظار ${rateLimitResult.remainingMinutes} دقيقة قبل طلب الدعم مرة أخرى.`
+              : `Please wait ${rateLimitResult.remainingMinutes} minutes before requesting support again.`,
+            getMainMenuButtons()
+          );
+          return;
+        }
+        recordAttempt(RATE_LIMITS.SUPPORT_TRANSFER.key);
         setState('transfer_form');
         addBotMessage(t('transferPrompt'));
         break;
