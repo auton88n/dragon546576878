@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.verify-recaptcha]
 verify_jwt = false
+
+[functions.send-ayn-support]
+verify_jwt = true
