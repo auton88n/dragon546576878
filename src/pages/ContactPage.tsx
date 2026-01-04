@@ -18,7 +18,6 @@ import CooldownNotice from '@/components/shared/CooldownNotice';
 import { useRecaptcha } from '@/hooks/useRecaptcha';
 import { checkRateLimit, recordAttempt, RATE_LIMITS } from '@/lib/rateLimiter';
 import heroImage from '@/assets/hero-heritage.webp';
-
 const contactSchema = z.object({
   name: z.string().trim().min(3, 'Name must be at least 3 characters').max(100),
   email: z.string().trim().email('Please enter a valid email').max(255),
@@ -26,28 +25,31 @@ const contactSchema = z.object({
   subject: z.string().trim().min(3, 'Subject is required').max(200),
   message: z.string().trim().min(10, 'Message must be at least 10 characters').max(2000)
 });
-
 type ContactFormData = z.infer<typeof contactSchema>;
-
 const ContactPage = () => {
-  const { t, isRTL, currentLanguage } = useLanguage();
+  const {
+    t,
+    isRTL,
+    currentLanguage
+  } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { executeRecaptcha } = useRecaptcha();
-  
+  const {
+    executeRecaptcha
+  } = useRecaptcha();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [honeypot, setHoneypot] = useState('');
   const [cooldownMinutes, setCooldownMinutes] = useState<number | null>(null);
-
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors }
+    formState: {
+      errors
+    }
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema)
   });
-
   const onSubmit = async (data: ContactFormData) => {
     // Honeypot check - silently "succeed" for bots
     if (honeypot) {
@@ -61,19 +63,22 @@ const ContactPage = () => {
       setCooldownMinutes(rateLimitResult.remainingMinutes || 1);
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       // Get reCAPTCHA token - required on production
       const recaptchaToken = await executeRecaptcha('contact_form');
-      
+
       // Verify with server (only if token exists - means we're on allowed domain)
       if (recaptchaToken) {
-        const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-recaptcha', {
-          body: { token: recaptchaToken, action: 'contact_form' }
+        const {
+          data: verifyData,
+          error: verifyError
+        } = await supabase.functions.invoke('verify-recaptcha', {
+          body: {
+            token: recaptchaToken,
+            action: 'contact_form'
+          }
         });
-
         if (verifyError || !verifyData?.success) {
           console.error('reCAPTCHA verification failed:', verifyError || verifyData);
           toast.error(isArabic ? 'فشل التحقق. يرجى المحاولة مرة أخرى.' : 'Verification failed. Please try again.');
@@ -85,17 +90,16 @@ const ContactPage = () => {
 
       // Record the attempt before submission
       recordAttempt(RATE_LIMITS.CONTACT_FORM.key);
-
-      const { error } = await supabase.from('contact_submissions').insert({
+      const {
+        error
+      } = await supabase.from('contact_submissions').insert({
         name: data.name,
         email: data.email,
         phone: data.phone || null,
         subject: data.subject,
         message: data.message
       });
-
       if (error) throw error;
-
       setIsSubmitted(true);
       reset();
       toast.success(t('contact.success'));
@@ -106,7 +110,6 @@ const ContactPage = () => {
       setIsSubmitting(false);
     }
   };
-
   const contactInfo = [{
     icon: MapPin,
     titleEn: 'Location',
@@ -136,9 +139,7 @@ const ContactPage = () => {
     contentAr: 'السبت - الخميس: ٩:٠٠ ص - ٦:٠٠ م\nالجمعة: مغلق',
     dirType: 'auto' as const
   }];
-
-  return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+  return <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
       {/* Hero Section */}
@@ -174,10 +175,7 @@ const ContactPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {cooldownMinutes !== null ? (
-                  <CooldownNotice remainingMinutes={cooldownMinutes} isArabic={isArabic} />
-                ) : isSubmitted ? (
-                  <div className="text-center py-12">
+                {cooldownMinutes !== null ? <CooldownNotice remainingMinutes={cooldownMinutes} isArabic={isArabic} /> : isSubmitted ? <div className="text-center py-12">
                     <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
                     <h3 className="font-semibold mb-2 text-base">
                       {t('contact.form.successTitle')}
@@ -188,20 +186,9 @@ const ContactPage = () => {
                     <Button onClick={() => setIsSubmitted(false)} variant="outline">
                       {t('contact.form.sendAnother')}
                     </Button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  </div> : <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     {/* Honeypot - invisible to humans */}
-                    <input
-                      type="text"
-                      name="website"
-                      autoComplete="off"
-                      tabIndex={-1}
-                      value={honeypot}
-                      onChange={(e) => setHoneypot(e.target.value)}
-                      className="absolute -left-[9999px] opacity-0 pointer-events-none"
-                      aria-hidden="true"
-                    />
+                    <input type="text" name="website" autoComplete="off" tabIndex={-1} value={honeypot} onChange={e => setHoneypot(e.target.value)} className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true" />
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -235,21 +222,14 @@ const ContactPage = () => {
                     </div>
 
                     <Button type="submit" className="btn-gold w-full" disabled={isSubmitting}>
-                      {isSubmitting ? t('contact.form.sending') : (
-                        <>
+                      {isSubmitting ? t('contact.form.sending') : <>
                           <Send className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" />
                           {t('contact.form.send')}
-                        </>
-                      )}
+                        </>}
                     </Button>
 
-                    <p className="text-xs text-muted-foreground text-center">
-                      {isArabic 
-                        ? 'هذا الموقع محمي بواسطة reCAPTCHA'
-                        : 'This site is protected by reCAPTCHA'}
-                    </p>
-                  </form>
-                )}
+                    
+                  </form>}
               </CardContent>
             </Card>
 
@@ -257,8 +237,7 @@ const ContactPage = () => {
             <div className="space-y-8">
               {/* Contact Cards */}
               <div className="grid sm:grid-cols-2 gap-4">
-                {contactInfo.map((info, index) => (
-                  <Card key={index} className="border-border/50">
+                {contactInfo.map((info, index) => <Card key={index} className="border-border/50">
                     <CardContent className="p-4 flex items-start gap-4">
                       <div className="p-2 rounded-lg bg-accent/10">
                         <info.icon className="h-5 w-5 text-accent" />
@@ -272,8 +251,7 @@ const ContactPage = () => {
                         </p>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
 
               {/* Map Placeholder */}
@@ -283,16 +261,10 @@ const ContactPage = () => {
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="aspect-video bg-muted flex items-center justify-center">
-                    <iframe
-                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3654.5!2d46.56436420764147!3d23.612384849872548!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDM2JzQ0LjYiTiA0NsKwMzMnNTEuNyJF!5e0!3m2!1sen!2ssa!4v1"
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0, minHeight: '300px' }}
-                      allowFullScreen
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      title={t('contact.map.title')}
-                    />
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3654.5!2d46.56436420764147!3d23.612384849872548!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDM2JzQ0LjYiTiA0NsKwMzMnNTEuNyJF!5e0!3m2!1sen!2ssa!4v1" width="100%" height="100%" style={{
+                    border: 0,
+                    minHeight: '300px'
+                  }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={t('contact.map.title')} />
                   </div>
                 </CardContent>
               </Card>
@@ -302,8 +274,6 @@ const ContactPage = () => {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default ContactPage;
