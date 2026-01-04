@@ -11,9 +11,6 @@ const corsHeaders = {
 
 interface SupportTicketRequest {
   ticketId: string;
-  adminId: string;
-  adminEmail: string;
-  adminName: string;
   subject: string;
   category: string;
   priority: string;
@@ -23,7 +20,7 @@ interface SupportTicketRequest {
 const priorityLabels: Record<string, { en: string; ar: string; color: string }> = {
   low: { en: "Low", ar: "منخفضة", color: "#22c55e" },
   medium: { en: "Medium", ar: "متوسطة", color: "#f59e0b" },
-  high: { en: "High", ar: "High", color: "#ef4444" },
+  high: { en: "High", ar: "عالية", color: "#ef4444" },
   critical: { en: "Critical", ar: "حرجة", color: "#dc2626" },
 };
 
@@ -43,34 +40,138 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const {
-      ticketId,
-      adminId,
-      adminEmail,
-      adminName,
-      subject,
-      category,
-      priority,
-      description,
-    }: SupportTicketRequest = await req.json();
+    // =====================
+    // STEP 1: Authenticate user from Authorization header
+    // =====================
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.log("No Authorization header provided");
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized: No authorization header" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Create client with user's token to verify identity
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+    
+    if (userError || !user) {
+      console.log("Failed to authenticate user:", userError?.message || "No user found");
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized: Invalid session" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("Authenticated user:", user.id);
+
+    // =====================
+    // STEP 2: Verify user is staff (admin, manager, etc.)
+    // =====================
+    const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
+    
+    const { data: isStaff, error: staffError } = await supabaseService.rpc("is_staff", {
+      _user_id: user.id,
+    });
+
+    if (staffError) {
+      console.error("Error checking staff status:", staffError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Failed to verify permissions" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!isStaff) {
+      console.log("User is not staff:", user.id);
+      return new Response(
+        JSON.stringify({ success: false, error: "Forbidden: Staff access required" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log("User verified as staff");
+
+    // =====================
+    // STEP 3: Get user profile for name
+    // =====================
+    const { data: profile } = await supabaseService
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const adminId = user.id;
+    const adminEmail = profile?.email || user.email || "";
+    const adminName = profile?.full_name || user.email || "Admin";
+
+    console.log("Admin info:", { adminId, adminEmail, adminName });
+
+    // =====================
+    // STEP 4: Parse and validate request body
+    // =====================
+    const body: SupportTicketRequest = await req.json();
+    const { ticketId, subject, category, priority, description } = body;
+
+    // Validate required fields
+    if (!ticketId || typeof ticketId !== "string") {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid ticketId" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!subject || typeof subject !== "string" || subject.trim().length < 3 || subject.trim().length > 120) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Subject must be 3-120 characters" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!category || !["bug", "feature", "question", "other"].includes(category)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid category" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!priority || !["low", "medium", "high", "critical"].includes(priority)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid priority" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!description || typeof description !== "string" || description.trim().length < 50 || description.trim().length > 5000) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Description must be 50-5000 characters" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     console.log("Creating support ticket:", { ticketId, subject, category, priority });
 
-    // Insert ticket into database
-    const { error: insertError } = await supabase
+    // =====================
+    // STEP 5: Insert ticket into database
+    // =====================
+    const { error: insertError } = await supabaseService
       .from("support_tickets")
       .insert({
         id: ticketId,
         admin_id: adminId,
         admin_email: adminEmail,
         admin_name: adminName,
-        subject,
+        subject: subject.trim(),
         category,
         priority,
-        description,
+        description: description.trim(),
         status: "pending",
       });
 
@@ -78,6 +179,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Failed to insert ticket:", insertError);
       throw new Error(`Failed to create ticket: ${insertError.message}`);
     }
+
+    console.log("Ticket inserted successfully");
 
     const ticketRef = ticketId.slice(0, 8).toUpperCase();
     const priorityInfo = priorityLabels[priority] || priorityLabels.medium;
@@ -87,7 +190,9 @@ const handler = async (req: Request): Promise<Response> => {
       timeStyle: "short",
     });
 
-    // Email 1: To AYN Support
+    // =====================
+    // STEP 6: Send email to AYN Support
+    // =====================
     const aynEmailHtml = `
 <!DOCTYPE html>
 <html>
@@ -155,7 +260,9 @@ const handler = async (req: Request): Promise<Response> => {
 </html>
     `;
 
-    // Email 2: Confirmation to Admin
+    // =====================
+    // STEP 7: Send confirmation email to Admin
+    // =====================
     const confirmationEmailHtml = `
 <!DOCTYPE html>
 <html dir="rtl">
