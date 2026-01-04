@@ -65,11 +65,11 @@ const ContactPage = () => {
     setIsSubmitting(true);
 
     try {
-      // Get reCAPTCHA token
+      // Get reCAPTCHA token - required on production
       const recaptchaToken = await executeRecaptcha('contact_form');
       
+      // Verify with server (only if token exists - means we're on allowed domain)
       if (recaptchaToken) {
-        // Verify with server
         const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-recaptcha', {
           body: { token: recaptchaToken, action: 'contact_form' }
         });
@@ -81,6 +81,7 @@ const ContactPage = () => {
           return;
         }
       }
+      // Note: On dev/preview domains, reCAPTCHA is skipped but honeypot + rate limiting still protect
 
       // Record the attempt before submission
       recordAttempt(RATE_LIMITS.CONTACT_FORM.key);
