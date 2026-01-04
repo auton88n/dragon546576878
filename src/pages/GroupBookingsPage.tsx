@@ -26,6 +26,9 @@ import {
   MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import CooldownNotice from '@/components/shared/CooldownNotice';
+import { useRecaptcha } from '@/hooks/useRecaptcha';
+import { checkRateLimit, recordAttempt, RATE_LIMITS } from '@/lib/rateLimiter';
 
 const groupBookingSchema = z.object({
   organization_name: z.string().min(3, 'Organization name must be at least 3 characters').max(100),
@@ -43,6 +46,7 @@ type GroupBookingForm = z.infer<typeof groupBookingSchema>;
 const GroupBookingsPage = () => {
   const { t, isRTL, currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
+  const { executeRecaptcha } = useRecaptcha();
   
   const [formData, setFormData] = useState<Partial<GroupBookingForm>>({
     organization_name: '',
@@ -57,6 +61,8 @@ const GroupBookingsPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [honeypot, setHoneypot] = useState('');
+  const [cooldownMinutes, setCooldownMinutes] = useState<number | null>(null);
 
   const benefits = [
     {
@@ -107,6 +113,19 @@ const GroupBookingsPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+
+    // Honeypot check - silently "succeed" for bots
+    if (honeypot) {
+      setIsSuccess(true);
+      return;
+    }
+
+    // Rate limit check
+    const rateLimitResult = checkRateLimit(RATE_LIMITS.GROUP_BOOKING);
+    if (!rateLimitResult.allowed) {
+      setCooldownMinutes(rateLimitResult.remainingMinutes || 1);
+      return;
+    }
     
     try {
       const validatedData = groupBookingSchema.parse({
@@ -115,6 +134,26 @@ const GroupBookingsPage = () => {
       });
 
       setIsSubmitting(true);
+
+      // Get reCAPTCHA token
+      const recaptchaToken = await executeRecaptcha('group_booking');
+      
+      if (recaptchaToken) {
+        // Verify with server
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-recaptcha', {
+          body: { token: recaptchaToken, action: 'group_booking' }
+        });
+
+        if (verifyError || !verifyData?.success) {
+          console.error('reCAPTCHA verification failed:', verifyError || verifyData);
+          toast.error(isArabic ? 'فشل التحقق. يرجى المحاولة مرة أخرى.' : 'Verification failed. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Record the attempt before submission
+      recordAttempt(RATE_LIMITS.GROUP_BOOKING.key);
 
       const { error } = await supabase
         .from('group_booking_requests')
@@ -258,193 +297,215 @@ const GroupBookingsPage = () => {
 
             <Card className="bg-card border-border/50 shadow-xl">
               <CardContent className="p-6 md:p-8">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Organization Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="organization_name">
-                      {isArabic ? 'اسم المنظمة / الشركة' : 'Organization Name'} *
-                    </Label>
-                    <Input
-                      id="organization_name"
-                      value={formData.organization_name}
-                      onChange={(e) => setFormData({ ...formData, organization_name: e.target.value })}
-                      placeholder={isArabic ? 'شركة المثال' : 'Example Company'}
-                      className={errors.organization_name ? 'border-destructive' : ''}
+                {cooldownMinutes !== null ? (
+                  <CooldownNotice remainingMinutes={cooldownMinutes} isArabic={isArabic} />
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Honeypot - invisible to humans */}
+                    <input
+                      type="text"
+                      name="website"
+                      autoComplete="off"
+                      tabIndex={-1}
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                      className="absolute -left-[9999px] opacity-0 pointer-events-none"
+                      aria-hidden="true"
                     />
-                    {errors.organization_name && (
-                      <p className="text-sm text-destructive">{errors.organization_name}</p>
-                    )}
-                  </div>
 
-                  {/* Contact Person */}
-                  <div className="space-y-2">
-                    <Label htmlFor="contact_person">
-                      {isArabic ? 'اسم المسؤول' : 'Contact Person'} *
-                    </Label>
-                    <Input
-                      id="contact_person"
-                      value={formData.contact_person}
-                      onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
-                      placeholder={isArabic ? 'محمد أحمد' : 'John Doe'}
-                      className={errors.contact_person ? 'border-destructive' : ''}
-                    />
-                    {errors.contact_person && (
-                      <p className="text-sm text-destructive">{errors.contact_person}</p>
-                    )}
-                  </div>
-
-                  {/* Email & Phone */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Organization Name */}
                     <div className="space-y-2">
-                      <Label htmlFor="email">
-                        {isArabic ? 'البريد الإلكتروني' : 'Email'} *
+                      <Label htmlFor="organization_name">
+                        {isArabic ? 'اسم المنظمة / الشركة' : 'Organization Name'} *
                       </Label>
                       <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="email@example.com"
-                        className={errors.email ? 'border-destructive' : ''}
+                        id="organization_name"
+                        value={formData.organization_name}
+                        onChange={(e) => setFormData({ ...formData, organization_name: e.target.value })}
+                        placeholder={isArabic ? 'شركة المثال' : 'Example Company'}
+                        className={errors.organization_name ? 'border-destructive' : ''}
                       />
-                      {errors.email && (
-                        <p className="text-sm text-destructive">{errors.email}</p>
+                      {errors.organization_name && (
+                        <p className="text-sm text-destructive">{errors.organization_name}</p>
                       )}
                     </div>
+
+                    {/* Contact Person */}
                     <div className="space-y-2">
-                      <Label htmlFor="phone">
-                        {isArabic ? 'رقم الهاتف' : 'Phone'} *
+                      <Label htmlFor="contact_person">
+                        {isArabic ? 'اسم المسؤول' : 'Contact Person'} *
                       </Label>
                       <Input
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+966 5X XXX XXXX"
-                        className={errors.phone ? 'border-destructive' : ''}
+                        id="contact_person"
+                        value={formData.contact_person}
+                        onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
+                        placeholder={isArabic ? 'محمد أحمد' : 'John Doe'}
+                        className={errors.contact_person ? 'border-destructive' : ''}
                       />
-                      {errors.phone && (
-                        <p className="text-sm text-destructive">{errors.phone}</p>
+                      {errors.contact_person && (
+                        <p className="text-sm text-destructive">{errors.contact_person}</p>
                       )}
                     </div>
-                  </div>
 
-                  {/* Group Size */}
-                  <div className="space-y-2">
-                    <Label htmlFor="group_size">
-                      {isArabic ? 'عدد الأشخاص' : 'Group Size'} *
-                    </Label>
-                    <div className="flex items-center gap-3">
-                      <Input
-                        id="group_size"
-                        type="number"
-                        min={20}
-                        value={formData.group_size}
-                        onChange={(e) => setFormData({ ...formData, group_size: parseInt(e.target.value) || 20 })}
-                        className={cn("w-32", errors.group_size ? 'border-destructive' : '')}
-                      />
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        {isArabic ? 'شخص (الحد الأدنى 20)' : 'people (minimum 20)'}
-                      </span>
-                    </div>
-                    {errors.group_size && (
-                      <p className="text-sm text-destructive">{errors.group_size}</p>
-                    )}
-                  </div>
-
-                  {/* Preferred Dates */}
-                  <div className="space-y-2">
-                    <Label>
-                      {isArabic ? 'التواريخ المفضلة' : 'Preferred Date(s)'} *
-                    </Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-start font-normal",
-                            !formData.preferred_dates?.length && "text-muted-foreground",
-                            errors.preferred_dates ? 'border-destructive' : ''
-                          )}
-                        >
-                          <CalendarIcon className="me-2 h-4 w-4" />
-                          {formData.preferred_dates?.length 
-                            ? formData.preferred_dates.map(d => format(d, 'PP', { locale: isArabic ? ar : enUS })).join(', ')
-                            : isArabic ? 'اختر التواريخ' : 'Select dates'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="multiple"
-                          selected={formData.preferred_dates}
-                          onSelect={(dates) => setFormData({ ...formData, preferred_dates: dates || [] })}
-                          disabled={(date) => date < new Date()}
-                          locale={isArabic ? ar : enUS}
+                    {/* Email & Phone */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">
+                          {isArabic ? 'البريد الإلكتروني' : 'Email'} *
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          placeholder="email@example.com"
+                          className={errors.email ? 'border-destructive' : ''}
                         />
-                      </PopoverContent>
-                    </Popover>
-                    {errors.preferred_dates && (
-                      <p className="text-sm text-destructive">{errors.preferred_dates}</p>
-                    )}
-                  </div>
+                        {errors.email && (
+                          <p className="text-sm text-destructive">{errors.email}</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">
+                          {isArabic ? 'رقم الهاتف' : 'Phone'} *
+                        </Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          placeholder="+966 5X XXX XXXX"
+                          className={errors.phone ? 'border-destructive' : ''}
+                        />
+                        {errors.phone && (
+                          <p className="text-sm text-destructive">{errors.phone}</p>
+                        )}
+                      </div>
+                    </div>
 
-                  {/* Group Type */}
-                  <div className="space-y-3">
-                    <Label>
-                      {isArabic ? 'نوع المجموعة' : 'Group Type'} *
-                    </Label>
-                    <RadioGroup
-                      value={formData.group_type}
-                      onValueChange={(value) => setFormData({ ...formData, group_type: value })}
-                      className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                    {/* Group Size */}
+                    <div className="space-y-2">
+                      <Label htmlFor="group_size">
+                        {isArabic ? 'عدد الأشخاص' : 'Group Size'} *
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          id="group_size"
+                          type="number"
+                          min={20}
+                          value={formData.group_size}
+                          onChange={(e) => setFormData({ ...formData, group_size: parseInt(e.target.value) || 20 })}
+                          className={cn("w-32", errors.group_size ? 'border-destructive' : '')}
+                        />
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Users className="w-4 h-4" />
+                          {isArabic ? 'شخص (الحد الأدنى 20)' : 'people (minimum 20)'}
+                        </span>
+                      </div>
+                      {errors.group_size && (
+                        <p className="text-sm text-destructive">{errors.group_size}</p>
+                      )}
+                    </div>
+
+                    {/* Preferred Dates */}
+                    <div className="space-y-2">
+                      <Label>
+                        {isArabic ? 'التواريخ المفضلة' : 'Preferred Date(s)'} *
+                      </Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-start font-normal",
+                              !formData.preferred_dates?.length && "text-muted-foreground",
+                              errors.preferred_dates ? 'border-destructive' : ''
+                            )}
+                          >
+                            <CalendarIcon className="me-2 h-4 w-4" />
+                            {formData.preferred_dates?.length 
+                              ? formData.preferred_dates.map(d => format(d, 'PP', { locale: isArabic ? ar : enUS })).join(', ')
+                              : isArabic ? 'اختر التواريخ' : 'Select dates'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="multiple"
+                            selected={formData.preferred_dates}
+                            onSelect={(dates) => setFormData({ ...formData, preferred_dates: dates || [] })}
+                            disabled={(date) => date < new Date()}
+                            locale={isArabic ? ar : enUS}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {errors.preferred_dates && (
+                        <p className="text-sm text-destructive">{errors.preferred_dates}</p>
+                      )}
+                    </div>
+
+                    {/* Group Type */}
+                    <div className="space-y-3">
+                      <Label>
+                        {isArabic ? 'نوع المجموعة' : 'Group Type'} *
+                      </Label>
+                      <RadioGroup
+                        value={formData.group_type}
+                        onValueChange={(value) => setFormData({ ...formData, group_type: value })}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                      >
+                        {groupTypes.map((type) => (
+                          <div key={type.value} className="flex items-center space-x-2 rtl:space-x-reverse">
+                            <RadioGroupItem value={type.value} id={type.value} />
+                            <Label htmlFor={type.value} className="font-normal cursor-pointer">
+                              {isArabic ? type.labelAr : type.labelEn}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                      {errors.group_type && (
+                        <p className="text-sm text-destructive">{errors.group_type}</p>
+                      )}
+                    </div>
+
+                    {/* Special Requirements */}
+                    <div className="space-y-2">
+                      <Label htmlFor="special_requirements">
+                        {isArabic ? 'متطلبات خاصة' : 'Special Requirements'}
+                      </Label>
+                      <Textarea
+                        id="special_requirements"
+                        value={formData.special_requirements}
+                        onChange={(e) => setFormData({ ...formData, special_requirements: e.target.value })}
+                        placeholder={isArabic 
+                          ? 'مثال: خدمات الضيافة، النقل، مرشد خاص، فترة زمنية محددة...'
+                          : 'Examples: Catering, transportation, private guide, specific time slot...'}
+                        rows={4}
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full btn-gold h-12 text-lg"
+                      disabled={isSubmitting}
                     >
-                      {groupTypes.map((type) => (
-                        <div key={type.value} className="flex items-center space-x-2 rtl:space-x-reverse">
-                          <RadioGroupItem value={type.value} id={type.value} />
-                          <Label htmlFor={type.value} className="font-normal cursor-pointer">
-                            {isArabic ? type.labelAr : type.labelEn}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                    {errors.group_type && (
-                      <p className="text-sm text-destructive">{errors.group_type}</p>
-                    )}
-                  </div>
+                      {isSubmitting 
+                        ? (isArabic ? 'جاري الإرسال...' : 'Submitting...') 
+                        : (isArabic ? 'إرسال الطلب' : 'Submit Request')}
+                    </Button>
 
-                  {/* Special Requirements */}
-                  <div className="space-y-2">
-                    <Label htmlFor="special_requirements">
-                      {isArabic ? 'متطلبات خاصة' : 'Special Requirements'}
-                    </Label>
-                    <Textarea
-                      id="special_requirements"
-                      value={formData.special_requirements}
-                      onChange={(e) => setFormData({ ...formData, special_requirements: e.target.value })}
-                      placeholder={isArabic 
-                        ? 'مثال: خدمات الضيافة، النقل، مرشد خاص، فترة زمنية محددة...'
-                        : 'Examples: Catering, transportation, private guide, specific time slot...'}
-                      rows={4}
-                    />
-                  </div>
+                    <p className="text-center text-sm text-muted-foreground">
+                      {isArabic 
+                        ? 'سنرد عليكم خلال 24 ساعة'
+                        : "We'll respond within 24 hours"}
+                    </p>
 
-                  <Button
-                    type="submit"
-                    className="w-full btn-gold h-12 text-lg"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting 
-                      ? (isArabic ? 'جاري الإرسال...' : 'Submitting...') 
-                      : (isArabic ? 'إرسال الطلب' : 'Submit Request')}
-                  </Button>
-
-                  <p className="text-center text-sm text-muted-foreground">
-                    {isArabic 
-                      ? 'سنرد عليكم خلال 24 ساعة'
-                      : "We'll respond within 24 hours"}
-                  </p>
-                </form>
+                    <p className="text-xs text-muted-foreground text-center">
+                      {isArabic 
+                        ? 'هذا الموقع محمي بواسطة reCAPTCHA'
+                        : 'This site is protected by reCAPTCHA'}
+                    </p>
+                  </form>
+                )}
               </CardContent>
             </Card>
           </div>

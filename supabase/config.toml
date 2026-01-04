@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.send-payment-reminder]
 verify_jwt = false
+
+[functions.verify-recaptcha]
+verify_jwt = false
