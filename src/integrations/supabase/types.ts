@@ -504,6 +504,51 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          admin_email: string
+          admin_id: string
+          admin_name: string
+          ayn_notes: string | null
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          priority: string
+          status: string
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_email: string
+          admin_id: string
+          admin_name: string
+          ayn_notes?: string | null
+          category?: string
+          created_at?: string | null
+          description: string
+          id?: string
+          priority?: string
+          status?: string
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_email?: string
+          admin_id?: string
+          admin_name?: string
+          ayn_notes?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          priority?: string
+          status?: string
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           booking_id: string
