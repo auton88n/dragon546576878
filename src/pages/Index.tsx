@@ -9,7 +9,7 @@ import featureHeritage from '@/assets/feature-heritage.webp';
 import featureTours from '@/assets/feature-tours.webp';
 import featureFamily from '@/assets/feature-family.webp';
 
-const heroImage = '/images/hero-heritage.webp';
+const heroImage = '/images/hero-heritage-new.webp';
 const Index = () => {
   const {
     currentLanguage: language,
