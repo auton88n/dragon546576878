@@ -94,7 +94,6 @@ const App = () => (
             <Route path="/support" element={<SupportPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/login" element={<LoginPage />} />
             
             {/* Protected Routes - Scanner */}
             <Route
