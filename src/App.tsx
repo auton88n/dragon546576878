@@ -3,11 +3,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import "@/lib/i18n";
 import LoadingSpinner from "./components/shared/LoadingSpinner";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { lazyWithPreload, registerPreloader } from "./lib/lazyWithPreload";
+import { useAuthStore } from "./stores/authStore";
 
 // Eager load - critical path (homepage)
 import Index from "./pages/Index";
@@ -54,6 +55,25 @@ const PageLoader = () => (
     <LoadingSpinner size="lg" />
   </div>
 );
+
+// Gate component to conditionally render ChatWidget
+const ChatWidgetGate = () => {
+  const location = useLocation();
+  const role = useAuthStore((s) => s.role);
+  
+  // Hide for staff users everywhere
+  const isStaffUser = !!role;
+  
+  // Hide on specific routes
+  const excludedRoutes = ['/login', '/admin', '/scan', '/support-dashboard', '/support'];
+  const isExcludedPath = excludedRoutes.some(route => 
+    location.pathname === route || location.pathname.startsWith(route + '/')
+  );
+  
+  if (isStaffUser || isExcludedPath) return null;
+  
+  return <ChatWidget />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -109,7 +129,7 @@ const App = () => (
             {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <ChatWidget />
+          <ChatWidgetGate />
         </Suspense>
       </BrowserRouter>
     </TooltipProvider>

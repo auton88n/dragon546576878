@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { MessageCircle, X, RotateCcw, Send, User, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -148,16 +147,6 @@ const LiveSupportBanner = ({
 );
 
 const ChatWidget = () => {
-  const location = useLocation();
-  
-  // Hide chat widget on staff pages
-  const excludedRoutes = ['/login', '/admin', '/scan', '/support-dashboard'];
-  const shouldHide = excludedRoutes.some(route => 
-    location.pathname === route || location.pathname.startsWith(route + '/')
-  );
-  
-  if (shouldHide) return null;
-  
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const [inputValue, setInputValue] = useState('');
