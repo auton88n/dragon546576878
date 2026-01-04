@@ -343,7 +343,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending email to AYN support...");
     const { error: aynEmailError } = await resend.emails.send({
-      from: "Souq Almufaijer <onboarding@resend.dev>",
+      from: "Souq Almufaijer <info@almufaijer.com>",
       to: ["support@aynn.io"],
       reply_to: adminEmail,
       subject: `[Souq Almufaijer] ${priorityInfo.en.toUpperCase()} - ${subject}`,
@@ -360,7 +360,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send confirmation email to Admin
     console.log("Sending confirmation email to admin...");
     const { error: confirmEmailError } = await resend.emails.send({
-      from: "AYN Support <onboarding@resend.dev>",
+      from: "AYN Support <noreply@almufaijer.com>",
       to: [adminEmail],
       subject: `Ticket Received: ${subject} - #${ticketRef}`,
       html: confirmationEmailHtml,
