@@ -9,8 +9,19 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Loader2, Send, Headset, Clock, CheckCircle2, AlertCircle, HelpCircle } from 'lucide-react';
+import { Loader2, Send, Headset, Clock, CheckCircle2, AlertCircle, HelpCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const categories = [
   { value: 'bug', labelKey: 'admin.support.categories.bug' },
@@ -36,7 +47,7 @@ const statusConfig: Record<string, { icon: React.ElementType; color: string }> =
 export default function AYNSupportPanel() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
-  const { tickets, loading, submitting, createTicket } = useSupportTickets();
+  const { tickets, loading, submitting, createTicket, deleteTicket, updateTicketStatus } = useSupportTickets();
 
   const [formData, setFormData] = useState<CreateTicketData>({
     subject: '',
@@ -252,9 +263,53 @@ export default function AYNSupportPanel() {
                             <p className="whitespace-pre-wrap text-sm">{ticket.ayn_notes}</p>
                           </div>
                         )}
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {format(new Date(ticket.created_at), 'PPp')}
+                        <div className="flex items-center justify-between pt-2 border-t">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {format(new Date(ticket.created_at), 'PPp')}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {ticket.status !== 'resolved' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1"
+                                onClick={() => updateTicketStatus(ticket.id, 'resolved')}
+                              >
+                                <CheckCircle2 className="h-3 w-3" />
+                                {t('admin.support.markResolved')}
+                              </Button>
+                            )}
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="h-7 text-xs gap-1"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  {t('admin.support.delete')}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>{t('admin.support.deleteConfirmTitle')}</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {t('admin.support.deleteConfirmDesc')}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteTicket(ticket.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    {t('admin.support.delete')}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </div>
                       </div>
                     </AccordionContent>

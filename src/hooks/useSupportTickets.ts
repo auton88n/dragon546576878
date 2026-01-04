@@ -117,11 +117,67 @@ export function useSupportTickets() {
     }
   };
 
+  const deleteTicket = async (ticketId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('support_tickets')
+        .delete()
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
+      toast({
+        title: t('admin.support.ticketDeleted'),
+        description: t('admin.support.ticketDeletedDesc'),
+      });
+
+      await fetchTickets();
+      return true;
+    } catch (error: any) {
+      console.error('Failed to delete support ticket:', error);
+      toast({
+        title: t('errors.generic'),
+        description: error.message,
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  const updateTicketStatus = async (ticketId: string, status: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('support_tickets')
+        .update({ status })
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
+      toast({
+        title: t('admin.support.statusUpdated'),
+        description: t('admin.support.statusUpdatedDesc'),
+      });
+
+      await fetchTickets();
+      return true;
+    } catch (error: any) {
+      console.error('Failed to update ticket status:', error);
+      toast({
+        title: t('errors.generic'),
+        description: error.message,
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   return {
     tickets,
     loading,
     submitting,
     createTicket,
+    deleteTicket,
+    updateTicketStatus,
     refetch: fetchTickets,
   };
 }
