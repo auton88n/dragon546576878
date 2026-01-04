@@ -1,18 +1,20 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/shared/Header';
-import Footer from '@/components/shared/Footer';
 import StepIndicator from '@/components/booking/StepIndicator';
 import OptimizedImage from '@/components/shared/OptimizedImage';
 
 const heroImage = '/images/hero-heritage.webp';
 import TicketSelector from '@/components/booking/TicketSelector';
 import DetailsAndPayment from '@/components/booking/DetailsAndPayment';
-import OrderSummary from '@/components/booking/OrderSummary';
+
+// Lazy load below-the-fold components
+const OrderSummary = lazy(() => import('@/components/booking/OrderSummary'));
+const Footer = lazy(() => import('@/components/shared/Footer'));
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -195,14 +197,18 @@ const BookingPage = () => {
             {/* Order Summary Sidebar */}
             <div className="lg:col-span-1">
               <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <OrderSummary />
+                <Suspense fallback={<div className="glass-card-gold p-6 animate-pulse h-64" />}>
+                  <OrderSummary />
+                </Suspense>
               </div>
             </div>
           </div>
         </div>
       </main>
 
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };
