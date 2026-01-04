@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { MessageCircle, X, RotateCcw, Send, User, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -146,7 +146,7 @@ const LiveSupportBanner = ({
   </div>
 );
 
-const ChatWidget = () => {
+const ChatWidget = forwardRef<HTMLDivElement>((_, ref) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const [inputValue, setInputValue] = useState('');
@@ -323,6 +323,8 @@ const ChatWidget = () => {
       </button>
     </>
   );
-};
+});
+
+ChatWidget.displayName = 'ChatWidget';
 
 export default ChatWidget;

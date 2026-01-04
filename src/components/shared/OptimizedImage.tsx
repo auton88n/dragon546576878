@@ -132,7 +132,7 @@ const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(
             onLoad={handleLoad}
             loading={priority ? 'eager' : 'lazy'}
             decoding="async"
-            fetchPriority={priority ? 'high' : 'auto'}
+            {...{ fetchpriority: priority ? 'high' : 'auto' } as React.ImgHTMLAttributes<HTMLImageElement>}
             className={cn(
               'w-full h-full object-cover transition-opacity duration-300',
               isLoaded ? 'opacity-100' : 'opacity-0'
