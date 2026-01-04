@@ -28,8 +28,8 @@ const { Component: SupportPage, preload: preloadSupport } = lazyWithPreload(() =
 const { Component: TermsPage, preload: preloadTerms } = lazyWithPreload(() => import('./pages/TermsPage'));
 const { Component: NotFound } = lazyWithPreload(() => import('./pages/NotFound'));
 
-// Lazy load chat widget
-const ChatWidget = lazyWithPreload(() => import('./components/support/ChatWidget')).Component;
+// Lazy load chat widget - use direct import to avoid ref warning
+const { Component: ChatWidgetComponent } = lazyWithPreload(() => import('./components/support/ChatWidget'));
 
 // Register preloaders for header navigation
 registerPreloader('/about', preloadAbout);
@@ -72,7 +72,7 @@ const ChatWidgetGate = () => {
   
   if (isStaffUser || isExcludedPath) return null;
   
-  return <ChatWidget />;
+  return <ChatWidgetComponent />;
 };
 
 const App = () => (
