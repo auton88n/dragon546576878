@@ -61,7 +61,7 @@ const Index = () => {
             <div className="hero-glass p-8 md:p-12 text-center">
               {/* Welcome Text */}
               <p className="text-primary/80 text-lg mb-2 opacity-0 animate-slide-up" style={{
-              animationDelay: '0.1s',
+              animationDelay: '0.05s',
               animationFillMode: 'forwards'
             }}>
                 {isArabic ? 'مرحباً بكم في' : 'Welcome to'}
@@ -69,7 +69,7 @@ const Index = () => {
               
               {/* Site Name */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-accent opacity-0 animate-slide-up" style={{
-              animationDelay: '0.2s',
+              animationDelay: '0.1s',
               animationFillMode: 'forwards'
             }}>
                 {isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
@@ -77,7 +77,7 @@ const Index = () => {
               
               {/* Tagline */}
               <p className="text-muted-foreground text-lg md:text-xl mb-8 opacity-0 animate-slide-up" style={{
-              animationDelay: '0.3s',
+              animationDelay: '0.15s',
               animationFillMode: 'forwards'
             }}>
                 {isArabic ? 'تجربة فريدة في قلب جبال طويق الساحرة' : 'A unique experience in the enchanting Tuwayq Mountains'}
@@ -85,7 +85,7 @@ const Index = () => {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 opacity-0 animate-slide-up" style={{
-              animationDelay: '0.4s',
+              animationDelay: '0.2s',
               animationFillMode: 'forwards'
             }}>
                 <Link to="/book">
@@ -104,7 +104,7 @@ const Index = () => {
 
               {/* Pricing Pills */}
               <div className="flex flex-wrap justify-center gap-4 opacity-0 animate-slide-up" style={{
-              animationDelay: '0.5s',
+              animationDelay: '0.25s',
               animationFillMode: 'forwards'
             }}>
                 

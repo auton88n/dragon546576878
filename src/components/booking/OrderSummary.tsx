@@ -1,6 +1,7 @@
+import { forwardRef } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Ticket, Calendar, Sun, Users, ShieldCheck, Sparkles, Package } from 'lucide-react';
+import { Ticket, Calendar, Sun, ShieldCheck, Sparkles, Package } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 
@@ -16,7 +17,7 @@ interface OrderSummaryProps {
   compact?: boolean;
 }
 
-const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
+const OrderSummary = forwardRef<HTMLDivElement, OrderSummaryProps>(({ compact = false }, ref) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { tickets, visitDate, totalAmount, packageQuantities } = useBookingStore();
@@ -34,7 +35,7 @@ const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
 
   if (totalTickets === 0) {
     return (
-      <div className={`glass-card-gold p-6 ${compact ? '' : 'sticky top-28'}`}>
+      <div ref={ref} className={`glass-card-gold p-6 ${compact ? '' : 'sticky top-28'}`}>
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center glow-gold">
             <Ticket className="h-6 w-6 text-foreground" />
@@ -54,7 +55,7 @@ const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
   }
 
   return (
-    <div className={`glass-card-gold overflow-hidden ${compact ? '' : 'sticky top-28'}`}>
+    <div ref={ref} className={`glass-card-gold overflow-hidden ${compact ? '' : 'sticky top-28'}`}>
       {/* Header */}
       <div className="gradient-heritage p-5">
         <div className="flex items-center gap-3 text-primary-foreground">
@@ -142,6 +143,7 @@ const OrderSummary = ({ compact = false }: OrderSummaryProps) => {
       </div>
     </div>
   );
-};
+});
 
+OrderSummary.displayName = 'OrderSummary';
 export default OrderSummary;

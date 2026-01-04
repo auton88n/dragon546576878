@@ -8,7 +8,8 @@ import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import StepIndicator from '@/components/booking/StepIndicator';
 import OptimizedImage from '@/components/shared/OptimizedImage';
-import heroImage from '@/assets/hero-heritage.jpg';
+
+const heroImage = '/images/hero-heritage.webp';
 import TicketSelector from '@/components/booking/TicketSelector';
 import DetailsAndPayment from '@/components/booking/DetailsAndPayment';
 import OrderSummary from '@/components/booking/OrderSummary';
@@ -145,19 +146,14 @@ const BookingPage = () => {
           <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
             {/* Step Content */}
             <div className="lg:col-span-2">
-              <div 
-                className="glass-card-gold p-4 sm:p-6 md:p-8 transition-all duration-500"
-                key={step}
-              >
-                <div className="animate-fade-in">
-                  {step === 1 && <TicketSelector />}
-                  {step === 2 && (
-                    <DetailsAndPayment 
-                      onPaymentComplete={handlePaymentComplete} 
-                      isProcessing={isProcessing} 
-                    />
-                  )}
-                </div>
+              <div className="glass-card-gold p-4 sm:p-6 md:p-8 transition-all duration-200">
+                {step === 1 && <TicketSelector />}
+                {step === 2 && (
+                  <DetailsAndPayment 
+                    onPaymentComplete={handlePaymentComplete} 
+                    isProcessing={isProcessing} 
+                  />
+                )}
 
                 {/* Navigation Button for Step 1 */}
                 {step === 1 && (
