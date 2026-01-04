@@ -1,10 +1,11 @@
+import { forwardRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import Logo from './Logo';
 import PoweredByAYN from './PoweredByAYN';
 
-const Footer = () => {
+const Footer = forwardRef<HTMLElement, object>((_, ref) => {
   const { currentLanguage: language } = useLanguage();
   const isArabic = language === 'ar';
   const currentYear = new Date().getFullYear();
@@ -20,7 +21,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-foreground text-background">
+    <footer ref={ref} className="bg-foreground text-background">
       <div className="container py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Brand */}
@@ -103,6 +104,7 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
+});
 
+Footer.displayName = 'Footer';
 export default Footer;
