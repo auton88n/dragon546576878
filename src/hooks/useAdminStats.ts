@@ -1,5 +1,5 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useCallback, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AdminStats {
@@ -11,7 +11,14 @@ export interface AdminStats {
   pendingEmails: number;
 }
 
-const THROTTLE_MS = 2000;
+const DEFAULT_STATS: AdminStats = {
+  totalRevenue: 0,
+  todayBookings: 0,
+  todayVisitors: 0,
+  ticketsScanned: 0,
+  totalBookings: 0,
+  pendingEmails: 0,
+};
 
 const fetchAdminStats = async (): Promise<AdminStats> => {
   const today = new Date().toISOString().split('T')[0];
@@ -58,23 +65,24 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
 };
 
 export const useAdminStats = () => {
-  const queryClient = useQueryClient();
   const lastFetchRef = useRef<number>(0);
 
-  const { data: stats, isLoading: loading, refetch } = useQuery({
+  const queryResult = useQuery({
     queryKey: ['admin-stats'],
     queryFn: fetchAdminStats,
-    staleTime: 30000, // 30 seconds
+    staleTime: 30000,
     refetchOnWindowFocus: false,
   });
 
+  const { refetch } = queryResult;
+
   const throttledRefetch = useCallback(() => {
     const now = Date.now();
-    if (now - lastFetchRef.current > THROTTLE_MS) {
+    if (now - lastFetchRef.current > 2000) {
       lastFetchRef.current = now;
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      refetch();
     }
-  }, [queryClient]);
+  }, [refetch]);
 
   useEffect(() => {
     const channel = supabase
@@ -97,15 +105,8 @@ export const useAdminStats = () => {
   }, [throttledRefetch]);
 
   return {
-    stats: stats || {
-      totalRevenue: 0,
-      todayBookings: 0,
-      todayVisitors: 0,
-      ticketsScanned: 0,
-      totalBookings: 0,
-      pendingEmails: 0,
-    },
-    loading,
+    stats: queryResult.data ?? DEFAULT_STATS,
+    loading: queryResult.isLoading,
     refetch,
   };
 };
