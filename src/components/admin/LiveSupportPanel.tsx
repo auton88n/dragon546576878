@@ -451,28 +451,38 @@ const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
               <MessageCircle className="w-4 h-4" />
               {isArabic ? 'المحادثة' : 'Conversation'}
             </div>
-            <div className="flex-1 overflow-y-auto space-y-3 min-h-[180px] max-h-[280px] bg-muted/20 rounded-lg p-3">
+            <div className="flex-1 overflow-y-auto space-y-3 min-h-[200px] max-h-[350px] bg-muted/20 rounded-lg p-4">
               {selectedConversation?.messages?.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${msg.type === 'admin' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${
-                      msg.type === 'user'
-                        ? 'bg-primary text-white rounded-tr-sm'
-                        : msg.type === 'admin'
-                        ? 'bg-green-100 text-green-900 rounded-tl-sm border border-green-200'
-                        : 'bg-secondary text-secondary-foreground rounded-tl-sm'
+                    className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${
+                      msg.type === 'admin'
+                        ? 'bg-green-600 text-white rounded-br-sm'
+                        : msg.type === 'user'
+                        ? 'bg-slate-200 text-slate-900 rounded-bl-sm'
+                        : 'bg-secondary/80 text-secondary-foreground rounded-bl-sm border border-border/50'
                     }`}
                   >
                     {msg.type === 'admin' && (
-                      <span className="text-xs font-medium text-green-700 block mb-1">
-                        {isArabic ? 'رد الدعم' : 'Support Reply'}
+                      <span className="text-xs font-medium text-green-100 block mb-1">
+                        {isArabic ? 'رد الدعم' : 'Staff Reply'}
                       </span>
                     )}
-                    <span className="whitespace-pre-wrap text-inherit block">{msg.content}</span>
-                    <span className="text-xs opacity-70 mt-1 block">
+                    {msg.type === 'user' && (
+                      <span className="text-xs font-medium text-slate-500 block mb-1">
+                        {isArabic ? 'العميل' : 'Customer'}
+                      </span>
+                    )}
+                    {msg.type === 'bot' && (
+                      <span className="text-xs font-medium text-muted-foreground block mb-1">
+                        {isArabic ? 'النظام' : 'Bot'}
+                      </span>
+                    )}
+                    <span className="whitespace-pre-wrap block">{msg.content}</span>
+                    <span className="text-xs opacity-60 mt-1 block">
                       {format(new Date(msg.timestamp), 'h:mm a')}
                     </span>
                   </div>
