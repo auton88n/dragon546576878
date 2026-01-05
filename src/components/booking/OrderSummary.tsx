@@ -4,7 +4,20 @@ import { ar, enUS } from 'date-fns/locale';
 import { Ticket, Calendar, Sun, ShieldCheck, Sparkles, Package } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
+import { useSettings } from '@/hooks/useSettings';
 
+// Helper to format 24h time to 12h display
+const formatTime = (time: string, isArabic: boolean): string => {
+  const [hours] = time.split(':').map(Number);
+  const period = hours >= 12 ? (isArabic ? 'م' : 'PM') : (isArabic ? 'ص' : 'AM');
+  const displayHours = hours % 12 || 12;
+  if (isArabic) {
+    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const toArabic = (n: number) => n.toString().split('').map(d => arabicNumerals[parseInt(d)]).join('');
+    return `${toArabic(displayHours)} ${period}`;
+  }
+  return `${displayHours} ${period}`;
+};
 // Package names for display
 const PACKAGE_NAMES: Record<string, { en: string; ar: string }> = {
   'adult-single': { en: 'Adult Ticket', ar: 'تذكرة بالغ' },
@@ -21,6 +34,11 @@ const OrderSummary = forwardRef<HTMLDivElement, OrderSummaryProps>(({ compact = 
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { tickets, visitDate, totalAmount, packageQuantities } = useBookingStore();
+  const { settings } = useSettings();
+  
+  // Format operating hours dynamically
+  const openTime = formatTime(settings.operatingHours.openTime, isArabic);
+  const closeTime = formatTime(settings.operatingHours.closeTime, isArabic);
   
   // Get package names for display
   const selectedPackages = packageQuantities
@@ -89,7 +107,7 @@ const OrderSummary = forwardRef<HTMLDivElement, OrderSummaryProps>(({ compact = 
                 <Sun className="h-4 w-4 text-accent" />
               </div>
               <span className="font-medium text-accent">
-                {isArabic ? 'صالحة طوال اليوم (9 ص - 6 م)' : 'Valid All Day (9 AM - 6 PM)'}
+                {isArabic ? `صالحة طوال اليوم (${openTime} - ${closeTime})` : `Valid All Day (${openTime} - ${closeTime})`}
               </span>
             </div>
           </div>
