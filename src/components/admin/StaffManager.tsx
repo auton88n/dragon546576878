@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Users, Plus, Key, Edit2, Power, PowerOff, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Users, Plus, Key, Edit2, Power, PowerOff, Eye, EyeOff, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useStaff, StaffMember } from '@/hooks/useStaff';
 import { useToast } from '@/hooks/use-toast';
@@ -47,13 +47,14 @@ const StaffManager = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { toast } = useToast();
-  const { staff, loading, actionLoading, createStaff, updatePassword, updateProfile, toggleActive } = useStaff();
+  const { staff, loading, actionLoading, createStaff, updatePassword, updateProfile, toggleActive, deleteStaff } = useStaff();
 
   // Dialog states
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [toggleDialogOpen, setToggleDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
 
   // Form states
@@ -72,6 +73,12 @@ const StaffManager = () => {
     phone: '',
     role: 'scanner' as 'scanner' | 'manager' | 'support',
   });
+
+  // Real-time email duplicate check
+  const emailExists = useMemo(() => {
+    if (!newStaff.email) return false;
+    return staff.some(s => s.email.toLowerCase() === newStaff.email.toLowerCase());
+  }, [newStaff.email, staff]);
 
   const handleAddStaff = async () => {
     if (!newStaff.email || !newStaff.password || !newStaff.fullName) {
@@ -188,6 +195,25 @@ const StaffManager = () => {
   const openToggleDialog = (member: StaffMember) => {
     setSelectedStaff(member);
     setToggleDialogOpen(true);
+  };
+
+  const openDeleteDialog = (member: StaffMember) => {
+    setSelectedStaff(member);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteStaff = async () => {
+    if (!selectedStaff) return;
+
+    const success = await deleteStaff(selectedStaff.id);
+    if (success) {
+      toast({
+        title: isArabic ? 'تم بنجاح' : 'Success',
+        description: isArabic ? 'تم حذف الموظف' : 'Staff member deleted',
+      });
+      setDeleteDialogOpen(false);
+      setSelectedStaff(null);
+    }
   };
 
   const getRoleBadge = (role: string) => {
@@ -331,6 +357,14 @@ const StaffManager = () => {
                                   <Power className="h-4 w-4 text-green-600" />
                                 )}
                               </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openDeleteDialog(member)}
+                                title={isArabic ? 'حذف' : 'Delete'}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
                             </>
                           )}
                         </div>
@@ -364,16 +398,22 @@ const StaffManager = () => {
             </div>
             <div className="space-y-2">
               <Label>{isArabic ? 'البريد الإلكتروني' : 'Email'} *</Label>
-              <Input
-                type="email"
-                value={newStaff.email}
-                onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
-                placeholder="email@example.com"
-              />
-              {staff.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {isArabic ? 'البريد المستخدم: ' : 'Existing: '}
-                  {staff.map(s => s.email).join(', ')}
+              <div className="relative">
+                <Input
+                  type="email"
+                  value={newStaff.email}
+                  onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+                  placeholder="email@example.com"
+                  className={emailExists ? 'border-destructive pr-10' : ''}
+                />
+                {emailExists && (
+                  <AlertTriangle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
+                )}
+              </div>
+              {emailExists && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {isArabic ? 'هذا البريد مسجل مسبقاً' : 'This email is already registered'}
                 </p>
               )}
             </div>
@@ -426,7 +466,7 @@ const StaffManager = () => {
             <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
               {isArabic ? 'إلغاء' : 'Cancel'}
             </Button>
-            <Button onClick={handleAddStaff} disabled={actionLoading}>
+            <Button onClick={handleAddStaff} disabled={actionLoading || emailExists}>
               {actionLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               {isArabic ? 'إضافة' : 'Add'}
             </Button>
@@ -567,6 +607,33 @@ const StaffManager = () => {
             <AlertDialogAction onClick={handleToggleActive} disabled={actionLoading}>
               {actionLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               {isArabic ? 'تأكيد' : 'Confirm'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Staff Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">
+              {isArabic ? 'حذف الموظف نهائياً' : 'Delete Staff Member'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isArabic
+                ? `هل أنت متأكد من حذف ${selectedStaff?.fullName} نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.`
+                : `Are you sure you want to permanently delete ${selectedStaff?.fullName}? This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isArabic ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteStaff} 
+              disabled={actionLoading}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {actionLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {isArabic ? 'حذف' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

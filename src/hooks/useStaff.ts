@@ -235,6 +235,39 @@ export function useStaff() {
     }
   };
 
+  const deleteStaff = async (userId: string): Promise<boolean> => {
+    setActionLoading(true);
+    try {
+      const response = await supabase.functions.invoke('manage-staff', {
+        body: {
+          action: 'delete',
+          userId,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to delete staff');
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      await fetchStaff();
+      return true;
+    } catch (error) {
+      console.error('Delete staff error:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete staff',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return {
     staff,
     loading,
@@ -243,6 +276,7 @@ export function useStaff() {
     updatePassword,
     updateProfile,
     toggleActive,
+    deleteStaff,
     refetch: fetchStaff,
   };
 }
