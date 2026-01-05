@@ -103,12 +103,15 @@ export const useSettings = () => {
       for (const item of settingsToSave) {
         const { error } = await supabase
           .from('settings')
-          .upsert({
-            setting_key: item.key,
-            setting_value: item.value as any,
-            category: item.cat,
-            updated_at: new Date().toISOString(),
-          });
+          .upsert(
+            {
+              setting_key: item.key,
+              setting_value: item.value as any,
+              category: item.cat,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'setting_key' }
+          );
 
         if (error) throw error;
       }
