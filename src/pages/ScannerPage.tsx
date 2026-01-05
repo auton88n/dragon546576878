@@ -533,7 +533,13 @@ const ScannerPage = () => {
 
   return (
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <StaffHeader title="Ticket Scanner" titleAr="ماسح التذاكر" />
+      <StaffHeader 
+        title="Ticket Scanner" 
+        titleAr="ماسح التذاكر" 
+        isOnline={isOnline}
+        isSyncing={isSyncing}
+        queueCount={queueLength}
+      />
 
       {/* Result Overlay */}
       {showResultOverlay && currentResult && (
