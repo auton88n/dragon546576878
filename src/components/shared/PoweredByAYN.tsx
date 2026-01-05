@@ -8,9 +8,14 @@ const PoweredByAYN = forwardRef<HTMLDivElement, PoweredByAYNProps>(
   ({ className = '' }, ref) => {
     return (
       <div ref={ref} className={`text-center py-3 ${className}`}>
-        <span className="text-[11px] text-[#8B7355]">
+        <a 
+          href="https://ayn.io" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-[11px] text-[#8B7355] hover:text-[#6B5545] transition-colors"
+        >
           Powered by <span className="font-semibold">AYN</span>
-        </span>
+        </a>
       </div>
     );
   }
