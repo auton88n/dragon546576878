@@ -144,23 +144,38 @@ const TicketSelector = () => {
         </Popover>
 
         {/* Valid All Day Message */}
-        {selectedDate && (
-          <div className="flex items-center gap-3 p-4 bg-accent/10 rounded-xl border border-accent/20">
-            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-              <Sun className="h-5 w-5 text-accent" />
+        {selectedDate && (() => {
+          const formatTime = (time: string) => {
+            const [hours, minutes] = time.split(':').map(Number);
+            const period = hours >= 12 ? (isArabic ? 'م' : 'PM') : (isArabic ? 'ص' : 'AM');
+            const displayHours = hours % 12 || 12;
+            if (isArabic) {
+              const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+              const toArabic = (n: number) => n.toString().split('').map(d => arabicNumerals[parseInt(d)]).join('');
+              return `${toArabic(displayHours)} ${period}`;
+            }
+            return `${displayHours} ${period}`;
+          };
+          const openTime = formatTime(settings.operatingHours.openTime);
+          const closeTime = formatTime(settings.operatingHours.closeTime);
+          return (
+            <div className="flex items-center gap-3 p-4 bg-accent/10 rounded-xl border border-accent/20">
+              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                <Sun className="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">
+                  {isArabic ? 'صالحة طوال اليوم' : 'Valid All Day'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {isArabic 
+                    ? `تعال في أي وقت خلال ساعات العمل (${openTime} - ${closeTime})` 
+                    : `Come anytime during operating hours (${openTime} - ${closeTime})`}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-foreground">
-                {isArabic ? 'صالحة طوال اليوم' : 'Valid All Day'}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {isArabic 
-                  ? 'تعال في أي وقت خلال ساعات العمل (9 ص - 6 م)' 
-                  : 'Come anytime during operating hours (9 AM - 6 PM)'}
-              </p>
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* What You'll Experience */}
