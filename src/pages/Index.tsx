@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePackages } from '@/hooks/usePackages';
+import { useSettings } from '@/hooks/useSettings';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,22 @@ import featureTours from '@/assets/feature-tours.webp';
 import featureFamily from '@/assets/feature-family.webp';
 import logoBlack from '@/assets/logo-black.png';
 const heroImage = '/images/hero-heritage-new.webp';
+
+// Helper to format 24h time to 12h display
+const formatTime = (time: string, isArabic: boolean): string => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const period = hours >= 12 ? (isArabic ? 'م' : 'PM') : (isArabic ? 'ص' : 'AM');
+  const displayHours = hours % 12 || 12;
+  
+  if (isArabic) {
+    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const toArabicNum = (n: number) => n.toString().split('').map(d => arabicNumerals[parseInt(d)]).join('');
+    return `${toArabicNum(displayHours)}:${toArabicNum(minutes).padStart(2, '٠')} ${period}`;
+  }
+  
+  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+};
+
 const Index = () => {
   const {
     currentLanguage: language,
@@ -18,10 +35,17 @@ const Index = () => {
   } = useLanguage();
   const isArabic = language === 'ar';
   const { data: packages } = usePackages();
+  const { settings } = useSettings();
   
   // Get prices from packages (Adult Solo and Child Solo)
   const adultPackage = packages?.find(p => p.adult_count === 1 && p.child_count === 0);
   const childPackage = packages?.find(p => p.adult_count === 0 && p.child_count === 1);
+  
+  // Format operating hours from settings
+  const openTime = formatTime(settings.operatingHours.openTime, isArabic);
+  const closeTime = formatTime(settings.operatingHours.closeTime, isArabic);
+  const hoursDisplay = `${openTime} - ${closeTime}`;
+  
   const features = [{
     icon: Landmark,
     image: featureHeritage,
@@ -184,7 +208,7 @@ const Index = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">{isArabic ? 'السبت - الخميس' : 'Saturday - Thursday'}</p>
-                      <p className="text-accent font-bold">{isArabic ? '٩:٠٠ ص - ٦:٠٠ م' : '9:00 AM - 6:00 PM'}</p>
+                      <p className="text-accent font-bold">{hoursDisplay}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 group">
