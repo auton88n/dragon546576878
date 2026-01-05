@@ -45,7 +45,7 @@ export function recordAttempt(key: string) {
 
 // Rate limit configurations
 export const RATE_LIMITS = {
-  CONTACT_FORM: { key: 'contact_form', maxAttempts: 3, windowMinutes: 15 },
-  GROUP_BOOKING: { key: 'group_booking', maxAttempts: 2, windowMinutes: 60 },
+  CONTACT_FORM: { key: 'contact_form', maxAttempts: 10, windowMinutes: 15 },
+  GROUP_BOOKING: { key: 'group_booking', maxAttempts: 5, windowMinutes: 60 },
   SUPPORT_TRANSFER: { key: 'support_transfer', maxAttempts: 2, windowMinutes: 30 },
 } as const;
