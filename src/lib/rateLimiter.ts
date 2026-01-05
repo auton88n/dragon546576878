@@ -1,3 +1,5 @@
+import { safeLocalStorage } from './safeStorage';
+
 interface RateLimitConfig {
   key: string;
   maxAttempts: number;
@@ -11,7 +13,7 @@ interface RateLimitResult {
 
 export function checkRateLimit(config: RateLimitConfig): RateLimitResult {
   const storageKey = `rate_limit_${config.key}`;
-  const stored = localStorage.getItem(storageKey);
+  const stored = safeLocalStorage.getItem(storageKey);
   const now = Date.now();
   
   let attempts: number[] = stored ? JSON.parse(stored) : [];
@@ -21,7 +23,7 @@ export function checkRateLimit(config: RateLimitConfig): RateLimitResult {
   attempts = attempts.filter(t => now - t < windowMs);
   
   // Update storage with filtered attempts
-  localStorage.setItem(storageKey, JSON.stringify(attempts));
+  safeLocalStorage.setItem(storageKey, JSON.stringify(attempts));
   
   if (attempts.length >= config.maxAttempts) {
     const oldestAttempt = Math.min(...attempts);
@@ -37,10 +39,10 @@ export function checkRateLimit(config: RateLimitConfig): RateLimitResult {
 
 export function recordAttempt(key: string) {
   const storageKey = `rate_limit_${key}`;
-  const stored = localStorage.getItem(storageKey);
+  const stored = safeLocalStorage.getItem(storageKey);
   const attempts: number[] = stored ? JSON.parse(stored) : [];
   attempts.push(Date.now());
-  localStorage.setItem(storageKey, JSON.stringify(attempts));
+  safeLocalStorage.setItem(storageKey, JSON.stringify(attempts));
 }
 
 // Rate limit configurations

@@ -4,6 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe area insets for notched devices (iPhone X+) */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+}
+
 /* Optimized scrollbar hide - targets scrollable containers only */
 html, body {
   -ms-overflow-style: none;
@@ -149,8 +157,11 @@ body::-webkit-scrollbar {
     @apply border-border;
   }
 
-  html {
-    scroll-behavior: smooth;
+  /* Smooth scroll with @supports fallback for older browsers */
+  @supports (scroll-behavior: smooth) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
 
   body {
@@ -191,9 +202,11 @@ body::-webkit-scrollbar {
 }
 
 @layer components {
-  /* Heritage Glass Card - Optimized (reduced blur) */
+  /* Heritage Glass Card - Optimized with webkit prefix */
   .glass-card {
     @apply bg-card/95 border border-border/50 shadow-xl rounded-2xl;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
     box-shadow: 
       0 8px 32px rgba(61, 46, 31, 0.08),
       0 0 0 1px rgba(201, 168, 108, 0.1) inset;
@@ -286,9 +299,11 @@ body::-webkit-scrollbar {
     );
   }
 
-  /* Hero Glass - Optimized (reduced blur intensity) */
+  /* Hero Glass - Optimized with webkit prefix */
   .hero-glass {
-    @apply backdrop-blur-md border border-white/20 rounded-3xl;
+    @apply border border-white/20 rounded-3xl;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
     background: rgba(255, 253, 249, 0.95);
     box-shadow: 
       0 25px 50px rgba(61, 46, 31, 0.15),

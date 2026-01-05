@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { safeLocalStorage } from '@/lib/safeStorage';
 
 export function useLanguage() {
   const { i18n, t } = useTranslation();
@@ -12,7 +13,7 @@ export function useLanguage() {
       i18n.changeLanguage(lang);
       document.documentElement.lang = lang;
       document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      localStorage.setItem('almufaijer-language', lang);
+      safeLocalStorage.setItem('almufaijer-language', lang);
     },
     [i18n]
   );
@@ -24,7 +25,7 @@ export function useLanguage() {
 
   // Initialize language from storage or default
   useEffect(() => {
-    const savedLang = localStorage.getItem('almufaijer-language') as 'ar' | 'en' | null;
+    const savedLang = safeLocalStorage.getItem('almufaijer-language') as 'ar' | 'en' | null;
     const lang = savedLang || 'ar';
     
     if (i18n.language !== lang) {

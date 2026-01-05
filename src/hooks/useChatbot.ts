@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLanguage } from './useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { checkRateLimit, recordAttempt, RATE_LIMITS } from '@/lib/rateLimiter';
+import { safeLocalStorage } from '@/lib/safeStorage';
 export interface ChatMessage {
   id: string;
   type: 'bot' | 'user';
@@ -169,7 +170,7 @@ export function useChatbot() {
 
   // Restore conversation from localStorage on mount
   useEffect(() => {
-    const savedId = localStorage.getItem(STORAGE_KEY);
+    const savedId = safeLocalStorage.getItem(STORAGE_KEY);
     if (savedId) {
       restoreConversation(savedId);
     } else if (!hasInitialized.current && messages.length === 0) {
@@ -211,7 +212,7 @@ export function useChatbot() {
         .single();
 
       if (error || !data) {
-        localStorage.removeItem(STORAGE_KEY);
+        safeLocalStorage.removeItem(STORAGE_KEY);
         hasInitialized.current = true;
         addBotMessageDirect(t('welcome'), getMainMenuButtonsDirect());
         return;
@@ -219,7 +220,7 @@ export function useChatbot() {
 
       // Check if conversation is still active
       if (data.status === 'closed' || data.status === 'resolved') {
-        localStorage.removeItem(STORAGE_KEY);
+        safeLocalStorage.removeItem(STORAGE_KEY);
         hasInitialized.current = true;
         addBotMessageDirect(t('welcome'), getMainMenuButtonsDirect());
         return;
@@ -254,7 +255,7 @@ export function useChatbot() {
       }, 300);
     } catch (err) {
       console.error('Failed to restore conversation:', err);
-      localStorage.removeItem(STORAGE_KEY);
+      safeLocalStorage.removeItem(STORAGE_KEY);
       hasInitialized.current = true;
       addBotMessageDirect(t('welcome'), getMainMenuButtonsDirect());
     }
@@ -304,7 +305,7 @@ export function useChatbot() {
           
           // Check if conversation was closed
           if (updatedConversation.status === 'closed' || updatedConversation.status === 'resolved') {
-            localStorage.removeItem(STORAGE_KEY);
+            safeLocalStorage.removeItem(STORAGE_KEY);
             return;
           }
 
@@ -396,7 +397,7 @@ export function useChatbot() {
   // Save conversation ID to localStorage
   const saveConversationId = (id: string) => {
     setConversationId(id);
-    localStorage.setItem(STORAGE_KEY, id);
+    safeLocalStorage.setItem(STORAGE_KEY, id);
   };
 
   const handleButtonClick = useCallback((action: string) => {
