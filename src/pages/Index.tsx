@@ -108,26 +108,6 @@ const Index = () => {
                 </a>
               </div>
 
-              {/* Pricing Pills */}
-              {(adultPackage || childPackage) && (
-                <div className="flex flex-wrap justify-center gap-3 opacity-0 animate-slide-up" style={{
-                  animationDelay: '0.25s',
-                  animationFillMode: 'forwards'
-                }}>
-                  {adultPackage && (
-                    <div className="px-4 py-2 rounded-full bg-card/80 border border-primary/20 backdrop-blur-sm">
-                      <span className="text-muted-foreground text-sm">{isArabic ? 'بالغ' : 'Adult'}: </span>
-                      <span className="text-accent font-bold">{adultPackage.price} {isArabic ? 'ر.س' : 'SAR'}</span>
-                    </div>
-                  )}
-                  {childPackage && (
-                    <div className="px-4 py-2 rounded-full bg-card/80 border border-primary/20 backdrop-blur-sm">
-                      <span className="text-muted-foreground text-sm">{isArabic ? 'طفل' : 'Child'}: </span>
-                      <span className="text-accent font-bold">{childPackage.price} {isArabic ? 'ر.س' : 'SAR'}</span>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>
