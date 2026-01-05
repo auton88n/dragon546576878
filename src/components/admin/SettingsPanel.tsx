@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, DollarSign, Clock, Calendar, Save, RefreshCw } from 'lucide-react';
+import { Settings, Clock, Calendar, Save, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useSettings, SiteSettings } from '@/hooks/useSettings';
 import { useToast } from '@/hooks/use-toast';
@@ -90,67 +90,10 @@ const SettingsPanel = () => {
           {isArabic ? 'الإعدادات' : 'Settings'}
         </CardTitle>
         <CardDescription className="text-start rtl:text-right">
-          {isArabic ? 'إدارة أسعار التذاكر وساعات العمل' : 'Manage ticket prices and operating hours'}
+          {isArabic ? 'إدارة ساعات العمل وقواعد الحجز' : 'Manage operating hours and booking rules'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 md:space-y-8 p-4 md:p-6 pt-4 md:pt-6">
-        {/* Ticket Pricing */}
-        <div className="glass-card rounded-xl p-4 md:p-6 border border-accent/10">
-          <h3 className="font-semibold mb-4 md:mb-6 flex items-center gap-3 text-foreground rtl:flex-row-reverse rtl:justify-end text-sm md:text-base">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-              <DollarSign className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-600" />
-            </div>
-            {isArabic ? 'أسعار التذاكر (ر.س)' : 'Ticket Prices (SAR)'}
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 rtl:[direction:rtl]">
-            <div className="space-y-2 text-start">
-              <Label className="text-muted-foreground">{isArabic ? 'بالغ' : 'Adult'}</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.ticketPricing.adult}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    ticketPricing: { ...formData.ticketPricing, adult: Number(e.target.value) },
-                  })
-                }
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
-              />
-            </div>
-            <div className="space-y-2 text-start">
-              <Label className="text-muted-foreground">{isArabic ? 'طفل' : 'Child'}</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.ticketPricing.child}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    ticketPricing: { ...formData.ticketPricing, child: Number(e.target.value) },
-                  })
-                }
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
-              />
-            </div>
-            <div className="space-y-2 text-start">
-              <Label className="text-muted-foreground">{isArabic ? 'كبير السن' : 'Senior'}</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.ticketPricing.senior}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    ticketPricing: { ...formData.ticketPricing, senior: Number(e.target.value) },
-                  })
-                }
-                className="bg-background/50 border-border/50 focus:border-accent transition-colors text-start"
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Operating Hours */}
         <div className="glass-card rounded-xl p-4 md:p-6 border border-accent/10">
           <h3 className="font-semibold mb-4 md:mb-6 flex items-center gap-3 text-foreground rtl:flex-row-reverse rtl:justify-end text-sm md:text-base">
