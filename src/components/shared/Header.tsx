@@ -66,9 +66,13 @@ const Header = () => {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled || !hasHeroSection
           ? 'bg-card shadow-md border-b border-border' 
-          : 'bg-gradient-to-b from-foreground/30 to-transparent'
+          : 'header-transparent'
       }`}
-      style={{ paddingTop: 'var(--safe-area-inset-top)' }}
+      style={{ 
+        paddingTop: 'var(--safe-area-inset-top)',
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)'
+      }}
     >
       <div className="container flex h-16 md:h-20 items-center justify-between">
         {/* Logo */}
