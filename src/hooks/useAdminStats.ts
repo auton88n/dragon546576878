@@ -9,6 +9,7 @@ export interface AdminStats {
   ticketsScanned: number;
   totalBookings: number;
   pendingEmails: number;
+  todayScans: number;
 }
 
 const DEFAULT_STATS: AdminStats = {
@@ -18,16 +19,21 @@ const DEFAULT_STATS: AdminStats = {
   ticketsScanned: 0,
   totalBookings: 0,
   pendingEmails: 0,
+  todayScans: 0,
 };
 
 const fetchAdminStats = async (): Promise<AdminStats> => {
   const today = new Date().toISOString().split('T')[0];
+
+  const startOfDay = `${today}T00:00:00.000Z`;
+  const endOfDay = `${today}T23:59:59.999Z`;
 
   const [
     { data: allBookings },
     { data: todayBookingsData },
     { data: scannedTickets },
     { data: pendingEmails },
+    { count: todayScansCount },
   ] = await Promise.all([
     supabase
       .from('bookings')
@@ -46,6 +52,11 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
       .from('email_queue')
       .select('id')
       .eq('status', 'pending'),
+    supabase
+      .from('scan_logs')
+      .select('id', { count: 'exact', head: true })
+      .gte('scan_timestamp', startOfDay)
+      .lte('scan_timestamp', endOfDay),
   ]);
 
   const totalRevenue = allBookings?.reduce((sum, b) => sum + Number(b.total_amount), 0) || 0;
@@ -61,6 +72,7 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
     ticketsScanned: scannedTickets?.length || 0,
     totalBookings: allBookings?.length || 0,
     pendingEmails: pendingEmails?.length || 0,
+    todayScans: todayScansCount || 0,
   };
 };
 
@@ -95,6 +107,11 @@ export const useAdminStats = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'tickets' },
+        throttledRefetch
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'scan_logs' },
         throttledRefetch
       )
       .subscribe();

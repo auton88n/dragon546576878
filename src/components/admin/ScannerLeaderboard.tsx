@@ -105,7 +105,9 @@ const ScannerLeaderboard = () => {
                     {scanner.scansToday}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {isArabic ? 'تذكرة' : 'scans'}
+                    {isArabic 
+                      ? `${scanner.validScans} صالحة` 
+                      : `${scanner.validScans} valid`}
                   </p>
                 </div>
               </div>
