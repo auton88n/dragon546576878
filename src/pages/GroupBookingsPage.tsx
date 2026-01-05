@@ -254,6 +254,20 @@ const GroupBookingsPage = () => {
             <Card className="bg-card border-border/50 shadow-xl">
               <CardContent className="p-6 md:p-8">
                 {cooldownMinutes !== null ? <CooldownNotice remainingMinutes={cooldownMinutes} isArabic={isArabic} /> : <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Error Summary Banner */}
+                    {Object.keys(errors).length > 0 && (
+                      <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
+                        <p className="text-destructive font-medium text-sm mb-2">
+                          {isArabic ? 'يرجى تصحيح الأخطاء التالية:' : 'Please fix the following errors:'}
+                        </p>
+                        <ul className="text-sm text-destructive/80 list-disc list-inside">
+                          {Object.values(errors).map((error, i) => (
+                            <li key={i}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     {/* Honeypot - invisible to humans */}
                     <input type="text" name="website" autoComplete="off" tabIndex={-1} value={honeypot} onChange={e => setHoneypot(e.target.value)} className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true" />
 
@@ -341,7 +355,7 @@ const GroupBookingsPage = () => {
                           <Calendar mode="multiple" selected={formData.preferred_dates} onSelect={dates => setFormData({
                         ...formData,
                         preferred_dates: dates || []
-                      })} disabled={date => date < new Date()} locale={isArabic ? ar : enUS} />
+                      })} disabled={date => date < new Date()} locale={isArabic ? ar : enUS} initialFocus />
                         </PopoverContent>
                       </Popover>
                       {errors.preferred_dates && <p className="text-sm text-destructive">{errors.preferred_dates}</p>}
