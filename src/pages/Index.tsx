@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
+import { usePackages } from '@/hooks/usePackages';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,11 @@ const Index = () => {
     isRTL
   } = useLanguage();
   const isArabic = language === 'ar';
+  const { data: packages } = usePackages();
+  
+  // Get prices from packages (Adult Solo and Child Solo)
+  const adultPackage = packages?.find(p => p.adult_count === 1 && p.child_count === 0);
+  const childPackage = packages?.find(p => p.adult_count === 0 && p.child_count === 1);
   const features = [{
     icon: Landmark,
     image: featureHeritage,
@@ -103,13 +109,25 @@ const Index = () => {
               </div>
 
               {/* Pricing Pills */}
-              <div className="flex flex-wrap justify-center gap-4 opacity-0 animate-slide-up" style={{
-              animationDelay: '0.25s',
-              animationFillMode: 'forwards'
-            }}>
-                
-                
-              </div>
+              {(adultPackage || childPackage) && (
+                <div className="flex flex-wrap justify-center gap-3 opacity-0 animate-slide-up" style={{
+                  animationDelay: '0.25s',
+                  animationFillMode: 'forwards'
+                }}>
+                  {adultPackage && (
+                    <div className="px-4 py-2 rounded-full bg-card/80 border border-primary/20 backdrop-blur-sm">
+                      <span className="text-muted-foreground text-sm">{isArabic ? 'بالغ' : 'Adult'}: </span>
+                      <span className="text-accent font-bold">{adultPackage.price} {isArabic ? 'ر.س' : 'SAR'}</span>
+                    </div>
+                  )}
+                  {childPackage && (
+                    <div className="px-4 py-2 rounded-full bg-card/80 border border-primary/20 backdrop-blur-sm">
+                      <span className="text-muted-foreground text-sm">{isArabic ? 'طفل' : 'Child'}: </span>
+                      <span className="text-accent font-bold">{childPackage.price} {isArabic ? 'ر.س' : 'SAR'}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
