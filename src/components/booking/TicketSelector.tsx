@@ -59,7 +59,7 @@ const TicketSelector = () => {
   // Set default month for calendar
   const defaultMonth = eventPeriodEnabled && bookingStartDate ? bookingStartDate : new Date();
 
-  const selectedDate = visitDate ? new Date(visitDate) : undefined;
+  const selectedDate = visitDate ? parseISO(visitDate) : undefined;
 
   // Map database packages to component format
   const packages: Package[] = (dbPackages || []).map(pkg => ({
