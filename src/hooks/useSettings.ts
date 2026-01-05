@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface TicketPricing {
-  adult: number;
-  child: number;
-  senior: number;
-}
-
 export interface OperatingHours {
   openTime: string;
   closeTime: string;
@@ -15,7 +9,6 @@ export interface OperatingHours {
 }
 
 export interface SiteSettings {
-  ticketPricing: TicketPricing;
   operatingHours: OperatingHours;
   maxTicketsPerBooking: number;
   advanceBookingDays: number;
@@ -23,11 +16,6 @@ export interface SiteSettings {
 }
 
 const defaultSettings: SiteSettings = {
-  ticketPricing: {
-    adult: 40,
-    child: 25,
-    senior: 0,
-  },
   operatingHours: {
     openTime: '09:00',
     closeTime: '18:00',
@@ -50,7 +38,6 @@ export const useSettings = () => {
         .from('settings')
         .select('setting_key, setting_value')
         .in('setting_key', [
-          'ticket_pricing',
           'operating_hours',
           'max_tickets_per_booking',
           'advance_booking_days',
@@ -67,7 +54,6 @@ export const useSettings = () => {
 
         const dbOperatingHours = settingsMap['operating_hours'];
         setSettings({
-          ticketPricing: { ...defaultSettings.ticketPricing, ...settingsMap['ticket_pricing'] },
           operatingHours: {
             ...defaultSettings.operatingHours,
             ...dbOperatingHours,
@@ -89,7 +75,6 @@ export const useSettings = () => {
     setSaving(true);
     try {
       const settingsToSave = [
-        { key: 'ticket_pricing', value: newSettings.ticketPricing, cat: 'pricing' },
         { key: 'operating_hours', value: newSettings.operatingHours, cat: 'operations' },
         { key: 'max_tickets_per_booking', value: newSettings.maxTicketsPerBooking, cat: 'booking' },
         { key: 'advance_booking_days', value: newSettings.advanceBookingDays, cat: 'booking' },
