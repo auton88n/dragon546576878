@@ -9,7 +9,7 @@ import { Clock, MapPin, Landmark, Heart, Calendar, Users, Ticket } from 'lucide-
 import featureHeritage from '@/assets/feature-heritage.webp';
 import featureTours from '@/assets/feature-tours.webp';
 import featureFamily from '@/assets/feature-family.webp';
-
+import logoBlack from '@/assets/logo-black.png';
 const heroImage = '/images/hero-heritage-new.webp';
 const Index = () => {
   const {
@@ -65,27 +65,23 @@ const Index = () => {
           <div className="max-w-2xl mx-auto">
             {/* Glass Card */}
             <div className="hero-glass p-8 md:p-12 text-center">
-              {/* Welcome Text */}
-              <p className="text-primary/80 text-lg mb-2 opacity-0 animate-slide-up" style={{
-              animationDelay: '0.05s',
-              animationFillMode: 'forwards'
-            }}>
-                {isArabic ? 'مرحباً بكم في' : 'Welcome to'}
-              </p>
-              
-              {/* Site Name */}
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-accent opacity-0 animate-slide-up" style={{
-              animationDelay: '0.1s',
-              animationFillMode: 'forwards'
-            }}>
-                {isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
-              </h1>
+              {/* Logo - Top Center */}
+              <div className="flex justify-center mb-6 opacity-0 animate-slide-up" style={{
+                animationDelay: '0.05s',
+                animationFillMode: 'forwards'
+              }}>
+                <img 
+                  src={logoBlack} 
+                  alt="Souq Almufaijer" 
+                  className="h-16 md:h-20 w-auto"
+                />
+              </div>
               
               {/* Tagline */}
               <p className="text-muted-foreground text-lg md:text-xl mb-8 opacity-0 animate-slide-up" style={{
-              animationDelay: '0.15s',
-              animationFillMode: 'forwards'
-            }}>
+                animationDelay: '0.1s',
+                animationFillMode: 'forwards'
+              }}>
                 {isArabic ? 'تجربة فريدة في قلب جبال طويق الساحرة' : 'A unique experience in the enchanting Tuwayq Mountains'}
               </p>
 
