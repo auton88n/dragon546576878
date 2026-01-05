@@ -107,17 +107,17 @@ const saveSettingsToDB = async (newSettings: SiteSettings): Promise<void> => {
   }
 };
 
-export const useSettings = () => {
+export function useSettings() {
   const queryClient = useQueryClient();
 
-  const { data: settings, isLoading: loading, refetch } = useQuery({
-    queryKey: ['settings'],
+  const settingsQuery = useQuery({
+    queryKey: ['settings'] as const,
     queryFn: fetchSettingsFromDB,
     staleTime: 0,
     refetchOnWindowFocus: true,
   });
 
-  const { mutateAsync, isPending: saving } = useMutation({
+  const settingsMutation = useMutation({
     mutationFn: saveSettingsToDB,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
@@ -126,7 +126,7 @@ export const useSettings = () => {
 
   const saveSettings = async (newSettings: SiteSettings): Promise<boolean> => {
     try {
-      await mutateAsync(newSettings);
+      await settingsMutation.mutateAsync(newSettings);
       return true;
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -134,5 +134,11 @@ export const useSettings = () => {
     }
   };
 
-  return { settings: settings ?? defaultSettings, loading, saving, saveSettings, refetch };
-};
+  return {
+    settings: settingsQuery.data ?? defaultSettings,
+    loading: settingsQuery.isLoading,
+    saving: settingsMutation.isPending,
+    saveSettings,
+    refetch: settingsQuery.refetch,
+  };
+}
