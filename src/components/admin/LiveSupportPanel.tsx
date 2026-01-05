@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useNotificationSound } from '@/hooks/useNotificationSound';
-import { MessageCircle, User, Clock, CheckCircle, Trash2, Eye, Send, ChevronDown, ChevronUp, Ticket, Calendar } from 'lucide-react';
+import { MessageCircle, User, Clock, CheckCircle, Trash2, Eye, Send, ChevronDown, ChevronUp, Ticket, Calendar, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -389,7 +389,7 @@ const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
                   {isHistoryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="px-3 pb-3">
+              <CollapsibleContent className="px-3 pb-3 pt-2">
                 {isLoadingBookings ? (
                   <div className="flex items-center justify-center py-4">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
@@ -397,34 +397,40 @@ const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
                 ) : customerBookings && customerBookings.length > 0 ? (
                   <div className="space-y-2">
                     {customerBookings.map((booking) => (
-                      <div key={booking.id} className="bg-secondary/50 rounded-lg p-3 text-sm">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-mono font-medium text-primary">
+                      <div key={booking.id} className="bg-secondary/40 rounded-lg p-3 border border-border/50">
+                        {/* Header Row - Reference & Status */}
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="font-mono text-sm font-semibold text-foreground">
                             #{booking.booking_reference}
                           </span>
                           <Badge 
                             variant="outline" 
-                            className={
+                            className={`text-xs shrink-0 ${
                               booking.payment_status === 'completed' 
                                 ? 'bg-green-50 text-green-700 border-green-200' 
                                 : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                            }
+                            }`}
                           >
                             {booking.payment_status === 'completed' 
                               ? (isArabic ? 'مدفوع' : 'Paid')
                               : (isArabic ? 'معلق' : 'Pending')}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Calendar className="w-3 h-3" />
-                          <span>{format(new Date(booking.visit_date), 'MMM d, yyyy')}</span>
-                          <span>•</span>
+                        
+                        {/* Details Row - Compact single line */}
+                        <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {format(new Date(booking.visit_date), 'MMM d, yyyy')}
+                          </span>
+                          <span className="text-border">•</span>
                           <span>{booking.visit_time}</span>
-                        </div>
-                        <div className="text-muted-foreground mt-1">
-                          {booking.adult_count} {isArabic ? 'بالغ' : 'Adult'}
-                          {booking.child_count > 0 && `, ${booking.child_count} ${isArabic ? 'طفل' : 'Child'}`}
-                          <span className="mx-2">•</span>
+                          <span className="text-border">•</span>
+                          <span>
+                            {booking.adult_count} {isArabic ? 'بالغ' : 'Adult'}
+                            {booking.child_count > 0 && ` + ${booking.child_count} ${isArabic ? 'طفل' : 'Child'}`}
+                          </span>
+                          <span className="text-border">•</span>
                           <span className="font-medium text-foreground">{booking.total_amount} SAR</span>
                         </div>
                       </div>
@@ -439,34 +445,40 @@ const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
             </Collapsible>
           )}
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto py-4 space-y-3 min-h-[200px] max-h-[300px]">
-            {selectedConversation?.messages?.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+          {/* Conversation Section */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <MessageCircle className="w-4 h-4" />
+              {isArabic ? 'المحادثة' : 'Conversation'}
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-3 min-h-[180px] max-h-[280px] bg-muted/20 rounded-lg p-3">
+              {selectedConversation?.messages?.map((msg, idx) => (
                 <div
-                  className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${
-                    msg.type === 'user'
-                      ? 'bg-primary text-white rounded-tr-sm'
-                      : msg.type === 'admin'
-                      ? 'bg-green-100 text-green-900 rounded-tl-sm border border-green-200'
-                      : 'bg-secondary text-secondary-foreground rounded-tl-sm'
-                  }`}
+                  key={idx}
+                  className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  {msg.type === 'admin' && (
-                    <span className="text-xs font-medium text-green-700 block mb-1">
-                      {isArabic ? 'رد الدعم' : 'Support Reply'}
+                  <div
+                    className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${
+                      msg.type === 'user'
+                        ? 'bg-primary text-white rounded-tr-sm'
+                        : msg.type === 'admin'
+                        ? 'bg-green-100 text-green-900 rounded-tl-sm border border-green-200'
+                        : 'bg-secondary text-secondary-foreground rounded-tl-sm'
+                    }`}
+                  >
+                    {msg.type === 'admin' && (
+                      <span className="text-xs font-medium text-green-700 block mb-1">
+                        {isArabic ? 'رد الدعم' : 'Support Reply'}
+                      </span>
+                    )}
+                    <span className="whitespace-pre-wrap text-inherit block">{msg.content}</span>
+                    <span className="text-xs opacity-70 mt-1 block">
+                      {format(new Date(msg.timestamp), 'h:mm a')}
                     </span>
-                  )}
-                  <span className="whitespace-pre-wrap text-inherit block">{msg.content}</span>
-                  <span className="text-xs opacity-70 mt-1 block">
-                    {format(new Date(msg.timestamp), 'h:mm a')}
-                  </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Reply Input */}
@@ -489,24 +501,28 @@ const LiveSupportPanel = ({ soundEnabled = true }: LiveSupportPanelProps) => {
             </div>
           )}
 
-          {/* Admin Notes */}
-          <div className="pt-4 border-t space-y-3">
-            <h4 className="font-medium text-sm">
-              {isArabic ? 'ملاحظات داخلية' : 'Internal Notes'}
-            </h4>
-            <Textarea
-              value={adminNotes}
-              onChange={(e) => setAdminNotes(e.target.value)}
-              placeholder={isArabic ? 'ملاحظات للفريق...' : 'Notes for the team...'}
-              rows={2}
-            />
-            <div className="flex items-center justify-between gap-3">
+          {/* Admin Notes & Actions Footer */}
+          <div className="pt-4 border-t border-border/60 space-y-3">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <FileText className="w-4 h-4" />
+                {isArabic ? 'ملاحظات داخلية' : 'Internal Notes'}
+              </label>
+              <Textarea
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                placeholder={isArabic ? 'ملاحظات للفريق...' : 'Notes for the team...'}
+                rows={2}
+                className="bg-background"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3 pt-1">
               <Button variant="outline" size="sm" onClick={handleSaveNotes}>
                 {isArabic ? 'حفظ الملاحظات' : 'Save Notes'}
               </Button>
               {selectedConversation?.status !== 'resolved' && (
-                <Button size="sm" onClick={handleMarkResolved} className="bg-green-600 hover:bg-green-700">
-                  <CheckCircle className="w-4 h-4 me-1" />
+                <Button size="sm" onClick={handleMarkResolved} className="bg-green-600 hover:bg-green-700 gap-2">
+                  <CheckCircle className="w-4 h-4" />
                   {isArabic ? 'تم الحل' : 'Mark Resolved'}
                 </Button>
               )}
