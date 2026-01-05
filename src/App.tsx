@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import "@/lib/i18n";
 import LoadingSpinner from "./components/shared/LoadingSpinner";
+import ScrollToTop from "./components/shared/ScrollToTop";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { lazyWithPreload, registerPreloader } from "./lib/lazyWithPreload";
 import { useAuthStore } from "./stores/authStore";
@@ -81,6 +82,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public Routes */}
