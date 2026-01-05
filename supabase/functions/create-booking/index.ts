@@ -32,6 +32,23 @@ interface GeneratedTicket {
   qrCodeUrl: string;
 }
 
+// Input validation functions
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+  return emailRegex.test(email) && email.length <= 255;
+};
+
+const validatePhone = (phone: string): boolean => {
+  // Saudi phone format: +966XXXXXXXXX or 05XXXXXXXX or international
+  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  const phoneRegex = /^(\+966|966|05|5)[0-9]{8,9}$|^\+?[1-9][0-9]{7,14}$/;
+  return phoneRegex.test(cleanPhone);
+};
+
+const validateName = (name: string): boolean => {
+  return name.trim().length >= 2 && name.trim().length <= 100;
+};
+
 // Generate a unique booking reference
 const generateBookingReference = (): string => {
   const year = new Date().getFullYear();
@@ -107,6 +124,50 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ success: false, error: "Missing required fields" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Input validation
+    if (!validateEmail(body.customerEmail)) {
+      console.log("Invalid email:", body.customerEmail);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid email format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!validatePhone(body.customerPhone)) {
+      console.log("Invalid phone:", body.customerPhone);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid phone format. Use +966XXXXXXXXX or 05XXXXXXXX" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!validateName(body.customerName)) {
+      console.log("Invalid name:", body.customerName);
+      return new Response(
+        JSON.stringify({ success: false, error: "Name must be 2-100 characters" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Rate limiting: check for recent bookings from same email (5 per hour)
+    const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+    const { count: recentBookings } = await supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("customer_email", body.customerEmail.toLowerCase())
+      .gte("created_at", oneHourAgo);
+
+    if (recentBookings && recentBookings >= 5) {
+      console.log("Rate limit exceeded for:", body.customerEmail);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Too many booking attempts. Please try again in 1 hour." 
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
