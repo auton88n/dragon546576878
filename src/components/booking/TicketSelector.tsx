@@ -1,5 +1,5 @@
 import { CalendarIcon, Check, Sun, Sparkles, ShoppingBag, Home, Mountain, Landmark, Building2, TreePalm, Palette, Users, Map, Camera, Music, Coffee, Utensils, Star, Heart } from 'lucide-react';
-import { format, isFriday, isBefore, startOfDay } from 'date-fns';
+import { format, isBefore, isAfter, startOfDay } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
@@ -30,9 +30,13 @@ const TicketSelector = () => {
     tickets
   } = useBookingStore();
 
+  // Booking window: January 7-16, 2026 (all days open including Friday)
+  const bookingStartDate = new Date(2026, 0, 7);
+  const bookingEndDate = new Date(2026, 0, 16);
+
   const disabledDays = (date: Date) => {
-    const today = startOfDay(new Date());
-    return isBefore(date, today) || isFriday(date);
+    const dateToCheck = startOfDay(date);
+    return isBefore(dateToCheck, bookingStartDate) || isAfter(dateToCheck, bookingEndDate);
   };
 
   const selectedDate = visitDate ? new Date(visitDate) : undefined;
@@ -111,6 +115,7 @@ const TicketSelector = () => {
               selected={selectedDate}
               onSelect={(date) => date && setVisitDate(format(date, 'yyyy-MM-dd'))}
               disabled={disabledDays}
+              defaultMonth={bookingStartDate}
               initialFocus
               className={cn("p-3 pointer-events-auto")}
               locale={isArabic ? ar : enUS}
