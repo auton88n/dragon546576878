@@ -8,8 +8,15 @@ export interface OperatingHours {
   timeSlotInterval: number; // in minutes
 }
 
+export interface EventPeriod {
+  startDate: string; // Format: YYYY-MM-DD
+  endDate: string;   // Format: YYYY-MM-DD
+  enabled: boolean;  // Whether to restrict to this period
+}
+
 export interface SiteSettings {
   operatingHours: OperatingHours;
+  eventPeriod: EventPeriod;
   maxTicketsPerBooking: number;
   advanceBookingDays: number;
   sameDayCutoffHour: number;
@@ -21,6 +28,11 @@ const defaultSettings: SiteSettings = {
     closeTime: '18:00',
     closedDays: [5], // Friday
     timeSlotInterval: 60,
+  },
+  eventPeriod: {
+    startDate: '2026-01-07',
+    endDate: '2026-01-16',
+    enabled: true,
   },
   maxTicketsPerBooking: 10,
   advanceBookingDays: 30,
@@ -39,6 +51,7 @@ export const useSettings = () => {
         .select('setting_key, setting_value')
         .in('setting_key', [
           'operating_hours',
+          'event_period',
           'max_tickets_per_booking',
           'advance_booking_days',
           'same_day_cutoff_hour',
@@ -53,11 +66,16 @@ export const useSettings = () => {
         });
 
         const dbOperatingHours = settingsMap['operating_hours'];
+        const dbEventPeriod = settingsMap['event_period'];
         setSettings({
           operatingHours: {
             ...defaultSettings.operatingHours,
             ...dbOperatingHours,
             closedDays: dbOperatingHours?.closedDays ?? defaultSettings.operatingHours.closedDays,
+          },
+          eventPeriod: {
+            ...defaultSettings.eventPeriod,
+            ...dbEventPeriod,
           },
           maxTicketsPerBooking: settingsMap['max_tickets_per_booking'] ?? defaultSettings.maxTicketsPerBooking,
           advanceBookingDays: settingsMap['advance_booking_days'] ?? defaultSettings.advanceBookingDays,
@@ -76,6 +94,7 @@ export const useSettings = () => {
     try {
       const settingsToSave = [
         { key: 'operating_hours', value: newSettings.operatingHours, cat: 'operations' },
+        { key: 'event_period', value: newSettings.eventPeriod, cat: 'booking' },
         { key: 'max_tickets_per_booking', value: newSettings.maxTicketsPerBooking, cat: 'booking' },
         { key: 'advance_booking_days', value: newSettings.advanceBookingDays, cat: 'booking' },
         { key: 'same_day_cutoff_hour', value: newSettings.sameDayCutoffHour, cat: 'booking' },

@@ -1,10 +1,11 @@
 import { CalendarIcon, Check, Sun, Sparkles, ShoppingBag, Home, Mountain, Landmark, Building2, TreePalm, Palette, Users, Map, Camera, Music, Coffee, Utensils, Star, Heart } from 'lucide-react';
-import { format, isBefore, isAfter, startOfDay } from 'date-fns';
+import { format, isBefore, isAfter, startOfDay, parseISO, isFriday } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { usePackages } from '@/hooks/usePackages';
 import { useAttractions } from '@/hooks/useAttractions';
+import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,6 +22,7 @@ const TicketSelector = () => {
   const isArabic = currentLanguage === 'ar';
   const { data: dbPackages, isLoading: packagesLoading } = usePackages();
   const { data: dbAttractions, isLoading: attractionsLoading } = useAttractions();
+  const { settings } = useSettings();
   const { 
     packageQuantities,
     setPackageQuantity, 
@@ -30,14 +32,32 @@ const TicketSelector = () => {
     tickets
   } = useBookingStore();
 
-  // Booking window: January 7-16, 2026 (all days open including Friday)
-  const bookingStartDate = new Date(2026, 0, 7);
-  const bookingEndDate = new Date(2026, 0, 16);
+  // Get booking dates from settings
+  const eventPeriodEnabled = settings.eventPeriod?.enabled ?? false;
+  const bookingStartDate = eventPeriodEnabled && settings.eventPeriod?.startDate 
+    ? parseISO(settings.eventPeriod.startDate) 
+    : null;
+  const bookingEndDate = eventPeriodEnabled && settings.eventPeriod?.endDate 
+    ? parseISO(settings.eventPeriod.endDate) 
+    : null;
 
   const disabledDays = (date: Date) => {
     const dateToCheck = startOfDay(date);
-    return isBefore(dateToCheck, bookingStartDate) || isAfter(dateToCheck, bookingEndDate);
+    const today = startOfDay(new Date());
+    
+    if (eventPeriodEnabled && bookingStartDate && bookingEndDate) {
+      // Event period mode: only allow dates within the window
+      return isBefore(dateToCheck, bookingStartDate) || isAfter(dateToCheck, bookingEndDate);
+    } else {
+      // Normal mode: block past dates and closed days (Friday by default)
+      const closedDays = settings.operatingHours?.closedDays ?? [5];
+      const dayOfWeek = date.getDay();
+      return isBefore(dateToCheck, today) || closedDays.includes(dayOfWeek);
+    }
   };
+
+  // Set default month for calendar
+  const defaultMonth = eventPeriodEnabled && bookingStartDate ? bookingStartDate : new Date();
 
   const selectedDate = visitDate ? new Date(visitDate) : undefined;
 
@@ -115,7 +135,7 @@ const TicketSelector = () => {
               selected={selectedDate}
               onSelect={(date) => date && setVisitDate(format(date, 'yyyy-MM-dd'))}
               disabled={disabledDays}
-              defaultMonth={bookingStartDate}
+              defaultMonth={defaultMonth}
               initialFocus
               className={cn("p-3 pointer-events-auto")}
               locale={isArabic ? ar : enUS}
