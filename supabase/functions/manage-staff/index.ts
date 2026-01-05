@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface StaffAction {
-  action: "create" | "update-password" | "update-profile" | "toggle-active";
+  action: "create" | "update-password" | "update-profile" | "toggle-active" | "delete";
   userId?: string;
   email?: string;
   password?: string;
@@ -251,6 +251,58 @@ serve(async (req) => {
         }
 
         console.log("User", body.userId, "active:", body.isActive);
+        return new Response(
+          JSON.stringify({ success: true }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      case "delete": {
+        if (!body.userId) {
+          return new Response(
+            JSON.stringify({ error: "Missing user ID" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Check if trying to delete an admin
+        const { data: targetRole } = await supabaseAdmin
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", body.userId)
+          .maybeSingle();
+
+        if (targetRole?.role === "admin") {
+          return new Response(
+            JSON.stringify({ error: "Cannot delete admin accounts" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Delete user role first
+        await supabaseAdmin
+          .from("user_roles")
+          .delete()
+          .eq("user_id", body.userId);
+
+        // Delete profile
+        await supabaseAdmin
+          .from("profiles")
+          .delete()
+          .eq("id", body.userId);
+
+        // Delete user from auth
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(body.userId);
+
+        if (deleteError) {
+          console.error("Delete user error:", deleteError);
+          return new Response(
+            JSON.stringify({ error: deleteError.message }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        console.log("Deleted staff:", body.userId);
         return new Response(
           JSON.stringify({ success: true }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
