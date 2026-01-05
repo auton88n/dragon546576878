@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
-import { LayoutDashboard, Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, MessageSquare, Mail, Headphones, Headset } from 'lucide-react';
+import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, MessageSquare, Mail, Headphones, Headset } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
@@ -14,9 +14,10 @@ import BookingFilters from '@/components/admin/BookingFilters';
 import BookingDetailsDialog from '@/components/admin/BookingDetailsDialog';
 import EditBookingDialog from '@/components/admin/EditBookingDialog';
 import BulkActionsBar from '@/components/admin/BulkActionsBar';
-import ScannerLeaderboard from '@/components/admin/ScannerLeaderboard';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// Lazy load non-critical components
+const ScannerLeaderboard = lazy(() => import('@/components/admin/ScannerLeaderboard'));
 const SettingsPanel = lazy(() => import('@/components/admin/SettingsPanel'));
 const ReportsPanel = lazy(() => import('@/components/admin/ReportsPanel'));
 const GroupBookingsPanel = lazy(() => import('@/components/admin/GroupBookingsPanel'));
@@ -159,9 +160,11 @@ const AdminPage = () => {
             ))}
           </div>
 
-          {/* Scanner Leaderboard */}
+          {/* Scanner Leaderboard - Lazy loaded */}
           <div className="mb-6">
-            <ScannerLeaderboard />
+            <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
+              <ScannerLeaderboard />
+            </Suspense>
           </div>
 
           {/* Tabs Navigation */}
@@ -212,7 +215,7 @@ const AdminPage = () => {
             </TabsList>
 
             {/* Bookings Tab */}
-            <TabsContent value="bookings" className="animate-fade-in">
+            <TabsContent value="bookings">
               <Card className="glass-card-gold border-0">
                 <CardHeader className="border-b border-border/50 p-3 sm:p-4 md:p-6">
                   <CardTitle className="flex items-center gap-2 text-base md:text-lg rtl:flex-row-reverse rtl:justify-end">
@@ -274,28 +277,28 @@ const AdminPage = () => {
             </TabsContent>
 
             {/* Reports Tab */}
-            <TabsContent value="reports" className="animate-fade-in">
+            <TabsContent value="reports">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
                 <ReportsPanel />
               </Suspense>
             </TabsContent>
 
             {/* Settings Tab */}
-            <TabsContent value="settings" className="animate-fade-in">
+            <TabsContent value="settings">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
                 <SettingsPanel />
               </Suspense>
             </TabsContent>
 
             {/* Group Bookings Tab */}
-            <TabsContent value="groups" className="animate-fade-in">
+            <TabsContent value="groups">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
                 <GroupBookingsPanel />
               </Suspense>
             </TabsContent>
 
             {/* Messages Tab with Subtabs */}
-            <TabsContent value="messages" className="animate-fade-in">
+            <TabsContent value="messages">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
                 <Tabs defaultValue="live-chat" className="space-y-4">
                   <TabsList className="glass-card p-1 h-auto">
@@ -327,7 +330,7 @@ const AdminPage = () => {
             </TabsContent>
 
             {/* AYN Support Tab */}
-            <TabsContent value="ayn-support" className="animate-fade-in">
+            <TabsContent value="ayn-support">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
                 <AYNSupportPanel />
               </Suspense>
