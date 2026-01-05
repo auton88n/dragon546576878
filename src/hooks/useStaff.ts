@@ -117,9 +117,15 @@ export function useStaff() {
       return true;
     } catch (error) {
       console.error('Create staff error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create staff';
+      // Provide user-friendly messages for common errors
+      let friendlyMessage = errorMessage;
+      if (errorMessage.toLowerCase().includes('email already exists')) {
+        friendlyMessage = 'This email is already registered. Please use a different email address.';
+      }
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to create staff',
+        description: friendlyMessage,
         variant: 'destructive',
       });
       return false;
