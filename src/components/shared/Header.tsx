@@ -63,15 +63,18 @@ const Header = () => {
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-[9999] isolation-isolate transition-all duration-300 ${
         isScrolled || !hasHeroSection
-          ? 'bg-card shadow-md border-b border-border' 
+          ? 'header-solid' 
           : 'header-transparent'
       }`}
       style={{ 
         paddingTop: 'var(--safe-area-inset-top)',
-        transform: 'translateZ(0)',
-        WebkitTransform: 'translateZ(0)'
+        transform: 'translate3d(0, 0, 0)',
+        WebkitTransform: 'translate3d(0, 0, 0)',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+        willChange: 'transform'
       }}
     >
       <div className="container flex h-16 md:h-20 items-center justify-between">
