@@ -38,12 +38,6 @@ const BookingPage = () => {
 
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const generateBookingReference = () => {
-    const year = new Date().getFullYear();
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `ALM-${year}-${random}`;
-  };
-
   const handleNext = () => {
     if (step === 1 && canProceed()) {
       setStep(2);
@@ -86,8 +80,6 @@ const BookingPage = () => {
       if (!data?.success) {
         throw new Error(data?.error || 'Booking failed');
       }
-
-      console.log('Booking created successfully:', data);
 
       reset();
       navigate(`/confirmation/${data.bookingId}`);
