@@ -655,27 +655,41 @@ const ScannerPage = () => {
             </Button>
           </div>
 
-          {/* Stats Bar */}
-          <div className="flex items-center justify-center gap-3 py-2.5 px-4 bg-muted/30 rounded-lg text-sm mb-4">
-            <div className="flex items-center gap-1.5">
-              <div className={cn("w-2 h-2 rounded-full", todayStats.totalScans > 0 ? "bg-foreground" : "bg-muted-foreground/50")} />
-              <span className={cn("tabular-nums", todayStats.totalScans > 0 ? "font-semibold" : "text-muted-foreground")}>{todayStats.totalScans}</span>
-              <span className="text-muted-foreground text-xs hidden sm:inline">{isArabic ? 'إجمالي' : 'Total'}</span>
+          {/* Stats Grid - 4 clear mini cards */}
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            {/* Total Scans */}
+            <div className="bg-card border border-border/50 rounded-xl p-2.5 text-center">
+              <p className="text-xl font-bold tabular-nums">{todayStats.totalScans}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {isArabic ? 'إجمالي' : 'Total'}
+              </p>
             </div>
-            <div className="w-px h-4 bg-border" />
-            <div className="flex items-center gap-1.5">
-              <Check className={cn("w-3.5 h-3.5", todayStats.validScans > 0 ? "text-success" : "text-muted-foreground/50")} />
-              <span className={cn("tabular-nums", todayStats.validScans > 0 ? "font-semibold text-success" : "text-muted-foreground")}>{todayStats.validScans}</span>
+            
+            {/* Valid Scans */}
+            <div className="bg-success/10 border border-success/30 rounded-xl p-2.5 text-center">
+              <p className="text-xl font-bold tabular-nums text-success">{todayStats.validScans}</p>
+              <p className="text-[10px] text-success/80 mt-0.5 flex items-center justify-center gap-0.5">
+                <Check className="h-2.5 w-2.5" />
+                {isArabic ? 'صالح' : 'Valid'}
+              </p>
             </div>
-            <div className="w-px h-4 bg-border" />
-            <div className="flex items-center gap-1.5">
-              <AlertCircle className={cn("w-3.5 h-3.5", todayStats.usedScans > 0 ? "text-warning" : "text-muted-foreground/50")} />
-              <span className={cn("tabular-nums", todayStats.usedScans > 0 ? "font-semibold text-warning" : "text-muted-foreground")}>{todayStats.usedScans}</span>
+            
+            {/* Used/Already Scanned */}
+            <div className="bg-warning/10 border border-warning/30 rounded-xl p-2.5 text-center">
+              <p className="text-xl font-bold tabular-nums text-warning">{todayStats.usedScans}</p>
+              <p className="text-[10px] text-warning/80 mt-0.5 flex items-center justify-center gap-0.5">
+                <AlertCircle className="h-2.5 w-2.5" />
+                {isArabic ? 'مستخدم' : 'Used'}
+              </p>
             </div>
-            <div className="w-px h-4 bg-border" />
-            <div className="flex items-center gap-1.5">
-              <X className={cn("w-3.5 h-3.5", todayStats.invalidScans > 0 ? "text-destructive" : "text-muted-foreground/50")} />
-              <span className={cn("tabular-nums", todayStats.invalidScans > 0 ? "font-semibold text-destructive" : "text-muted-foreground")}>{todayStats.invalidScans}</span>
+            
+            {/* Invalid */}
+            <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-2.5 text-center">
+              <p className="text-xl font-bold tabular-nums text-destructive">{todayStats.invalidScans}</p>
+              <p className="text-[10px] text-destructive/80 mt-0.5 flex items-center justify-center gap-0.5">
+                <X className="h-2.5 w-2.5" />
+                {isArabic ? 'مرفوض' : 'Invalid'}
+              </p>
             </div>
           </div>
 
