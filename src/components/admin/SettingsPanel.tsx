@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Settings, Clock, Calendar, Save, RefreshCw, CalendarRange} from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Settings, Clock, Calendar, Save, RefreshCw, CalendarRange, RotateCcw } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import TestQRGenerator from './TestQRGenerator';
 import PackagesManager from './PackagesManager';
@@ -25,15 +26,37 @@ const SettingsPanel = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { toast } = useToast();
-  const { settings, loading, saving, saveSettings } = useSettings();
+  const { settings, loading, saving, saveSettings, refetch } = useSettings();
 
-  const [formData, setFormData] = useState<SiteSettings>(settings);
+  // Initialize formData as null until settings are loaded
+  const [formData, setFormData] = useState<SiteSettings | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
+  // Initialize form data only once when settings are loaded
   useEffect(() => {
+    if (!loading && settings && !initialized) {
+      setFormData(settings);
+      setInitialized(true);
+    }
+  }, [settings, loading, initialized]);
+
+  // Detect unsaved changes
+  const hasUnsavedChanges = useMemo(() => {
+    if (!formData || !settings) return false;
+    return JSON.stringify(formData) !== JSON.stringify(settings);
+  }, [formData, settings]);
+
+  // Reset form to DB values
+  const handleReset = () => {
     setFormData(settings);
-  }, [settings]);
+    toast({
+      title: isArabic ? 'تم إعادة التعيين' : 'Reset',
+      description: isArabic ? 'تمت استعادة القيم المحفوظة' : 'Restored saved values',
+    });
+  };
 
   const handleSave = async () => {
+    if (!formData) return;
     const success = await saveSettings(formData);
     if (success) {
       toast({
@@ -60,6 +83,7 @@ const SettingsPanel = () => {
   ];
 
   const toggleClosedDay = (day: number) => {
+    if (!formData) return;
     const currentClosedDays = formData.operatingHours?.closedDays ?? [];
     const closedDays = currentClosedDays.includes(day)
       ? currentClosedDays.filter((d) => d !== day)
@@ -71,7 +95,8 @@ const SettingsPanel = () => {
     });
   };
 
-  if (loading) {
+  // Show loading skeleton until settings are loaded AND formData is initialized
+  if (loading || !formData) {
     return (
       <Card className="glass-card border-accent/20">
         <CardHeader>
@@ -323,19 +348,35 @@ const SettingsPanel = () => {
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-center sm:justify-end rtl:sm:justify-start pt-4">
-          <Button 
-            onClick={handleSave} 
-            disabled={saving} 
-            className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground px-6 md:px-8 py-4 md:py-6 text-base md:text-lg rounded-xl shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
-          >
-            {saving ? (
-              <RefreshCw className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4 md:h-5 md:w-5" />
-            )}
-            {isArabic ? 'حفظ الإعدادات' : 'Save Settings'}
-          </Button>
+        <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-end rtl:sm:justify-start gap-3 pt-4">
+          {hasUnsavedChanges && (
+            <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 px-3 py-1">
+              {isArabic ? 'تغييرات غير محفوظة' : 'Unsaved Changes'}
+            </Badge>
+          )}
+          <div className="flex gap-3 w-full sm:w-auto">
+            <Button 
+              variant="outline"
+              onClick={handleReset} 
+              disabled={saving || !hasUnsavedChanges}
+              className="gap-2 px-4 py-4 md:py-6 rounded-xl flex-1 sm:flex-initial"
+            >
+              <RotateCcw className="h-4 w-4" />
+              {isArabic ? 'إعادة تعيين' : 'Reset'}
+            </Button>
+            <Button 
+              onClick={handleSave} 
+              disabled={saving || !hasUnsavedChanges} 
+              className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground px-6 md:px-8 py-4 md:py-6 text-base md:text-lg rounded-xl shadow-lg hover:shadow-xl transition-all flex-1 sm:flex-initial"
+            >
+              {saving ? (
+                <RefreshCw className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 md:h-5 md:w-5" />
+              )}
+              {isArabic ? 'حفظ الإعدادات' : 'Save Settings'}
+            </Button>
+          </div>
         </div>
 
         <Separator className="my-4" />
