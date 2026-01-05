@@ -6,6 +6,7 @@ export interface ScannerStat {
   scannerId: string;
   scannerName: string;
   scansToday: number;
+  validScans: number;
   lastScanTime: string | null;
 }
 
@@ -16,12 +17,12 @@ const fetchScannerStats = async (): Promise<ScannerStat[]> => {
   const startOfDay = `${today}T00:00:00.000Z`;
   const endOfDay = `${today}T23:59:59.999Z`;
 
+  // Fetch ALL scan attempts (not just valid) to show complete scanner activity
   const { data: scans, error } = await supabase
     .from('scan_logs')
     .select('scanner_user_id, scan_timestamp, scan_result')
     .gte('scan_timestamp', startOfDay)
-    .lte('scan_timestamp', endOfDay)
-    .eq('scan_result', 'valid');
+    .lte('scan_timestamp', endOfDay);
 
   if (error) throw error;
 
@@ -38,12 +39,15 @@ const fetchScannerStats = async (): Promise<ScannerStat[]> => {
 
   const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
 
-  const statsMap = new Map<string, { count: number; lastScan: string | null }>();
+  const statsMap = new Map<string, { count: number; validCount: number; lastScan: string | null }>();
   
   scans?.forEach(scan => {
     if (!scan.scanner_user_id) return;
-    const current = statsMap.get(scan.scanner_user_id) || { count: 0, lastScan: null };
+    const current = statsMap.get(scan.scanner_user_id) || { count: 0, validCount: 0, lastScan: null };
     current.count++;
+    if (scan.scan_result === 'valid') {
+      current.validCount++;
+    }
     if (!current.lastScan || (scan.scan_timestamp && scan.scan_timestamp > current.lastScan)) {
       current.lastScan = scan.scan_timestamp;
     }
@@ -55,6 +59,7 @@ const fetchScannerStats = async (): Promise<ScannerStat[]> => {
       scannerId,
       scannerName: profileMap.get(scannerId) || 'Unknown',
       scansToday: data.count,
+      validScans: data.validCount,
       lastScanTime: data.lastScan,
     }))
     .sort((a, b) => b.scansToday - a.scansToday);
