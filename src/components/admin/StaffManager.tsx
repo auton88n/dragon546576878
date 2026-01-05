@@ -370,6 +370,12 @@ const StaffManager = () => {
                 onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
                 placeholder="email@example.com"
               />
+              {staff.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {isArabic ? 'البريد المستخدم: ' : 'Existing: '}
+                  {staff.map(s => s.email).join(', ')}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>{isArabic ? 'رقم الجوال' : 'Phone'}</Label>
