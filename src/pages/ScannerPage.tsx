@@ -22,6 +22,8 @@ interface ScanResult {
   ticketType?: string;
 }
 
+import { safeLocalStorage } from '@/lib/safeStorage';
+
 // Constants for stability
 const RESULT_DISPLAY_TIMEOUT = 2000;
 const DUPLICATE_SCAN_THRESHOLD = 5000;
@@ -33,7 +35,7 @@ const getTodayKey = () => new Date().toISOString().split('T')[0];
 
 const loadStoredStats = () => {
   try {
-    const stored = localStorage.getItem(STATS_STORAGE_KEY);
+    const stored = safeLocalStorage.getItem(STATS_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.date === getTodayKey()) {
@@ -48,7 +50,7 @@ const loadStoredStats = () => {
 
 const loadStoredRecentScans = (): ScanResult[] => {
   try {
-    const stored = localStorage.getItem(RECENT_SCANS_STORAGE_KEY);
+    const stored = safeLocalStorage.getItem(RECENT_SCANS_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.date === getTodayKey()) {
@@ -96,14 +98,14 @@ const ScannerPage = () => {
   const scanCountSinceRestartRef = useRef<number>(0);
 
   useEffect(() => {
-    localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify({
+    safeLocalStorage.setItem(STATS_STORAGE_KEY, JSON.stringify({
       date: getTodayKey(),
       stats: todayStats
     }));
   }, [todayStats]);
 
   useEffect(() => {
-    localStorage.setItem(RECENT_SCANS_STORAGE_KEY, JSON.stringify({
+    safeLocalStorage.setItem(RECENT_SCANS_STORAGE_KEY, JSON.stringify({
       date: getTodayKey(),
       scans: recentScans
     }));

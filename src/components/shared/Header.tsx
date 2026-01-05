@@ -68,6 +68,7 @@ const Header = () => {
           ? 'bg-card shadow-md border-b border-border' 
           : 'bg-gradient-to-b from-foreground/30 to-transparent'
       }`}
+      style={{ paddingTop: 'var(--safe-area-inset-top)' }}
     >
       <div className="container flex h-16 md:h-20 items-center justify-between">
         {/* Logo */}

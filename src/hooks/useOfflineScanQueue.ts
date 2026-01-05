@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { markTicketAsUsed, logScanAttempt, type TicketValidationResult } from '@/lib/ticketService';
+import { safeLocalStorage } from '@/lib/safeStorage';
 
 interface QueuedScan {
   id: string;
@@ -20,7 +21,7 @@ export const useOfflineScanQueue = (userId?: string) => {
 
   // Load queue from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = safeLocalStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
         setQueue(JSON.parse(stored));
@@ -32,7 +33,7 @@ export const useOfflineScanQueue = (userId?: string) => {
 
   // Save queue to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
+    safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
   }, [queue]);
 
   // Listen for online/offline events
@@ -124,7 +125,7 @@ export const useOfflineScanQueue = (userId?: string) => {
   // Clear the queue
   const clearQueue = useCallback(() => {
     setQueue([]);
-    localStorage.removeItem(STORAGE_KEY);
+    safeLocalStorage.removeItem(STORAGE_KEY);
   }, []);
 
   return {
