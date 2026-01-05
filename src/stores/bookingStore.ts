@@ -156,13 +156,33 @@ export const useBookingStore = create<BookingStore>()(
     }),
     {
       name: 'almufaijer-booking',
+      version: 2,
       partialize: (state) => ({
         packageQuantities: state.packageQuantities,
         tickets: state.tickets,
-        visitDate: state.visitDate,
+        visitDate: state.visitDate ?? '',
         customerInfo: state.customerInfo,
         language: state.language,
       }),
+      migrate: (persistedState, version) => {
+        if (version < 2) {
+          // Clear stale data on version upgrade
+          return {
+            packageQuantities: [] as PackageQuantity[],
+            tickets: { adult: 0, child: 0, senior: 0 },
+            visitDate: '',
+            customerInfo: { name: '', email: '', phone: '', specialRequests: '' },
+            language: 'ar' as const,
+          };
+        }
+        return persistedState as {
+          packageQuantities: PackageQuantity[];
+          tickets: { adult: number; child: number; senior: number };
+          visitDate: string;
+          customerInfo: { name: string; email: string; phone: string; specialRequests?: string };
+          language: 'ar' | 'en';
+        };
+      },
     }
   )
 );

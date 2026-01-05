@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { Ticket, Calendar, Sun, ShieldCheck, Sparkles, Package } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -81,7 +81,7 @@ const OrderSummary = forwardRef<HTMLDivElement, OrderSummaryProps>(({ compact = 
               <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110">
                 <Calendar className="h-4 w-4 text-accent" />
               </div>
-              <span className="font-medium">{format(new Date(visitDate), 'd MMM yyyy', { locale: isArabic ? ar : enUS })}</span>
+              <span className="font-medium">{format(parseISO(visitDate), 'd MMM yyyy', { locale: isArabic ? ar : enUS })}</span>
             </div>
             {/* Valid All Day indicator */}
             <div className="flex items-center gap-3 text-sm group">
