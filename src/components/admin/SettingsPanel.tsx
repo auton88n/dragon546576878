@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Settings, Clock, Calendar, Save, RefreshCw } from 'lucide-react';
+import { Settings, Clock, Calendar, Save, RefreshCw, CalendarRange} from 'lucide-react';
+import { format, differenceInDays, parseISO } from 'date-fns';
+import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useSettings, SiteSettings } from '@/hooks/useSettings';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +12,10 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import TestQRGenerator from './TestQRGenerator';
 import PackagesManager from './PackagesManager';
 import AttractionsManager from './AttractionsManager';
@@ -102,7 +108,7 @@ const SettingsPanel = () => {
             </div>
             {isArabic ? 'ساعات العمل' : 'Operating Hours'}
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6 rtl:[direction:rtl]">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 rtl:[direction:rtl]">
             <div className="space-y-2 text-start">
               <Label className="text-muted-foreground">{isArabic ? 'وقت الافتتاح' : 'Opening Time'}</Label>
               <Input
@@ -148,36 +154,121 @@ const SettingsPanel = () => {
               />
             </div>
           </div>
+        </div>
 
-          <div className="text-start">
-            <Label className="mb-3 block text-muted-foreground">{isArabic ? 'أيام الإغلاق' : 'Closed Days'}</Label>
-            <div className="flex flex-wrap gap-3 rtl:[direction:rtl]">
-              {daysOfWeek.map((day) => (
-                <div 
-                  key={day.value} 
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors cursor-pointer rtl:flex-row-reverse ${
-                    (formData.operatingHours?.closedDays ?? []).includes(day.value)
-                      ? 'bg-accent/20 border-accent/40'
-                      : 'bg-background/50 border-border/50 hover:border-accent/30'
-                  }`}
-                  onClick={() => toggleClosedDay(day.value)}
-                >
-                  <Checkbox
-                    id={`day-${day.value}`}
-                    checked={(formData.operatingHours?.closedDays ?? []).includes(day.value)}
-                    onCheckedChange={() => toggleClosedDay(day.value)}
-                    className="border-accent data-[state=checked]:bg-accent"
-                  />
-                  <label
-                    htmlFor={`day-${day.value}`}
-                    className="text-sm cursor-pointer font-medium"
+        {/* Event Period */}
+        <div className="glass-card rounded-xl p-4 md:p-6 border border-accent/10">
+          <h3 className="font-semibold mb-4 md:mb-6 flex items-center gap-3 text-foreground rtl:flex-row-reverse rtl:justify-end text-sm md:text-base">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+              <CalendarRange className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-600" />
+            </div>
+            {isArabic ? 'فترة الفعالية' : 'Event Period'}
+          </h3>
+          
+          {/* Enable Toggle */}
+          <div className="flex items-center justify-between mb-6 p-4 rounded-lg bg-background/50 border border-border/50 rtl:flex-row-reverse">
+            <div className="text-start rtl:text-right">
+              <Label className="text-foreground font-medium">
+                {isArabic ? 'تفعيل فترة الفعالية' : 'Enable Event Period'}
+              </Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                {isArabic 
+                  ? 'يقيد الحجوزات بالتواريخ المحددة فقط' 
+                  : 'Restricts bookings to specific dates only'}
+              </p>
+            </div>
+            <Switch
+              checked={formData.eventPeriod?.enabled ?? false}
+              onCheckedChange={(checked) =>
+                setFormData({
+                  ...formData,
+                  eventPeriod: { ...formData.eventPeriod, enabled: checked },
+                })
+              }
+            />
+          </div>
+
+          {/* Date Pickers */}
+          <div className={cn(
+            "grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 rtl:[direction:rtl]",
+            !formData.eventPeriod?.enabled && "opacity-50 pointer-events-none"
+          )}>
+            <div className="space-y-2 text-start">
+              <Label className="text-muted-foreground">{isArabic ? 'تاريخ البداية' : 'Start Date'}</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal bg-background/50 border-border/50",
+                      !formData.eventPeriod?.startDate && "text-muted-foreground"
+                    )}
                   >
-                    {isArabic ? day.labelAr : day.labelEn}
-                  </label>
-                </div>
-              ))}
+                    <Calendar className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                    {formData.eventPeriod?.startDate
+                      ? format(parseISO(formData.eventPeriod.startDate), 'PPP', { locale: isArabic ? ar : enUS })
+                      : (isArabic ? 'اختر التاريخ' : 'Pick a date')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={formData.eventPeriod?.startDate ? parseISO(formData.eventPeriod.startDate) : undefined}
+                    onSelect={(date) =>
+                      date && setFormData({
+                        ...formData,
+                        eventPeriod: { ...formData.eventPeriod, startDate: format(date, 'yyyy-MM-dd') },
+                      })
+                    }
+                    locale={isArabic ? ar : enUS}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-2 text-start">
+              <Label className="text-muted-foreground">{isArabic ? 'تاريخ النهاية' : 'End Date'}</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal bg-background/50 border-border/50",
+                      !formData.eventPeriod?.endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <Calendar className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                    {formData.eventPeriod?.endDate
+                      ? format(parseISO(formData.eventPeriod.endDate), 'PPP', { locale: isArabic ? ar : enUS })
+                      : (isArabic ? 'اختر التاريخ' : 'Pick a date')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={formData.eventPeriod?.endDate ? parseISO(formData.eventPeriod.endDate) : undefined}
+                    onSelect={(date) =>
+                      date && setFormData({
+                        ...formData,
+                        eventPeriod: { ...formData.eventPeriod, endDate: format(date, 'yyyy-MM-dd') },
+                      })
+                    }
+                    locale={isArabic ? ar : enUS}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
+
+          {/* Period Summary */}
+          {formData.eventPeriod?.enabled && formData.eventPeriod?.startDate && formData.eventPeriod?.endDate && (
+            <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-start rtl:text-right">
+              <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                ✓ {differenceInDays(parseISO(formData.eventPeriod.endDate), parseISO(formData.eventPeriod.startDate)) + 1} {isArabic ? 'يوم (جميع الأيام مفتوحة خلال الفعالية)' : 'days (all days open during event)'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Booking Rules */}
