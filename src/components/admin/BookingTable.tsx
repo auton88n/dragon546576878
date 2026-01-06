@@ -380,7 +380,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
   const renderRow = (booking: Booking) => (
     <>
       {onSelectionChange && (
-        <TableCell className="w-12">
+        <TableCell className="w-10 p-2">
           <Checkbox
             checked={selectedIds.includes(booking.id)}
             onCheckedChange={() => handleSelectOne(booking.id)}
@@ -388,34 +388,34 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
           />
         </TableCell>
       )}
-      <TableCell className="font-mono font-semibold text-accent text-start">
+      <TableCell className="font-mono text-xs font-semibold text-accent text-start truncate p-2">
         {booking.booking_reference}
       </TableCell>
-      <TableCell className="text-start">
-        <div>
-          <p className="font-medium text-foreground">{booking.customer_name}</p>
-          <p className="text-sm text-muted-foreground">{booking.customer_email}</p>
+      <TableCell className="text-start p-2">
+        <div className="truncate">
+          <p className="font-medium text-foreground truncate text-sm">{booking.customer_name}</p>
+          <p className="text-xs text-muted-foreground truncate">{booking.customer_email}</p>
         </div>
       </TableCell>
-      <TableCell className="text-foreground text-start">{formatDate(booking.visit_date)}</TableCell>
-      <TableCell className="text-foreground text-start">{formatTime(booking.visit_time)}</TableCell>
-      <TableCell>
-        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent/10 text-accent font-semibold">
+      <TableCell className="text-foreground text-start text-sm p-2 truncate">{formatDate(booking.visit_date)}</TableCell>
+      <TableCell className="text-foreground text-start text-sm p-2">{formatTime(booking.visit_time)}</TableCell>
+      <TableCell className="text-center p-2">
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-accent font-semibold text-sm">
           {booking.adult_count + booking.child_count + (booking.senior_count || 0)}
         </span>
       </TableCell>
-      <TableCell className="font-semibold text-accent text-start">
+      <TableCell className="font-semibold text-accent text-start text-sm p-2">
         {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
       </TableCell>
-      <TableCell>{getStatusBadge(booking.booking_status, booking.payment_status)}</TableCell>
-      <TableCell>
+      <TableCell className="p-2">{getStatusBadge(booking.booking_status, booking.payment_status)}</TableCell>
+      <TableCell className="w-10 p-2 text-center">
         {booking.confirmation_email_sent ? (
-          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-            <MailCheck className="h-4 w-4 text-emerald-600" />
+          <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto">
+            <MailCheck className="h-3.5 w-3.5 text-emerald-600" />
           </div>
         ) : (
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <Mail className="h-4 w-4 text-muted-foreground" />
+          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center mx-auto">
+            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
         )}
       </TableCell>
@@ -529,12 +529,12 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
       {/* Desktop Table - hidden on small screens */}
       <div className="hidden md:block">
         {!useVirtual ? (
-          <div className="overflow-x-auto scrollbar-hide glass-card rounded-xl border border-accent/20">
-            <Table dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className="overflow-hidden glass-card rounded-xl border border-accent/20">
+            <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full">
               <TableHeader>
                 <TableRow className="border-b border-accent/20 hover:bg-transparent">
                   {onSelectionChange && (
-                    <TableHead className="w-12">
+                    <TableHead className="w-10">
                       <Checkbox
                         checked={selectedIds.length === bookings.length && bookings.length > 0}
                         onCheckedChange={handleSelectAll}
@@ -542,15 +542,15 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                       />
                     </TableHead>
                   )}
-                  <TableHead className="text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
-                  <TableHead className="text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-                  <TableHead className="text-accent font-semibold text-start">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
-                  <TableHead className="text-accent font-semibold text-start">{isArabic ? 'الوقت' : 'Time'}</TableHead>
-                  <TableHead className="text-accent font-semibold">{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
-                  <TableHead className="text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-                  <TableHead className="text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
-                  <TableHead className="text-accent font-semibold">{isArabic ? 'البريد' : 'Email'}</TableHead>
-                  <TableHead className="text-end text-accent font-semibold">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
+                  <TableHead className="w-[11%] text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Ref'}</TableHead>
+                  <TableHead className="w-[18%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+                  <TableHead className="w-[13%] text-accent font-semibold text-start">{isArabic ? 'التاريخ' : 'Date'}</TableHead>
+                  <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+                  <TableHead className="w-[6%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
+                  <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                  <TableHead className="w-[14%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead className="w-10 text-accent font-semibold text-center">{isArabic ? '' : ''}</TableHead>
+                  <TableHead className="w-10 text-end text-accent font-semibold">{isArabic ? '' : ''}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -578,12 +578,12 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
         ) : (
           // Virtual scrolling table for large datasets
           <div className="glass-card rounded-xl border border-accent/20 overflow-hidden">
-            <div className="overflow-x-auto scrollbar-hide">
-              <Table dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className="overflow-hidden">
+              <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full">
                 <TableHeader>
                   <TableRow className="border-b border-accent/20 hover:bg-transparent">
                     {onSelectionChange && (
-                      <TableHead className="w-12">
+                      <TableHead className="w-10">
                         <Checkbox
                           checked={selectedIds.length === bookings.length && bookings.length > 0}
                           onCheckedChange={handleSelectAll}
@@ -591,15 +591,15 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                         />
                       </TableHead>
                     )}
-                    <TableHead className="text-accent font-semibold min-w-[120px] text-start">{isArabic ? 'رقم الحجز' : 'Reference'}</TableHead>
-                    <TableHead className="text-accent font-semibold min-w-[180px] text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-                    <TableHead className="text-accent font-semibold min-w-[130px] text-start">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</TableHead>
-                    <TableHead className="text-accent font-semibold min-w-[80px] text-start">{isArabic ? 'الوقت' : 'Time'}</TableHead>
-                    <TableHead className="text-accent font-semibold min-w-[80px]">{isArabic ? 'التذاكر' : 'Tickets'}</TableHead>
-                    <TableHead className="text-accent font-semibold min-w-[100px] text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-                    <TableHead className="text-accent font-semibold min-w-[100px]">{isArabic ? 'الحالة' : 'Status'}</TableHead>
-                    <TableHead className="text-accent font-semibold min-w-[60px]">{isArabic ? 'البريد' : 'Email'}</TableHead>
-                    <TableHead className="text-end text-accent font-semibold min-w-[80px]">{isArabic ? 'الإجراءات' : 'Actions'}</TableHead>
+                    <TableHead className="w-[11%] text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Ref'}</TableHead>
+                    <TableHead className="w-[18%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+                    <TableHead className="w-[13%] text-accent font-semibold text-start">{isArabic ? 'التاريخ' : 'Date'}</TableHead>
+                    <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+                    <TableHead className="w-[6%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
+                    <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                    <TableHead className="w-[14%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                    <TableHead className="w-10 text-accent font-semibold text-center">{isArabic ? '' : ''}</TableHead>
+                    <TableHead className="w-10 text-end text-accent font-semibold">{isArabic ? '' : ''}</TableHead>
                   </TableRow>
                 </TableHeader>
               </Table>
@@ -607,7 +607,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
 
             <div 
               ref={parentRef}
-              className="overflow-auto max-h-[500px] scrollbar-hide"
+              className="overflow-y-auto overflow-x-hidden max-h-[500px] scrollbar-hide"
             >
               <div
                 style={{
@@ -616,7 +616,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                   position: 'relative',
                 }}
               >
-                <Table dir={isRTL ? 'rtl' : 'ltr'}>
+                <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full">
                   <TableBody>
                     {virtualizer.getVirtualItems().map((virtualRow) => {
                       const booking = bookings[virtualRow.index];
