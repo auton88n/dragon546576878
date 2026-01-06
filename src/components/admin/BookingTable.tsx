@@ -2,12 +2,13 @@ import { useState, useRef, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users, CheckCircle, Ban, Bell, Loader2, Pencil } from 'lucide-react';
+import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users, CheckCircle, Ban, Bell, Loader2, Pencil, XCircle, Clock } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { resendConfirmationEmail, sendPaymentReminder } from '@/lib/emailService';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
+import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -189,36 +190,42 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
   };
 
   const getStatusBadge = (status: string, paymentStatus?: string) => {
-    // Handle pending_payment status
-    if (status === 'pending_payment' || paymentStatus === 'pending') {
-      return (
-        <Badge variant="outline" className="bg-amber-500/20 text-amber-700 border-amber-500/30 dark:text-amber-400">
-          {isArabic ? 'في انتظار الدفع' : 'Awaiting Payment'}
-        </Badge>
-      );
-    }
+    // Determine icon and styling based on status
+    const isCancelled = status === 'cancelled';
+    const isPending = status === 'pending_payment' || paymentStatus === 'pending';
     
-    const config: Record<string, { className: string; labelAr: string; labelEn: string }> = {
+    const config: Record<string, { className: string; icon: React.ElementType; labelAr: string; labelEn: string }> = {
       confirmed: { 
         className: 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30 dark:text-emerald-400',
+        icon: CheckCircle,
         labelAr: 'مؤكد',
         labelEn: 'Confirmed'
       },
       pending: { 
         className: 'bg-amber-500/20 text-amber-700 border-amber-500/30 dark:text-amber-400',
-        labelAr: 'معلق',
-        labelEn: 'Pending'
+        icon: Clock,
+        labelAr: 'في انتظار الدفع',
+        labelEn: 'Awaiting Payment'
       },
       cancelled: { 
         className: 'bg-red-500/20 text-red-700 border-red-500/30 dark:text-red-400',
+        icon: XCircle,
         labelAr: 'ملغي',
         labelEn: 'Cancelled'
       },
     };
-    const { className, labelAr, labelEn } = config[status] || { className: '', labelAr: status, labelEn: status };
+    
+    // Override to pending if payment is pending
+    const effectiveStatus = isCancelled ? 'cancelled' : (isPending ? 'pending' : status);
+    const { className, icon: Icon, labelAr, labelEn } = config[effectiveStatus] || config.pending;
+    
     return (
-      <Badge variant="outline" className={className}>
-        {isArabic ? labelAr : labelEn}
+      <Badge 
+        variant="outline" 
+        className={cn(className, 'flex items-center gap-1.5', isRTL && 'flex-row-reverse')}
+      >
+        <Icon className="h-3.5 w-3.5" />
+        <span>{isArabic ? labelAr : labelEn}</span>
       </Badge>
     );
   };
@@ -236,8 +243,15 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
   };
 
   // Mobile Card Component
-  const MobileBookingCard = ({ booking }: { booking: Booking }) => (
-    <div className="glass-card rounded-xl border border-accent/20 p-4 space-y-3">
+  const MobileBookingCard = ({ booking }: { booking: Booking }) => {
+    const isCancelled = booking.booking_status === 'cancelled';
+    return (
+    <div className={cn(
+      'glass-card rounded-xl border p-4 space-y-3 transition-all',
+      isCancelled 
+        ? 'border-red-500/30 bg-red-50/50 dark:bg-red-950/20 border-s-4 border-s-red-500' 
+        : 'border-accent/20'
+    )}>
       {/* Selection + Header */}
       <div className="flex items-center justify-between rtl:flex-row-reverse">
         <div className="flex items-center gap-3 rtl:flex-row-reverse">
@@ -357,6 +371,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
       </div>
     </div>
   );
+  };
 
   const renderRow = (booking: Booking) => (
     <>
@@ -538,7 +553,10 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                 {bookings.map((booking) => (
                   <TableRow 
                     key={booking.id} 
-                    className="border-b border-accent/10 hover:bg-accent/5 transition-colors"
+                    className={cn(
+                      'border-b border-accent/10 hover:bg-accent/5 transition-colors',
+                      booking.booking_status === 'cancelled' && 'bg-red-50/50 dark:bg-red-950/20 border-s-4 border-s-red-500'
+                    )}
                   >
                     {renderRow(booking)}
                   </TableRow>
@@ -596,7 +614,10 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                           key={booking.id}
                           data-index={virtualRow.index}
                           ref={virtualizer.measureElement}
-                          className="border-b border-accent/10 hover:bg-accent/5 transition-colors"
+                          className={cn(
+                            'border-b border-accent/10 hover:bg-accent/5 transition-colors',
+                            booking.booking_status === 'cancelled' && 'bg-red-50/50 dark:bg-red-950/20 border-s-4 border-s-red-500'
+                          )}
                           style={{
                             position: 'absolute',
                             top: 0,

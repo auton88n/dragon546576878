@@ -14,6 +14,7 @@ import BookingFilters from '@/components/admin/BookingFilters';
 import BookingDetailsDialog from '@/components/admin/BookingDetailsDialog';
 import EditBookingDialog from '@/components/admin/EditBookingDialog';
 import BulkActionsBar from '@/components/admin/BulkActionsBar';
+import StatusLegend from '@/components/admin/StatusLegend';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load non-critical components
@@ -228,13 +229,18 @@ const AdminPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 p-3 sm:p-4 md:p-6 pt-4 sm:pt-6">
-                  <BookingFilters
-                    filters={filters}
-                    onFiltersChange={setFilters}
-                    onReset={handleResetFilters}
-                    onExport={handleExport}
-                    exporting={exporting}
-                  />
+                  <div className="flex flex-wrap items-start gap-4 rtl:[direction:rtl]">
+                    <div className="flex-1 min-w-0">
+                      <BookingFilters
+                        filters={filters}
+                        onFiltersChange={setFilters}
+                        onReset={handleResetFilters}
+                        onExport={handleExport}
+                        exporting={exporting}
+                      />
+                    </div>
+                    <StatusLegend />
+                  </div>
                   
                   <BookingTable
                     bookings={bookings}
