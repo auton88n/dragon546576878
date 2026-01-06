@@ -247,15 +247,11 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     const isCancelled = booking.booking_status === 'cancelled';
     return (
     <div className={cn(
-      'glass-card rounded-xl border p-4 space-y-3 transition-all relative overflow-hidden',
+      'glass-card rounded-xl border p-4 space-y-3 transition-all',
       isCancelled 
         ? 'border-red-500/30 bg-red-50/50 dark:bg-red-950/20' 
         : 'border-accent/20'
     )}>
-      {/* Full-height red bar indicator for cancelled bookings */}
-      {isCancelled && (
-        <div className="absolute inset-y-0 start-0 w-1 bg-red-500" aria-hidden="true" />
-      )}
       {/* Selection + Header */}
       <div className="flex items-center justify-between rtl:flex-row-reverse">
         <div className="flex items-center gap-3 rtl:flex-row-reverse">
@@ -560,14 +556,10 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                     <TableRow 
                       key={booking.id} 
                       className={cn(
-                        'border-b border-accent/10 hover:bg-accent/5 transition-colors relative',
+                        'border-b border-accent/10 hover:bg-accent/5 transition-colors',
                         isCancelled && 'bg-red-50/50 dark:bg-red-950/20'
                       )}
                     >
-                      {/* Full-height red indicator */}
-                      {isCancelled && (
-                        <td className="absolute inset-y-0 start-0 w-1 bg-red-500 p-0" aria-hidden="true" />
-                      )}
                       {renderRow(booking)}
                     </TableRow>
                   );
@@ -627,7 +619,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                           data-index={virtualRow.index}
                           ref={virtualizer.measureElement}
                           className={cn(
-                            'border-b border-accent/10 hover:bg-accent/5 transition-colors relative',
+                            'border-b border-accent/10 hover:bg-accent/5 transition-colors',
                             isCancelled && 'bg-red-50/50 dark:bg-red-950/20'
                           )}
                           style={{
@@ -639,10 +631,6 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                             transform: `translateY(${virtualRow.start}px)`,
                           }}
                         >
-                          {/* Full-height red indicator */}
-                          {isCancelled && (
-                            <td className="absolute inset-y-0 start-0 w-1 bg-red-500 p-0" aria-hidden="true" />
-                          )}
                           {renderRow(booking)}
                         </TableRow>
                       );
