@@ -1,21 +1,11 @@
 import { useState } from 'react';
-import { CheckCircle, Ban, Bell, X, Loader2, Trash2 } from 'lucide-react';
+import { CheckCircle, Ban, Bell, X, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { resendConfirmationEmail } from '@/lib/emailService';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import type { Tables } from '@/integrations/supabase/types';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 type Booking = Tables<'bookings'>;
 
@@ -31,7 +21,6 @@ const BulkActionsBar = ({ selectedIds, bookings, onClearSelection, onBookingUpda
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
   const [loading, setLoading] = useState<string | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const selectedBookings = bookings.filter(b => selectedIds.includes(b.id));
   const pendingPaymentBookings = selectedBookings.filter(b => b.payment_status === 'pending' && b.booking_status !== 'cancelled');
@@ -129,35 +118,6 @@ const BulkActionsBar = ({ selectedIds, bookings, onClearSelection, onBookingUpda
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return;
-    setLoading('delete');
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .delete()
-        .in('id', selectedIds);
-      if (error) throw error;
-      toast({
-        title: isArabic ? 'تم الحذف' : 'Deleted',
-        description: isArabic 
-          ? `تم حذف ${selectedIds.length} حجز` 
-          : `${selectedIds.length} booking(s) deleted`,
-      });
-      onBookingUpdated();
-      onClearSelection();
-      setShowDeleteConfirm(false);
-    } catch {
-      toast({
-        title: isArabic ? 'خطأ' : 'Error',
-        description: isArabic ? 'فشل الحذف' : 'Failed to delete bookings',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(null);
-    }
-  };
-
   if (selectedIds.length === 0) return null;
 
   return (
@@ -222,20 +182,6 @@ const BulkActionsBar = ({ selectedIds, bookings, onClearSelection, onBookingUpda
               <span className="hidden sm:inline">{isArabic ? 'إلغاء' : 'Cancel'}</span>
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setShowDeleteConfirm(true)}
-            disabled={loading !== null}
-            className="border-red-600/50 text-red-700 hover:bg-red-600/10 gap-1.5 text-xs"
-          >
-            {loading === 'delete' ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="h-3.5 w-3.5" />
-            )}
-            <span className="hidden sm:inline">{isArabic ? 'حذف' : 'Delete'}</span>
-          </Button>
         </div>
 
         {/* Clear */}
@@ -248,31 +194,6 @@ const BulkActionsBar = ({ selectedIds, bookings, onClearSelection, onBookingUpda
           <X className="h-4 w-4" />
         </Button>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {isArabic ? 'تأكيد الحذف' : 'Confirm Deletion'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {isArabic 
-                ? `هل أنت متأكد من حذف ${selectedIds.length} حجز؟ سيتم حذف جميع التذاكر المرتبطة. هذا الإجراء لا يمكن التراجع عنه.`
-                : `Are you sure you want to delete ${selectedIds.length} booking(s)? All associated tickets will also be deleted. This action cannot be undone.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{isArabic ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleBulkDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isArabic ? 'حذف' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
