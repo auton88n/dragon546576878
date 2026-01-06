@@ -100,6 +100,7 @@ const ScannerPage = () => {
   const lastScannedCodeRef = useRef<string | null>(null);
   const lastScanTimeRef = useRef<number>(0);
   const scanCountSinceRestartRef = useRef<number>(0);
+  const isProcessingScanRef = useRef<boolean>(false);
 
   useEffect(() => {
     safeLocalStorage.setItem(STATS_STORAGE_KEY, JSON.stringify({
@@ -371,11 +372,25 @@ const ScannerPage = () => {
   }, []);
 
   const onScanSuccess = useCallback(async (decodedText: string) => {
-    const now = Date.now();
-    if (lastScannedCodeRef.current === decodedText && now - lastScanTimeRef.current < DUPLICATE_SCAN_THRESHOLD) {
+    // Single-thread lock to prevent race conditions from rapid callbacks
+    if (isProcessingScanRef.current) {
       return;
     }
-    lastScannedCodeRef.current = decodedText;
+    isProcessingScanRef.current = true;
+
+    // Normalize text to handle invisible characters
+    const normalizedText = decodedText
+      .trim()
+      .replace(/\u0000/g, '')
+      .replace(/\uFEFF/g, '')
+      .replace(/[\u200B-\u200D\u2060]/g, '');
+
+    const now = Date.now();
+    if (lastScannedCodeRef.current === normalizedText && now - lastScanTimeRef.current < DUPLICATE_SCAN_THRESHOLD) {
+      isProcessingScanRef.current = false;
+      return;
+    }
+    lastScannedCodeRef.current = normalizedText;
     lastScanTimeRef.current = now;
     scanCountSinceRestartRef.current++;
 
@@ -383,12 +398,12 @@ const ScannerPage = () => {
       try { await scannerRef.current.pause(); } catch (e) {}
     }
 
-    // Detect QR code type
-    const { kind } = detectQRKind(decodedText);
+    // Detect QR code type using normalized text
+    const { kind } = detectQRKind(normalizedText);
 
     // Check if this is an employee badge
     if (kind === 'employee') {
-      const empResult = await validateEmployeeQR(decodedText);
+      const empResult = await validateEmployeeQR(normalizedText);
       setCurrentResult(empResult);
       setIsEmployeeResult(true);
       setShowResultOverlay(true);
@@ -422,6 +437,7 @@ const ScannerPage = () => {
         setShowResultOverlay(false);
         setCurrentResult(null);
         setIsEmployeeResult(false);
+        isProcessingScanRef.current = false;
         if (scannerRef.current) {
           try { await scannerRef.current.resume(); } catch (e) {}
         }
@@ -450,6 +466,7 @@ const ScannerPage = () => {
       resultTimeoutRef.current = setTimeout(async () => {
         setShowResultOverlay(false);
         setCurrentResult(null);
+        isProcessingScanRef.current = false;
         if (scannerRef.current) {
           try { await scannerRef.current.resume(); } catch (e) {}
         }
@@ -458,7 +475,7 @@ const ScannerPage = () => {
     }
 
     // Standard ticket validation (kind === 'ticket')
-    const result = await validateTicket(decodedText);
+    const result = await validateTicket(normalizedText);
     setCurrentResult(result);
     setIsEmployeeResult(false);
     setShowResultOverlay(true);
@@ -498,6 +515,7 @@ const ScannerPage = () => {
       setShowResultOverlay(false);
       setCurrentResult(null);
       setIsEmployeeResult(false);
+      isProcessingScanRef.current = false;
       if (scannerRef.current) {
         try { await scannerRef.current.resume(); } catch (e) {}
       }

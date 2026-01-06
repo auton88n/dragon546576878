@@ -38,33 +38,64 @@ export interface EmployeeValidationResult {
 // Detect QR code type - handles both new and legacy formats
 export type QRCodeKind = 'employee' | 'ticket' | 'unknown';
 
-export const detectQRKind = (qrData: string): { kind: QRCodeKind; parsed: any } => {
+// Normalize QR data by removing invisible/garbage characters
+const normalizeQRData = (data: string): string => {
+  return data
+    .trim()
+    .replace(/\u0000/g, '') // null chars
+    .replace(/\uFEFF/g, '') // BOM
+    .replace(/[\u200B-\u200D\u2060]/g, ''); // zero-width chars
+};
+
+// Try to extract JSON from possibly corrupted string
+const extractJSON = (data: string): any | null => {
+  const normalized = normalizeQRData(data);
+  
+  // Direct parse attempt
   try {
-    const parsed = JSON.parse(qrData);
-    
-    // New employee format: { type: "employee", id, name, dept, cs }
-    if (parsed.type === 'employee' || parsed.type === 'employee_badge') {
-      return { kind: 'employee', parsed };
-    }
-    
-    // Legacy employee format: has id/employeeId + department/dept, but NO code
-    const employeeId = parsed.id || parsed.employeeId || parsed.employee_id;
-    const hasDept = parsed.dept || parsed.department;
-    const hasTicketCode = !!parsed.code;
-    
-    if (employeeId && hasDept && !hasTicketCode) {
-      return { kind: 'employee', parsed };
-    }
-    
-    // Ticket format: must have code
-    if (hasTicketCode) {
-      return { kind: 'ticket', parsed };
-    }
-    
-    return { kind: 'unknown', parsed };
+    return JSON.parse(normalized);
   } catch {
+    // Try to find JSON substring
+    const start = normalized.indexOf('{');
+    const end = normalized.lastIndexOf('}');
+    if (start !== -1 && end > start) {
+      try {
+        return JSON.parse(normalized.slice(start, end + 1));
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+};
+
+export const detectQRKind = (qrData: string): { kind: QRCodeKind; parsed: any } => {
+  const parsed = extractJSON(qrData);
+  
+  if (!parsed) {
     return { kind: 'unknown', parsed: null };
   }
+  
+  // New employee format: { type: "employee", id, name, dept, cs }
+  if (parsed.type === 'employee' || parsed.type === 'employee_badge') {
+    return { kind: 'employee', parsed };
+  }
+  
+  // Legacy employee format: has id/employeeId + department/dept, but NO code
+  const employeeId = parsed.id || parsed.employeeId || parsed.employee_id;
+  const hasDept = parsed.dept || parsed.department;
+  const hasTicketCode = !!parsed.code;
+  
+  if (employeeId && hasDept && !hasTicketCode) {
+    return { kind: 'employee', parsed };
+  }
+  
+  // Ticket format: must have code
+  if (hasTicketCode) {
+    return { kind: 'ticket', parsed };
+  }
+  
+  return { kind: 'unknown', parsed };
 };
 
 // Check if QR data is for an employee badge (legacy function for compatibility)
