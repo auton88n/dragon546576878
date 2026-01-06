@@ -41,10 +41,7 @@ const StatusLegend = () => {
 
       {isOpen && (
         <div 
-          className={cn(
-            'absolute top-full mt-2 z-50 glass-card rounded-xl border border-accent/20 p-4 shadow-lg min-w-[280px]',
-            isRTL ? 'right-0' : 'left-0'
-          )}
+          className="absolute top-full mt-2 z-50 bg-background rounded-xl border border-accent/20 p-4 shadow-lg min-w-[280px] start-0"
         >
           {/* Bookings Section */}
           <div className="mb-4">
