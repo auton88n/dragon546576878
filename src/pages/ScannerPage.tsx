@@ -4,7 +4,7 @@ import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, 
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
-import { validateTicket, markTicketAsUsed, logScanAttempt, lookupTicket, isEmployeeQR, validateEmployeeQR, logEmployeeScan, type TicketValidationResult, type EmployeeValidationResult } from '@/lib/ticketService';
+import { validateTicket, markTicketAsUsed, logScanAttempt, lookupTicket, detectQRKind, validateEmployeeQR, logEmployeeScan, type TicketValidationResult, type EmployeeValidationResult } from '@/lib/ticketService';
 import { useOfflineScanQueue } from '@/hooks/useOfflineScanQueue';
 import StaffHeader from '@/components/shared/StaffHeader';
 import PoweredByAYN from '@/components/shared/PoweredByAYN';
@@ -383,8 +383,11 @@ const ScannerPage = () => {
       try { await scannerRef.current.pause(); } catch (e) {}
     }
 
+    // Detect QR code type
+    const { kind } = detectQRKind(decodedText);
+
     // Check if this is an employee badge
-    if (isEmployeeQR(decodedText)) {
+    if (kind === 'employee') {
       const empResult = await validateEmployeeQR(decodedText);
       setCurrentResult(empResult);
       setIsEmployeeResult(true);
@@ -427,7 +430,34 @@ const ScannerPage = () => {
       return;
     }
 
-    // Standard ticket validation
+    // Handle unknown QR codes
+    if (kind === 'unknown') {
+      setCurrentResult({
+        isValid: false,
+        status: 'invalid',
+        message: isArabic ? 'رمز QR غير معروف' : 'Unrecognized QR code',
+      } as TicketValidationResult);
+      setIsEmployeeResult(false);
+      setShowResultOverlay(true);
+      playFeedback('error');
+
+      setTodayStats(prev => ({
+        ...prev,
+        totalScans: prev.totalScans + 1,
+        invalidScans: prev.invalidScans + 1,
+      }));
+
+      resultTimeoutRef.current = setTimeout(async () => {
+        setShowResultOverlay(false);
+        setCurrentResult(null);
+        if (scannerRef.current) {
+          try { await scannerRef.current.resume(); } catch (e) {}
+        }
+      }, RESULT_DISPLAY_TIMEOUT);
+      return;
+    }
+
+    // Standard ticket validation (kind === 'ticket')
     const result = await validateTicket(decodedText);
     setCurrentResult(result);
     setIsEmployeeResult(false);
@@ -473,7 +503,7 @@ const ScannerPage = () => {
       }
       await restartScannerIfNeeded();
     }, RESULT_DISPLAY_TIMEOUT);
-  }, [playFeedback, user, isOnline, addToQueue, restartScannerIfNeeded]);
+  }, [playFeedback, user, isOnline, addToQueue, restartScannerIfNeeded, isArabic]);
 
   const startScanning = async () => {
     setCameraError(null);
