@@ -53,7 +53,7 @@ const EmployeeQRDialog = ({ employee, onClose }: EmployeeQRDialogProps) => {
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+        <DialogHeader className="pe-12">
           <DialogTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <QrCode className="h-5 w-5 text-violet-600" />
             {isArabic ? 'بطاقة الموظف' : 'Employee Badge'}
