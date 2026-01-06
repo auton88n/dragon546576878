@@ -911,18 +911,43 @@ const ScannerPage = () => {
                       !scan.isEmployee && !['valid', 'used'].includes(scan.status) && 'bg-destructive/5 border-destructive/20'
                     )}>
                       <div className="flex items-center gap-3">
-                        <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center", scan.status === 'valid' && 'bg-success/10', scan.status === 'used' && 'bg-warning/10', !['valid', 'used'].includes(scan.status) && 'bg-destructive/10')}>
-                          {scan.status === 'valid' && <CheckCircle className="h-4 w-4 text-success" />}
-                          {scan.status === 'used' && <AlertTriangle className="h-4 w-4 text-warning" />}
-                          {!['valid', 'used'].includes(scan.status) && <XCircle className="h-4 w-4 text-destructive" />}
+                        <div className={cn(
+                          "w-8 h-8 rounded-xl flex items-center justify-center",
+                          scan.isEmployee && scan.status === 'employee_valid' && 'bg-violet-500/10',
+                          scan.isEmployee && scan.status === 'employee_inactive' && 'bg-destructive/10',
+                          !scan.isEmployee && scan.status === 'valid' && 'bg-success/10',
+                          !scan.isEmployee && scan.status === 'used' && 'bg-warning/10',
+                          !scan.isEmployee && !['valid', 'used'].includes(scan.status) && 'bg-destructive/10'
+                        )}>
+                          {scan.isEmployee && scan.status === 'employee_valid' && <CheckCircle className="h-4 w-4 text-violet-500" />}
+                          {scan.isEmployee && scan.status === 'employee_inactive' && <XCircle className="h-4 w-4 text-destructive" />}
+                          {!scan.isEmployee && scan.status === 'valid' && <CheckCircle className="h-4 w-4 text-success" />}
+                          {!scan.isEmployee && scan.status === 'used' && <AlertTriangle className="h-4 w-4 text-warning" />}
+                          {!scan.isEmployee && !['valid', 'used'].includes(scan.status) && <XCircle className="h-4 w-4 text-destructive" />}
                         </div>
                         <div>
-                          <p className="font-medium text-xs font-mono">{scan.ticketCode || (isArabic ? 'غير معروف' : 'Unknown')}</p>
-                          {scan.customerName && <p className="text-xs text-muted-foreground">{scan.customerName}</p>}
+                          {scan.isEmployee ? (
+                            <>
+                              <p className="font-medium text-xs">{scan.employeeName || (isArabic ? 'موظف' : 'Employee')}</p>
+                              <p className="text-xs text-muted-foreground">{getDepartmentLabel(scan.employeeDepartment || 'general')}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="font-medium text-xs font-mono">{scan.ticketCode || (isArabic ? 'غير معروف' : 'Unknown')}</p>
+                              {scan.customerName && <p className="text-xs text-muted-foreground">{scan.customerName}</p>}
+                            </>
+                          )}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className={cn("text-xs font-medium", scan.status === 'valid' && 'text-success', scan.status === 'used' && 'text-warning', !['valid', 'used'].includes(scan.status) && 'text-destructive')}>{getStatusText(scan.status)}</p>
+                      <div className="text-right rtl:text-left">
+                        <p className={cn(
+                          "text-xs font-medium",
+                          scan.isEmployee && scan.status === 'employee_valid' && 'text-violet-500',
+                          scan.isEmployee && scan.status === 'employee_inactive' && 'text-destructive',
+                          !scan.isEmployee && scan.status === 'valid' && 'text-success',
+                          !scan.isEmployee && scan.status === 'used' && 'text-warning',
+                          !scan.isEmployee && !['valid', 'used'].includes(scan.status) && 'text-destructive'
+                        )}>{getStatusText(scan.status)}</p>
                         <p className="text-xs text-muted-foreground">{scan.timestamp.toLocaleTimeString()}</p>
                       </div>
                     </div>
