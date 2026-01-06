@@ -21,6 +21,7 @@ import TestQRGenerator from './TestQRGenerator';
 import PackagesManager from './PackagesManager';
 import AttractionsManager from './AttractionsManager';
 import StaffManager from './StaffManager';
+import EmployeesManager from './EmployeesManager';
 
 const SettingsPanel = () => {
   const { currentLanguage } = useLanguage();
@@ -383,6 +384,11 @@ const SettingsPanel = () => {
 
         {/* Staff Management */}
         <StaffManager />
+
+        <Separator className="my-4" />
+
+        {/* Employees Manager */}
+        <EmployeesManager />
 
         <Separator className="my-4" />
 

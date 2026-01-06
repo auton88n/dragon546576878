@@ -23,6 +23,120 @@ export interface TicketValidationResult {
   };
 }
 
+// Employee validation result - separate from ticket
+export interface EmployeeValidationResult {
+  isValid: boolean;
+  status: 'valid' | 'inactive' | 'not_found';
+  message: string;
+  employee?: {
+    id: string;
+    name: string;
+    department: string;
+  };
+}
+
+// Check if QR data is for an employee badge
+export const isEmployeeQR = (qrData: string): boolean => {
+  try {
+    const parsed = JSON.parse(qrData);
+    return parsed.type === 'employee';
+  } catch {
+    return false;
+  }
+};
+
+// Validate an employee badge QR code (unlimited scans - never marks as used)
+export const validateEmployeeQR = async (qrData: string): Promise<EmployeeValidationResult> => {
+  try {
+    console.log('Validating employee QR:', qrData);
+    
+    const parsed = JSON.parse(qrData);
+    
+    if (parsed.type !== 'employee' || !parsed.id) {
+      return {
+        isValid: false,
+        status: 'not_found',
+        message: 'Invalid employee badge format',
+      };
+    }
+
+    // Look up employee in database
+    const { data: employee, error } = await supabase
+      .from('employees')
+      .select('id, full_name, department, is_active')
+      .eq('id', parsed.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Database error looking up employee:', error);
+      return {
+        isValid: false,
+        status: 'not_found',
+        message: 'Error validating employee',
+      };
+    }
+
+    if (!employee) {
+      console.log('Employee not found for ID:', parsed.id);
+      return {
+        isValid: false,
+        status: 'not_found',
+        message: 'Employee not found',
+      };
+    }
+
+    // Check if employee is active
+    if (!employee.is_active) {
+      return {
+        isValid: false,
+        status: 'inactive',
+        message: 'Employee badge deactivated',
+        employee: {
+          id: employee.id,
+          name: employee.full_name,
+          department: employee.department,
+        },
+      };
+    }
+
+    // Employee is valid!
+    return {
+      isValid: true,
+      status: 'valid',
+      message: 'Employee verified',
+      employee: {
+        id: employee.id,
+        name: employee.full_name,
+        department: employee.department,
+      },
+    };
+  } catch (err) {
+    console.error('Error validating employee QR:', err);
+    return {
+      isValid: false,
+      status: 'not_found',
+      message: 'Invalid employee badge',
+    };
+  }
+};
+
+// Log an employee scan for attendance tracking (optional)
+export const logEmployeeScan = async (
+  employeeId: string,
+  scannerId?: string,
+  location?: string
+): Promise<void> => {
+  try {
+    await supabase.from('employee_scans').insert({
+      employee_id: employeeId,
+      scanner_user_id: scannerId,
+      scan_location: location || 'main_entrance',
+    });
+  } catch (err) {
+    console.error('Error logging employee scan:', err);
+  }
+};
+
 export const validateTicket = async (qrData: string): Promise<TicketValidationResult> => {
   try {
     console.log('Validating QR data:', qrData);

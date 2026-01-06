@@ -4,7 +4,7 @@ import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, 
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
-import { validateTicket, markTicketAsUsed, logScanAttempt, lookupTicket, type TicketValidationResult } from '@/lib/ticketService';
+import { validateTicket, markTicketAsUsed, logScanAttempt, lookupTicket, isEmployeeQR, validateEmployeeQR, logEmployeeScan, type TicketValidationResult, type EmployeeValidationResult } from '@/lib/ticketService';
 import { useOfflineScanQueue } from '@/hooks/useOfflineScanQueue';
 import StaffHeader from '@/components/shared/StaffHeader';
 import PoweredByAYN from '@/components/shared/PoweredByAYN';
@@ -16,10 +16,13 @@ import { cn } from '@/lib/utils';
 
 interface ScanResult {
   timestamp: Date;
-  status: TicketValidationResult['status'];
+  status: TicketValidationResult['status'] | 'employee_valid' | 'employee_inactive';
   ticketCode?: string;
   customerName?: string;
   ticketType?: string;
+  isEmployee?: boolean;
+  employeeName?: string;
+  employeeDepartment?: string;
 }
 
 import { safeLocalStorage } from '@/lib/safeStorage';
@@ -76,7 +79,8 @@ const ScannerPage = () => {
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [currentResult, setCurrentResult] = useState<TicketValidationResult | null>(null);
+  const [currentResult, setCurrentResult] = useState<TicketValidationResult | EmployeeValidationResult | null>(null);
+  const [isEmployeeResult, setIsEmployeeResult] = useState(false);
   const [showResultOverlay, setShowResultOverlay] = useState(false);
   const [recentScans, setRecentScans] = useState<ScanResult[]>(loadStoredRecentScans);
   const [todayStats, setTodayStats] = useState(loadStoredStats);
@@ -256,6 +260,7 @@ const ScannerPage = () => {
     }
     setShowResultOverlay(false);
     setCurrentResult(null);
+    setIsEmployeeResult(false);
     if (scannerRef.current) {
       try { scannerRef.current.resume(); } catch (e) {}
     }
@@ -378,8 +383,54 @@ const ScannerPage = () => {
       try { await scannerRef.current.pause(); } catch (e) {}
     }
 
+    // Check if this is an employee badge
+    if (isEmployeeQR(decodedText)) {
+      const empResult = await validateEmployeeQR(decodedText);
+      setCurrentResult(empResult);
+      setIsEmployeeResult(true);
+      setShowResultOverlay(true);
+
+      if (empResult.isValid) {
+        playFeedback('success');
+        // Log for attendance (optional) - no "mark as used" for employees
+        if (empResult.employee && isOnline) {
+          await logEmployeeScan(empResult.employee.id, user?.id, 'main_entrance');
+        }
+      } else {
+        playFeedback('error');
+      }
+
+      // Add to recent scans with employee flag
+      setRecentScans(prev => [{
+        timestamp: new Date(),
+        status: empResult.isValid ? 'employee_valid' : 'employee_inactive',
+        isEmployee: true,
+        employeeName: empResult.employee?.name,
+        employeeDepartment: empResult.employee?.department,
+      }, ...prev.slice(0, 9)]);
+
+      // Stats: employees don't affect ticket counts
+      setTodayStats(prev => ({
+        ...prev,
+        totalScans: prev.totalScans + 1,
+      }));
+
+      resultTimeoutRef.current = setTimeout(async () => {
+        setShowResultOverlay(false);
+        setCurrentResult(null);
+        setIsEmployeeResult(false);
+        if (scannerRef.current) {
+          try { await scannerRef.current.resume(); } catch (e) {}
+        }
+        await restartScannerIfNeeded();
+      }, RESULT_DISPLAY_TIMEOUT);
+      return;
+    }
+
+    // Standard ticket validation
     const result = await validateTicket(decodedText);
     setCurrentResult(result);
+    setIsEmployeeResult(false);
     setShowResultOverlay(true);
 
     if (result.isValid) {
@@ -416,6 +467,7 @@ const ScannerPage = () => {
     resultTimeoutRef.current = setTimeout(async () => {
       setShowResultOverlay(false);
       setCurrentResult(null);
+      setIsEmployeeResult(false);
       if (scannerRef.current) {
         try { await scannerRef.current.resume(); } catch (e) {}
       }
@@ -505,7 +557,10 @@ const ScannerPage = () => {
     };
   }, []);
 
-  const getStatusColor = (status: TicketValidationResult['status']) => {
+  const getStatusColor = (status: string, isEmployee = false) => {
+    if (isEmployee) {
+      return status === 'valid' ? 'bg-violet-600' : 'bg-destructive';
+    }
     switch (status) {
       case 'valid': return 'bg-success';
       case 'used': return 'bg-warning';
@@ -513,7 +568,10 @@ const ScannerPage = () => {
     }
   };
 
-  const getStatusIcon = (status: TicketValidationResult['status']) => {
+  const getStatusIcon = (status: string, isEmployee = false) => {
+    if (isEmployee && status === 'valid') {
+      return <CheckCircle className="h-24 w-24" />;
+    }
     switch (status) {
       case 'valid': return <CheckCircle className="h-24 w-24" />;
       case 'used': return <AlertTriangle className="h-24 w-24" />;
@@ -521,7 +579,15 @@ const ScannerPage = () => {
     }
   };
 
-  const getStatusText = (status: TicketValidationResult['status']) => {
+  const getStatusText = (status: string, isEmployee = false) => {
+    if (isEmployee) {
+      const empTexts: Record<string, { ar: string; en: string }> = {
+        valid: { ar: 'موظف معتمد', en: 'Employee Verified' },
+        inactive: { ar: 'بطاقة معطلة', en: 'Badge Deactivated' },
+        not_found: { ar: 'موظف غير موجود', en: 'Employee Not Found' },
+      };
+      return isArabic ? empTexts[status]?.ar : empTexts[status]?.en;
+    }
     const texts: Record<string, { ar: string; en: string }> = {
       valid: { ar: 'تذكرة صالحة', en: 'Valid Ticket' },
       used: { ar: 'تذكرة مستخدمة', en: 'Already Used' },
@@ -531,6 +597,20 @@ const ScannerPage = () => {
       not_found: { ar: 'تذكرة غير موجودة', en: 'Not Found' },
     };
     return isArabic ? texts[status]?.ar : texts[status]?.en;
+  };
+
+  const getDepartmentLabel = (dept: string) => {
+    const depts: Record<string, { ar: string; en: string }> = {
+      security: { ar: 'الأمن', en: 'Security' },
+      cleaning: { ar: 'النظافة', en: 'Cleaning' },
+      guide: { ar: 'الإرشاد', en: 'Guide' },
+      cafe: { ar: 'المقهى', en: 'Café' },
+      shop: { ar: 'المتجر', en: 'Shop' },
+      maintenance: { ar: 'الصيانة', en: 'Maintenance' },
+      general: { ar: 'عام', en: 'General' },
+      other: { ar: 'أخرى', en: 'Other' },
+    };
+    return depts[dept] ? (isArabic ? depts[dept].ar : depts[dept].en) : dept;
   };
 
   return (
@@ -546,18 +626,31 @@ const ScannerPage = () => {
       {/* Result Overlay */}
       {showResultOverlay && currentResult && (
         <div 
-          className={cn('fixed inset-0 z-50 flex flex-col items-center justify-center text-white p-8 animate-fade-in cursor-pointer', getStatusColor(currentResult.status))}
+          className={cn('fixed inset-0 z-50 flex flex-col items-center justify-center text-white p-8 animate-fade-in cursor-pointer', getStatusColor(currentResult.status, isEmployeeResult))}
           onClick={dismissResult}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && dismissResult()}
         >
           <div className="scale-150 mb-2">
-            {getStatusIcon(currentResult.status)}
+            {getStatusIcon(currentResult.status, isEmployeeResult)}
           </div>
-          <h2 className="text-5xl md:text-6xl font-bold mt-6 mb-3 text-center leading-tight">{getStatusText(currentResult.status)}</h2>
+          <h2 className="text-5xl md:text-6xl font-bold mt-6 mb-3 text-center leading-tight">{getStatusText(currentResult.status, isEmployeeResult)}</h2>
           <p className="text-2xl md:text-3xl opacity-95 mb-6 font-medium text-center">{currentResult.message}</p>
-          {currentResult.ticket && (
+          
+          {/* Employee badge info */}
+          {isEmployeeResult && 'employee' in currentResult && currentResult.employee && (
+            <div className="bg-white/30 backdrop-blur-md rounded-3xl p-8 text-center border-2 border-white/40 min-w-[300px] shadow-2xl">
+              <p className="text-3xl md:text-4xl font-bold mb-3">{currentResult.employee.name}</p>
+              <p className="text-xl md:text-2xl opacity-90 px-6 py-2 bg-white/25 rounded-full inline-block font-semibold">
+                {getDepartmentLabel(currentResult.employee.department)}
+              </p>
+              <p className="text-sm mt-4 opacity-75">{isArabic ? '✓ يمكنه الدخول' : '✓ Entry allowed'}</p>
+            </div>
+          )}
+          
+          {/* Ticket info */}
+          {!isEmployeeResult && 'ticket' in currentResult && currentResult.ticket && (
             <div className="bg-white/30 backdrop-blur-md rounded-3xl p-8 text-center border-2 border-white/40 min-w-[300px] shadow-2xl">
               <p className="text-2xl md:text-3xl font-bold mb-3">{currentResult.ticket.customerName}</p>
               <p className="text-xl md:text-2xl opacity-90 font-mono tracking-wider mb-4">{currentResult.ticket.ticketCode}</p>
@@ -809,7 +902,14 @@ const ScannerPage = () => {
               ) : (
                 <div className="space-y-2">
                   {recentScans.map((scan, index) => (
-                    <div key={index} className={cn('flex items-center justify-between p-3 rounded-xl border', scan.status === 'valid' && 'bg-success/5 border-success/20', scan.status === 'used' && 'bg-warning/5 border-warning/20', !['valid', 'used'].includes(scan.status) && 'bg-destructive/5 border-destructive/20')}>
+                    <div key={index} className={cn(
+                      'flex items-center justify-between p-3 rounded-xl border',
+                      scan.isEmployee && scan.status === 'employee_valid' && 'bg-violet-500/5 border-violet-500/20',
+                      scan.isEmployee && scan.status === 'employee_inactive' && 'bg-destructive/5 border-destructive/20',
+                      !scan.isEmployee && scan.status === 'valid' && 'bg-success/5 border-success/20',
+                      !scan.isEmployee && scan.status === 'used' && 'bg-warning/5 border-warning/20',
+                      !scan.isEmployee && !['valid', 'used'].includes(scan.status) && 'bg-destructive/5 border-destructive/20'
+                    )}>
                       <div className="flex items-center gap-3">
                         <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center", scan.status === 'valid' && 'bg-success/10', scan.status === 'used' && 'bg-warning/10', !['valid', 'used'].includes(scan.status) && 'bg-destructive/10')}>
                           {scan.status === 'valid' && <CheckCircle className="h-4 w-4 text-success" />}
