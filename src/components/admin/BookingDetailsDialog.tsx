@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe, CheckCircle, Ban } from 'lucide-react';
+import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe, CheckCircle, Ban, History } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { resendConfirmationEmail } from '@/lib/emailService';
@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import EmailStatusTracker from './EmailStatusTracker';
 
 type Booking = Tables<'bookings'>;
 type TicketType = Tables<'tickets'>;
@@ -394,6 +395,17 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
               )}
               {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
             </Button>
+          </div>
+
+          {/* Email History */}
+          <div className="glass-card rounded-xl p-5 border border-accent/10">
+            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <History className="h-4 w-4 text-blue-600" />
+              </div>
+              {isArabic ? 'سجل البريد الإلكتروني' : 'Email History'}
+            </h3>
+            <EmailStatusTracker bookingId={booking.id} />
           </div>
 
           {/* Admin Actions for pending payments */}
