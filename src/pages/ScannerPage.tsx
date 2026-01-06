@@ -689,11 +689,11 @@ const ScannerPage = () => {
           {/* Employee badge info */}
           {isEmployeeResult && 'employee' in currentResult && currentResult.employee && (
             <div className="bg-white/30 backdrop-blur-md rounded-3xl p-8 text-center border-2 border-white/40 min-w-[300px] shadow-2xl">
-              <p className="text-3xl md:text-4xl font-bold mb-3">{currentResult.employee.name}</p>
-              <p className="text-xl md:text-2xl opacity-90 px-6 py-2 bg-white/25 rounded-full inline-block font-semibold">
+              <p className="text-3xl md:text-4xl font-bold mb-3 text-white">{currentResult.employee.name}</p>
+              <p className="text-xl md:text-2xl text-white px-6 py-2 bg-white/25 rounded-full inline-block font-semibold">
                 {getDepartmentLabel(currentResult.employee.department)}
               </p>
-              <p className="text-sm mt-4 opacity-75">{isArabic ? '✓ يمكنه الدخول' : '✓ Entry allowed'}</p>
+              <p className="text-sm mt-4 text-white/90">{isArabic ? '✓ يمكنه الدخول' : '✓ Entry allowed'}</p>
             </div>
           )}
           
