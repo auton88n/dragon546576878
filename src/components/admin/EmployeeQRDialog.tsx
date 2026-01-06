@@ -161,9 +161,9 @@ const EmployeeQRDialog = ({ employee, onClose }: EmployeeQRDialogProps) => {
       ctx.fillStyle = '#5B21B6';
       ctx.fillRect(0, height - 55, width, 55);
       
-      ctx.fillStyle = '#E9D5FF';
-      ctx.font = '14px Arial';
-      ctx.fillText('tickets.almufaijer.com', width / 2, height - 22);
+    ctx.fillStyle = '#E9D5FF';
+    ctx.font = '12px Arial';
+    ctx.fillText('Powered by AYN', width / 2, height - 22);
       
       // Download as PNG
       const link = document.createElement('a');
