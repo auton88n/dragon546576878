@@ -1,14 +1,25 @@
+import { useState } from 'react';
 import { Trophy, QrCode, Clock } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useScannerStats } from '@/hooks/useScannerStats';
+import { useScannerStats, DateRange } from '@/hooks/useScannerStats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 
 const ScannerLeaderboard = () => {
   const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { scannerStats, loading } = useScannerStats();
+  const [dateRange, setDateRange] = useState<DateRange>('7days');
+  const { scannerStats, loading } = useScannerStats(dateRange);
+
+  const getRangeLabel = (range: DateRange) => {
+    switch (range) {
+      case 'today': return isArabic ? 'اليوم' : 'Today';
+      case '7days': return isArabic ? 'آخر 7 أيام' : 'Last 7 Days';
+      case '30days': return isArabic ? 'آخر 30 يوم' : 'Last 30 Days';
+    }
+  };
 
   const getMedalColor = (index: number) => {
     switch (index) {
@@ -55,14 +66,26 @@ const ScannerLeaderboard = () => {
   return (
     <Card className="glass-card-gold border-0">
       <CardHeader className="p-4 border-b border-border/50">
-        <CardTitle className={`flex items-center gap-2 text-base ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-          <div className="w-8 h-8 rounded-xl gradient-gold flex items-center justify-center">
-            <Trophy className="h-4 w-4 text-foreground" />
-          </div>
-          <span className="text-foreground">
-            {isArabic ? 'متصدري الماسحين اليوم' : "Today's Scanner Leaderboard"}
-          </span>
-        </CardTitle>
+        <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <CardTitle className={`flex items-center gap-2 text-base ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="w-8 h-8 rounded-xl gradient-gold flex items-center justify-center">
+              <Trophy className="h-4 w-4 text-foreground" />
+            </div>
+            <span className="text-foreground">
+              {isArabic ? 'متصدري الماسحين' : 'Scanner Leaderboard'}
+            </span>
+          </CardTitle>
+          <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
+            <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">{isArabic ? 'اليوم' : 'Today'}</SelectItem>
+              <SelectItem value="7days">{isArabic ? 'آخر 7 أيام' : 'Last 7 Days'}</SelectItem>
+              <SelectItem value="30days">{isArabic ? 'آخر 30 يوم' : 'Last 30 Days'}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent className="p-4 pt-3">
         {scannerStats.length === 0 ? (
@@ -102,7 +125,7 @@ const ScannerLeaderboard = () => {
                 {/* Scan Count */}
                 <div className={`flex-shrink-0 text-center ${isRTL ? 'text-left' : 'text-right'}`}>
                   <p className={`text-2xl font-bold ${index === 0 ? 'text-yellow-500' : 'text-foreground'}`}>
-                    {scanner.scansToday}
+                    {scanner.scansCount}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {isArabic 
