@@ -93,19 +93,22 @@ export const useEmployees = () => {
     try {
       setActionLoading(employeeId);
       
-      const { data: result, error } = await supabase.functions.invoke('generate-employee-badge', {
-        body: { employeeId },
-        headers: { 'action': 'resend' },
-      });
+      // Get session for auth
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      
+      if (!accessToken) {
+        throw new Error(isArabic ? 'غير مصرح' : 'Unauthorized');
+      }
 
-      // Pass action as query param
+      // Single call with proper action=resend query param
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL || 'https://hekgkfdunwpxqbrotfpn.supabase.co'}/functions/v1/generate-employee-badge?action=resend`,
+        `https://hekgkfdunwpxqbrotfpn.supabase.co/functions/v1/generate-employee-badge?action=resend`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({ employeeId }),
         }

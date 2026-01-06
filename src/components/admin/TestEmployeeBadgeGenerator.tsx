@@ -71,7 +71,7 @@ const TestEmployeeBadgeGenerator = () => {
         cs: generateChecksum(employee.id + name),
       });
 
-      // Generate QR code image
+      // Generate QR code as base64
       const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
         width: 600,
         margin: 4,
@@ -79,10 +79,33 @@ const TestEmployeeBadgeGenerator = () => {
         color: { dark: '#000000', light: '#FFFFFF' },
       });
 
-      // Update employee with QR code URL
+      // Convert base64 to blob for upload to storage
+      const base64Data = qrCodeDataUrl.replace(/^data:image\/\w+;base64,/, '');
+      const binaryData = atob(base64Data);
+      const bytes = new Uint8Array(binaryData.length);
+      for (let i = 0; i < binaryData.length; i++) {
+        bytes[i] = binaryData.charCodeAt(i);
+      }
+
+      // Upload to Supabase Storage
+      const storagePath = `employees/${employee.id}.png`;
+      const { error: uploadError } = await supabase.storage
+        .from('tickets')
+        .upload(storagePath, bytes, {
+          contentType: 'image/png',
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public HTTPS URL (not base64!)
+      const { data: urlData } = supabase.storage.from('tickets').getPublicUrl(storagePath);
+      const qrCodeUrl = urlData.publicUrl;
+
+      // Update employee with proper HTTPS URL
       await supabase
         .from('employees')
-        .update({ qr_code_url: qrCodeDataUrl })
+        .update({ qr_code_url: qrCodeUrl })
         .eq('id', employee.id);
 
       // Add to local state
@@ -91,7 +114,7 @@ const TestEmployeeBadgeGenerator = () => {
         type,
         name,
         department,
-        qrCodeUrl: qrCodeDataUrl,
+        qrCodeUrl: qrCodeUrl,
         createdAt: new Date(),
       }]);
 
