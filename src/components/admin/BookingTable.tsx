@@ -2,22 +2,12 @@ import { useState, useRef, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users, CheckCircle, Ban, Bell, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users, CheckCircle, Ban, Bell, Loader2, Pencil } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { resendConfirmationEmail, sendPaymentReminder } from '@/lib/emailService';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import {
   Table,
   TableBody,
@@ -59,7 +49,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
   const isArabic = currentLanguage === 'ar';
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  
   const parentRef = useRef<HTMLDivElement>(null);
 
   const useVirtual = bookings.length > VIRTUAL_THRESHOLD;
@@ -154,30 +144,6 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     }
   };
 
-  const handleDeleteBooking = async (bookingId: string) => {
-    setActionLoadingId(bookingId);
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .delete()
-        .eq('id', bookingId);
-      if (error) throw error;
-      toast({
-        title: isArabic ? 'تم الحذف' : 'Deleted',
-        description: isArabic ? 'تم حذف الحجز بنجاح' : 'Booking deleted successfully',
-      });
-      setDeleteConfirmId(null);
-      onBookingUpdated?.();
-    } catch {
-      toast({
-        title: isArabic ? 'خطأ' : 'Error',
-        description: isArabic ? 'فشل حذف الحجز' : 'Failed to delete booking',
-        variant: 'destructive',
-      });
-    } finally {
-      setActionLoadingId(null);
-    }
-  };
 
   const handleSendReminder = async (booking: Booking) => {
     setActionLoadingId(booking.id);
@@ -372,13 +338,6 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                   {isArabic ? 'إلغاء الحجز' : 'Cancel Booking'}
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem 
-                onClick={() => setDeleteConfirmId(booking.id)}
-                className="cursor-pointer text-red-700 hover:bg-red-600/10"
-              >
-                <Trash2 className="h-4 w-4 me-2" />
-                {isArabic ? 'حذف الحجز' : 'Delete Booking'}
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={() => handleResendEmail(booking)}
@@ -497,13 +456,6 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                 {isArabic ? 'إلغاء الحجز' : 'Cancel Booking'}
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem 
-              onClick={() => setDeleteConfirmId(booking.id)}
-              className="cursor-pointer text-red-700 hover:bg-red-600/10"
-            >
-              <Trash2 className="h-4 w-4 me-2" />
-              {isArabic ? 'حذف الحجز' : 'Delete Booking'}
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               onClick={() => handleResendEmail(booking)}
@@ -523,30 +475,6 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     </>
   );
 
-  // Add delete confirmation dialog before the loading check
-  const deleteDialog = (
-    <AlertDialog open={deleteConfirmId !== null} onOpenChange={() => setDeleteConfirmId(null)}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{isArabic ? 'تأكيد الحذف' : 'Confirm Deletion'}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {isArabic 
-              ? 'هل أنت متأكد من حذف هذا الحجز؟ سيتم حذف جميع التذاكر المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.'
-              : 'Are you sure you want to delete this booking? All associated tickets will also be deleted. This action cannot be undone.'}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{isArabic ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => deleteConfirmId && handleDeleteBooking(deleteConfirmId)}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            {isArabic ? 'حذف' : 'Delete'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
 
   if (loading) {
     return (
@@ -572,8 +500,6 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
   // Mobile view - card layout
   return (
     <>
-      {deleteDialog}
-      
       {/* Mobile Cards - visible on small screens */}
       <div className="md:hidden space-y-3">
         {bookings.map((booking) => (
