@@ -35,14 +35,46 @@ export interface EmployeeValidationResult {
   };
 }
 
-// Check if QR data is for an employee badge
-export const isEmployeeQR = (qrData: string): boolean => {
+// Detect QR code type - handles both new and legacy formats
+export type QRCodeKind = 'employee' | 'ticket' | 'unknown';
+
+export const detectQRKind = (qrData: string): { kind: QRCodeKind; parsed: any } => {
   try {
     const parsed = JSON.parse(qrData);
-    return parsed.type === 'employee';
+    
+    // New employee format: { type: "employee", id, name, dept, cs }
+    if (parsed.type === 'employee' || parsed.type === 'employee_badge') {
+      return { kind: 'employee', parsed };
+    }
+    
+    // Legacy employee format: has id/employeeId + department/dept, but NO code
+    const employeeId = parsed.id || parsed.employeeId || parsed.employee_id;
+    const hasDept = parsed.dept || parsed.department;
+    const hasTicketCode = !!parsed.code;
+    
+    if (employeeId && hasDept && !hasTicketCode) {
+      return { kind: 'employee', parsed };
+    }
+    
+    // Ticket format: must have code
+    if (hasTicketCode) {
+      return { kind: 'ticket', parsed };
+    }
+    
+    return { kind: 'unknown', parsed };
   } catch {
-    return false;
+    return { kind: 'unknown', parsed: null };
   }
+};
+
+// Check if QR data is for an employee badge (legacy function for compatibility)
+export const isEmployeeQR = (qrData: string): boolean => {
+  return detectQRKind(qrData).kind === 'employee';
+};
+
+// Extract employee ID from various possible fields
+const extractEmployeeId = (parsed: any): string | null => {
+  return parsed?.id || parsed?.employeeId || parsed?.employee_id || null;
 };
 
 // Validate an employee badge QR code (unlimited scans - never marks as used)
@@ -51,9 +83,10 @@ export const validateEmployeeQR = async (qrData: string): Promise<EmployeeValida
   try {
     console.log('Validating employee QR:', qrData);
     
-    const parsed = JSON.parse(qrData);
+    const { kind, parsed } = detectQRKind(qrData);
+    const employeeId = extractEmployeeId(parsed);
     
-    if (parsed.type !== 'employee' || !parsed.id) {
+    if (kind !== 'employee' || !employeeId) {
       return {
         isValid: false,
         status: 'not_found',
@@ -63,7 +96,7 @@ export const validateEmployeeQR = async (qrData: string): Promise<EmployeeValida
 
     // Use RPC function to validate employee (bypasses RLS issues)
     const { data, error } = await supabase
-      .rpc('validate_employee_badge', { employee_id: parsed.id });
+      .rpc('validate_employee_badge', { employee_id: employeeId });
 
     if (error) {
       console.error('RPC error validating employee:', error);
