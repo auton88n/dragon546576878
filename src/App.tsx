@@ -8,6 +8,7 @@ import "@/lib/i18n";
 import LoadingSpinner from "./components/shared/LoadingSpinner";
 import ScrollToTop from "./components/shared/ScrollToTop";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AuthBootstrap from "./components/auth/AuthBootstrap";
 import { lazyWithPreload, registerPreloader } from "./lib/lazyWithPreload";
 import { useAuthStore } from "./stores/authStore";
 
@@ -82,6 +83,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AuthBootstrap />
         <ScrollToTop />
         <Suspense fallback={<PageLoader />}>
           <Routes>
