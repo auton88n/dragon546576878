@@ -229,16 +229,16 @@ const AdminPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 p-3 sm:p-4 md:p-6 pt-4 sm:pt-6">
-                  <div className="flex flex-wrap items-start gap-4 rtl:[direction:rtl]">
-                    <div className="flex-1 min-w-0">
-                      <BookingFilters
-                        filters={filters}
-                        onFiltersChange={setFilters}
-                        onReset={handleResetFilters}
-                        onExport={handleExport}
-                        exporting={exporting}
-                      />
-                    </div>
+                  <BookingFilters
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    onReset={handleResetFilters}
+                    onExport={handleExport}
+                    exporting={exporting}
+                  />
+                  
+                  {/* Status Legend - positioned below filters, aligned to end */}
+                  <div className="flex justify-end rtl:justify-start">
                     <StatusLegend />
                   </div>
                   
