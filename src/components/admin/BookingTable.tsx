@@ -572,6 +572,8 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
   // Mobile view - card layout
   return (
     <>
+      {deleteDialog}
+      
       {/* Mobile Cards - visible on small screens */}
       <div className="md:hidden space-y-3">
         {bookings.map((booking) => (
