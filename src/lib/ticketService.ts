@@ -46,6 +46,7 @@ export const isEmployeeQR = (qrData: string): boolean => {
 };
 
 // Validate an employee badge QR code (unlimited scans - never marks as used)
+// Uses RPC function to bypass RLS for scanner users
 export const validateEmployeeQR = async (qrData: string): Promise<EmployeeValidationResult> => {
   try {
     console.log('Validating employee QR:', qrData);
@@ -60,15 +61,12 @@ export const validateEmployeeQR = async (qrData: string): Promise<EmployeeValida
       };
     }
 
-    // Look up employee in database
-    const { data: employee, error } = await supabase
-      .from('employees')
-      .select('id, full_name, department, is_active')
-      .eq('id', parsed.id)
-      .maybeSingle();
+    // Use RPC function to validate employee (bypasses RLS issues)
+    const { data, error } = await supabase
+      .rpc('validate_employee_badge', { employee_id: parsed.id });
 
     if (error) {
-      console.error('Database error looking up employee:', error);
+      console.error('RPC error validating employee:', error);
       return {
         isValid: false,
         status: 'not_found',
@@ -76,7 +74,20 @@ export const validateEmployeeQR = async (qrData: string): Promise<EmployeeValida
       };
     }
 
-    if (!employee) {
+    // Cast the response to the expected type
+    const employee = data as { id?: string; full_name?: string; department?: string; is_active?: boolean; error?: string } | null;
+
+    // Check if RPC returned an error (not authenticated)
+    if (employee?.error === 'not_authenticated') {
+      console.log('Session expired during employee validation');
+      return {
+        isValid: false,
+        status: 'not_found',
+        message: 'Session expired - please log in again',
+      };
+    }
+
+    if (!employee || !employee.id) {
       console.log('Employee not found for ID:', parsed.id);
       return {
         isValid: false,
@@ -93,8 +104,8 @@ export const validateEmployeeQR = async (qrData: string): Promise<EmployeeValida
         message: 'Employee badge deactivated',
         employee: {
           id: employee.id,
-          name: employee.full_name,
-          department: employee.department,
+          name: employee.full_name || '',
+          department: employee.department || '',
         },
       };
     }
@@ -106,8 +117,8 @@ export const validateEmployeeQR = async (qrData: string): Promise<EmployeeValida
       message: 'Employee verified',
       employee: {
         id: employee.id,
-        name: employee.full_name,
-        department: employee.department,
+        name: employee.full_name || '',
+        department: employee.department || '',
       },
     };
   } catch (err) {
