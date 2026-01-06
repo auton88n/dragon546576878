@@ -18,6 +18,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import TestQRGenerator from './TestQRGenerator';
+import TestEmployeeBadgeGenerator from './TestEmployeeBadgeGenerator';
 import PackagesManager from './PackagesManager';
 import AttractionsManager from './AttractionsManager';
 import StaffManager from './StaffManager';
@@ -404,6 +405,11 @@ const SettingsPanel = () => {
 
         {/* Test QR Generator */}
         <TestQRGenerator />
+
+        <Separator className="my-4" />
+
+        {/* Test Employee Badge Generator */}
+        <TestEmployeeBadgeGenerator />
       </CardContent>
     </Card>
   );
