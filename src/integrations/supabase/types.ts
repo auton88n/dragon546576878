@@ -250,6 +250,74 @@ export type Database = {
           },
         ]
       }
+      employee_scans: {
+        Row: {
+          employee_id: string
+          id: string
+          scan_location: string | null
+          scanned_at: string | null
+          scanner_user_id: string | null
+        }
+        Insert: {
+          employee_id: string
+          id?: string
+          scan_location?: string | null
+          scanned_at?: string | null
+          scanner_user_id?: string | null
+        }
+        Update: {
+          employee_id?: string
+          id?: string
+          scan_location?: string | null
+          scanned_at?: string | null
+          scanner_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_scans_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          created_at: string | null
+          department: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          phone: string | null
+          qr_code_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          qr_code_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          phone?: string | null
+          qr_code_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       group_booking_requests: {
         Row: {
           admin_notes: string | null
