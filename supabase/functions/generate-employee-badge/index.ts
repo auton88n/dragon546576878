@@ -74,12 +74,12 @@ const generateEmailTemplate = (employee: { full_name: string; department: string
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light dark">
-  <meta name="supported-color-schemes" content="light dark">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
   <title>${translations.title}</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #F5F1EB; font-family: Arial, sans-serif; direction: ${direction};">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #F5F1EB;">
+<body style="margin: 0; padding: 0; background-color: #1F1F1F; font-family: Arial, sans-serif; direction: ${direction};">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #1F1F1F;">
     <tr>
       <td align="center" style="padding: 24px 16px;">
         <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 500px;">
@@ -98,17 +98,17 @@ const generateEmailTemplate = (employee: { full_name: string; department: string
           
           <!-- Content -->
           <tr>
-            <td style="background-color: #FFFFFF; padding: 32px 24px; border-radius: 0 0 16px 16px;">
+            <td style="background-color: #2D2D2D; padding: 32px 24px; border-radius: 0 0 16px 16px;">
               
-              <h2 style="color: #1F2937; margin: 0 0 10px; font-size: 18px; font-weight: 700; text-align: ${textAlign};">${translations.greeting}</h2>
-              <p style="color: #4B5563; margin: 0 0 24px; line-height: 1.6; font-size: 14px; text-align: ${textAlign};">${translations.welcome}</p>
+              <h2 style="color: #FFFFFF; margin: 0 0 10px; font-size: 18px; font-weight: 700; text-align: ${textAlign};">${translations.greeting}</h2>
+              <p style="color: #E5E5E5; margin: 0 0 24px; line-height: 1.6; font-size: 14px; text-align: ${textAlign};">${translations.welcome}</p>
               
               <!-- Employee Info -->
-              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px; background-color: #F9FAFB; border-radius: 12px; border: 2px solid #E5E7EB;">
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px; background-color: #3D3D3D; border-radius: 12px; border: 2px solid #4D4D4D;">
                 <tr>
                   <td align="center" style="padding: 20px;">
-                    <p style="color: #6B7280; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">${translations.department}</p>
-                    <p style="color: #1F2937; margin: 0; font-size: 20px; font-weight: 700;">${deptDisplay}</p>
+                    <p style="color: #A3A3A3; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">${translations.department}</p>
+                    <p style="color: #FFFFFF; margin: 0; font-size: 20px; font-weight: 700;">${deptDisplay}</p>
                   </td>
                 </tr>
               </table>
@@ -116,9 +116,9 @@ const generateEmailTemplate = (employee: { full_name: string; department: string
               <!-- QR Code -->
               <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
                 <tr>
-                  <td align="center" style="padding: 24px; background-color: #FAFAF9; border-radius: 12px; border: 1px solid #E8DED0;">
+                  <td align="center" style="padding: 24px; background-color: #FFFFFF; border-radius: 12px;">
                     <img src="${employee.qr_code_url}" alt="Employee Badge QR" width="250" height="250" style="display: block; border: 3px solid #7C3AED; border-radius: 12px;" />
-                    <p style="color: #374151; margin: 16px 0 0; font-size: 12px; font-weight: 600;">${employee.full_name}</p>
+                    <p style="color: #1F1F1F; margin: 16px 0 0; font-size: 12px; font-weight: 600;">${employee.full_name}</p>
                   </td>
                 </tr>
               </table>
@@ -126,19 +126,19 @@ const generateEmailTemplate = (employee: { full_name: string; department: string
               <!-- Instructions -->
               <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 16px;">
                 <tr>
-                  <td style="padding: 16px; background-color: #F0FDF4; border-radius: 12px; border: 1px solid #BBF7D0;">
-                    <p style="color: #166534; margin: 0; font-size: 13px; text-align: center; font-weight: 500;">
+                  <td style="padding: 16px; background-color: #14532D; border-radius: 12px; border: 1px solid #22C55E;">
+                    <p style="color: #4ADE80; margin: 0; font-size: 13px; text-align: center; font-weight: 500;">
                       ✓ ${translations.instructions}
                     </p>
                   </td>
                 </tr>
               </table>
               
-              <p style="color: #4B5563; margin: 0 0 16px; font-size: 12px; text-align: center;">
+              <p style="color: #D4D4D4; margin: 0 0 16px; font-size: 12px; text-align: center;">
                 💾 ${translations.saveNote}
               </p>
               
-              <p style="color: #6B7280; margin: 0; font-size: 11px; text-align: center;">
+              <p style="color: #A3A3A3; margin: 0; font-size: 11px; text-align: center;">
                 ${translations.contact}
               </p>
               
