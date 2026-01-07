@@ -23,6 +23,7 @@ import PackagesManager from './PackagesManager';
 import AttractionsManager from './AttractionsManager';
 import StaffManager from './StaffManager';
 import EmployeesManager from './EmployeesManager';
+import { HoursAnnouncementPanel } from './HoursAnnouncementPanel';
 
 const SettingsPanel = () => {
   const { currentLanguage } = useLanguage();
@@ -400,6 +401,11 @@ const SettingsPanel = () => {
 
         {/* Attractions Manager */}
         <AttractionsManager />
+
+        <Separator className="my-4" />
+
+        {/* Hours Announcement */}
+        <HoursAnnouncementPanel />
 
         <Separator className="my-4" />
 
