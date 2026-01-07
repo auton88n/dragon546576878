@@ -23,47 +23,60 @@ const DEFAULT_STATS: AdminStats = {
 };
 
 const fetchAdminStats = async (): Promise<AdminStats> => {
-  const today = new Date().toISOString().split('T')[0];
+  // Get today's date in Saudi Arabia timezone (UTC+3)
+  const getSaudiDate = () => {
+    const now = new Date();
+    const saudiTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Riyadh' }));
+    return saudiTime.toISOString().split('T')[0];
+  };
+  const today = getSaudiDate();
 
-  const startOfDay = `${today}T00:00:00.000Z`;
-  const endOfDay = `${today}T23:59:59.999Z`;
+  const startOfDay = `${today}T00:00:00+03:00`;
+  const endOfDay = `${today}T23:59:59+03:00`;
 
   const [
-    { data: allBookings },
+    { data: allBookings, count: totalBookingsCount },
     { data: todayBookingsData },
-    { data: scannedTickets },
-    { data: pendingEmails },
+    { count: scannedTicketsCount },
+    { count: pendingEmailsCount },
     { count: todayScansCount },
   ] = await Promise.all([
+    // Total revenue with explicit limit to avoid 1000 row cap
     supabase
       .from('bookings')
-      .select('total_amount, adult_count, child_count, senior_count')
+      .select('total_amount', { count: 'exact' })
       .eq('booking_status', 'confirmed')
-      .eq('payment_status', 'completed'),
+      .eq('payment_status', 'completed')
+      .limit(10000),
+    // Today's bookings
     supabase
       .from('bookings')
       .select('adult_count, child_count, senior_count')
       .eq('visit_date', today)
       .eq('booking_status', 'confirmed')
       .eq('payment_status', 'completed'),
+    // Scanned tickets - use count for efficiency
     supabase
       .from('tickets')
-      .select('id')
+      .select('*', { count: 'exact', head: true })
       .eq('is_used', true),
+    // Pending emails - use count
     supabase
       .from('email_queue')
-      .select('id')
+      .select('*', { count: 'exact', head: true })
       .eq('status', 'pending'),
+    // Today's scans
     supabase
       .from('scan_logs')
-      .select('id', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true })
       .gte('scan_timestamp', startOfDay)
       .lte('scan_timestamp', endOfDay),
   ]);
 
-  const totalRevenue = allBookings?.reduce((sum, b) => sum + Number(b.total_amount), 0) || 0;
+  const totalRevenue = allBookings?.reduce((sum, b) => sum + Number(b.total_amount ?? 0), 0) || 0;
   const todayVisitors = todayBookingsData?.reduce(
-    (sum, b) => sum + (b.adult_count || 0) + (b.child_count || 0) + (b.senior_count || 0),
+    (sum, b) => 
+      sum + Number(b.adult_count ?? 0) + Number(b.child_count ?? 0) + Number(b.senior_count ?? 0),
     0
   ) || 0;
 
@@ -71,9 +84,9 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
     totalRevenue,
     todayBookings: todayBookingsData?.length || 0,
     todayVisitors,
-    ticketsScanned: scannedTickets?.length || 0,
-    totalBookings: allBookings?.length || 0,
-    pendingEmails: pendingEmails?.length || 0,
+    ticketsScanned: scannedTicketsCount || 0,
+    totalBookings: totalBookingsCount || 0,
+    pendingEmails: pendingEmailsCount || 0,
     todayScans: todayScansCount || 0,
   };
 };
