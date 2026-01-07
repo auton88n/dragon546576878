@@ -694,6 +694,107 @@ export type Database = {
         }
         Relationships: []
       }
+      vip_contacts: {
+        Row: {
+          category: string
+          created_at: string | null
+          email: string
+          id: string
+          last_contacted_at: string | null
+          name_ar: string
+          name_en: string
+          notes: string | null
+          phone: string | null
+          preferred_language: string
+          status: string
+          title_ar: string | null
+          title_en: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          email: string
+          id?: string
+          last_contacted_at?: string | null
+          name_ar: string
+          name_en: string
+          notes?: string | null
+          phone?: string | null
+          preferred_language?: string
+          status?: string
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          last_contacted_at?: string | null
+          name_ar?: string
+          name_en?: string
+          notes?: string | null
+          phone?: string | null
+          preferred_language?: string
+          status?: string
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      vip_email_logs: {
+        Row: {
+          contact_email: string
+          contact_id: string | null
+          contact_name: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          subject: string
+          template_type: string
+        }
+        Insert: {
+          contact_email: string
+          contact_id?: string | null
+          contact_name: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject: string
+          template_type: string
+        }
+        Update: {
+          contact_email?: string
+          contact_id?: string | null
+          contact_name?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject?: string
+          template_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vip_email_logs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "vip_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
