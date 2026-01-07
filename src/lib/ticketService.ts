@@ -18,8 +18,14 @@ export interface TicketValidationResult {
     ticketType: string;
     bookingReference: string;
     customerName: string;
+    customerPhone: string;
     visitDate: string;
     visitTime: string;
+    adultCount: number;
+    childCount: number;
+    seniorCount: number;
+    paymentStatus: string;
+    usedAt?: string;
   };
 }
 
@@ -233,8 +239,13 @@ export const validateTicket = async (qrData: string): Promise<TicketValidationRe
           bookings (
             booking_reference,
             customer_name,
+            customer_phone,
             visit_date,
-            visit_time
+            visit_time,
+            adult_count,
+            child_count,
+            senior_count,
+            payment_status
           )
         `)
         .eq('ticket_code', qrData.trim())
@@ -270,8 +281,13 @@ export const validateTicket = async (qrData: string): Promise<TicketValidationRe
         bookings (
           booking_reference,
           customer_name,
+          customer_phone,
           visit_date,
-          visit_time
+          visit_time,
+          adult_count,
+          child_count,
+          senior_count,
+          payment_status
         )
       `)
       .eq('ticket_code', code)
@@ -310,21 +326,30 @@ export const validateTicket = async (qrData: string): Promise<TicketValidationRe
 const validateTicketRecord = (ticket: any): TicketValidationResult => {
   const bookingData = ticket.bookings as any;
   
+  // Build common ticket data
+  const ticketData = {
+    id: ticket.id,
+    ticketCode: ticket.ticket_code,
+    ticketType: ticket.ticket_type,
+    bookingReference: bookingData?.booking_reference || '',
+    customerName: bookingData?.customer_name || 'Unknown',
+    customerPhone: bookingData?.customer_phone || '',
+    visitDate: ticket.valid_from,
+    visitTime: bookingData?.visit_time || '',
+    adultCount: bookingData?.adult_count || 0,
+    childCount: bookingData?.child_count || 0,
+    seniorCount: bookingData?.senior_count || 0,
+    paymentStatus: bookingData?.payment_status || 'unknown',
+    usedAt: ticket.scanned_at || undefined,
+  };
+  
   // Check if already used
   if (ticket.is_used) {
     return {
       isValid: false,
       status: 'used',
       message: 'Ticket already used',
-      ticket: {
-        id: ticket.id,
-        ticketCode: ticket.ticket_code,
-        ticketType: ticket.ticket_type,
-        bookingReference: bookingData?.booking_reference || '',
-        customerName: bookingData?.customer_name || 'Unknown',
-        visitDate: ticket.valid_from,
-        visitTime: bookingData?.visit_time || '',
-      },
+      ticket: ticketData,
     };
   }
 
@@ -338,15 +363,7 @@ const validateTicketRecord = (ticket: any): TicketValidationResult => {
       message: isExpired 
         ? 'Ticket has expired' 
         : `Ticket valid for ${ticket.valid_from}`,
-      ticket: {
-        id: ticket.id,
-        ticketCode: ticket.ticket_code,
-        ticketType: ticket.ticket_type,
-        bookingReference: bookingData?.booking_reference || '',
-        customerName: bookingData?.customer_name || 'Unknown',
-        visitDate: ticket.valid_from,
-        visitTime: bookingData?.visit_time || '',
-      },
+      ticket: ticketData,
     };
   }
 
@@ -355,15 +372,7 @@ const validateTicketRecord = (ticket: any): TicketValidationResult => {
     isValid: true,
     status: 'valid',
     message: 'Ticket is valid',
-    ticket: {
-      id: ticket.id,
-      ticketCode: ticket.ticket_code,
-      ticketType: ticket.ticket_type,
-      bookingReference: bookingData?.booking_reference || '',
-      customerName: bookingData?.customer_name || 'Unknown',
-      visitDate: ticket.valid_from,
-      visitTime: bookingData?.visit_time || '',
-    },
+    ticket: ticketData,
   };
 };
 
@@ -428,8 +437,13 @@ export const lookupTicket = async (searchQuery: string): Promise<TicketValidatio
         bookings (
           booking_reference,
           customer_name,
+          customer_phone,
           visit_date,
-          visit_time
+          visit_time,
+          adult_count,
+          child_count,
+          senior_count,
+          payment_status
         )
       `)
       .ilike('ticket_code', `%${query}%`)
@@ -443,8 +457,13 @@ export const lookupTicket = async (searchQuery: string): Promise<TicketValidatio
         bookings!inner (
           booking_reference,
           customer_name,
+          customer_phone,
           visit_date,
-          visit_time
+          visit_time,
+          adult_count,
+          child_count,
+          senior_count,
+          payment_status
         )
       `)
       .ilike('bookings.booking_reference', `%${query}%`)

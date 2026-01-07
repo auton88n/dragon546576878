@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard, Phone, Users, Baby, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
@@ -28,7 +28,7 @@ interface ScanResult {
 import { safeLocalStorage } from '@/lib/safeStorage';
 
 // Constants for stability
-const RESULT_DISPLAY_TIMEOUT = 2000;
+const RESULT_DISPLAY_TIMEOUT = 10000;
 const DUPLICATE_SCAN_THRESHOLD = 5000;
 const SCANNER_RESTART_THRESHOLD = 500;
 const STATS_STORAGE_KEY = 'scanner_daily_stats';
@@ -91,6 +91,7 @@ const ScannerPage = () => {
   const [showCodeEntry, setShowCodeEntry] = useState(false);
   const [enteredCode, setEnteredCode] = useState('');
   const [isValidatingCode, setIsValidatingCode] = useState(false);
+  const [countdownProgress, setCountdownProgress] = useState(100);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const resultTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -116,7 +117,19 @@ const ScannerPage = () => {
     }));
   }, [recentScans]);
 
+  // Countdown animation when overlay is shown
   useEffect(() => {
+    if (showResultOverlay) {
+      setCountdownProgress(100);
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, 100 - (elapsed / RESULT_DISPLAY_TIMEOUT) * 100);
+        setCountdownProgress(remaining);
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [showResultOverlay]);
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
@@ -674,40 +687,101 @@ const ScannerPage = () => {
       {/* Result Overlay */}
       {showResultOverlay && currentResult && (
         <div 
-          className={cn('fixed inset-0 z-50 flex flex-col items-center justify-center text-white p-8 animate-fade-in cursor-pointer', getStatusColor(currentResult.status, isEmployeeResult))}
+          className={cn('fixed inset-0 z-50 flex flex-col items-center justify-center text-white p-6 animate-fade-in cursor-pointer', getStatusColor(currentResult.status, isEmployeeResult))}
           onClick={dismissResult}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && dismissResult()}
         >
-          <div className="scale-150 mb-2">
+          <div className="scale-125 mb-2">
             {getStatusIcon(currentResult.status, isEmployeeResult)}
           </div>
-          <h2 className="text-5xl md:text-6xl font-bold mt-6 mb-3 text-center leading-tight">{getStatusText(currentResult.status, isEmployeeResult)}</h2>
-          <p className="text-2xl md:text-3xl opacity-95 mb-6 font-medium text-center">{currentResult.message}</p>
+          <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-2 text-center leading-tight">{getStatusText(currentResult.status, isEmployeeResult)}</h2>
           
           {/* Employee badge info */}
           {isEmployeeResult && 'employee' in currentResult && currentResult.employee && (
-            <div className="bg-white/30 backdrop-blur-md rounded-3xl p-8 text-center border-2 border-white/40 min-w-[300px] shadow-2xl">
-              <p className="text-3xl md:text-4xl font-bold mb-3 text-white">{currentResult.employee.name}</p>
-              <p className="text-xl md:text-2xl text-white px-6 py-2 bg-white/25 rounded-full inline-block font-semibold">
+            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 text-center border-2 border-white/40 min-w-[300px] shadow-2xl mt-4">
+              <p className="text-2xl md:text-3xl font-bold mb-2 text-white">{currentResult.employee.name}</p>
+              <p className="text-lg md:text-xl text-white px-4 py-1.5 bg-white/25 rounded-full inline-block font-semibold">
                 {getDepartmentLabel(currentResult.employee.department)}
               </p>
-              <p className="text-sm mt-4 text-white/90">{isArabic ? '✓ يمكنه الدخول' : '✓ Entry allowed'}</p>
+              <p className="text-sm mt-3 text-white/90">{isArabic ? '✓ يمكنه الدخول' : '✓ Entry allowed'}</p>
             </div>
           )}
           
-          {/* Ticket info */}
+          {/* Enhanced Ticket info */}
           {!isEmployeeResult && 'ticket' in currentResult && currentResult.ticket && (
-            <div className="bg-white/30 backdrop-blur-md rounded-3xl p-8 text-center border-2 border-white/40 min-w-[300px] shadow-2xl">
-              <p className="text-2xl md:text-3xl font-bold mb-3">{currentResult.ticket.customerName}</p>
-              <p className="text-xl md:text-2xl opacity-90 font-mono tracking-wider mb-4">{currentResult.ticket.ticketCode}</p>
-              <p className="text-lg md:text-xl opacity-90 capitalize px-6 py-2 bg-white/25 rounded-full inline-block font-semibold">
-                {currentResult.ticket.ticketType}
-              </p>
+            <div className="bg-white/25 backdrop-blur-md rounded-2xl p-5 text-center border-2 border-white/40 w-full max-w-sm shadow-2xl mt-4">
+              {/* Customer Name */}
+              <p className="text-2xl md:text-3xl font-bold mb-1">{currentResult.ticket.customerName}</p>
+              
+              {/* Phone */}
+              {currentResult.ticket.customerPhone && (
+                <p className="text-lg opacity-90 flex items-center justify-center gap-2 mb-3">
+                  <Phone className="h-4 w-4" />
+                  <span dir="ltr">{currentResult.ticket.customerPhone}</span>
+                </p>
+              )}
+              
+              {/* Party Size */}
+              <div className="flex items-center justify-center gap-3 flex-wrap mb-3 bg-white/20 rounded-xl py-2 px-3">
+                {currentResult.ticket.adultCount > 0 && (
+                  <span className="flex items-center gap-1.5 text-base font-medium">
+                    <User className="h-4 w-4" />
+                    {currentResult.ticket.adultCount} {isArabic ? 'بالغ' : 'Adult'}{currentResult.ticket.adultCount > 1 && !isArabic ? 's' : ''}
+                  </span>
+                )}
+                {currentResult.ticket.childCount > 0 && (
+                  <span className="flex items-center gap-1.5 text-base font-medium">
+                    <Baby className="h-4 w-4" />
+                    {currentResult.ticket.childCount} {isArabic ? 'طفل' : 'Child'}{currentResult.ticket.childCount > 1 && !isArabic ? 'ren' : ''}
+                  </span>
+                )}
+                {currentResult.ticket.seniorCount > 0 && (
+                  <span className="flex items-center gap-1.5 text-base font-medium">
+                    <Users className="h-4 w-4" />
+                    {currentResult.ticket.seniorCount} {isArabic ? 'كبار' : 'Senior'}{currentResult.ticket.seniorCount > 1 && !isArabic ? 's' : ''}
+                  </span>
+                )}
+              </div>
+              
+              {/* Payment Warning */}
+              {currentResult.ticket.paymentStatus !== 'completed' && (
+                <div className="bg-amber-500/80 text-white rounded-lg px-3 py-1.5 text-sm font-semibold mb-3">
+                  ⚠️ {isArabic ? 'في انتظار الدفع' : 'Payment Pending'}
+                </div>
+              )}
+              
+              {/* Used At (for already-used tickets) */}
+              {currentResult.status === 'used' && currentResult.ticket.usedAt && (
+                <p className="text-sm opacity-90 mb-3">
+                  {isArabic ? 'تم المسح: ' : 'Scanned: '}
+                  {new Date(currentResult.ticket.usedAt).toLocaleTimeString(isArabic ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+              
+              {/* Ticket Details */}
+              <div className="text-sm opacity-80 space-y-1">
+                <p className="font-mono tracking-wider">{currentResult.ticket.ticketCode} ({currentResult.ticket.ticketType})</p>
+                <p>{isArabic ? 'الحجز: ' : 'Ref: '}{currentResult.ticket.bookingReference}</p>
+                <p>{isArabic ? 'التاريخ: ' : 'Date: '}{new Date(currentResult.ticket.visitDate).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+              </div>
             </div>
           )}
-          <p className="mt-8 opacity-75 text-lg md:text-xl font-medium">{isArabic ? 'اضغط للمتابعة أو انتظر...' : 'Tap to continue or wait...'}</p>
+          
+          {/* Tap to continue with countdown */}
+          <p className="mt-6 text-xl font-semibold opacity-90">
+            {isArabic ? 'اضغط للمتابعة' : 'Tap anywhere to continue'}
+            <span className="opacity-60 ms-2">({Math.ceil(countdownProgress / 10)}s)</span>
+          </p>
+          
+          {/* Progress bar */}
+          <div className="absolute bottom-0 left-0 right-0 h-2 bg-white/20">
+            <div 
+              className="h-full bg-white/60 transition-all duration-100" 
+              style={{ width: `${countdownProgress}%` }} 
+            />
+          </div>
         </div>
       )}
 
