@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Settings, Clock, Calendar, Save, RefreshCw, CalendarRange, RotateCcw, Settings2, Users, Package, Megaphone, Wrench } from 'lucide-react';
+import { Settings, Clock, Calendar, Save, RefreshCw, CalendarRange, RotateCcw, Settings2, Users, Package, Megaphone, Wrench, Crown } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -23,6 +23,7 @@ import AttractionsManager from './AttractionsManager';
 import StaffManager from './StaffManager';
 import EmployeesManager from './EmployeesManager';
 import { HoursAnnouncementPanel } from './HoursAnnouncementPanel';
+import VIPOutreachPanel from './VIPOutreachPanel';
 
 const SettingsPanel = () => {
   const { currentLanguage } = useLanguage();
@@ -79,6 +80,7 @@ const SettingsPanel = () => {
     { id: 'users', labelAr: 'المستخدمين', labelEn: 'Users', icon: Users },
     { id: 'packages', labelAr: 'الباقات والفعاليات', labelEn: 'Packages', icon: Package },
     { id: 'announcements', labelAr: 'الإعلانات', labelEn: 'Announcements', icon: Megaphone },
+    { id: 'vip', labelAr: 'الدعوات الخاصة', labelEn: 'VIP Outreach', icon: Crown },
     { id: 'developer', labelAr: 'أدوات المطور', labelEn: 'Developer', icon: Wrench },
   ];
 

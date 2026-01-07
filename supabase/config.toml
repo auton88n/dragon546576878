@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.send-staff-credentials]
 verify_jwt = false
+
+[functions.send-vip-invitation]
+verify_jwt = false
