@@ -12,7 +12,6 @@ interface VerifyPaymentRequest {
 }
 
 // Helper function to log payment events
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function logPaymentEvent(
   supabase: any,
   bookingId: string,
@@ -242,7 +241,26 @@ serve(async (req) => {
       },
     });
 
-    // Send confirmation email
+    // STEP 1: Generate tickets AFTER payment is confirmed
+    console.log("Payment confirmed, generating tickets...");
+    try {
+      const { data: ticketData, error: ticketError } = await supabase.functions.invoke("generate-tickets", {
+        body: { bookingId: body.bookingId },
+      });
+
+      if (ticketError) {
+        console.error("Error generating tickets:", ticketError);
+        // Log but don't fail - tickets can be regenerated
+      } else {
+        console.log("Tickets generated successfully:", ticketData);
+      }
+    } catch (ticketErr) {
+      console.error("Error invoking generate-tickets function:", ticketErr);
+      // Don't fail the whole request if ticket generation fails
+    }
+
+    // STEP 2: Send confirmation email with tickets
+    console.log("Sending confirmation email...");
     try {
       const { error: emailError } = await supabase.functions.invoke("send-booking-confirmation", {
         body: { bookingId: body.bookingId },
