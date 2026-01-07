@@ -18,7 +18,7 @@ import StatusLegend from '@/components/admin/StatusLegend';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load non-critical components
-const ScannerLeaderboard = lazy(() => import('@/components/admin/ScannerLeaderboard'));
+
 const SettingsPanel = lazy(() => import('@/components/admin/SettingsPanel'));
 const ReportsPanel = lazy(() => import('@/components/admin/ReportsPanel'));
 const GroupBookingsPanel = lazy(() => import('@/components/admin/GroupBookingsPanel'));
@@ -160,12 +160,6 @@ const AdminPage = () => {
             ))}
           </div>
 
-          {/* Scanner Leaderboard - Lazy loaded */}
-          <div className="mb-6">
-            <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl" />}>
-              <ScannerLeaderboard />
-            </Suspense>
-          </div>
 
           {/* Tabs Navigation */}
           <Tabs defaultValue="bookings" className="space-y-4" activationMode="manual">
