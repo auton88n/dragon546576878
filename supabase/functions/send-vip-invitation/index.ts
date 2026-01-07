@@ -22,6 +22,12 @@ interface VIPEmailRequest {
   eventTime?: string;
 }
 
+// Generate tracking pixel URL
+const getTrackingPixelUrl = (trackingId: string): string => {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  return `${supabaseUrl}/functions/v1/track-email-open/${trackingId}.gif`;
+};
+
 // Professional VIP email template
 const generateVIPEmailHTML = (
   language: 'ar' | 'en',
@@ -160,6 +166,13 @@ const generateVIPEmailHTML = (
   `;
 };
 
+// Wrapper to add tracking pixel
+const addTrackingPixel = (html: string, trackingId: string): string => {
+  const trackingUrl = getTrackingPixelUrl(trackingId);
+  const trackingPixel = `<img src="${trackingUrl}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;" />`;
+  return html.replace('</body>', `${trackingPixel}</body>`);
+};
+
 const handler = async (req: Request): Promise<Response> => {
   console.log("VIP Invitation function called");
   
@@ -199,8 +212,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending VIP invitation to: ${contactEmail}`);
 
-    // Generate email HTML
-    const emailHtml = generateVIPEmailHTML(
+    // Generate tracking ID for this email
+    const trackingId = crypto.randomUUID();
+
+    // Generate email HTML with tracking pixel
+    let emailHtml = generateVIPEmailHTML(
       preferredLanguage,
       contactName,
       subject,
@@ -209,6 +225,7 @@ const handler = async (req: Request): Promise<Response> => {
       eventDate,
       eventTime
     );
+    emailHtml = addTrackingPixel(emailHtml, trackingId);
 
     // Send email via Resend
     const { data: emailData, error: emailError } = await resend.emails.send({
@@ -241,7 +258,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailData);
 
-    // Log successful send
+    // Log successful send with tracking ID
     await supabase.from("vip_email_logs").insert({
       contact_id: contactId || null,
       contact_email: contactEmail,
@@ -251,6 +268,7 @@ const handler = async (req: Request): Promise<Response> => {
       status: "sent",
       sent_at: new Date().toISOString(),
       sent_by: sentByUserId,
+      tracking_id: trackingId,
     });
 
     // Update contact's last_contacted_at if contactId provided

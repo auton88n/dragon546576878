@@ -753,11 +753,14 @@ export type Database = {
           created_at: string | null
           error_message: string | null
           id: string
+          open_count: number | null
+          opened_at: string | null
           sent_at: string | null
           sent_by: string | null
           status: string
           subject: string
           template_type: string
+          tracking_id: string | null
         }
         Insert: {
           contact_email: string
@@ -766,11 +769,14 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
+          open_count?: number | null
+          opened_at?: string | null
           sent_at?: string | null
           sent_by?: string | null
           status?: string
           subject: string
           template_type: string
+          tracking_id?: string | null
         }
         Update: {
           contact_email?: string
@@ -779,11 +785,14 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
+          open_count?: number | null
+          opened_at?: string | null
           sent_at?: string | null
           sent_by?: string | null
           status?: string
           subject?: string
           template_type?: string
+          tracking_id?: string | null
         }
         Relationships: [
           {
