@@ -815,6 +815,27 @@ const StaffManager = () => {
               </p>
             </div>
             
+            {/* Email notification checkbox */}
+            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+              <Checkbox 
+                id="sendEmailNotification"
+                checked={sendEmailNotification}
+                onCheckedChange={(checked) => setSendEmailNotification(checked === true)}
+                disabled={isBulkImporting}
+              />
+              <label 
+                htmlFor="sendEmailNotification" 
+                className="flex items-center gap-2 text-sm cursor-pointer select-none"
+              >
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span>
+                  {isArabic 
+                    ? 'إرسال بيانات الدخول بالبريد الإلكتروني' 
+                    : 'Send login credentials via email'}
+                </span>
+              </label>
+            </div>
+            
             <Textarea
               placeholder={isArabic ? 'الصق البيانات هنا...' : 'Paste data here...'}
               value={bulkInput}
@@ -829,6 +850,11 @@ const StaffManager = () => {
                 <Progress value={(bulkProgress.current / bulkProgress.total) * 100} />
                 <p className="text-sm text-center text-muted-foreground">
                   {bulkProgress.current} / {bulkProgress.total}
+                  {sendEmailNotification && bulkProgress.emailsSent > 0 && (
+                    <span className="ms-2 text-green-600">
+                      ({isArabic ? `${bulkProgress.emailsSent} بريد مرسل` : `${bulkProgress.emailsSent} emails sent`})
+                    </span>
+                  )}
                 </p>
               </div>
             )}
