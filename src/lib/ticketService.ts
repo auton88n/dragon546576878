@@ -14,6 +14,7 @@ export interface TicketValidationResult {
   message: string;
   ticket?: {
     id: string;
+    bookingId: string;
     ticketCode: string;
     ticketType: string;
     bookingReference: string;
@@ -329,6 +330,7 @@ const validateTicketRecord = (ticket: any): TicketValidationResult => {
   // Build common ticket data
   const ticketData = {
     id: ticket.id,
+    bookingId: ticket.booking_id,
     ticketCode: ticket.ticket_code,
     ticketType: ticket.ticket_type,
     bookingReference: bookingData?.booking_reference || '',
