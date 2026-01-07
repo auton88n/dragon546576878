@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard, Phone, Users, Baby, User, CreditCard } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard, Phone, Users, Baby, User, CreditCard, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
@@ -104,6 +104,7 @@ const ScannerPage = () => {
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [selectedScanDetail, setSelectedScanDetail] = useState<ScanResult | null>(null);
   const [isMarkingPaid, setIsMarkingPaid] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [countdownProgress, setCountdownProgress] = useState(100);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -227,7 +228,7 @@ const ScannerPage = () => {
     } catch (e) {}
   }, []);
 
-  const playSound = useCallback(async (type: 'success' | 'error' | 'warning') => {
+  const playSound = useCallback(async (type: 'success' | 'error' | 'warning' | 'payment') => {
     if (!soundEnabled) return;
     try {
       const ctx = await initAudioContext();
@@ -246,6 +247,20 @@ const ScannerPage = () => {
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.15 + 0.15);
           osc.start(ctx.currentTime + i * 0.15);
           osc.stop(ctx.currentTime + i * 0.15 + 0.15);
+        });
+      } else if (type === 'payment') {
+        // Cash register "cha-ching" sound - two bright ascending tones
+        [1200, 1600, 2000].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = freq;
+          osc.type = 'sine';
+          gain.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.08 + 0.12);
+          osc.start(ctx.currentTime + i * 0.08);
+          osc.stop(ctx.currentTime + i * 0.08 + 0.12);
         });
       } else if (type === 'warning') {
         [440, 440].forEach((freq, i) => {
@@ -305,6 +320,9 @@ const ScannerPage = () => {
         .eq('id', bookingId);
       
       if (error) throw error;
+      
+      // Play payment confirmation sound
+      playSound('payment');
       toast.success(isArabic ? 'تم تحديث الدفع بنجاح' : 'Payment marked as complete');
       
       // Update current result if showing
@@ -325,7 +343,25 @@ const ScannerPage = () => {
     } finally {
       setIsMarkingPaid(false);
     }
-  }, [isArabic, currentResult, selectedScanDetail, isMarkingPaid]);
+  }, [isArabic, currentResult, selectedScanDetail, isMarkingPaid, playSound]);
+
+  const handleResendEmail = useCallback(async (bookingId: string) => {
+    if (!bookingId || isResendingEmail) return;
+    setIsResendingEmail(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-booking-confirmation', {
+        body: { bookingId }
+      });
+      
+      if (error) throw error;
+      toast.success(isArabic ? 'تم إرسال البريد الإلكتروني بنجاح' : 'Email sent successfully');
+    } catch (err) {
+      console.error('Error resending email:', err);
+      toast.error(isArabic ? 'فشل إرسال البريد الإلكتروني' : 'Failed to send email');
+    } finally {
+      setIsResendingEmail(false);
+    }
+  }, [isArabic, isResendingEmail]);
 
   const handleManualLookup = useCallback(async () => {
     if (!searchQuery.trim()) return;
@@ -1209,6 +1245,18 @@ const ScannerPage = () => {
                 >
                   {isMarkingPaid ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                   {isArabic ? 'تحديد كمدفوع' : 'Mark as Paid'}
+                </Button>
+              )}
+              
+              {selectedScanDetail.bookingId && (
+                <Button 
+                  variant="outline"
+                  className="w-full gap-2"
+                  disabled={isResendingEmail}
+                  onClick={() => handleResendEmail(selectedScanDetail.bookingId!)}
+                >
+                  {isResendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                  {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
                 </Button>
               )}
             </div>
