@@ -233,6 +233,7 @@ export const HoursAnnouncementPanel = () => {
           .from('bookings')
           .select('customer_email, customer_name, language')
           .eq('booking_status', 'confirmed')
+          .eq('payment_status', 'completed')
           .order('created_at', { ascending: false });
 
         if (error) throw error;
