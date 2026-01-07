@@ -575,11 +575,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    if (bookingError || !booking) {
-      console.error("Booking fetch error:", bookingError);
-      throw new Error(`Booking not found: ${bookingId}`);
-    }
-
     console.log(`📋 Booking found: ${booking.booking_reference}`);
     console.log(`   Customer: ${booking.customer_name} (${booking.customer_email})`);
     console.log(`   Language: ${booking.language}`);
