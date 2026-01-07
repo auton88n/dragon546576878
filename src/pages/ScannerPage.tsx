@@ -451,13 +451,25 @@ const ScannerPage = () => {
       if (selectedScanDetail) {
         setSelectedScanDetail({ ...selectedScanDetail, paymentStatus: 'completed' });
       }
+      
+      // Update recent scans list to reflect payment status
+      setRecentScans(prev => prev.map(scan => 
+        scan.bookingId === bookingId 
+          ? { ...scan, paymentStatus: 'completed' }
+          : scan
+      ));
+      
+      // Update full booking details if loaded
+      if (fullBookingDetails && fullBookingDetails.id === bookingId) {
+        setFullBookingDetails({ ...fullBookingDetails, payment_status: 'completed' });
+      }
     } catch (err) {
       console.error('Error marking as paid:', err);
       toast.error(isArabic ? 'فشل تحديث الدفع' : 'Failed to update payment');
     } finally {
       setIsMarkingPaid(false);
     }
-  }, [isArabic, currentResult, selectedScanDetail, isMarkingPaid, playSound]);
+  }, [isArabic, currentResult, selectedScanDetail, isMarkingPaid, playSound, fullBookingDetails]);
 
   const handleResendEmail = useCallback(async (bookingId: string) => {
     if (!bookingId || isResendingEmail || emailCooldownRemaining > 0) return;
@@ -1541,10 +1553,13 @@ const ScannerPage = () => {
                   <div className="flex justify-center">
                     <Badge variant={selectedScanDetail.status === 'valid' ? 'default' : selectedScanDetail.status === 'used' ? 'secondary' : 'destructive'} className={cn(
                       'text-sm px-3 py-1',
-                      selectedScanDetail.status === 'valid' && 'bg-success text-white',
+                      selectedScanDetail.status === 'valid' && selectedScanDetail.paymentStatus !== 'completed' && 'bg-amber-500 text-white',
+                      selectedScanDetail.status === 'valid' && selectedScanDetail.paymentStatus === 'completed' && 'bg-success text-white',
                       selectedScanDetail.status === 'used' && 'bg-warning text-white'
                     )}>
-                      {getStatusText(selectedScanDetail.status)}
+                      {selectedScanDetail.status === 'valid' && selectedScanDetail.paymentStatus !== 'completed'
+                        ? (isArabic ? 'صالحة - غير مدفوعة' : 'Valid - Not Paid')
+                        : getStatusText(selectedScanDetail.status)}
                     </Badge>
                   </div>
                   
