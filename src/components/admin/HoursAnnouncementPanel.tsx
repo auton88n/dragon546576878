@@ -533,7 +533,7 @@ export const HoursAnnouncementPanel = () => {
             <Clock className="h-4 w-4 text-amber-700" />
             <AlertDescription className="text-amber-800">
               <strong>{isArabic ? 'الساعات:' : 'Hours:'}</strong>{' '}
-              {customContent.hoursEn} - {customContent.daysEn}
+              {isArabic ? customContent.hoursAr : customContent.hoursEn} | {isArabic ? customContent.daysAr : customContent.daysEn}
             </AlertDescription>
           </Alert>
 
