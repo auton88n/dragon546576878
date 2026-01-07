@@ -34,9 +34,9 @@ export const useReportData = (days: number = 30) => {
 
       const { data: bookings, error } = await supabase
         .from('bookings')
-        .select('visit_date, total_amount, adult_count, child_count, senior_count, payment_status')
+        .select('visit_date, total_amount, adult_count, child_count, senior_count, booking_status')
         .gte('visit_date', startDate)
-        .eq('payment_status', 'completed')
+        .eq('booking_status', 'confirmed')
         .order('visit_date', { ascending: true });
 
       if (error) throw error;
