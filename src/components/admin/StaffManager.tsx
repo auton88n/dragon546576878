@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Users, Plus, Key, Edit2, Power, PowerOff, Eye, EyeOff, Loader2, Trash2, AlertTriangle, Upload, Mail } from 'lucide-react';
+import { Users, Plus, Key, Edit2, Power, PowerOff, Eye, EyeOff, Loader2, Trash2, AlertTriangle, Upload, Mail, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -69,6 +69,12 @@ const StaffManager = () => {
   const [sendEmailNotification, setSendEmailNotification] = useState(true);
   const [sendSingleEmailNotification, setSendSingleEmailNotification] = useState(true);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  
+  // Resend credentials states
+  const [resendDialogOpen, setResendDialogOpen] = useState(false);
+  const [selectedForResend, setSelectedForResend] = useState<StaffMember | null>(null);
+  const [resendPassword, setResendPassword] = useState('scan2024');
+  const [isResending, setIsResending] = useState(false);
 
   // Form states
   const [newStaff, setNewStaff] = useState({
@@ -370,6 +376,52 @@ const StaffManager = () => {
     }
   };
 
+  const openResendDialog = (member: StaffMember) => {
+    setSelectedForResend(member);
+    setResendPassword('scan2024');
+    setResendDialogOpen(true);
+  };
+
+  const handleResendCredentials = async () => {
+    if (!selectedForResend) return;
+    
+    setIsResending(true);
+    
+    // First, update the password
+    const passwordUpdated = await updatePassword(selectedForResend.id, resendPassword);
+    
+    if (passwordUpdated) {
+      // Then send the credentials email
+      const emailSent = await sendCredentialsEmail(
+        selectedForResend.email,
+        selectedForResend.fullName,
+        resendPassword,
+        selectedForResend.role
+      );
+      
+      toast({
+        title: emailSent 
+          ? (isArabic ? 'تم بنجاح' : 'Success') 
+          : (isArabic ? 'نجاح جزئي' : 'Partial Success'),
+        description: emailSent 
+          ? (isArabic ? 'تم تحديث كلمة المرور وإرسال البيانات' : 'Password updated and credentials sent')
+          : (isArabic ? 'تم تحديث كلمة المرور، فشل إرسال البريد' : 'Password updated but email failed'),
+        variant: emailSent ? 'default' : 'destructive',
+      });
+    } else {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل تحديث كلمة المرور' : 'Failed to update password',
+        variant: 'destructive',
+      });
+    }
+    
+    setIsResending(false);
+    setResendDialogOpen(false);
+    setSelectedForResend(null);
+    setResendPassword('scan2024');
+  };
+
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'admin':
@@ -504,6 +556,14 @@ const StaffManager = () => {
                                 title={isArabic ? 'تغيير كلمة المرور' : 'Change Password'}
                               >
                                 <Key className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openResendDialog(member)}
+                                title={isArabic ? 'إعادة إرسال بيانات الدخول' : 'Resend Credentials'}
+                              >
+                                <Send className="h-4 w-4 text-blue-600" />
                               </Button>
                               <Button
                                 variant="ghost"
@@ -917,6 +977,64 @@ const StaffManager = () => {
             >
               {isBulkImporting && <Loader2 className="h-4 w-4 animate-spin me-2" />}
               {isArabic ? 'إضافة' : 'Import'} ({bulkEntries.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resend Credentials Dialog */}
+      <Dialog open={resendDialogOpen} onOpenChange={setResendDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isArabic ? 'إعادة إرسال بيانات الدخول' : 'Resend Login Credentials'}</DialogTitle>
+            <DialogDescription>
+              {isArabic 
+                ? 'سيتم تغيير كلمة المرور الحالية وإرسال البيانات الجديدة بالبريد' 
+                : 'This will reset the current password and send new credentials via email'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedForResend && (
+            <div className="space-y-4 py-4">
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="font-medium">{selectedForResend.fullName}</p>
+                <p className="text-sm text-muted-foreground">{selectedForResend.email}</p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>{isArabic ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                <Input
+                  type="text"
+                  value={resendPassword}
+                  onChange={(e) => setResendPassword(e.target.value)}
+                  placeholder={isArabic ? '8 أحرف على الأقل' : 'Min 8 characters'}
+                  disabled={isResending}
+                />
+              </div>
+              
+              <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                <p className="text-sm text-amber-700">
+                  {isArabic 
+                    ? 'سيتم تغيير كلمة المرور الحالية للموظف' 
+                    : "This will change the staff member's current password"}
+                </p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResendDialogOpen(false)} disabled={isResending}>
+              {isArabic ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button 
+              onClick={handleResendCredentials} 
+              disabled={isResending || resendPassword.length < 8}
+            >
+              {isResending && <Loader2 className="h-4 w-4 animate-spin me-2" />}
+              {isResending 
+                ? (isArabic ? 'جاري الإرسال...' : 'Sending...') 
+                : (isArabic ? 'إعادة التعيين والإرسال' : 'Reset & Send Email')}
             </Button>
           </DialogFooter>
         </DialogContent>
