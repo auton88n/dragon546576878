@@ -823,29 +823,14 @@ const ScannerPage = () => {
         scannerRef.current = new Html5Qrcode('qr-reader');
       }
 
-      // Optimized for ultra-fast QR detection with dynamic sizing
-      const qrboxFunction = (viewfinderWidth: number, viewfinderHeight: number) => {
-        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-        const size = Math.floor(minEdge * 0.75); // 75% of smaller edge for easier targeting
-        return { width: size, height: size };
-      };
-      
+      // Optimized config - simple and reliable
       const qrConfig = { 
         fps: 30, // Maximum frame rate for fastest detection
-        qrbox: qrboxFunction, // Dynamic sizing based on screen
+        qrbox: { width: 300, height: 300 }, // Fixed size, reliable
         aspectRatio: 1,
         formatsToSupport: [ 0 ], // 0 = QR_CODE only, skip other formats for speed
         experimentalFeatures: {
           useBarCodeDetectorIfSupported: true // Use native detector when available (much faster)
-        },
-        // Video constraints for faster focus and detection
-        videoConstraints: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          advanced: [
-            { focusMode: "continuous" } as any // Continuous autofocus for quick lock
-          ]
         }
       };
       let cameraId: string | { facingMode: string } = { facingMode: 'environment' };
