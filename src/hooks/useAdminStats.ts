@@ -82,8 +82,9 @@ export const useAdminStats = () => {
   const queryResult = useQuery({
     queryKey: ['admin-stats'],
     queryFn: fetchAdminStats,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
+    staleTime: 10000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   const { refetch } = queryResult;

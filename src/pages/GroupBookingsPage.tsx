@@ -85,20 +85,24 @@ const GroupBookingsPage = () => {
   }];
   const groupTypes = [{
     value: 'corporate',
-    labelEn: 'Corporate Team Building',
-    labelAr: 'بناء فرق الشركات'
+    labelEn: 'Corporate Visit',
+    labelAr: 'زيارة شركات'
   }, {
     value: 'school',
-    labelEn: 'School/Educational',
-    labelAr: 'مدرسي / تعليمي'
+    labelEn: 'School Trip',
+    labelAr: 'رحلة مدرسية'
   }, {
-    value: 'wedding',
-    labelEn: 'Wedding/Private Event',
-    labelAr: 'حفل زفاف / مناسبة خاصة'
+    value: 'tour_group',
+    labelEn: 'Tour Group',
+    labelAr: 'مجموعة سياحية'
   }, {
-    value: 'conference',
-    labelEn: 'Conference/Business Event',
-    labelAr: 'مؤتمر / حدث تجاري'
+    value: 'government',
+    labelEn: 'Government/Institution',
+    labelAr: 'جهة حكومية'
+  }, {
+    value: 'private_event',
+    labelEn: 'Private Event',
+    labelAr: 'مناسبة خاصة'
   }, {
     value: 'other',
     labelEn: 'Other',
