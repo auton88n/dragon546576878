@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard, Phone, Users, Baby, User, CreditCard, Mail, Clock, Ticket, Briefcase } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard, Phone, Users, Baby, User, CreditCard, Mail, Clock, Ticket, Briefcase, Banknote } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
@@ -1017,23 +1017,33 @@ const ScannerPage = () => {
                 )}
               </div>
               
-              {/* Payment Warning with Mark as Paid button */}
+              {/* Payment Warning - ENHANCED with Large Pulsing Alert */}
               {currentResult.ticket.paymentStatus !== 'completed' && (
-                <div className="flex flex-col items-center gap-2 mb-3">
-                  <div className="bg-amber-500/80 text-white rounded-lg px-3 py-1.5 text-sm font-semibold">
-                    ⚠️ {isArabic ? 'في انتظار الدفع' : 'Payment Pending'}
+                <div className="flex flex-col items-center gap-3 mb-4">
+                  {/* Flashing Payment Due Alert */}
+                  <div className="bg-red-600 text-white rounded-xl px-6 py-3 text-lg font-bold animate-pulse flex items-center gap-3 shadow-lg border-2 border-white/30">
+                    <Banknote className="h-6 w-6" />
+                    <div className="text-center">
+                      <p className="text-lg">{isArabic ? '⚠️ لم يتم الدفع' : '⚠️ NOT PAID'}</p>
+                    </div>
                   </div>
+                  
+                  {/* Large Mark as Paid Button */}
                   <Button
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                    size="lg"
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white text-lg px-8 py-6 h-auto gap-3 shadow-xl border-2 border-white/40 font-bold rounded-xl"
                     disabled={isMarkingPaid}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleMarkAsPaid(currentResult.ticket!.bookingId);
                     }}
                   >
-                    {isMarkingPaid ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                    {isArabic ? 'تم الدفع' : 'Mark as Paid'}
+                    {isMarkingPaid ? (
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    ) : (
+                      <CheckCircle className="h-6 w-6" />
+                    )}
+                    {isArabic ? '✓ تم استلام الدفع' : '✓ Payment Received'}
                   </Button>
                 </div>
               )}
@@ -1563,15 +1573,34 @@ const ScannerPage = () => {
                     </p>
                   )}
                   
+                  {/* Enhanced Payment Warning in Dialog */}
                   {selectedScanDetail.paymentStatus !== 'completed' && selectedScanDetail.bookingId && (
-                    <Button 
-                      className="w-full bg-green-600 hover:bg-green-700 gap-2"
-                      disabled={isMarkingPaid}
-                      onClick={() => handleMarkAsPaid(selectedScanDetail.bookingId!)}
-                    >
-                      {isMarkingPaid ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                      {isArabic ? 'تحديد كمدفوع' : 'Mark as Paid'}
-                    </Button>
+                    <div className="space-y-3">
+                      {/* Payment Due Alert */}
+                      <div className="bg-red-100 dark:bg-red-900/30 border-2 border-red-500 rounded-xl p-4 text-center">
+                        <div className="flex items-center justify-center gap-2 text-red-600 dark:text-red-400 font-bold text-lg">
+                          <Banknote className="h-5 w-5" />
+                          {isArabic ? '⚠️ لم يتم الدفع' : '⚠️ NOT PAID'}
+                        </div>
+                        {fullBookingDetails?.total_amount && (
+                          <p className="text-red-600 dark:text-red-400 text-sm mt-1">
+                            {isArabic ? 'المبلغ المستحق: ' : 'Amount Due: '}
+                            <span className="font-bold font-mono">{fullBookingDetails.total_amount} SAR</span>
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Large Payment Button */}
+                      <Button 
+                        size="lg"
+                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-lg py-6 h-auto gap-3 font-bold"
+                        disabled={isMarkingPaid}
+                        onClick={() => handleMarkAsPaid(selectedScanDetail.bookingId!)}
+                      >
+                        {isMarkingPaid ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle className="h-5 w-5" />}
+                        {isArabic ? '✓ تم استلام الدفع' : '✓ Payment Received'}
+                      </Button>
+                    </div>
                   )}
                   
                   {selectedScanDetail.bookingId && (
