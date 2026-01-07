@@ -49,11 +49,17 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
   const { 
     customerInfo, 
     setCustomerInfo, 
-    totalAmount,
+    totalAmount: storedTotal,
+    packageQuantities,
     tickets,
     pricing,
     visitDate,
   } = useBookingStore();
+
+  // Recalculate total from packages if stored total is 0 (safety net for hydration issues)
+  const totalAmount = storedTotal > 0 
+    ? storedTotal 
+    : packageQuantities.reduce((sum, pkg) => sum + pkg.price * pkg.quantity, 0);
 
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
