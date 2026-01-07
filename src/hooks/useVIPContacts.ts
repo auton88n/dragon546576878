@@ -35,6 +35,9 @@ export interface VIPEmailLog {
   sent_at: string | null;
   sent_by: string | null;
   created_at: string;
+  tracking_id: string | null;
+  opened_at: string | null;
+  open_count: number | null;
 }
 
 export interface CreateVIPContact {
