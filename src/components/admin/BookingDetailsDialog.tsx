@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe, CheckCircle, Ban, History } from 'lucide-react';
+import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe, CheckCircle, Ban, History, Wallet } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { resendConfirmationEmail } from '@/lib/emailService';
@@ -17,7 +17,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import EmailStatusTracker from './EmailStatusTracker';
+import PaymentHistoryPanel from './PaymentHistoryPanel';
 
 type Booking = Tables<'bookings'>;
 type TicketType = Tables<'tickets'>;
@@ -358,6 +360,22 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
                 <p className="font-mono text-sm text-foreground">{booking.payment_id || '-'}</p>
               </div>
             </div>
+
+            {/* Payment History Collapsible */}
+            <Collapsible className="mt-4">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-full justify-between gap-2">
+                  <span className="flex items-center gap-2 rtl:flex-row-reverse">
+                    <Wallet className="h-4 w-4" />
+                    {isArabic ? 'سجل المدفوعات' : 'Payment History'}
+                  </span>
+                  <History className="h-4 w-4" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-4">
+                <PaymentHistoryPanel bookingId={booking.id} />
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
           {/* Email Status & Actions */}
