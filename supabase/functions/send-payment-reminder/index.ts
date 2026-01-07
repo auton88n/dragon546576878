@@ -41,7 +41,9 @@ const generateReminderTemplate = (booking: any, isArabic: boolean, paymentUrl: s
       : "We're excited to welcome you! Please complete your payment to confirm your upcoming visit to Souq Almufaijer.",
     bookingRef: isArabic ? "رقم الحجز" : "Booking Reference",
     visitDate: isArabic ? "تاريخ الزيارة" : "Visit Date",
-    visitTime: isArabic ? "وقت الزيارة" : "Visit Time",
+    validHours: isArabic ? "ساعات الصلاحية" : "Valid Hours",
+    hoursValue: isArabic ? "٣:٠٠ م - ١٢:٠٠ ص" : "3:00 PM - 12:00 AM",
+    validAllDay: isArabic ? "صالحة طوال اليوم" : "Valid All Day",
     amountDue: isArabic ? "المبلغ المستحق" : "Amount Due",
     note: isArabic 
       ? "يرجى إتمام الدفع قبل موعد الزيارة للحفاظ على حجزك"
@@ -130,10 +132,13 @@ const generateReminderTemplate = (booking: any, isArabic: boolean, paymentUrl: s
                               </td>
                               <td width="50%" style="text-align: ${textAlign}; padding-${isArabic ? 'right' : 'left'}: 10px;">
                                 <p style="color: #5C4A3A; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px;">
-                                  ${translations.visitTime}
+                                  ${translations.validHours}
                                 </p>
                                 <p style="color: #3D2E1F !important; font-size: 15px; font-weight: 600; margin: 0;">
-                                  ${formattedTime}
+                                  ${translations.hoursValue}
+                                </p>
+                                <p style="color: #8B7355; font-size: 11px; margin: 4px 0 0 0; font-style: italic;">
+                                  ${translations.validAllDay}
                                 </p>
                               </td>
                             </tr>
