@@ -1,14 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLanguage } from './useLanguage';
-import { supabase } from '@/integrations/supabase/client';
-import { checkRateLimit, recordAttempt, RATE_LIMITS } from '@/lib/rateLimiter';
-import { safeLocalStorage } from '@/lib/safeStorage';
+
 export interface ChatMessage {
   id: string;
   type: 'bot' | 'user';
-  role?: 'bot' | 'admin'; // Distinguish automated bot vs human admin
   content: string;
-  senderName?: string;
   buttons?: ChatButton[];
   timestamp: Date;
 }
@@ -19,16 +15,9 @@ export interface ChatButton {
   action: string;
 }
 
-export interface CustomerInfo {
-  name: string;
-  email: string;
-  phone?: string;
-}
-
-type ChatState = 'welcome' | 'menu' | 'booking' | 'payment' | 'tickets' | 'hours' | 'location' | 'transfer' | 'transfer_form' | 'transferred' | 'email_lookup';
+type ChatState = 'welcome' | 'menu' | 'booking' | 'payment' | 'tickets' | 'hours' | 'location';
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
-const STORAGE_KEY = 'support_conversation_id';
 
 export function useChatbot() {
   const { currentLanguage } = useLanguage();
@@ -37,17 +26,9 @@ export function useChatbot() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [state, setState] = useState<ChatState>('welcome');
   const [isOpen, setIsOpen] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
-  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({ name: '', email: '' });
   const [unreadCount, setUnreadCount] = useState(0);
   const hasInitialized = useRef(false);
-  const messagesRef = useRef<ChatMessage[]>([]);
-
-  // Keep messagesRef in sync
-  useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
 
   // Translations
   const t = useCallback((key: string) => {
@@ -75,10 +56,6 @@ export function useChatbot() {
       location: {
         en: "📍 Location",
         ar: "📍 الموقع"
-      },
-      talkToSupport: {
-        en: "💬 Talk to Support",
-        ar: "💬 تحدث مع الدعم"
       },
       backToMenu: {
         en: "← Back to Menu",
@@ -116,77 +93,32 @@ export function useChatbot() {
         en: "📍 Location:\n\nSouq Almufaijer Heritage Site\nAlmufaijer, Saudi Arabia\n\n📞 Phone: +966 50 101 8811\n📧 Email: info@almufaijer.com\n\nFind us on Google Maps for directions!",
         ar: "📍 الموقع:\n\nموقع سوق المفيجر التراثي\nالمفيجر، المملكة العربية السعودية\n\n📞 الهاتف: ٨٨١١ ١٠١ ٥٠ ٩٦٦+\n📧 البريد: info@almufaijer.com\n\nابحث عنا في خرائط جوجل للاتجاهات!"
       },
-      transferPrompt: {
-        en: "I'll connect you with our support team. Please provide your details:",
-        ar: "سأقوم بتوصيلك بفريق الدعم. يرجى تقديم بياناتك:"
-      },
-      transferSuccess: {
-        en: "✅ You're now connected to live support!\n\nOur team will reply here shortly. Please stay on this page.\n\nReference: ",
-        ar: "✅ أنت الآن متصل بالدعم المباشر!\n\nسيرد فريقنا هنا قريباً. يرجى البقاء في هذه الصفحة.\n\nالمرجع: "
-      },
       thankYou: {
         en: "Great! Is there anything else I can help you with?",
         ar: "رائع! هل هناك شيء آخر يمكنني مساعدتك به؟"
       },
-      enterName: {
-        en: "What is your name?",
-        ar: "ما هو اسمك؟"
-      },
-      enterEmail: {
-        en: "What is your email address?",
-        ar: "ما هو بريدك الإلكتروني؟"
-      },
-      enterMessage: {
-        en: "Please describe your issue or question:",
-        ar: "يرجى وصف مشكلتك أو سؤالك:"
-      },
-      invalidEmail: {
-        en: "Please enter a valid email address.",
-        ar: "يرجى إدخال بريد إلكتروني صحيح."
-      },
-      submitRequest: {
-        en: "📤 Submit Request",
-        ar: "📤 إرسال الطلب"
-      },
-      existingConversation: {
-        en: "📧 Have an existing conversation?",
-        ar: "📧 لديك محادثة سابقة؟"
-      },
-      enterLookupEmail: {
-        en: "Enter your email to find your conversation:",
-        ar: "أدخل بريدك الإلكتروني للعثور على محادثتك:"
-      },
-      noConversationFound: {
-        en: "No active conversation found with this email. Would you like to start a new one?",
-        ar: "لم يتم العثور على محادثة نشطة بهذا البريد. هل تريد بدء محادثة جديدة؟"
-      },
-      conversationRestored: {
-        en: "✅ Your conversation has been restored! You can continue chatting with our support team.",
-        ar: "✅ تم استعادة محادثتك! يمكنك متابعة الدردشة مع فريق الدعم."
+      needMoreHelp: {
+        en: "For further assistance, please visit our Contact page or call us directly.",
+        ar: "للمزيد من المساعدة، يرجى زيارة صفحة التواصل أو الاتصال بنا مباشرة."
       },
     };
     return translations[key]?.[isArabic ? 'ar' : 'en'] || key;
   }, [isArabic]);
 
-  // Restore conversation from localStorage on mount
+  // Initialize with welcome message
   useEffect(() => {
-    const savedId = safeLocalStorage.getItem(STORAGE_KEY);
-    if (savedId) {
-      restoreConversation(savedId);
-    } else if (!hasInitialized.current && messages.length === 0) {
+    if (!hasInitialized.current && messages.length === 0) {
       hasInitialized.current = true;
       addBotMessageDirect(t('welcome'), getMainMenuButtonsDirect());
     }
   }, []);
 
   // Helper to add bot message directly (for initialization)
-  const addBotMessageDirect = (content: string, buttons?: ChatButton[], role: 'bot' | 'admin' = 'bot', senderName?: string) => {
+  const addBotMessageDirect = (content: string, buttons?: ChatButton[]) => {
     setMessages(prev => [...prev, {
       id: generateId(),
       type: 'bot',
-      role,
       content,
-      senderName,
       buttons,
       timestamp: new Date()
     }]);
@@ -198,159 +130,7 @@ export function useChatbot() {
     { id: 'tickets', label: isArabic ? '📱 رمز QR / التذاكر' : '📱 QR Code / Tickets', action: 'tickets' },
     { id: 'hours', label: isArabic ? '🕐 ساعات العمل' : '🕐 Operating Hours', action: 'hours' },
     { id: 'location', label: isArabic ? '📍 الموقع' : '📍 Location', action: 'location' },
-    { id: 'transfer', label: isArabic ? '💬 تحدث مع الدعم' : '💬 Talk to Support', action: 'transfer' },
-    { id: 'find_conversation', label: isArabic ? '📧 ابحث عن محادثتي' : '📧 Find My Conversation', action: 'email_lookup' },
   ];
-
-  // Restore conversation from database
-  const restoreConversation = async (id: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('support_conversations')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error || !data) {
-        safeLocalStorage.removeItem(STORAGE_KEY);
-        hasInitialized.current = true;
-        addBotMessageDirect(t('welcome'), getMainMenuButtonsDirect());
-        return;
-      }
-
-      // Check if conversation is still active
-      if (data.status === 'closed' || data.status === 'resolved') {
-        safeLocalStorage.removeItem(STORAGE_KEY);
-        hasInitialized.current = true;
-        addBotMessageDirect(t('welcome'), getMainMenuButtonsDirect());
-        return;
-      }
-
-      // Restore messages
-      const savedMessages = typeof data.messages === 'string'
-        ? JSON.parse(data.messages)
-        : data.messages || [];
-
-      const restoredMessages: ChatMessage[] = savedMessages.map((m: { type: string; content: string; timestamp: string; sender_name?: string }) => ({
-        id: generateId(),
-        type: m.type === 'admin' ? 'bot' : m.type as 'bot' | 'user',
-        role: m.type === 'admin' ? 'admin' : 'bot',
-        content: m.content,
-        senderName: m.sender_name,
-        timestamp: new Date(m.timestamp)
-      }));
-
-      setMessages(restoredMessages);
-      setConversationId(id);
-      setState('transferred');
-      setCustomerInfo({
-        name: data.customer_name || '',
-        email: data.customer_email || ''
-      });
-      hasInitialized.current = true;
-
-      // Add restored notification
-      setTimeout(() => {
-        addBotMessageDirect(t('conversationRestored'));
-      }, 300);
-    } catch (err) {
-      console.error('Failed to restore conversation:', err);
-      safeLocalStorage.removeItem(STORAGE_KEY);
-      hasInitialized.current = true;
-      addBotMessageDirect(t('welcome'), getMainMenuButtonsDirect());
-    }
-  };
-
-  // Lookup conversation by email
-  const lookupConversationByEmail = async (email: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('support_conversations')
-        .select('*')
-        .eq('customer_email', email.toLowerCase())
-        .in('status', ['active', 'transferred'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error || !data) {
-        return null;
-      }
-
-      return data;
-    } catch {
-      return null;
-    }
-  };
-
-  // Subscribe to conversation updates for admin replies
-  useEffect(() => {
-    if (!conversationId) return;
-
-    console.log('Subscribing to conversation:', conversationId);
-
-    const channel = supabase
-      .channel(`conversation-${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'support_conversations',
-          filter: `id=eq.${conversationId}`
-        },
-        (payload) => {
-          console.log('Received update:', payload);
-          const updatedConversation = payload.new as { messages?: string | unknown[]; status?: string };
-          
-          // Check if conversation was closed
-          if (updatedConversation.status === 'closed' || updatedConversation.status === 'resolved') {
-            safeLocalStorage.removeItem(STORAGE_KEY);
-            return;
-          }
-
-          const allMessages = typeof updatedConversation.messages === 'string'
-            ? JSON.parse(updatedConversation.messages)
-            : updatedConversation.messages || [];
-          
-          // Find admin messages not yet in our chat
-          const currentMessages = messagesRef.current;
-          const newAdminMessages = allMessages.filter(
-            (m: { type: string; content: string; timestamp: string }) => 
-              m.type === 'admin' && 
-              !currentMessages.some(existing => 
-                existing.role === 'admin' && existing.content === m.content
-              )
-          );
-          
-          // Add new admin messages
-          newAdminMessages.forEach((adminMsg: { content: string; timestamp: string; sender_name?: string }) => {
-            setMessages(prev => {
-              // Double-check to avoid duplicates
-              if (prev.some(m => m.role === 'admin' && m.content === adminMsg.content)) {
-                return prev;
-              }
-              return [...prev, {
-                id: generateId(),
-                type: 'bot' as const,
-                role: 'admin' as const,
-                content: adminMsg.content,
-                senderName: adminMsg.sender_name || (isArabic ? 'فريق الدعم' : 'Support Team'),
-                timestamp: new Date(adminMsg.timestamp)
-              }];
-            });
-            if (!isOpen) setUnreadCount(prev => prev + 1);
-          });
-        }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [conversationId, isOpen, isArabic]);
 
   const getMainMenuButtons = useCallback((): ChatButton[] => [
     { id: 'booking', label: t('booking'), action: 'booking' },
@@ -358,8 +138,6 @@ export function useChatbot() {
     { id: 'tickets', label: t('tickets'), action: 'tickets' },
     { id: 'hours', label: t('hours'), action: 'hours' },
     { id: 'location', label: t('location'), action: 'location' },
-    { id: 'transfer', label: t('talkToSupport'), action: 'transfer' },
-    { id: 'find_conversation', label: t('existingConversation'), action: 'email_lookup' },
   ], [t]);
 
   const getHelpfulButtons = useCallback((): ChatButton[] => [
@@ -368,15 +146,13 @@ export function useChatbot() {
     { id: 'menu', label: t('backToMenu'), action: 'menu' },
   ], [t]);
 
-  const addBotMessage = useCallback((content: string, buttons?: ChatButton[], role: 'bot' | 'admin' = 'bot', senderName?: string) => {
+  const addBotMessage = useCallback((content: string, buttons?: ChatButton[]) => {
     setIsTyping(true);
     setTimeout(() => {
       setMessages(prev => [...prev, {
         id: generateId(),
         type: 'bot',
-        role,
         content,
-        senderName,
         buttons,
         timestamp: new Date()
       }]);
@@ -393,12 +169,6 @@ export function useChatbot() {
       timestamp: new Date()
     }]);
   }, []);
-
-  // Save conversation ID to localStorage
-  const saveConversationId = (id: string) => {
-    setConversationId(id);
-    safeLocalStorage.setItem(STORAGE_KEY, id);
-  };
 
   const handleButtonClick = useCallback((action: string) => {
     switch (action) {
@@ -436,27 +206,6 @@ export function useChatbot() {
           ...getHelpfulButtons()
         ]);
         break;
-      case 'transfer':
-        addUserMessage(t('talkToSupport'));
-        // Rate limit check for transfers
-        const rateLimitResult = checkRateLimit(RATE_LIMITS.SUPPORT_TRANSFER);
-        if (!rateLimitResult.allowed) {
-          addBotMessage(
-            isArabic 
-              ? `يرجى الانتظار ${rateLimitResult.remainingMinutes} دقيقة قبل طلب الدعم مرة أخرى.`
-              : `Please wait ${rateLimitResult.remainingMinutes} minutes before requesting support again.`,
-            getMainMenuButtons()
-          );
-          return;
-        }
-        recordAttempt(RATE_LIMITS.SUPPORT_TRANSFER.key);
-        setState('transfer_form');
-        addBotMessage(t('transferPrompt'));
-        break;
-      case 'email_lookup':
-        setState('email_lookup');
-        addBotMessage(t('enterLookupEmail'));
-        break;
       case 'menu':
         setState('menu');
         addBotMessage(t('welcome'), getMainMenuButtons());
@@ -468,8 +217,12 @@ export function useChatbot() {
         break;
       case 'helpful_no':
         addUserMessage(t('no'));
-        setState('transfer_form');
-        addBotMessage(t('transferPrompt'));
+        // Direct to contact page instead of live support
+        addBotMessage(t('needMoreHelp'), [
+          { id: 'contact', label: isArabic ? '📞 تواصل معنا' : '📞 Contact Us', action: 'go_contact' },
+          { id: 'menu', label: t('backToMenu'), action: 'menu' },
+        ]);
+        setState('menu');
         break;
       case 'go_booking':
         window.location.href = '/book';
@@ -483,127 +236,8 @@ export function useChatbot() {
     }
   }, [t, isArabic, addUserMessage, addBotMessage, getMainMenuButtons, getHelpfulButtons]);
 
-  const handleUserInput = useCallback(async (input: string) => {
+  const handleUserInput = useCallback((input: string) => {
     addUserMessage(input);
-
-    // Handle email lookup state
-    if (state === 'email_lookup') {
-      const emailMatch = input.match(/[\w.-]+@[\w.-]+\.\w+/);
-      if (emailMatch) {
-        setIsTyping(true);
-        const conversation = await lookupConversationByEmail(emailMatch[0]);
-        setIsTyping(false);
-
-        if (conversation) {
-          // Restore the found conversation
-          await restoreConversation(conversation.id);
-        } else {
-          addBotMessage(t('noConversationFound'), [
-            { id: 'transfer', label: t('talkToSupport'), action: 'transfer' },
-            { id: 'menu', label: t('backToMenu'), action: 'menu' },
-          ]);
-          setState('menu');
-        }
-        return;
-      } else {
-        addBotMessage(t('invalidEmail'));
-        return;
-      }
-    }
-
-    if (state === 'transfer_form') {
-      // Simple keyword matching for common issues
-      const emailMatch = input.match(/[\w.-]+@[\w.-]+\.\w+/);
-      
-      if (emailMatch && !customerInfo.email) {
-        setCustomerInfo(prev => ({ ...prev, email: emailMatch[0] }));
-      }
-      
-      if (!customerInfo.name && !emailMatch) {
-        setCustomerInfo(prev => ({ ...prev, name: input }));
-        addBotMessage(t('enterEmail'));
-        return;
-      }
-      
-      if (customerInfo.name && !customerInfo.email && emailMatch) {
-        // Validate email and save conversation
-        try {
-          // Generate UUID client-side to avoid needing SELECT after INSERT
-          const newId = crypto.randomUUID();
-
-          const { error } = await supabase
-            .from('support_conversations')
-            .insert([{
-              id: newId,
-              customer_name: customerInfo.name,
-              customer_email: emailMatch[0].toLowerCase(),
-              messages: JSON.stringify(messages.map(m => ({
-                type: m.type,
-                content: m.content,
-                timestamp: m.timestamp
-              }))),
-              status: 'transferred',
-              transferred_at: new Date().toISOString()
-            }]);
-
-          if (error) throw error;
-
-          saveConversationId(newId);
-          setState('transferred');
-          addBotMessage(t('transferSuccess') + newId.slice(0, 8).toUpperCase());
-        } catch (err) {
-          console.error('Failed to save conversation:', err);
-          addBotMessage(
-            isArabic 
-              ? 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.' 
-              : 'Sorry, an error occurred. Please try again.',
-            getMainMenuButtons()
-          );
-        }
-        return;
-      }
-
-      // If we have name but no email yet
-      if (customerInfo.name && !customerInfo.email) {
-        addBotMessage(t('invalidEmail'));
-        return;
-      }
-    }
-
-    // Handle user messages in transferred state - update conversation
-    if (state === 'transferred' && conversationId) {
-      try {
-        // Fetch current messages and append new one
-        const { data } = await supabase
-          .from('support_conversations')
-          .select('messages')
-          .eq('id', conversationId)
-          .single();
-
-        if (data) {
-          const currentMessages = typeof data.messages === 'string'
-            ? JSON.parse(data.messages)
-            : data.messages || [];
-
-          const newMessage = {
-            type: 'user',
-            content: input,
-            timestamp: new Date().toISOString()
-          };
-
-          await supabase
-            .from('support_conversations')
-            .update({
-              messages: JSON.stringify([...currentMessages, newMessage]),
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', conversationId);
-        }
-      } catch (err) {
-        console.error('Failed to sync message:', err);
-      }
-      return; // Don't process keywords when in live support
-    }
 
     // Keyword matching for general queries
     const lowerInput = input.toLowerCase();
@@ -615,7 +249,6 @@ export function useChatbot() {
       tickets: ['qr', 'code', 'download', 'email', 'confirmation', 'رمز', 'تحميل', 'تأكيد'],
       hours: ['hour', 'open', 'close', 'time', 'when', 'ساعة', 'متى', 'مواعيد', 'وقت'],
       location: ['where', 'location', 'address', 'map', 'direction', 'أين', 'موقع', 'عنوان', 'خريطة'],
-      transfer: ['human', 'agent', 'support', 'help', 'person', 'talk', 'بشري', 'دعم', 'مساعدة', 'تحدث'],
     };
 
     for (const [action, words] of Object.entries(keywords)) {
@@ -625,14 +258,17 @@ export function useChatbot() {
       }
     }
 
-    // Default response
+    // Default response - direct to contact for help
     addBotMessage(
       isArabic
-        ? 'عذراً، لم أفهم سؤالك. يرجى اختيار من الخيارات أدناه أو التحدث مع فريق الدعم.'
-        : "I'm sorry, I didn't understand your question. Please choose from the options below or talk to our support team.",
-      getMainMenuButtons()
+        ? 'عذراً، لم أفهم سؤالك. يرجى اختيار من الخيارات أدناه أو زيارة صفحة التواصل.'
+        : "I'm sorry, I didn't understand your question. Please choose from the options below or visit our Contact page.",
+      [
+        ...getMainMenuButtons(),
+        { id: 'contact', label: isArabic ? '📞 تواصل معنا' : '📞 Contact Us', action: 'go_contact' },
+      ]
     );
-  }, [state, customerInfo, messages, conversationId, t, isArabic, addUserMessage, addBotMessage, handleButtonClick, getMainMenuButtons]);
+  }, [isArabic, addUserMessage, addBotMessage, handleButtonClick, getMainMenuButtons]);
 
   const toggleChat = useCallback(() => {
     setIsOpen(prev => !prev);
@@ -642,41 +278,20 @@ export function useChatbot() {
   const resetChat = useCallback(() => {
     setMessages([]);
     setState('welcome');
-    setCustomerInfo({ name: '', email: '' });
-    setConversationId(null);
-    localStorage.removeItem(STORAGE_KEY);
     setTimeout(() => {
       addBotMessage(t('welcome'), getMainMenuButtons());
     }, 100);
   }, [t, addBotMessage, getMainMenuButtons]);
-
-  // Start a fresh conversation (clears current one but keeps history in DB)
-  const startNewConversation = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setConversationId(null);
-    setCustomerInfo({ name: '', email: '' });
-    setState('menu');
-    setMessages([{
-      id: generateId(),
-      type: 'bot',
-      role: 'bot',
-      content: t('welcome'),
-      buttons: getMainMenuButtonsDirect(),
-      timestamp: new Date()
-    }]);
-  }, [t]);
 
   return {
     messages,
     isOpen,
     isTyping,
     state,
-    conversationId,
     unreadCount,
     toggleChat,
     handleButtonClick,
     handleUserInput,
     resetChat,
-    startNewConversation,
   };
 }

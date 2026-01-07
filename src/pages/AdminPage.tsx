@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
-import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, MessageSquare, Mail, Headphones, Headset } from 'lucide-react';
+import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
@@ -23,7 +23,6 @@ const SettingsPanel = lazy(() => import('@/components/admin/SettingsPanel'));
 const ReportsPanel = lazy(() => import('@/components/admin/ReportsPanel'));
 const GroupBookingsPanel = lazy(() => import('@/components/admin/GroupBookingsPanel'));
 const ContactSubmissionsPanel = lazy(() => import('@/components/admin/ContactSubmissionsPanel'));
-const LiveSupportPanel = lazy(() => import('@/components/admin/LiveSupportPanel'));
 const AYNSupportPanel = lazy(() => import('@/components/admin/AYNSupportPanel'));
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -203,7 +202,7 @@ const AdminPage = () => {
                 value="messages" 
                 className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse"
               >
-                <MessageSquare className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                <Mail className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 {isArabic ? 'الرسائل' : 'Messages'}
               </TabsTrigger>
               <TabsTrigger 
@@ -303,35 +302,10 @@ const AdminPage = () => {
               </Suspense>
             </TabsContent>
 
-            {/* Messages Tab with Subtabs */}
+            {/* Messages Tab - Contact Forms Only */}
             <TabsContent value="messages">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <Tabs defaultValue="live-chat" className="space-y-4">
-                  <TabsList className="glass-card p-1 h-auto">
-                    <TabsTrigger 
-                      value="live-chat" 
-                      className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-4 py-2 rounded-lg transition-all text-xs md:text-sm"
-                    >
-                      <Headphones className="h-4 w-4" />
-                      {isArabic ? 'المحادثات المباشرة' : 'Live Chat'}
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="contact-forms" 
-                      className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-4 py-2 rounded-lg transition-all text-xs md:text-sm"
-                    >
-                      <Mail className="h-4 w-4" />
-                      {isArabic ? 'نماذج التواصل' : 'Contact Forms'}
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="live-chat" className="mt-4">
-                    <LiveSupportPanel />
-                  </TabsContent>
-
-                  <TabsContent value="contact-forms" className="mt-4">
-                    <ContactSubmissionsPanel />
-                  </TabsContent>
-                </Tabs>
+                <ContactSubmissionsPanel />
               </Suspense>
             </TabsContent>
 
