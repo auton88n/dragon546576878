@@ -358,7 +358,7 @@ const StaffManager = () => {
             </Button>
             <Button variant="outline" onClick={() => setBulkDialogOpen(true)} className="gap-2">
               <Upload className="h-4 w-4" />
-              {isArabic ? 'استيراد مجمع' : 'Bulk Import'}
+              {isArabic ? 'إضافة عدة موظفين' : 'Bulk Import'}
             </Button>
           </div>
         </CardHeader>
@@ -738,24 +738,24 @@ const StaffManager = () => {
       }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{isArabic ? 'استيراد موظفين' : 'Bulk Import Staff'}</DialogTitle>
+            <DialogTitle>{isArabic ? 'إضافة موظفين دفعة واحدة' : 'Bulk Import Staff'}</DialogTitle>
             <DialogDescription>
               {isArabic 
-                ? 'أدخل بيانات الموظفين (بريد إلكتروني, اسم) - سطر لكل موظف'
+                ? 'أدخل بريد إلكتروني واسم كل موظف في سطر منفصل'
                 : 'Enter staff data (email, name) - one per line'}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="bg-muted/50 rounded-lg p-3 text-sm">
-              <p className="font-medium mb-1">{isArabic ? 'التنسيق:' : 'Format:'}</p>
+              <p className="font-medium mb-1">{isArabic ? 'طريقة الكتابة:' : 'Format:'}</p>
               <code className="text-xs block font-mono">
                 email@example.com, Full Name<br/>
                 another@email.com, Another Name
               </code>
               <p className="text-xs text-muted-foreground mt-2">
                 {isArabic 
-                  ? 'الدور: ماسح | كلمة المرور: scan2024' 
+                  ? 'سيتم تعيينهم كـ: ماسح تذاكر | كلمة المرور: scan2024' 
                   : 'Role: Scanner | Password: scan2024'}
               </p>
             </div>
@@ -779,7 +779,7 @@ const StaffManager = () => {
             )}
             
             <p className="text-sm text-muted-foreground">
-              {isArabic ? 'عدد الإدخالات:' : 'Entries found:'} <span className="font-bold">{bulkEntries.length}</span>
+              {isArabic ? 'عدد الموظفين:' : 'Entries found:'} <span className="font-bold">{bulkEntries.length}</span>
             </p>
           </div>
           
@@ -792,7 +792,7 @@ const StaffManager = () => {
               disabled={isBulkImporting || bulkEntries.length === 0}
             >
               {isBulkImporting && <Loader2 className="h-4 w-4 animate-spin me-2" />}
-              {isArabic ? 'استيراد' : 'Import'} ({bulkEntries.length})
+              {isArabic ? 'إضافة' : 'Import'} ({bulkEntries.length})
             </Button>
           </DialogFooter>
         </DialogContent>
