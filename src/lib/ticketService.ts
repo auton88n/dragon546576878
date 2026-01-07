@@ -26,6 +26,7 @@ export interface TicketValidationResult {
     childCount: number;
     seniorCount: number;
     paymentStatus: string;
+    totalAmount: number;
     usedAt?: string;
   };
 }
@@ -235,21 +236,22 @@ export const validateTicket = async (qrData: string): Promise<TicketValidationRe
       // This handles cases where the QR might contain just the ticket code
       const { data: ticketByCode } = await supabase
         .from('tickets')
-        .select(`
-          *,
-          bookings (
-            booking_reference,
-            customer_name,
-            customer_phone,
-            visit_date,
-            visit_time,
-            adult_count,
-            child_count,
-            senior_count,
-            payment_status
-          )
-        `)
-        .eq('ticket_code', qrData.trim())
+      .select(`
+        *,
+        bookings (
+          booking_reference,
+          customer_name,
+          customer_phone,
+          visit_date,
+          visit_time,
+          adult_count,
+          child_count,
+          senior_count,
+          payment_status,
+          total_amount
+        )
+      `)
+      .eq('ticket_code', qrData.trim())
         .maybeSingle();
       
       if (ticketByCode) {
@@ -288,7 +290,8 @@ export const validateTicket = async (qrData: string): Promise<TicketValidationRe
           adult_count,
           child_count,
           senior_count,
-          payment_status
+          payment_status,
+          total_amount
         )
       `)
       .eq('ticket_code', code)
@@ -342,6 +345,7 @@ const validateTicketRecord = (ticket: any): TicketValidationResult => {
     childCount: bookingData?.child_count || 0,
     seniorCount: bookingData?.senior_count || 0,
     paymentStatus: bookingData?.payment_status || 'unknown',
+    totalAmount: bookingData?.total_amount || 0,
     usedAt: ticket.scanned_at || undefined,
   };
   
@@ -445,7 +449,8 @@ export const lookupTicket = async (searchQuery: string): Promise<TicketValidatio
           adult_count,
           child_count,
           senior_count,
-          payment_status
+          payment_status,
+          total_amount
         )
       `)
       .ilike('ticket_code', `%${query}%`)
@@ -465,7 +470,8 @@ export const lookupTicket = async (searchQuery: string): Promise<TicketValidatio
           adult_count,
           child_count,
           senior_count,
-          payment_status
+          payment_status,
+          total_amount
         )
       `)
       .ilike('bookings.booking_reference', `%${query}%`)
