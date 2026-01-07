@@ -1050,13 +1050,16 @@ const ScannerPage = () => {
               {/* Payment Warning - ENHANCED with Large Pulsing Alert */}
               {currentResult.ticket.paymentStatus !== 'completed' && (
                 <div className="flex flex-col items-center gap-3 mb-4">
-                  {/* Flashing Payment Due Alert */}
-                  <div className="bg-red-600 text-white rounded-xl px-6 py-3 text-lg font-bold animate-pulse flex items-center gap-3 shadow-lg border-2 border-white/30">
-                    <Banknote className="h-6 w-6" />
-                    <div className="text-center">
-                      <p className="text-lg">{isArabic ? '⚠️ لم يتم الدفع' : '⚠️ NOT PAID'}</p>
-                      <p className="text-sm font-mono opacity-90">{currentResult.ticket.totalAmount || 0} SAR</p>
-                    </div>
+                  {/* Warning Label - Red with pulse */}
+                  <div className="bg-red-600 text-white rounded-xl px-6 py-2 text-lg font-bold animate-pulse flex items-center gap-2 shadow-lg">
+                    <Banknote className="h-5 w-5" />
+                    <span>{isArabic ? '⚠️ لم يتم الدفع' : '⚠️ NOT PAID'}</span>
+                  </div>
+                  
+                  {/* Amount Due - Separate high-contrast card */}
+                  <div className="bg-white text-red-600 rounded-xl px-6 py-3 font-bold text-xl shadow-lg border-2 border-red-600 flex items-center gap-2">
+                    <span className="font-mono">{currentResult.ticket.totalAmount || 0} SAR</span>
+                    <span className="text-sm opacity-75">{isArabic ? 'المستحق' : 'Due'}</span>
                   </div>
                   
                   {/* Large Mark as Paid Button */}
