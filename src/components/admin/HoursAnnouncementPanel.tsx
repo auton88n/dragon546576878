@@ -87,6 +87,8 @@ const generateEmailPreview = (language: 'en' | 'ar', customerName: string, conte
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
   <title>${subject}</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F5F1E8; direction: ${dir};">
@@ -123,17 +125,17 @@ const generateEmailPreview = (language: 'en' | 'ar', customerName: string, conte
                   <td style="padding: 30px; text-align: center;">
                     <div style="margin-bottom: 16px;">
                       <span style="font-size: 28px;">📅</span>
-                      <p style="color: #000000; font-size: 22px; font-weight: 800; margin: 8px 0 0 0;">
-                        ${daysMain}
+                      <p style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; font-size: 22px; font-weight: 800; margin: 8px 0 0 0;">
+                        <span style="color: #000000 !important; -webkit-text-fill-color: #000000 !important;">${daysMain}</span>
                       </p>
-                      ${daysSub ? `<p style="color: #333333; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">${daysSub}</p>` : ''}
+                      ${daysSub ? `<p style="color: #333333 !important; -webkit-text-fill-color: #333333 !important; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;"><span style="color: #333333 !important; -webkit-text-fill-color: #333333 !important;">${daysSub}</span></p>` : ''}
                     </div>
                     <div style="border-top: 1px solid #D4C5B0; padding-top: 16px;">
                       <span style="font-size: 28px;">⏰</span>
-                      <p style="color: #000000; font-size: 32px; font-weight: 800; margin: 8px 0 0 0;">
-                        ${hoursMain}
+                      <p style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; font-size: 32px; font-weight: 800; margin: 8px 0 0 0;">
+                        <span style="color: #000000 !important; -webkit-text-fill-color: #000000 !important;">${hoursMain}</span>
                       </p>
-                      ${hoursSub ? `<p style="color: #333333; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">${hoursSub}</p>` : ''}
+                      ${hoursSub ? `<p style="color: #333333 !important; -webkit-text-fill-color: #333333 !important; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;"><span style="color: #333333 !important; -webkit-text-fill-color: #333333 !important;">${hoursSub}</span></p>` : ''}
                     </div>
                   </td>
                 </tr>
