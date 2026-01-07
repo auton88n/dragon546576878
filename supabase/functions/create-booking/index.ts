@@ -321,29 +321,9 @@ serve(async (req) => {
 
     console.log("QR codes generated and marked");
 
-    // Send confirmation email by invoking the email function
-    try {
-      const { error: emailError } = await supabase.functions.invoke("send-booking-confirmation", {
-        body: { bookingId: booking.id },
-      });
-
-      if (emailError) {
-        console.error("Error sending confirmation email:", emailError);
-      } else {
-        console.log("Confirmation email sent");
-        
-        // Update email sent status
-        await supabase
-          .from("bookings")
-          .update({ 
-            confirmation_email_sent: true,
-            last_email_sent_at: new Date().toISOString()
-          })
-          .eq("id", booking.id);
-      }
-    } catch (emailErr) {
-      console.error("Error invoking email function:", emailErr);
-    }
+    // Note: Confirmation email is NOT sent here - it will be sent after payment is verified
+    // by the verify-moyasar-payment function
+    console.log("Booking created, awaiting payment. Email will be sent after payment verification.");
 
     // Return success response
     return new Response(
@@ -353,7 +333,7 @@ serve(async (req) => {
         bookingReference: bookingReference,
         tickets: generatedTickets,
         paymentUrl: null, // Will be populated when payment API is integrated
-        emailSent: true,
+        emailSent: false, // Email will be sent after payment completion
       }),
       { 
         status: 200, 
