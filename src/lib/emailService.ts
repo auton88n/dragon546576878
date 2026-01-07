@@ -71,7 +71,7 @@ export const resendConfirmationEmail = async (bookingId: string): Promise<boolea
 };
 
 /**
- * Send payment reminder email
+ * Send payment reminder email (single booking)
  */
 export const sendPaymentReminder = async (bookingId: string): Promise<boolean> => {
   try {
@@ -89,5 +89,33 @@ export const sendPaymentReminder = async (bookingId: string): Promise<boolean> =
   } catch (error) {
     console.error('Error invoking payment reminder function:', error);
     return false;
+  }
+};
+
+/**
+ * Send consolidated payment reminder (one email per customer with all their pending bookings)
+ */
+export const sendConsolidatedReminder = async (customerEmail: string): Promise<{
+  success: boolean;
+  bookingsCount?: number;
+}> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-consolidated-reminder', {
+      body: { customerEmail },
+    });
+
+    if (error) {
+      console.error('Error sending consolidated reminder:', error);
+      return { success: false };
+    }
+
+    console.log('Consolidated reminder sent:', data);
+    return { 
+      success: data?.success ?? false,
+      bookingsCount: data?.bookingsCount 
+    };
+  } catch (error) {
+    console.error('Error invoking consolidated reminder function:', error);
+    return { success: false };
   }
 };

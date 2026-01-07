@@ -6,7 +6,7 @@ import { useAdminStats } from '@/hooks/useAdminStats';
 import { useBookings } from '@/hooks/useBookings';
 import { useToast } from '@/hooks/use-toast';
 import { exportToCSV, exportToExcel } from '@/lib/exportBookings';
-import { sendPaymentReminder } from '@/lib/emailService';
+import { sendConsolidatedReminder } from '@/lib/emailService';
 import { supabase } from '@/integrations/supabase/client';
 import StaffHeader from '@/components/shared/StaffHeader';
 import PoweredByAYN from '@/components/shared/PoweredByAYN';
@@ -131,14 +131,19 @@ const AdminPage = () => {
         return;
       }
 
+      // Group by unique customer emails to avoid duplicate emails
+      const uniqueEmails = [...new Set(pendingBookings.map(b => b.customer_email))];
+      
       let successCount = 0;
+      let totalBookingsUpdated = 0;
       let failCount = 0;
 
-      // Send reminder to each pending booking
-      for (const booking of pendingBookings) {
-        const success = await sendPaymentReminder(booking.id);
-        if (success) {
+      // Send ONE consolidated reminder per customer
+      for (const email of uniqueEmails) {
+        const result = await sendConsolidatedReminder(email);
+        if (result.success) {
           successCount++;
+          totalBookingsUpdated += result.bookingsCount || 1;
         } else {
           failCount++;
         }
@@ -147,8 +152,8 @@ const AdminPage = () => {
       toast({
         title: isArabic ? 'تم إرسال التذكيرات' : 'Reminders Sent',
         description: isArabic 
-          ? `تم إرسال ${successCount} تذكير${failCount > 0 ? ` (فشل ${failCount})` : ''}`
-          : `Sent ${successCount} reminder(s)${failCount > 0 ? ` (${failCount} failed)` : ''}`,
+          ? `تم إرسال ${successCount} بريد إلكتروني لـ ${totalBookingsUpdated} حجز${failCount > 0 ? ` (فشل ${failCount})` : ''}`
+          : `Sent ${successCount} email(s) for ${totalBookingsUpdated} booking(s)${failCount > 0 ? ` (${failCount} failed)` : ''}`,
       });
 
       refetch();

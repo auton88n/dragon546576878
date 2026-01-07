@@ -1,5 +1,8 @@
 project_id = "hekgkfdunwpxqbrotfpn"
 
+[functions.send-consolidated-reminder]
+verify_jwt = false
+
 [functions.send-booking-confirmation]
 verify_jwt = false
 
