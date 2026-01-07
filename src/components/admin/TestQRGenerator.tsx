@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { QrCode, CheckCircle, XCircle, Clock, Calendar, Loader2, Trash2 } from 'lucide-react';
+import { QrCode, CheckCircle, XCircle, Clock, Calendar, Loader2, Trash2, CreditCard } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +11,7 @@ import QRCode from 'qrcode';
 
 interface TestTicket {
   id: string;
-  type: 'valid' | 'expired' | 'used' | 'wrong_date';
+  type: 'valid' | 'expired' | 'used' | 'wrong_date' | 'not_paid';
   ticketCode: string;
   qrCodeUrl: string;
   createdAt: Date;
@@ -28,7 +28,7 @@ const TestQRGenerator = () => {
   const [testTickets, setTestTickets] = useState<TestTicket[]>([]);
   const [clearing, setClearing] = useState(false);
 
-  const generateTestTicket = async (type: 'valid' | 'expired' | 'used' | 'wrong_date') => {
+  const generateTestTicket = async (type: 'valid' | 'expired' | 'used' | 'wrong_date' | 'not_paid') => {
     setGenerating(type);
     
     try {
@@ -44,6 +44,7 @@ const TestQRGenerator = () => {
       
       switch (type) {
         case 'valid':
+        case 'not_paid':
           visitDate = today;
           validFrom = today;
           validUntil = today;
@@ -77,10 +78,10 @@ const TestQRGenerator = () => {
           visit_time: '10:00',
           adult_count: 1,
           child_count: 0,
-          adult_price: 0,
+          adult_price: type === 'not_paid' ? 100 : 0,
           child_price: 0,
-          total_amount: 0,
-          payment_status: 'completed',
+          total_amount: type === 'not_paid' ? 100 : 0,
+          payment_status: type === 'not_paid' ? 'pending' : 'completed',
           booking_status: 'confirmed',
           language: 'en',
           qr_codes_generated: true,
@@ -186,6 +187,7 @@ const TestQRGenerator = () => {
       case 'expired': return arabic ? 'منتهية' : 'Expired';
       case 'used': return arabic ? 'مستخدمة' : 'Used';
       case 'wrong_date': return arabic ? 'تاريخ خاطئ' : 'Wrong Date';
+      case 'not_paid': return arabic ? 'غير مدفوع' : 'Not Paid';
       default: return type;
     }
   };
@@ -196,6 +198,7 @@ const TestQRGenerator = () => {
       case 'expired': return 'bg-red-500/20 text-red-700 border-red-500/30';
       case 'used': return 'bg-amber-500/20 text-amber-700 border-amber-500/30';
       case 'wrong_date': return 'bg-purple-500/20 text-purple-700 border-purple-500/30';
+      case 'not_paid': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
       default: return 'bg-muted text-muted-foreground';
     }
   };
@@ -206,12 +209,14 @@ const TestQRGenerator = () => {
       case 'expired': return <Clock className="h-4 w-4" />;
       case 'used': return <XCircle className="h-4 w-4" />;
       case 'wrong_date': return <Calendar className="h-4 w-4" />;
+      case 'not_paid': return <CreditCard className="h-4 w-4" />;
       default: return null;
     }
   };
 
-  const ticketTypes: Array<{ type: 'valid' | 'expired' | 'used' | 'wrong_date'; description: { en: string; ar: string } }> = [
+  const ticketTypes: Array<{ type: 'valid' | 'expired' | 'used' | 'wrong_date' | 'not_paid'; description: { en: string; ar: string } }> = [
     { type: 'valid', description: { en: 'Valid for today - should scan successfully', ar: 'صالحة لليوم - يجب أن تنجح المسح' } },
+    { type: 'not_paid', description: { en: 'Payment pending - shows Mark as Paid option', ar: 'الدفع معلق - يظهر خيار تحديد كمدفوع' } },
     { type: 'expired', description: { en: 'Expired 7 days ago - should show expired', ar: 'منتهية منذ 7 أيام - يجب أن تظهر منتهية' } },
     { type: 'used', description: { en: 'Already scanned - should show already used', ar: 'تم مسحها - يجب أن تظهر مستخدمة' } },
     { type: 'wrong_date', description: { en: 'Valid for future date - should show wrong date', ar: 'صالحة لتاريخ مستقبلي - يجب أن تظهر تاريخ خاطئ' } },

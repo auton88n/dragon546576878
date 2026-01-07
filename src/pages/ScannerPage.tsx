@@ -138,6 +138,10 @@ const ScannerPage = () => {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [employeeDetails, setEmployeeDetails] = useState<{ full_name: string; email: string; phone: string | null; department: string; is_active: boolean } | null>(null);
   const [employeeScansToday, setEmployeeScansToday] = useState(0);
+  const [showEmployeeLookup, setShowEmployeeLookup] = useState(false);
+  const [employeeSearchQuery, setEmployeeSearchQuery] = useState('');
+  const [employeeSearchResults, setEmployeeSearchResults] = useState<any[]>([]);
+  const [isSearchingEmployee, setIsSearchingEmployee] = useState(false);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const resultTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -569,6 +573,63 @@ const ScannerPage = () => {
       toast.success(isArabic ? `تمت مزامنة ${syncedCount} عمليات بنجاح` : `Synced ${syncedCount} scans successfully`);
     }
   }, [isOnline, queueLength, isSyncing, syncQueue, isArabic]);
+
+  const handleEmployeeLookup = useCallback(async () => {
+    if (!employeeSearchQuery.trim()) return;
+    setIsSearchingEmployee(true);
+    try {
+      const { data } = await supabase
+        .from('employees')
+        .select('id, full_name, email, phone, department, is_active')
+        .or(`full_name.ilike.%${employeeSearchQuery}%,email.ilike.%${employeeSearchQuery}%`)
+        .limit(10);
+      
+      setEmployeeSearchResults(data || []);
+    } catch (err) {
+      console.error('Employee lookup error:', err);
+    } finally {
+      setIsSearchingEmployee(false);
+    }
+  }, [employeeSearchQuery]);
+
+  const handleSelectEmployee = useCallback((emp: any) => {
+    // Log the manual lookup as an attendance scan
+    logEmployeeScan(emp.id, user?.id, 'manual_lookup');
+    
+    // Add to recent scans
+    setRecentScans(prev => [{
+      timestamp: new Date(),
+      status: emp.is_active ? 'employee_valid' : 'employee_inactive',
+      isEmployee: true,
+      employeeId: emp.id,
+      employeeName: emp.full_name,
+      employeeDepartment: emp.department,
+    }, ...prev.slice(0, 9)]);
+    
+    // Open detail dialog
+    setSelectedScanDetail({
+      timestamp: new Date(),
+      status: emp.is_active ? 'employee_valid' : 'employee_inactive',
+      isEmployee: true,
+      employeeId: emp.id,
+      employeeName: emp.full_name,
+      employeeDepartment: emp.department,
+    });
+    
+    // Play feedback sound
+    if (emp.is_active) playFeedback('success');
+    
+    toast(emp.is_active 
+      ? (isArabic ? 'موظف معتمد' : 'Employee Verified')
+      : (isArabic ? 'موظف غير فعال' : 'Inactive Employee'), 
+      { duration: 2000 }
+    );
+    
+    // Clear search
+    setEmployeeSearchQuery('');
+    setEmployeeSearchResults([]);
+    setShowEmployeeLookup(false);
+  }, [user?.id, playFeedback, isArabic]);
 
   const restartScannerIfNeeded = useCallback(async () => {
     if (scanCountSinceRestartRef.current >= SCANNER_RESTART_THRESHOLD) {
@@ -1227,6 +1288,62 @@ const ScannerPage = () => {
                     )}
                   </div>
                 )}
+                
+                {/* Employee Manual Lookup */}
+                <Button 
+                  variant="outline" 
+                  className="w-full gap-2 border-violet-200 text-violet-600 hover:bg-violet-50 dark:border-violet-500/30 dark:text-violet-400 dark:hover:bg-violet-500/10"
+                  onClick={() => setShowEmployeeLookup(!showEmployeeLookup)}
+                >
+                  <Briefcase className="h-4 w-4" />
+                  {isArabic ? 'بحث موظف' : 'Employee Lookup'}
+                </Button>
+                
+                {showEmployeeLookup && (
+                  <div className="mt-3 space-y-3 p-3 rounded-xl bg-violet-50/50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-500/30">
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder={isArabic ? 'اسم الموظف أو البريد...' : 'Employee name or email...'} 
+                        value={employeeSearchQuery} 
+                        onChange={(e) => setEmployeeSearchQuery(e.target.value)} 
+                        onKeyDown={(e) => e.key === 'Enter' && handleEmployeeLookup()} 
+                        className="flex-1 border-violet-200 dark:border-violet-500/30" 
+                      />
+                      <Button 
+                        onClick={handleEmployeeLookup} 
+                        disabled={isSearchingEmployee}
+                        className="bg-violet-500 hover:bg-violet-600"
+                      >
+                        {isSearchingEmployee ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    
+                    {employeeSearchResults.length > 0 && (
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {employeeSearchResults.map((emp) => (
+                          <div 
+                            key={emp.id} 
+                            onClick={() => handleSelectEmployee(emp)}
+                            className={cn(
+                              'p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md',
+                              emp.is_active ? 'bg-violet-500/5 border-violet-500/20' : 'bg-destructive/5 border-destructive/20'
+                            )}
+                          >
+                            <div className="flex items-center justify-between rtl:flex-row-reverse">
+                              <div>
+                                <p className="font-medium">{emp.full_name}</p>
+                                <p className="text-xs text-muted-foreground">{getDepartmentLabel(emp.department)}</p>
+                              </div>
+                              <Badge className={emp.is_active ? 'bg-violet-500 text-white' : 'bg-destructive text-white'}>
+                                {emp.is_active ? (isArabic ? 'فعال' : 'Active') : (isArabic ? 'غير فعال' : 'Inactive')}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1335,13 +1452,13 @@ const ScannerPage = () => {
                   <div className="bg-violet-50 dark:bg-violet-900/20 rounded-xl p-4 space-y-3">
                     <p className="font-bold text-lg text-center">{selectedScanDetail.employeeName}</p>
                     
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground rtl:flex-row-reverse">
                       <Briefcase className="h-4 w-4" />
                       <span>{getDepartmentLabel(selectedScanDetail.employeeDepartment || 'general')}</span>
                     </div>
                     
                     {employeeDetails?.phone && (
-                      <a href={`tel:${employeeDetails.phone}`} className="flex items-center justify-center gap-2 text-primary hover:underline">
+                      <a href={`tel:${employeeDetails.phone}`} className="flex items-center justify-center gap-2 text-primary hover:underline rtl:flex-row-reverse">
                         <Phone className="h-4 w-4" />
                         <span dir="ltr">{employeeDetails.phone}</span>
                       </a>
@@ -1351,8 +1468,10 @@ const ScannerPage = () => {
                       <p className="text-center text-sm text-muted-foreground">{employeeDetails.email}</p>
                     )}
                     
-                    <p className="text-xs text-center text-muted-foreground">
-                      {isArabic ? 'وقت الدخول: ' : 'Entry Time: '}{selectedScanDetail.timestamp.toLocaleString()}
+                    <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1 rtl:flex-row-reverse">
+                      <Clock className="h-3 w-3" />
+                      <span>{isArabic ? 'وقت الدخول:' : 'Entry Time:'}</span>
+                      <span dir="ltr">{selectedScanDetail.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
                     </p>
                   </div>
                 </>
