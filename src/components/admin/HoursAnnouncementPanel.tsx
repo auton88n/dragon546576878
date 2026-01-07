@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, Users, Clock, AlertCircle, CheckCircle2, RotateCcw, ChevronDown, ChevronUp, Edit3, RefreshCw, Eye, X } from 'lucide-react';
+import { Mail, Users, Clock, AlertCircle, CheckCircle2, RotateCcw, ChevronDown, ChevronUp, Edit3, RefreshCw, Eye, X, User } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -25,6 +25,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -195,11 +203,17 @@ export const HoursAnnouncementPanel = () => {
   const [customContent, setCustomContent] = useState<CustomContent>(defaultContent);
   const [showPreview, setShowPreview] = useState(false);
   const [previewLanguage, setPreviewLanguage] = useState<'en' | 'ar'>('en');
+  const [previewCustomer, setPreviewCustomer] = useState<Customer | null>(null);
+  const [sendingProgress, setSendingProgress] = useState<{ current: number; total: number; currentCustomer: string | null }>({ current: 0, total: 0, currentCustomer: null });
+  const [isCancelled, setIsCancelled] = useState(false);
+
+  // Get preview customer name
+  const previewCustomerName = previewCustomer?.name || 'Test User';
 
   // Generate preview HTML
   const previewHtml = useMemo(() => {
-    return generateEmailPreview(previewLanguage, 'Test User', customContent);
-  }, [previewLanguage, customContent]);
+    return generateEmailPreview(previewLanguage, previewCustomerName, customContent);
+  }, [previewLanguage, previewCustomerName, customContent]);
 
   // Fetch unique customers on mount
   useEffect(() => {
@@ -272,25 +286,77 @@ export const HoursAnnouncementPanel = () => {
   const handleSendToAll = async () => {
     setShowConfirmDialog(false);
     setIsSendingAll(true);
+    setIsCancelled(false);
+    setSendingProgress({ current: 0, total: customers.length, currentCustomer: null });
+
+    let successCount = 0;
+    let failCount = 0;
+
     try {
-      const { data, error } = await supabase.functions.invoke('send-hours-announcement', {
-        body: { sendToAll: true, customContent },
-      });
+      for (let i = 0; i < customers.length; i++) {
+        // Check if cancelled
+        if (isCancelled) {
+          toast.info(isArabic ? 'تم إلغاء الإرسال' : 'Sending cancelled');
+          break;
+        }
 
-      if (error) throw error;
+        const customer = customers[i];
+        setSendingProgress({ 
+          current: i + 1, 
+          total: customers.length, 
+          currentCustomer: customer.name 
+        });
 
-      if (data?.success) {
-        toast.success(data.message || (isArabic ? 'تم إرسال الإعلان للجميع' : 'Announcement sent to all customers'));
+        try {
+          const { data, error } = await supabase.functions.invoke('send-hours-announcement', {
+            body: { 
+              singleEmail: {
+                email: customer.email,
+                name: customer.name,
+                language: customer.language
+              },
+              customContent 
+            },
+          });
+
+          if (error || !data?.success) {
+            console.error(`Failed to send to ${customer.email}:`, error || data?.error);
+            failCount++;
+          } else {
+            successCount++;
+          }
+
+          // Small delay between emails
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } catch (err) {
+          console.error(`Error sending to ${customer.email}:`, err);
+          failCount++;
+        }
+      }
+
+      if (!isCancelled) {
+        const message = isArabic 
+          ? `تم الإرسال: ${successCount} ناجح، ${failCount} فشل`
+          : `Sent: ${successCount} successful, ${failCount} failed`;
+        
+        if (failCount === 0) {
+          toast.success(message);
+        } else {
+          toast.warning(message);
+        }
         setAllSent(true);
-      } else {
-        throw new Error(data?.error || 'Failed to send announcement');
       }
     } catch (error) {
       console.error('Error sending announcement:', error);
       toast.error(isArabic ? 'فشل إرسال الإعلان' : 'Failed to send announcement');
     } finally {
       setIsSendingAll(false);
+      setSendingProgress({ current: 0, total: 0, currentCustomer: null });
     }
+  };
+
+  const handleCancelSending = () => {
+    setIsCancelled(true);
   };
 
   const handleResetContent = () => {
@@ -570,6 +636,32 @@ export const HoursAnnouncementPanel = () => {
               </Collapsible>
             )}
 
+            {/* Progress Indicator */}
+            {isSendingAll && sendingProgress.total > 0 && (
+              <div className="space-y-3 p-4 border rounded-lg bg-amber-50">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">
+                    {isArabic 
+                      ? `جاري الإرسال ${sendingProgress.current} من ${sendingProgress.total}...`
+                      : `Sending ${sendingProgress.current} of ${sendingProgress.total}...`}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {Math.round((sendingProgress.current / sendingProgress.total) * 100)}%
+                  </span>
+                </div>
+                <Progress value={(sendingProgress.current / sendingProgress.total) * 100} className="h-2" />
+                {sendingProgress.currentCustomer && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {isArabic ? 'الحالي:' : 'Current:'} {sendingProgress.currentCustomer}
+                  </p>
+                )}
+                <Button variant="outline" size="sm" onClick={handleCancelSending} className="w-full">
+                  <X className="h-4 w-4 me-2" />
+                  {isArabic ? 'إلغاء' : 'Cancel'}
+                </Button>
+              </div>
+            )}
+
             <Button
               onClick={() => setShowConfirmDialog(true)}
               disabled={!testSent || isSendingAll || allSent}
@@ -603,6 +695,34 @@ export const HoursAnnouncementPanel = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 py-4">
+            {/* Customer Selector */}
+            <div className="flex items-center gap-3 mb-4">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">{isArabic ? 'معاينة باسم:' : 'Preview as:'}</span>
+              <Select
+                value={previewCustomer?.email || 'default'}
+                onValueChange={(value) => {
+                  if (value === 'default') {
+                    setPreviewCustomer(null);
+                  } else {
+                    const customer = customers.find(c => c.email === value);
+                    setPreviewCustomer(customer || null);
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Test User" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Test User</SelectItem>
+                  {customers.slice(0, 10).map((customer) => (
+                    <SelectItem key={customer.email} value={customer.email}>
+                      {customer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Tabs value={previewLanguage} onValueChange={(v) => setPreviewLanguage(v as 'en' | 'ar')}>
               <TabsList className="mb-4">
                 <TabsTrigger value="en">English</TabsTrigger>
