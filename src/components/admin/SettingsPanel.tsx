@@ -404,6 +404,11 @@ const SettingsPanel = () => {
             <HoursAnnouncementPanel />
           </TabsContent>
 
+          {/* VIP Outreach Tab */}
+          <TabsContent value="vip" className="space-y-6 mt-0">
+            <VIPOutreachPanel />
+          </TabsContent>
+
           {/* Developer Tab */}
           <TabsContent value="developer" className="space-y-6 mt-0">
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-4">
