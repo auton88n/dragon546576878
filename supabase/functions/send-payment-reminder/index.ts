@@ -20,12 +20,16 @@ const generateReminderTemplate = (booking: any, isArabic: boolean, paymentUrl: s
   const textAlign = isArabic ? "right" : "left";
 
   const visitDate = new Date(booking.visit_date);
-  const formattedDate = visitDate.toLocaleDateString(isArabic ? 'ar-SA' : 'en-US', {
+  const formattedDate = visitDate.toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    calendar: 'gregory',
   });
+  
+  // Remove seconds from time (09:00:00 -> 09:00)
+  const formattedTime = booking.visit_time?.slice(0, 5) || booking.visit_time;
 
   const translations = {
     subject: isArabic ? "تذكير ودي لإتمام حجزك" : "Complete Your Reservation",
@@ -104,10 +108,10 @@ const generateReminderTemplate = (booking: any, isArabic: boolean, paymentUrl: s
                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                       <tr>
                         <td style="padding: 10px 0; border-bottom: 1px solid #E8DED0;">
-                          <p style="color: #8B7355; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; text-align: ${textAlign};">
+                          <p style="color: #5C4A3A; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; text-align: ${textAlign};">
                             ${translations.bookingRef}
                           </p>
-                          <p style="color: #3D2E1F; font-size: 22px; font-weight: 700; margin: 0; font-family: 'Courier New', monospace; letter-spacing: 2px; text-align: ${textAlign};">
+                          <p style="color: #3D2E1F !important; font-size: 22px; font-weight: 700; margin: 0; font-family: 'Courier New', monospace; letter-spacing: 2px; text-align: ${textAlign};">
                             ${booking.booking_reference}
                           </p>
                         </td>
@@ -117,19 +121,19 @@ const generateReminderTemplate = (booking: any, isArabic: boolean, paymentUrl: s
                           <table cellpadding="0" cellspacing="0" border="0" width="100%">
                             <tr>
                               <td width="50%" style="text-align: ${textAlign}; padding-${isArabic ? 'left' : 'right'}: 10px;">
-                                <p style="color: #8B7355; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px;">
+                                <p style="color: #5C4A3A; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px;">
                                   ${translations.visitDate}
                                 </p>
-                                <p style="color: #3D2E1F; font-size: 15px; font-weight: 600; margin: 0;">
+                                <p style="color: #3D2E1F !important; font-size: 15px; font-weight: 600; margin: 0;">
                                   ${formattedDate}
                                 </p>
                               </td>
                               <td width="50%" style="text-align: ${textAlign}; padding-${isArabic ? 'right' : 'left'}: 10px;">
-                                <p style="color: #8B7355; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px;">
+                                <p style="color: #5C4A3A; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px;">
                                   ${translations.visitTime}
                                 </p>
-                                <p style="color: #3D2E1F; font-size: 15px; font-weight: 600; margin: 0;">
-                                  ${booking.visit_time}
+                                <p style="color: #3D2E1F !important; font-size: 15px; font-weight: 600; margin: 0;">
+                                  ${formattedTime}
                                 </p>
                               </td>
                             </tr>
@@ -138,11 +142,11 @@ const generateReminderTemplate = (booking: any, isArabic: boolean, paymentUrl: s
                       </tr>
                       <tr>
                         <td style="padding: 15px 0 5px 0;">
-                          <p style="color: #8B7355; font-size: 12px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px; text-align: ${textAlign};">
+                          <p style="color: #5C4A3A; font-size: 12px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px; text-align: ${textAlign};">
                             ${translations.amountDue}
                           </p>
-                          <p style="color: #5C4A3A; font-size: 32px; font-weight: 800; margin: 0; text-align: ${textAlign};">
-                            ${booking.total_amount} <span style="font-size: 16px; font-weight: 600; color: #8B7355;">SAR</span>
+                          <p style="color: #3D2E1F !important; font-size: 32px; font-weight: 800; margin: 0; text-align: ${textAlign};">
+                            ${booking.total_amount} <span style="font-size: 16px; font-weight: 600; color: #5C4A3A;">SAR</span>
                           </p>
                         </td>
                       </tr>
