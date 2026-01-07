@@ -86,8 +86,8 @@ export function useChatbot() {
         ar: "للتذاكر ورموز QR:\n\n• تحقق من بريدك الإلكتروني للتأكيد\n• اذهب إلى 'تذاكري' وأدخل بريدك\n• حمّل أو التقط صورة لرمز QR\n• أظهر الرمز عند المدخل\n\nلم تجد تذكرتك؟"
       },
       hoursInfo: {
-        en: "⏰ Operating Hours:\n\n📅 Saturday - Thursday: 9:00 AM - 6:00 PM\n🕌 Friday: Closed\n\n⏳ Time slots are available every hour from 9 AM to 5 PM (last entry)",
-        ar: "⏰ ساعات العمل:\n\n📅 السبت - الخميس: ٩:٠٠ صباحاً - ٦:٠٠ مساءً\n🕌 الجمعة: مغلق\n\n⏳ الفترات متاحة كل ساعة من ٩ صباحاً إلى ٥ مساءً (آخر دخول)"
+        en: "⏰ Operating Hours:\n\n📅 Open Daily (including Fridays)\n🕒 3:00 PM - 12:00 AM (Midnight)\n\n⏳ Tickets are valid all day during operating hours",
+        ar: "⏰ ساعات العمل:\n\n📅 مفتوح يومياً (بما في ذلك الجمعة)\n🕒 ٣:٠٠ مساءً - ١٢:٠٠ منتصف الليل\n\n⏳ التذاكر صالحة طوال اليوم خلال ساعات العمل"
       },
       locationInfo: {
         en: "📍 Location:\n\nSouq Almufaijer Heritage Site\nAlmufaijer, Saudi Arabia\n\n📞 Phone: +966 50 101 8811\n📧 Email: info@almufaijer.com\n\nFind us on Google Maps for directions!",
