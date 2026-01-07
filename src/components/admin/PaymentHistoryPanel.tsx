@@ -55,6 +55,13 @@ const PaymentHistoryPanel = memo(({ bookingId }: PaymentHistoryPanelProps) => {
         labelAr: 'فشل الدفع', 
         labelEn: 'Payment Failed' 
       },
+      client_failure: { 
+        icon: XCircle, 
+        color: 'text-orange-600', 
+        bgColor: 'bg-orange-500/20',
+        labelAr: 'رفض من البنك', 
+        labelEn: 'Bank Declined' 
+      },
       manual_update: { 
         icon: User, 
         color: 'text-blue-600', 
@@ -186,10 +193,28 @@ const PaymentHistoryPanel = memo(({ bookingId }: PaymentHistoryPanelProps) => {
                     {log.changer_name}
                   </p>
                 )}
+                {/* Show error details for failures */}
                 {log.error_message && (
                   <p className="text-red-600 text-xs bg-red-500/10 rounded px-2 py-1 mt-1">
                     {log.error_message}
                   </p>
+                )}
+                {/* Show metadata details for client-side failures */}
+                {log.event_type === 'failure' && log.metadata && (
+                  <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                    {(log.metadata as Record<string, unknown>)?.error_code && (
+                      <p>
+                        <span className="font-medium">{isArabic ? 'رمز الخطأ:' : 'Error Code:'}</span>{' '}
+                        {String((log.metadata as Record<string, unknown>).error_code)}
+                      </p>
+                    )}
+                    {(log.metadata as Record<string, unknown>)?.error_type && (
+                      <p>
+                        <span className="font-medium">{isArabic ? 'نوع الخطأ:' : 'Error Type:'}</span>{' '}
+                        {String((log.metadata as Record<string, unknown>).error_type)}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

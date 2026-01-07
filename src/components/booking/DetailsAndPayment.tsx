@@ -118,6 +118,51 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
       callbackUrl 
     });
 
+    // Error code to user-friendly message mapping
+    const getErrorMessage = (errorType?: string, errorCode?: string, errorMessage?: string): string => {
+      const errorMessages: Record<string, { en: string; ar: string }> = {
+        rejected: { en: 'Card was declined by your bank', ar: 'تم رفض البطاقة من قبل البنك' },
+        insufficient_funds: { en: 'Insufficient funds', ar: 'رصيد غير كافٍ' },
+        expired_card: { en: 'Card has expired', ar: 'البطاقة منتهية الصلاحية' },
+        invalid_card: { en: 'Invalid card details', ar: 'تفاصيل البطاقة غير صحيحة' },
+        processing_error: { en: 'Payment processing error. Please try again.', ar: 'خطأ في معالجة الدفع. يرجى المحاولة مرة أخرى.' },
+        '3ds_failed': { en: '3D Secure verification failed', ar: 'فشل التحقق الأمني' },
+        cancelled: { en: 'Payment was cancelled', ar: 'تم إلغاء الدفع' },
+        timeout: { en: 'Payment timed out. Please try again.', ar: 'انتهت مهلة الدفع. يرجى المحاولة مرة أخرى.' },
+        network_error: { en: 'Network error. Check your connection.', ar: 'خطأ في الشبكة. تحقق من اتصالك.' },
+      };
+      
+      const key = errorCode || errorType || '';
+      const mapped = errorMessages[key.toLowerCase()];
+      if (mapped) return isArabic ? mapped.ar : mapped.en;
+      
+      return errorMessage || (isArabic ? 'حدث خطأ في عملية الدفع' : 'An error occurred during payment');
+    };
+
+    // Log payment failure to server
+    const logFailureToServer = async (error: any) => {
+      try {
+        await supabase.functions.invoke('log-payment-failure', {
+          body: {
+            bookingId,
+            errorType: error?.type,
+            errorCode: error?.code,
+            errorMessage: error?.message,
+            paymentId: error?.id,
+            paymentMethod: error?.source?.type,
+            amount: amountInHalalas / 100,
+            metadata: {
+              browser: navigator.userAgent,
+              language: navigator.language,
+              timestamp: new Date().toISOString(),
+            },
+          },
+        });
+      } catch (logError) {
+        console.error('Failed to log payment failure:', logError);
+      }
+    };
+
     try {
       window.Moyasar.init({
         element: '.moyasar-form',
@@ -126,24 +171,32 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         description: `Souq Almufaijer Ticket - ${bookingReference}`,
         publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
         callback_url: callbackUrl,
-        methods: ['creditcard'], // Apple Pay disabled temporarily - verification file serving issue
+        methods: ['creditcard'],
         supported_networks: ['visa', 'mastercard', 'mada', 'amex'],
         language: isArabic ? 'ar' : 'en',
         fixed_width: true,
+        on_initiating: () => {
+          console.log('Payment form initiating for booking:', bookingId);
+        },
         on_completed: (payment: MoyasarPayment) => {
           console.log('Payment completed:', payment.id, payment.status);
-          // The callback_url will handle verification
         },
-        on_failure: (error: any) => {
+        on_failure: async (error: any) => {
           console.error('Payment failed:', {
             type: error?.type,
             message: error?.message,
             code: error?.code,
             full_error: JSON.stringify(error, null, 2)
           });
+          
+          // Log to server for analytics
+          await logFailureToServer(error);
+          
+          // Show user-friendly error message
+          const userMessage = getErrorMessage(error?.type, error?.code, error?.message);
           toast({
             title: isArabic ? 'فشل الدفع' : 'Payment Failed',
-            description: `${error?.type || 'Error'}: ${error?.message || (isArabic ? 'حدث خطأ في عملية الدفع' : 'An error occurred during payment')}`,
+            description: userMessage,
             variant: 'destructive',
           });
         },

@@ -21,6 +21,11 @@ export interface PaymentStatusStats {
   failed: number;
 }
 
+export interface DeclineReasonStats {
+  reason: string;
+  count: number;
+}
+
 export interface ReportData {
   dailyStats: DailyStats[];
   totalRevenue: number;
@@ -29,6 +34,7 @@ export interface ReportData {
   averageBookingValue: number;
   paymentMethods: PaymentMethodStats[];
   paymentStatus: PaymentStatusStats;
+  declineReasons: DeclineReasonStats[];
 }
 
 export const useReportData = (days: number = 30) => {
@@ -40,6 +46,7 @@ export const useReportData = (days: number = 30) => {
     averageBookingValue: 0,
     paymentMethods: [],
     paymentStatus: { completed: 0, pending: 0, failed: 0 },
+    declineReasons: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -66,6 +73,15 @@ export const useReportData = (days: number = 30) => {
         .gte('created_at', startDate);
 
       if (allError) throw allError;
+
+      // Fetch payment failure logs for decline reasons
+      const { data: failureLogs, error: logsError } = await supabase
+        .from('payment_logs')
+        .select('metadata, error_message')
+        .eq('event_type', 'failure')
+        .gte('created_at', startDate);
+
+      if (logsError) console.warn('Could not fetch payment logs:', logsError);
 
       // Group by date
       const dailyMap = new Map<string, DailyStats>();
@@ -113,6 +129,20 @@ export const useReportData = (days: number = 30) => {
         else if (booking.payment_status === 'failed') paymentStatus.failed++;
       });
 
+      // Calculate decline reasons from payment logs
+      const declineMap = new Map<string, number>();
+      failureLogs?.forEach((log) => {
+        const metadata = log.metadata as Record<string, unknown> | null;
+        const errorType = metadata?.error_type as string || 'unknown';
+        const errorCode = metadata?.error_code as string || '';
+        const reason = errorCode || errorType || 'unknown';
+        declineMap.set(reason, (declineMap.get(reason) || 0) + 1);
+      });
+
+      const declineReasons: DeclineReasonStats[] = Array.from(declineMap.entries())
+        .map(([reason, count]) => ({ reason, count }))
+        .sort((a, b) => b.count - a.count);
+
       const paymentMethods: PaymentMethodStats[] = Array.from(methodMap.entries()).map(([method, stats]) => ({
         method,
         count: stats.count,
@@ -130,6 +160,7 @@ export const useReportData = (days: number = 30) => {
         averageBookingValue,
         paymentMethods,
         paymentStatus,
+        declineReasons,
       });
     } catch (error) {
       console.error('Error fetching report data:', error);
