@@ -8,17 +8,64 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface CustomContent {
+  subjectEn?: string;
+  subjectAr?: string;
+  messageEn?: string;
+  messageAr?: string;
+  daysEn?: string;
+  daysAr?: string;
+  hoursEn?: string;
+  hoursAr?: string;
+  closingEn?: string;
+  closingAr?: string;
+}
+
 interface AnnouncementRequest {
   testEmail?: string;
   sendToAll?: boolean;
+  customContent?: CustomContent;
 }
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const generateEmailTemplate = (language: string, customerName: string): string => {
+// Default content values
+const defaultContent = {
+  subjectEn: 'Operating Hours Update - Souq Almufaijer',
+  subjectAr: 'تحديث ساعات العمل - سوق المفيجر',
+  messageEn: 'We would like to inform you about our operating hours at Souq Almufaijer Heritage Site:',
+  messageAr: 'نود إعلامكم بساعات العمل في موقع سوق المفيجر التراثي:',
+  daysEn: 'Open Daily (Including Fridays)',
+  daysAr: 'مفتوح يومياً (بما في ذلك الجمعة)',
+  hoursEn: '3:00 PM - 12:00 AM (Midnight)',
+  hoursAr: '٣:٠٠ م - ١٢:٠٠ ص (منتصف الليل)',
+  closingEn: 'Your tickets are valid anytime during these hours on your selected visit date.',
+  closingAr: 'تذاكركم صالحة في أي وقت خلال هذه الساعات في تاريخ زيارتكم المحدد.',
+};
+
+const generateEmailTemplate = (language: string, customerName: string, custom?: CustomContent): string => {
   const isArabic = language === 'ar';
   const dir = isArabic ? 'rtl' : 'ltr';
+  
+  // Merge custom content with defaults
+  const content = {
+    subject: isArabic ? (custom?.subjectAr || defaultContent.subjectAr) : (custom?.subjectEn || defaultContent.subjectEn),
+    message: isArabic ? (custom?.messageAr || defaultContent.messageAr) : (custom?.messageEn || defaultContent.messageEn),
+    days: isArabic ? (custom?.daysAr || defaultContent.daysAr) : (custom?.daysEn || defaultContent.daysEn),
+    hours: isArabic ? (custom?.hoursAr || defaultContent.hoursAr) : (custom?.hoursEn || defaultContent.hoursEn),
+    closing: isArabic ? (custom?.closingAr || defaultContent.closingAr) : (custom?.closingEn || defaultContent.closingEn),
+  };
+
+  // Split days text into main and subtitle if it contains parentheses
+  const daysMatch = content.days.match(/^([^(]+)(\(.+\))?$/);
+  const daysMain = daysMatch?.[1]?.trim() || content.days;
+  const daysSub = daysMatch?.[2]?.trim() || '';
+
+  // Split hours text into main and subtitle if it contains parentheses
+  const hoursMatch = content.hours.match(/^([^(]+)(\(.+\))?$/);
+  const hoursMain = hoursMatch?.[1]?.trim() || content.hours;
+  const hoursSub = hoursMatch?.[2]?.trim() || '';
   
   return `
 <!DOCTYPE html>
@@ -26,7 +73,7 @@ const generateEmailTemplate = (language: string, customerName: string): string =
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${isArabic ? 'تحديث ساعات العمل - سوق المفيجر' : 'Operating Hours Update - Souq Almufaijer'}</title>
+  <title>${content.subject}</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F5F1E8; direction: ${dir};">
   <table role="presentation" style="width: 100%; border-collapse: collapse;">
@@ -53,9 +100,7 @@ const generateEmailTemplate = (language: string, customerName: string): string =
               </p>
               
               <p style="color: #5C4A32; font-size: 16px; margin: 0 0 30px 0; line-height: 1.7;">
-                ${isArabic 
-                  ? 'نود إعلامكم بساعات العمل في موقع سوق المفيجر التراثي:'
-                  : 'We would like to inform you about our operating hours at Souq Almufaijer Heritage Site:'}
+                ${content.message}
               </p>
               
               <!-- Hours Box -->
@@ -64,30 +109,24 @@ const generateEmailTemplate = (language: string, customerName: string): string =
                   <td style="padding: 30px; text-align: center;">
                     <div style="margin-bottom: 16px;">
                       <span style="font-size: 28px;">📅</span>
-                      <p style="color: #1a1a1a; font-size: 18px; font-weight: 700; margin: 8px 0 0 0;">
-                        ${isArabic ? 'مفتوح يومياً' : 'Open Daily'}
+                      <p style="color: #000000; font-size: 22px; font-weight: 800; margin: 8px 0 0 0;">
+                        ${daysMain}
                       </p>
-                      <p style="color: #444444; font-size: 14px; margin: 4px 0 0 0;">
-                        ${isArabic ? '(بما في ذلك الجمعة)' : '(Including Fridays)'}
-                      </p>
+                      ${daysSub ? `<p style="color: #333333; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">${daysSub}</p>` : ''}
                     </div>
                     <div style="border-top: 1px solid #D4C5B0; padding-top: 16px;">
                       <span style="font-size: 28px;">⏰</span>
-                      <p style="color: #000000; font-size: 26px; font-weight: 800; margin: 8px 0 0 0;">
-                        ${isArabic ? '٣:٠٠ م - ١٢:٠٠ ص' : '3:00 PM - 12:00 AM'}
+                      <p style="color: #000000; font-size: 32px; font-weight: 800; margin: 8px 0 0 0;">
+                        ${hoursMain}
                       </p>
-                      <p style="color: #444444; font-size: 14px; margin: 4px 0 0 0;">
-                        ${isArabic ? '(منتصف الليل)' : '(Midnight)'}
-                      </p>
+                      ${hoursSub ? `<p style="color: #333333; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">${hoursSub}</p>` : ''}
                     </div>
                   </td>
                 </tr>
               </table>
               
               <p style="color: #5C4A32; font-size: 16px; margin: 0 0 24px 0; line-height: 1.7;">
-                ${isArabic 
-                  ? 'تذاكركم صالحة في أي وقت خلال هذه الساعات في تاريخ زيارتكم المحدد.'
-                  : 'Your tickets are valid anytime during these hours on your selected visit date.'}
+                ${content.closing}
               </p>
               
               <p style="color: #5C4A32; font-size: 16px; margin: 0 0 8px 0; line-height: 1.7;">
@@ -137,20 +176,23 @@ const handler = async (req: Request): Promise<Response> => {
     const resend = new Resend(resendApiKey);
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { testEmail, sendToAll }: AnnouncementRequest = await req.json();
+    const { testEmail, sendToAll, customContent }: AnnouncementRequest = await req.json();
 
-    console.log("Announcement request:", { testEmail, sendToAll });
+    console.log("Announcement request:", { testEmail, sendToAll, hasCustomContent: !!customContent });
 
     if (testEmail) {
       // Send test email
       console.log("Sending test email to:", testEmail);
       
-      const html = generateEmailTemplate('en', 'Test User');
+      const html = generateEmailTemplate('en', 'Test User', customContent);
+      const subject = customContent?.subjectEn 
+        ? `${customContent.subjectEn} | ${customContent.subjectAr || defaultContent.subjectAr}`
+        : "Operating Hours Update - Souq Almufaijer | تحديث ساعات العمل - سوق المفيجر";
       
       const { data, error } = await resend.emails.send({
         from: "Souq Almufaijer <info@almufaijer.com>",
         to: [testEmail],
-        subject: "Operating Hours Update - Souq Almufaijer | تحديث ساعات العمل - سوق المفيجر",
+        subject: subject,
         html: html,
       });
 
@@ -201,14 +243,15 @@ const handler = async (req: Request): Promise<Response> => {
 
       for (const [email, customer] of uniqueCustomers) {
         try {
-          const html = generateEmailTemplate(customer.language, customer.name);
+          const html = generateEmailTemplate(customer.language, customer.name, customContent);
+          const subject = customer.language === 'ar' 
+            ? (customContent?.subjectAr || defaultContent.subjectAr)
+            : (customContent?.subjectEn || defaultContent.subjectEn);
           
           const { data, error } = await resend.emails.send({
             from: "Souq Almufaijer <info@almufaijer.com>",
             to: [email],
-            subject: customer.language === 'ar' 
-              ? "تحديث ساعات العمل - سوق المفيجر" 
-              : "Operating Hours Update - Souq Almufaijer",
+            subject: subject,
             html: html,
           });
 
