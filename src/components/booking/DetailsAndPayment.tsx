@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Phone, Calendar, Clock, CheckCircle, Sparkles, FileText } from 'lucide-react';
+import { User, Mail, Phone, Calendar, CheckCircle, CreditCard, FileText, Shield, Lock } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
+import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,11 +19,15 @@ import {
 } from '@/components/ui/form';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import type { MoyasarPayment } from '@/types/moyasar.d';
 
 interface DetailsAndPaymentProps {
-  onPaymentComplete: (paymentId: string) => void;
+  onPaymentComplete: (bookingId: string) => void;
   isProcessing: boolean;
 }
+
+const MOYASAR_PUBLISHABLE_KEY = 'pk_live_Z4WZcnyWGhaDva7QgnBdb53DWzokQmiCATjFmST2';
 
 const createFormSchema = (isArabic: boolean) => z.object({
   name: z.string()
@@ -40,7 +45,22 @@ type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymentProps) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { customerInfo, setCustomerInfo, totalAmount } = useBookingStore();
+  const { toast } = useToast();
+  const { 
+    customerInfo, 
+    setCustomerInfo, 
+    totalAmount,
+    tickets,
+    pricing,
+    visitDate,
+  } = useBookingStore();
+
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
+  const moyasarInitialized = useRef(false);
+  const paymentFormRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(createFormSchema(isArabic)),
@@ -53,7 +73,6 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
   });
 
   const { formState: { errors, isValid } } = form;
-  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     const subscription = form.watch((values) => {
@@ -66,14 +85,118 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     return () => subscription.unsubscribe();
   }, [form, setCustomerInfo]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Initialize Moyasar payment form
+  const initializeMoyasar = useCallback((bookingId: string, bookingReference: string) => {
+    if (moyasarInitialized.current || !window.Moyasar) {
+      console.error('Moyasar SDK not loaded or already initialized');
+      return;
+    }
+
+    const amountInHalalas = Math.round(totalAmount * 100);
+    const callbackUrl = `${window.location.origin}/payment-callback?booking=${bookingId}`;
+
+    console.log('Initializing Moyasar with:', { 
+      amount: amountInHalalas, 
+      bookingId, 
+      callbackUrl 
+    });
+
+    try {
+      window.Moyasar.init({
+        element: '.moyasar-form',
+        amount: amountInHalalas,
+        currency: 'SAR',
+        description: `Souq Almufaijer Ticket - ${bookingReference}`,
+        publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
+        callback_url: callbackUrl,
+        methods: ['creditcard', 'applepay'],
+        apple_pay: {
+          country: 'SA',
+          label: 'سوق المفيجر',
+          validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
+        },
+        supported_networks: ['visa', 'mastercard', 'mada', 'amex'],
+        language: isArabic ? 'ar' : 'en',
+        fixed_width: true,
+        on_completed: (payment: MoyasarPayment) => {
+          console.log('Payment completed:', payment.id, payment.status);
+          // The callback_url will handle verification
+        },
+        on_failure: (error) => {
+          console.error('Payment failed:', error);
+          toast({
+            title: isArabic ? 'فشل الدفع' : 'Payment Failed',
+            description: error.message || (isArabic ? 'حدث خطأ في عملية الدفع' : 'An error occurred during payment'),
+            variant: 'destructive',
+          });
+        },
+      });
+
+      moyasarInitialized.current = true;
+    } catch (error) {
+      console.error('Failed to initialize Moyasar:', error);
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل في تهيئة نظام الدفع' : 'Failed to initialize payment system',
+        variant: 'destructive',
+      });
+    }
+  }, [totalAmount, isArabic, toast]);
+
+  // Create booking and show payment form
+  const handleProceedToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || !termsAccepted) return;
-    // No payment - just confirm booking
-    onPaymentComplete('PENDING');
+    if (!isValid || !termsAccepted || isCreatingBooking) return;
+
+    setIsCreatingBooking(true);
+
+    try {
+      // Create booking first (with pending payment status)
+      const { data, error } = await supabase.functions.invoke('create-booking', {
+        body: {
+          customerName: customerInfo.name,
+          customerEmail: customerInfo.email,
+          customerPhone: customerInfo.phone,
+          specialRequests: customerInfo.specialRequests || null,
+          visitDate: visitDate!,
+          visitTime: '09:00',
+          adultCount: tickets.adult,
+          childCount: tickets.child,
+          adultPrice: pricing.adult,
+          childPrice: pricing.child,
+          totalAmount: totalAmount,
+          language: currentLanguage,
+        }
+      });
+
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || 'Failed to create booking');
+      }
+
+      console.log('Booking created:', data.bookingId);
+      setPendingBookingId(data.bookingId);
+      setShowPaymentForm(true);
+
+      // Wait for DOM to update, then initialize Moyasar
+      setTimeout(() => {
+        initializeMoyasar(data.bookingId, data.bookingReference);
+      }, 100);
+
+    } catch (error) {
+      console.error('Booking creation error:', error);
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic 
+          ? 'حدث خطأ أثناء إنشاء الحجز. يرجى المحاولة مرة أخرى.'
+          : 'An error occurred while creating your booking. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCreatingBooking(false);
+    }
   };
 
-  const canSubmit = isValid && termsAccepted && !isProcessing;
+  const canSubmit = isValid && termsAccepted && !isCreatingBooking && !showPaymentForm;
 
   return (
     <div className="space-y-8">
@@ -101,6 +224,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
                         {...field}
                         placeholder={isArabic ? 'أدخل اسمك' : 'Enter your name'}
                         className="pl-11 rtl:pr-11 rtl:pl-4 h-12 rounded-xl border-2 focus:border-accent transition-all"
+                        disabled={showPaymentForm}
                       />
                     </div>
                   </FormControl>
@@ -126,6 +250,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
                         placeholder="example@email.com"
                         className="pl-11 rtl:pr-11 rtl:pl-4 h-12 rounded-xl border-2 focus:border-accent transition-all"
                         dir="ltr"
+                        disabled={showPaymentForm}
                       />
                     </div>
                   </FormControl>
@@ -151,6 +276,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
                         placeholder="+966501234567"
                         className="pl-11 rtl:pr-11 rtl:pl-4 h-12 rounded-xl border-2 focus:border-accent font-mono transition-all"
                         dir="ltr"
+                        disabled={showPaymentForm}
                       />
                     </div>
                   </FormControl>
@@ -162,95 +288,99 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         </Form>
       </div>
 
-      {/* Pending Payment Notice */}
+      {/* Payment Section */}
       <div className="space-y-5">
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
           <span className="w-8 h-8 rounded-full gradient-gold text-foreground text-sm flex items-center justify-center font-bold glow-gold">2</span>
-          {isArabic ? 'تأكيد الحجز' : 'Confirm Reservation'}
+          {isArabic ? 'الدفع' : 'Payment'}
         </h3>
 
-        <div className="p-5 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
-          <div className="flex items-center gap-3">
-            <Clock className="h-5 w-5 text-amber-600 shrink-0" />
-            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-              {isArabic 
-                ? 'سيتم إرسال رابط الدفع لاحقاً'
-                : 'Payment link will be sent later'}
-            </p>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {isArabic 
-              ? 'أكد حجزك الآن وسنرسل لك رابط الدفع عبر البريد الإلكتروني قريباً. حجزك محفوظ حتى يتم الدفع.'
-              : 'Confirm your reservation now and we will send you a payment link via email soon. Your booking is held until payment is completed.'}
-          </p>
-        </div>
+        {!showPaymentForm ? (
+          <form onSubmit={handleProceedToPayment} className="space-y-4">
+            {/* Terms Acceptance */}
+            <div className="p-4 bg-muted/50 border border-border rounded-xl">
+              <div className="flex items-start gap-3">
+                <Checkbox 
+                  id="terms" 
+                  checked={termsAccepted}
+                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                  className="mt-1"
+                />
+                <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
+                  <FileText className="inline h-4 w-4 text-accent mr-1 rtl:ml-1 rtl:mr-0" />
+                  {isArabic ? (
+                    <>
+                      لقد قرأت وأوافق على{' '}
+                      <Link to="/terms" target="_blank" className="text-accent hover:underline font-medium">
+                        سياسة الاستبدال والشروط
+                      </Link>
+                      {' '}(لا يوجد استرداد، استبدال التاريخ قبل 3 أيام فقط)
+                    </>
+                  ) : (
+                    <>
+                      I have read and agree to the{' '}
+                      <Link to="/terms" target="_blank" className="text-accent hover:underline font-medium">
+                        Exchange Policy & Terms
+                      </Link>
+                      {' '}(No refunds, date exchange 3 days before only)
+                    </>
+                  )}
+                </label>
+              </div>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Terms Acceptance */}
-          <div className="p-4 bg-muted/50 border border-border rounded-xl">
-            <div className="flex items-start gap-3">
-              <Checkbox 
-                id="terms" 
-                checked={termsAccepted}
-                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                className="mt-1"
-              />
-              <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
-                <FileText className="inline h-4 w-4 text-accent mr-1 rtl:ml-1 rtl:mr-0" />
-                {isArabic ? (
-                  <>
-                    لقد قرأت وأوافق على{' '}
-                    <Link to="/terms" target="_blank" className="text-accent hover:underline font-medium">
-                      سياسة الاستبدال والشروط
-                    </Link>
-                    {' '}(لا يوجد استرداد، استبدال التاريخ قبل 3 أيام فقط)
-                  </>
-                ) : (
-                  <>
-                    I have read and agree to the{' '}
-                    <Link to="/terms" target="_blank" className="text-accent hover:underline font-medium">
-                      Exchange Policy & Terms
-                    </Link>
-                    {' '}(No refunds, date exchange 3 days before only)
-                  </>
-                )}
-              </label>
+            {/* Amount Display */}
+            <div className="p-4 bg-accent/10 border border-accent/30 rounded-xl">
+              <div className="flex items-center justify-between">
+                <span className="text-foreground font-medium">
+                  {isArabic ? 'المبلغ الإجمالي' : 'Total Amount'}
+                </span>
+                <span className="text-2xl font-bold text-accent">
+                  {totalAmount} <span className="text-base">{isArabic ? 'ر.س' : 'SAR'}</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Proceed to Payment Button */}
+            <Button
+              type="submit"
+              size="lg"
+              className={cn(
+                'w-full h-14 text-lg rounded-xl transition-all duration-300',
+                canSubmit 
+                  ? 'btn-gold' 
+                  : 'bg-muted text-muted-foreground cursor-not-allowed'
+              )}
+              disabled={!canSubmit}
+            >
+              {isCreatingBooking ? (
+                <span className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                  {isArabic ? 'جاري التحضير...' : 'Preparing...'}
+                </span>
+              ) : (
+                <span className="flex items-center gap-3">
+                  <CreditCard className="h-5 w-5" />
+                  {isArabic ? 'المتابعة للدفع' : 'Proceed to Payment'}
+                </span>
+              )}
+            </Button>
+          </form>
+        ) : (
+          <div className="space-y-4">
+            {/* Moyasar Payment Form Container */}
+            <div 
+              ref={paymentFormRef}
+              className="moyasar-form rounded-xl overflow-hidden"
+            />
+
+            {/* Security Notice */}
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Lock className="h-3.5 w-3.5" />
+              <span>{isArabic ? 'دفع آمن عبر Moyasar' : 'Secure payment via Moyasar'}</span>
             </div>
           </div>
-
-          {/* Confirm Button */}
-          <Button
-            type="submit"
-            size="lg"
-            className={cn(
-              'w-full h-14 text-lg rounded-xl transition-all duration-300',
-              canSubmit 
-                ? 'btn-gold' 
-                : 'bg-muted text-muted-foreground cursor-not-allowed'
-            )}
-            disabled={!canSubmit}
-          >
-            {isProcessing ? (
-              <span className="flex items-center gap-3">
-                <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                {isArabic ? 'جاري المعالجة...' : 'Processing...'}
-              </span>
-            ) : (
-              <span className="flex items-center gap-3">
-                <Sparkles className="h-5 w-5" />
-                {isArabic ? 'تأكيد الحجز' : 'Confirm Booking'}
-              </span>
-            )}
-          </Button>
-
-          {/* Amount Display */}
-          <div className="mt-4 text-center">
-            <p className="text-sm text-muted-foreground">
-              {isArabic ? 'المبلغ المستحق:' : 'Amount due:'}{' '}
-              <span className="font-semibold text-accent">{totalAmount} {isArabic ? 'ر.س' : 'SAR'}</span>
-            </p>
-          </div>
-        </form>
+        )}
       </div>
 
       {/* Trust Badges */}
@@ -263,15 +393,15 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         </div>
         <div className="flex items-center gap-2 text-muted-foreground group">
           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110">
-            <Mail className="h-4 w-4 text-accent" />
+            <Shield className="h-4 w-4 text-accent" />
           </div>
-          <span className="text-xs font-medium">{isArabic ? 'تأكيد بريدي' : 'Email Confirm'}</span>
+          <span className="text-xs font-medium">{isArabic ? 'دفع آمن' : 'Secure'}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground group">
           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110">
             <CheckCircle className="h-4 w-4 text-accent" />
           </div>
-          <span className="text-xs font-medium">{isArabic ? 'محفوظ' : 'Reserved'}</span>
+          <span className="text-xs font-medium">{isArabic ? 'تأكيد فوري' : 'Confirmed'}</span>
         </div>
       </div>
     </div>

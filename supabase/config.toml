@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.track-email-open]
 verify_jwt = false
+
+[functions.verify-moyasar-payment]
+verify_jwt = false
