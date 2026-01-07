@@ -287,19 +287,24 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
         </div>
       </div>
 
-      {/* Amount + Email Status + Actions */}
+      {/* Amount + Email/Reminder Status + Actions */}
       <div className="flex items-center justify-between pt-2 border-t border-accent/10">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <span className="font-semibold text-accent">
             {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
           </span>
           {booking.confirmation_email_sent ? (
-            <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center" title={isArabic ? 'تم إرسال التأكيد' : 'Confirmation sent'}>
               <MailCheck className="h-3 w-3 text-emerald-600" />
             </div>
           ) : (
             <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
               <Mail className="h-3 w-3 text-muted-foreground" />
+            </div>
+          )}
+          {booking.reminder_email_sent && (
+            <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center" title={isArabic ? 'تم إرسال التذكير' : 'Reminder sent'}>
+              <Bell className="h-3 w-3 text-amber-600" />
             </div>
           )}
         </div>
@@ -414,6 +419,17 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
             <Mail className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
         )}
+      </TableCell>
+      <TableCell className="w-10 p-2 text-center">
+        {booking.reminder_email_sent ? (
+          <div className="w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto" title={isArabic ? 'تم إرسال التذكير' : 'Reminder Sent'}>
+            <Bell className="h-3.5 w-3.5 text-amber-600" />
+          </div>
+        ) : booking.payment_status === 'pending' ? (
+          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center mx-auto" title={isArabic ? 'لم يتم إرسال تذكير' : 'No reminder sent'}>
+            <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+          </div>
+        ) : null}
       </TableCell>
       <TableCell className="text-end">
         <DropdownMenu>
@@ -539,13 +555,14 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                     </TableHead>
                   )}
                   <TableHead className="w-[11%] text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Ref'}</TableHead>
-                  <TableHead className="w-[18%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-                  <TableHead className="w-[13%] text-accent font-semibold text-start">{isArabic ? 'التاريخ' : 'Date'}</TableHead>
-                  <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'الوقت' : 'Time'}</TableHead>
-                  <TableHead className="w-[6%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
-                  <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-                  <TableHead className="w-[14%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
-                  <TableHead className="w-10 text-accent font-semibold text-center">{isArabic ? '' : ''}</TableHead>
+                  <TableHead className="w-[17%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+                  <TableHead className="w-[12%] text-accent font-semibold text-start">{isArabic ? 'التاريخ' : 'Date'}</TableHead>
+                  <TableHead className="w-[7%] text-accent font-semibold text-start">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+                  <TableHead className="w-[5%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
+                  <TableHead className="w-[9%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                  <TableHead className="w-[13%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'البريد' : 'Email'}><Mail className="h-4 w-4 mx-auto" /></TableHead>
+                  <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'التذكير' : 'Reminder'}><Bell className="h-4 w-4 mx-auto" /></TableHead>
                   <TableHead className="w-10 text-end text-accent font-semibold">{isArabic ? '' : ''}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -584,13 +601,14 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                       </TableHead>
                     )}
                     <TableHead className="w-[11%] text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Ref'}</TableHead>
-                    <TableHead className="w-[18%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-                    <TableHead className="w-[13%] text-accent font-semibold text-start">{isArabic ? 'التاريخ' : 'Date'}</TableHead>
-                    <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'الوقت' : 'Time'}</TableHead>
-                    <TableHead className="w-[6%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
-                    <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-                    <TableHead className="w-[14%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
-                    <TableHead className="w-10 text-accent font-semibold text-center">{isArabic ? '' : ''}</TableHead>
+                    <TableHead className="w-[17%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+                    <TableHead className="w-[12%] text-accent font-semibold text-start">{isArabic ? 'التاريخ' : 'Date'}</TableHead>
+                    <TableHead className="w-[7%] text-accent font-semibold text-start">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+                    <TableHead className="w-[5%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
+                    <TableHead className="w-[9%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                    <TableHead className="w-[13%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                    <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'البريد' : 'Email'}><Mail className="h-4 w-4 mx-auto" /></TableHead>
+                    <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'التذكير' : 'Reminder'}><Bell className="h-4 w-4 mx-auto" /></TableHead>
                     <TableHead className="w-10 text-end text-accent font-semibold">{isArabic ? '' : ''}</TableHead>
                   </TableRow>
                 </TableHeader>
