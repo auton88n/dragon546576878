@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Users, Plus, Key, Edit2, Power, PowerOff, Eye, EyeOff, Loader2, Trash2, AlertTriangle, Upload, Mail, Send } from 'lucide-react';
+import { Users, Plus, Key, Edit2, Power, PowerOff, Eye, EyeOff, Loader2, Trash2, AlertTriangle, Upload, Mail, Send, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -13,6 +13,11 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogContent,
@@ -75,6 +80,7 @@ const StaffManager = () => {
   const [selectedForResend, setSelectedForResend] = useState<StaffMember | null>(null);
   const [resendPassword, setResendPassword] = useState('scan2024');
   const [isResending, setIsResending] = useState(false);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
 
   // Form states
   const [newStaff, setNewStaff] = useState({
@@ -379,6 +385,7 @@ const StaffManager = () => {
   const openResendDialog = (member: StaffMember) => {
     setSelectedForResend(member);
     setResendPassword('scan2024');
+    setShowEmailPreview(false);
     setResendDialogOpen(true);
   };
 
@@ -420,6 +427,17 @@ const StaffManager = () => {
     setResendDialogOpen(false);
     setSelectedForResend(null);
     setResendPassword('scan2024');
+    setShowEmailPreview(false);
+  };
+
+  const getRoleLabel = (role: string): string => {
+    const labels: Record<string, { ar: string; en: string }> = {
+      scanner: { ar: 'ماسح تذاكر', en: 'Scanner' },
+      manager: { ar: 'مشرف', en: 'Manager' },
+      support: { ar: 'دعم العملاء', en: 'Support' },
+      admin: { ar: 'مدير', en: 'Admin' },
+    };
+    return labels[role]?.[isArabic ? 'ar' : 'en'] || role;
   };
 
   const getRoleBadge = (role: string) => {
