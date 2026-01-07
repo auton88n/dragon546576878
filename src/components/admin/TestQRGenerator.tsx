@@ -75,7 +75,7 @@ const TestQRGenerator = () => {
           customer_email: 'test@almufaijer.com',
           customer_phone: '+966500000000',
           visit_date: visitDate,
-          visit_time: '10:00',
+          visit_time: '15:00',
           adult_count: 1,
           child_count: 0,
           adult_price: type === 'not_paid' ? 100 : 0,
@@ -96,7 +96,7 @@ const TestQRGenerator = () => {
         code: ticketCode,
         ref: bookingRef,
         date: visitDate,
-        time: '10:00',
+        time: '15:00',
         ts: Date.now(),
         cs: ticketCode.slice(-6),
       });

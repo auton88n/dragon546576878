@@ -199,7 +199,7 @@ serve(async (req) => {
         customer_phone: body.customerPhone,
         special_requests: body.specialRequests || null,
         visit_date: body.visitDate,
-        visit_time: body.visitTime || "09:00",
+        visit_time: body.visitTime || "15:00",
         adult_count: adultCount,
         child_count: childCount,
         senior_count: 0,
