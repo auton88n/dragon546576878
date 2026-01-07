@@ -130,6 +130,8 @@ const ScannerPage = () => {
       return () => clearInterval(interval);
     }
   }, [showResultOverlay]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
