@@ -698,23 +698,45 @@ const ConfirmationPage = () => {
                     <div className="absolute -right-6 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background" />
                   </div>
 
-                  {/* Right Side - QR Code (use first ticket's scannable QR) - TAP FOR FULLSCREEN */}
+                  {/* Right Side - QR Code or Payment Required */}
                   <div className="flex flex-col items-center justify-center md:w-48">
-                    {tickets[0]?.qr_code_url ? <button onClick={() => setFullscreenQR({
-                    url: tickets[0].qr_code_url!,
-                    code: tickets[0].ticket_code
-                  })} className="p-3 bg-white rounded-2xl shadow-inner border-2 border-accent/20 hover:border-accent/40 hover:shadow-lg transition-all cursor-pointer group relative" aria-label={isArabic ? 'اضغط لتكبير رمز QR' : 'Tap to enlarge QR code'}>
+                    {booking.payment_status === 'pending' ? (
+                      // Payment not completed - show payment required message
+                      <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 flex flex-col items-center justify-center p-4">
+                        <AlertCircle className="h-12 w-12 text-amber-600 dark:text-amber-400 mb-2" />
+                        <p className="text-center text-sm font-medium text-amber-800 dark:text-amber-300">
+                          {isArabic ? 'أكمل الدفع لاستلام التذاكر' : 'Complete payment to receive tickets'}
+                        </p>
+                      </div>
+                    ) : tickets[0]?.qr_code_url ? (
+                      <button onClick={() => setFullscreenQR({
+                        url: tickets[0].qr_code_url!,
+                        code: tickets[0].ticket_code
+                      })} className="p-3 bg-white rounded-2xl shadow-inner border-2 border-accent/20 hover:border-accent/40 hover:shadow-lg transition-all cursor-pointer group relative" aria-label={isArabic ? 'اضغط لتكبير رمز QR' : 'Tap to enlarge QR code'}>
                         <img src={tickets[0].qr_code_url} alt="QR Code" className="w-40 h-40 md:w-48 md:h-48" />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 rounded-2xl transition-colors">
                           <Maximize2 className="h-8 w-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
                         </div>
-                      </button> : <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl bg-muted flex items-center justify-center">
+                      </button>
+                    ) : (
+                      <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl bg-muted flex items-center justify-center">
                         <QrCode className="h-12 w-12 text-muted-foreground" />
-                      </div>}
-                    <Badge className="mt-3 bg-accent/20 text-accent border-accent/30">
-                      {isArabic ? 'اضغط للتكبير' : 'TAP TO ENLARGE'}
-                    </Badge>
-                    <ScanningTips className="mt-3 w-full max-w-[200px]" />
+                      </div>
+                    )}
+                    {booking.payment_status === 'pending' ? (
+                      <Link to={`/resume-payment/${booking.id}`} className="mt-3">
+                        <Button className="btn-gold gap-2">
+                          {isArabic ? 'أكمل الدفع' : 'Complete Payment'}
+                        </Button>
+                      </Link>
+                    ) : tickets[0]?.qr_code_url && (
+                      <>
+                        <Badge className="mt-3 bg-accent/20 text-accent border-accent/30">
+                          {isArabic ? 'اضغط للتكبير' : 'TAP TO ENLARGE'}
+                        </Badge>
+                        <ScanningTips className="mt-3 w-full max-w-[200px]" />
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -741,8 +763,8 @@ const ConfirmationPage = () => {
             </div>
           </div>
 
-          {/* Individual Tickets Section - THESE ARE THE SCANNABLE QR CODES */}
-          {tickets.length > 1 && <div className="mb-8 animate-slide-up" style={{
+          {/* Individual Tickets Section - ONLY SHOW IF PAYMENT COMPLETED AND TICKETS EXIST */}
+          {booking.payment_status === 'completed' && tickets.length > 1 && <div className="mb-8 animate-slide-up" style={{
           animationDelay: '0.25s'
         }}>
               <div className="flex items-center justify-between mb-4">

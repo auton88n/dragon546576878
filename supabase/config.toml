@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.log-payment-failure]
 verify_jwt = false
+
+[functions.generate-tickets]
+verify_jwt = false
