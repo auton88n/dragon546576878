@@ -1,7 +1,7 @@
 import { useState, useMemo, memo } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { TrendingUp, Users, DollarSign, Calendar, BarChart3, CreditCard, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Calendar, BarChart3, CreditCard, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useReportData } from '@/hooks/useReportData';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -36,6 +36,15 @@ const STATUS_COLORS = {
   pending: 'hsl(45 93% 47%)',
   failed: 'hsl(0 84% 60%)',
 };
+
+const DECLINE_COLORS = [
+  'hsl(0 84% 60%)',
+  'hsl(25 95% 53%)',
+  'hsl(45 93% 47%)',
+  'hsl(280 80% 55%)',
+  'hsl(200 80% 50%)',
+  'hsl(var(--muted-foreground))',
+];
 
 const ReportsPanel = () => {
   const { currentLanguage } = useLanguage();
@@ -82,6 +91,30 @@ const ReportsPanel = () => {
     { name: isArabic ? 'معلق' : 'Pending', value: data.paymentStatus.pending, status: 'pending' },
     { name: isArabic ? 'فاشل' : 'Failed', value: data.paymentStatus.failed, status: 'failed' },
   ].filter(item => item.value > 0), [data.paymentStatus, isArabic]);
+
+  const declineReasonLabels: Record<string, { en: string; ar: string }> = {
+    rejected: { en: 'Card Declined', ar: 'بطاقة مرفوضة' },
+    insufficient_funds: { en: 'Insufficient Funds', ar: 'رصيد غير كافٍ' },
+    expired_card: { en: 'Expired Card', ar: 'بطاقة منتهية' },
+    invalid_card: { en: 'Invalid Card', ar: 'بطاقة غير صالحة' },
+    processing_error: { en: 'Processing Error', ar: 'خطأ معالجة' },
+    '3ds_failed': { en: '3D Secure Failed', ar: 'فشل 3D Secure' },
+    cancelled: { en: 'User Cancelled', ar: 'إلغاء المستخدم' },
+    timeout: { en: 'Timeout', ar: 'انتهاء المهلة' },
+    network_error: { en: 'Network Error', ar: 'خطأ الشبكة' },
+    unknown: { en: 'Unknown', ar: 'غير معروف' },
+  };
+
+  const declineReasonsData = useMemo(() => 
+    data.declineReasons.map((dr) => ({
+      name: declineReasonLabels[dr.reason]?.[isArabic ? 'ar' : 'en'] || dr.reason,
+      value: dr.count,
+      reason: dr.reason,
+    })),
+    [data.declineReasons, isArabic]
+  );
+
+  const totalFailures = data.declineReasons.reduce((sum, dr) => sum + dr.count, 0);
 
   const summaryCards = [
     {
@@ -181,7 +214,7 @@ const ReportsPanel = () => {
         </div>
 
         {/* Payment Analytics Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Payment Success Rate */}
           <div className="glass-card rounded-xl p-4 md:p-6 border border-accent/10">
             <h3 className="font-semibold mb-4 md:mb-6 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end text-sm md:text-base">
@@ -242,6 +275,73 @@ const ReportsPanel = () => {
                 <span className="text-xs text-muted-foreground">{isArabic ? 'فاشل' : 'Failed'}</span>
               </div>
             </div>
+          </div>
+
+          {/* Payment Decline Reasons */}
+          <div className="glass-card rounded-xl p-4 md:p-6 border border-accent/10">
+            <h3 className="font-semibold mb-4 md:mb-6 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end text-sm md:text-base">
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+                <AlertTriangle className="h-3.5 w-3.5 md:h-4 md:w-4 text-red-600" />
+              </div>
+              {isArabic ? 'أسباب رفض الدفع' : 'Decline Reasons'}
+              {totalFailures > 0 && (
+                <span className="text-xs text-muted-foreground ml-2 rtl:mr-2 rtl:ml-0">({totalFailures})</span>
+              )}
+            </h3>
+            <div className="h-48 md:h-56">
+              {declineReasonsData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={declineReasonsData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      labelLine={false}
+                    >
+                      {declineReasonsData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={DECLINE_COLORS[index % DECLINE_COLORS.length]} 
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--accent) / 0.2)',
+                        borderRadius: '12px',
+                      }}
+                      formatter={(value: number) => [value, isArabic ? 'العدد' : 'Count']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground text-center">
+                  <div>
+                    <CheckCircle className="h-8 w-8 mx-auto mb-2 text-emerald-500 opacity-50" />
+                    <p className="text-sm">{isArabic ? 'لا توجد حالات رفض مسجلة' : 'No decline data yet'}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            {declineReasonsData.length > 0 && (
+              <div className="flex justify-center gap-3 mt-4 flex-wrap">
+                {declineReasonsData.slice(0, 4).map((dr, index) => (
+                  <div key={dr.reason} className="flex items-center gap-2 rtl:flex-row-reverse">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: DECLINE_COLORS[index % DECLINE_COLORS.length] }} 
+                    />
+                    <span className="text-xs text-muted-foreground">{dr.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Payment Methods Breakdown */}
