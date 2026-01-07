@@ -140,58 +140,76 @@ const BookingFilters = ({ filters, onFiltersChange, onReset, onExport, exporting
         </div>
 
         {/* Booking Status Filter */}
-        <Select
-          value={filters.status}
-          onValueChange={(value) => onFiltersChange({ ...filters, status: value })}
-        >
-          <SelectTrigger className="w-full lg:w-40 bg-background/50 border-border/50">
-            <Filter className="h-4 w-4 me-2 text-accent" />
-            <SelectValue placeholder={isArabic ? 'الحالة' : 'Status'} />
-          </SelectTrigger>
-          <SelectContent className="bg-card border-border">
-            <SelectItem value="all">{isArabic ? 'الكل' : 'All'}</SelectItem>
-            <SelectItem value="confirmed">{isArabic ? 'مؤكد' : 'Confirmed'}</SelectItem>
-            <SelectItem value="pending">{isArabic ? 'معلق' : 'Pending'}</SelectItem>
-            <SelectItem value="cancelled">{isArabic ? 'ملغي' : 'Cancelled'}</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1.5">
+          <label className="text-xs text-muted-foreground font-medium">
+            {isArabic ? 'حالة الحجز' : 'Booking Status'}
+          </label>
+          <Select
+            value={filters.status}
+            onValueChange={(value) => onFiltersChange({ ...filters, status: value })}
+          >
+            <SelectTrigger className="w-full lg:w-40 bg-background/50 border-border/50">
+              <SelectValue placeholder={isArabic ? 'الكل' : 'All'} />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="all">{isArabic ? 'الكل' : 'All'}</SelectItem>
+              <SelectItem value="confirmed">{isArabic ? 'مؤكد' : 'Confirmed'}</SelectItem>
+              <SelectItem value="pending">{isArabic ? 'معلق' : 'Pending'}</SelectItem>
+              <SelectItem value="cancelled">{isArabic ? 'ملغي' : 'Cancelled'}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Payment Status Filter */}
-        <Select
-          value={filters.paymentStatus}
-          onValueChange={(value) => onFiltersChange({ ...filters, paymentStatus: value })}
-        >
-          <SelectTrigger className="w-full lg:w-44 bg-background/50 border-border/50">
-            <CreditCard className="h-4 w-4 me-2 text-accent" />
-            <SelectValue placeholder={isArabic ? 'الدفع' : 'Payment'} />
-          </SelectTrigger>
-          <SelectContent className="bg-card border-border">
-            <SelectItem value="all">{isArabic ? 'الكل' : 'All'}</SelectItem>
-            <SelectItem value="pending">{isArabic ? 'في انتظار الدفع' : 'Awaiting Payment'}</SelectItem>
-            <SelectItem value="completed">{isArabic ? 'مدفوع' : 'Paid'}</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1.5">
+          <label className="text-xs text-muted-foreground font-medium">
+            {isArabic ? 'حالة الدفع' : 'Payment Status'}
+          </label>
+          <Select
+            value={filters.paymentStatus}
+            onValueChange={(value) => onFiltersChange({ ...filters, paymentStatus: value })}
+          >
+            <SelectTrigger className="w-full lg:w-44 bg-background/50 border-border/50">
+              <SelectValue placeholder={isArabic ? 'الكل' : 'All'} />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="all">{isArabic ? 'الكل' : 'All'}</SelectItem>
+              <SelectItem value="pending">{isArabic ? 'في انتظار الدفع' : 'Awaiting Payment'}</SelectItem>
+              <SelectItem value="completed">{isArabic ? 'مدفوع' : 'Paid'}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Date From */}
-        <div className="relative">
-          <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
-          <Input
-            type="date"
-            value={filters.dateFrom}
-            onChange={(e) => onFiltersChange({ ...filters, dateFrom: e.target.value })}
-            className="ps-10 w-full lg:w-44 bg-background/50 border-border/50 focus:border-accent transition-colors"
-          />
+        <div className="space-y-1.5">
+          <label className="text-xs text-muted-foreground font-medium">
+            {isArabic ? 'من تاريخ' : 'From Date'}
+          </label>
+          <div className="relative">
+            <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
+            <Input
+              type="date"
+              value={filters.dateFrom}
+              onChange={(e) => onFiltersChange({ ...filters, dateFrom: e.target.value })}
+              className="ps-10 w-full lg:w-40 bg-background/50 border-border/50 focus:border-accent transition-colors"
+            />
+          </div>
         </div>
 
         {/* Date To */}
-        <div className="relative">
-          <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
-          <Input
-            type="date"
-            value={filters.dateTo}
-            onChange={(e) => onFiltersChange({ ...filters, dateTo: e.target.value })}
-            className="ps-10 w-full lg:w-44 bg-background/50 border-border/50 focus:border-accent transition-colors"
-          />
+        <div className="space-y-1.5">
+          <label className="text-xs text-muted-foreground font-medium">
+            {isArabic ? 'إلى تاريخ' : 'To Date'}
+          </label>
+          <div className="relative">
+            <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
+            <Input
+              type="date"
+              value={filters.dateTo}
+              onChange={(e) => onFiltersChange({ ...filters, dateTo: e.target.value })}
+              className="ps-10 w-full lg:w-40 bg-background/50 border-border/50 focus:border-accent transition-colors"
+            />
+          </div>
         </div>
 
         {/* Export Dropdown */}
