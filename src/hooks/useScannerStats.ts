@@ -10,13 +10,17 @@ export interface ScannerStat {
   lastScanTime: string | null;
 }
 
-export type DateRange = 'today' | '7days' | '30days';
+export type DateRange = 'today' | '7days' | '30days' | 'all';
 
 const THROTTLE_MS = 2000;
 
-const getDateRange = (range: DateRange): { start: string; end: string } => {
+const getDateRange = (range: DateRange): { start: string | null; end: string } => {
   const now = new Date();
   const end = now.toISOString();
+  
+  if (range === 'all') {
+    return { start: null, end };
+  }
   
   let start: Date;
   switch (range) {
@@ -41,11 +45,17 @@ const fetchScannerStats = async (range: DateRange): Promise<ScannerStat[]> => {
   const { start, end } = getDateRange(range);
 
   // Fetch ALL scan attempts (not just valid) to show complete scanner activity
-  const { data: scans, error } = await supabase
+  let query = supabase
     .from('scan_logs')
     .select('scanner_user_id, scan_timestamp, scan_result')
-    .gte('scan_timestamp', start)
     .lte('scan_timestamp', end);
+  
+  // Only add start filter if not "all time"
+  if (start) {
+    query = query.gte('scan_timestamp', start);
+  }
+  
+  const { data: scans, error } = await query;
 
   if (error) throw error;
 

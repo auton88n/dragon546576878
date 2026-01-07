@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 const ScannerLeaderboard = () => {
   const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const [dateRange, setDateRange] = useState<DateRange>('7days');
+  const [dateRange, setDateRange] = useState<DateRange>('30days');
   const { scannerStats, loading } = useScannerStats(dateRange);
 
   const getRangeLabel = (range: DateRange) => {
@@ -18,6 +18,7 @@ const ScannerLeaderboard = () => {
       case 'today': return isArabic ? 'اليوم' : 'Today';
       case '7days': return isArabic ? 'آخر 7 أيام' : 'Last 7 Days';
       case '30days': return isArabic ? 'آخر 30 يوم' : 'Last 30 Days';
+      case 'all': return isArabic ? 'كل الوقت' : 'All Time';
     }
   };
 
@@ -83,6 +84,7 @@ const ScannerLeaderboard = () => {
               <SelectItem value="today">{isArabic ? 'اليوم' : 'Today'}</SelectItem>
               <SelectItem value="7days">{isArabic ? 'آخر 7 أيام' : 'Last 7 Days'}</SelectItem>
               <SelectItem value="30days">{isArabic ? 'آخر 30 يوم' : 'Last 30 Days'}</SelectItem>
+              <SelectItem value="all">{isArabic ? 'كل الوقت' : 'All Time'}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -92,7 +94,7 @@ const ScannerLeaderboard = () => {
           <div className={`text-center py-8 text-muted-foreground ${isRTL ? 'rtl' : ''}`}>
             <QrCode className="h-10 w-10 mx-auto mb-2 opacity-50" />
             <p className="text-sm">
-              {isArabic ? 'لا توجد عمليات مسح اليوم' : 'No scans today yet'}
+              {isArabic ? `لا توجد عمليات مسح في ${getRangeLabel(dateRange)}` : `No scans in ${getRangeLabel(dateRange)}`}
             </p>
           </div>
         ) : (
