@@ -14,8 +14,8 @@ interface PaymentReminderRequest {
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Urgent payment reminder email template - distinctly different from confirmation
-const generateReminderTemplate = (booking: any, isArabic: boolean) => {
+// Urgent payment reminder email template with Pay Now button
+const generateReminderTemplate = (booking: any, isArabic: boolean, paymentUrl: string) => {
   const direction = isArabic ? "rtl" : "ltr";
   const textAlign = isArabic ? "right" : "left";
 
@@ -41,6 +41,7 @@ const generateReminderTemplate = (booking: any, isArabic: boolean) => {
       ? "⚠️ تحذير: قد يتم إلغاء الحجز تلقائياً إذا لم يتم الدفع قبل موعد الزيارة."
       : "⚠️ Warning: Your booking may be automatically cancelled if payment is not received before your visit date.",
     payNow: isArabic ? "ادفع الآن" : "Pay Now",
+    orCopyLink: isArabic ? "أو انسخ هذا الرابط:" : "Or copy this link:",
     contact: isArabic ? "تواصل معنا" : "Contact Us",
     helpText: isArabic 
       ? "إذا كنت بحاجة للمساعدة أو لديك أي استفسار، لا تتردد في التواصل معنا."
@@ -136,6 +137,37 @@ const generateReminderTemplate = (booking: any, isArabic: boolean) => {
                         </td>
                       </tr>
                     </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Pay Now Button -->
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 20px;">
+                <tr>
+                  <td align="center">
+                    <a href="${paymentUrl}" target="_blank" style="
+                      display: inline-block;
+                      background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+                      color: #FFFFFF;
+                      font-size: 18px;
+                      font-weight: 700;
+                      padding: 18px 50px;
+                      border-radius: 12px;
+                      text-decoration: none;
+                      box-shadow: 0 4px 15px rgba(217, 119, 6, 0.4);
+                    ">${translations.payNow}</a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Fallback Link -->
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 30px;">
+                <tr>
+                  <td style="text-align: center;">
+                    <p style="color: #6B7280; font-size: 12px; margin: 0 0 8px 0;">${translations.orCopyLink}</p>
+                    <p style="color: #D97706; font-size: 12px; margin: 0; word-break: break-all;">
+                      <a href="${paymentUrl}" style="color: #D97706; text-decoration: underline;">${paymentUrl}</a>
+                    </p>
                   </td>
                 </tr>
               </table>
@@ -236,7 +268,10 @@ const handler = async (req: Request): Promise<Response> => {
       ? `⏰ تذكير: أكمل دفع حجزك #${booking.booking_reference}` 
       : `⏰ Reminder: Complete Your Payment #${booking.booking_reference}`;
 
-    const html = generateReminderTemplate(booking, isArabic);
+    // Generate payment URL
+    const paymentUrl = `https://tickets.almufaijer.com/pay/${bookingId}`;
+    
+    const html = generateReminderTemplate(booking, isArabic, paymentUrl);
 
     // Send email
     const { data: emailData, error: emailError } = await resend.emails.send({
@@ -255,6 +290,19 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("Payment reminder sent successfully:", emailData);
+
+    // Update booking to track reminder sent
+    const { error: updateError } = await supabase
+      .from("bookings")
+      .update({ 
+        reminder_email_sent: true,
+        last_email_sent_at: new Date().toISOString()
+      })
+      .eq("id", bookingId);
+
+    if (updateError) {
+      console.warn("Failed to update reminder tracking:", updateError);
+    }
 
     // Log to email queue
     await supabase.from("email_queue").insert({

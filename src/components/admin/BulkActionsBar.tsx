@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { CheckCircle, Ban, Bell, X, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
-import { resendConfirmationEmail } from '@/lib/emailService';
+import { sendPaymentReminder } from '@/lib/emailService';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import type { Tables } from '@/integrations/supabase/types';
@@ -97,15 +97,16 @@ const BulkActionsBar = ({ selectedIds, bookings, onClearSelection, onBookingUpda
     try {
       let successCount = 0;
       for (const booking of pendingPaymentBookings) {
-        const success = await resendConfirmationEmail(booking.id);
+        const success = await sendPaymentReminder(booking.id);
         if (success) successCount++;
       }
       toast({
         title: isArabic ? 'تم الإرسال' : 'Sent',
         description: isArabic 
-          ? `تم إرسال ${successCount} تذكير` 
-          : `${successCount} reminder(s) sent`,
+          ? `تم إرسال ${successCount} رسالة تذكير بالدفع` 
+          : `${successCount} payment reminder(s) sent`,
       });
+      onBookingUpdated();
       onClearSelection();
     } catch {
       toast({
