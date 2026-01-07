@@ -1,11 +1,13 @@
 import { useState, lazy, Suspense } from 'react';
-import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset } from 'lucide-react';
+import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import { useBookings } from '@/hooks/useBookings';
 import { useToast } from '@/hooks/use-toast';
 import { exportToCSV, exportToExcel } from '@/lib/exportBookings';
+import { sendPaymentReminder } from '@/lib/emailService';
+import { supabase } from '@/integrations/supabase/client';
 import StaffHeader from '@/components/shared/StaffHeader';
 import PoweredByAYN from '@/components/shared/PoweredByAYN';
 import StatsCard from '@/components/admin/StatsCard';
@@ -53,6 +55,7 @@ const AdminPage = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [exporting, setExporting] = useState(false);
+  const [sendingReminders, setSendingReminders] = useState(false);
 
   const handleViewDetails = (booking: Booking) => {
     setSelectedBooking(booking);
@@ -104,6 +107,61 @@ const AdminPage = () => {
     refetch();
     setSelectedIds([]);
   };
+
+  const handleSendAllReminders = async () => {
+    if (sendingReminders) return;
+    
+    setSendingReminders(true);
+    try {
+      // Fetch all pending payment bookings
+      const { data: pendingBookings, error } = await supabase
+        .from('bookings')
+        .select('id, customer_email')
+        .eq('payment_status', 'pending');
+
+      if (error) throw error;
+
+      if (!pendingBookings || pendingBookings.length === 0) {
+        toast({
+          title: isArabic ? 'لا توجد حجوزات معلقة' : 'No Pending Bookings',
+          description: isArabic ? 'جميع الحجوزات تم دفعها' : 'All bookings have been paid',
+        });
+        return;
+      }
+
+      let successCount = 0;
+      let failCount = 0;
+
+      // Send reminder to each pending booking
+      for (const booking of pendingBookings) {
+        const success = await sendPaymentReminder(booking.id);
+        if (success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      }
+
+      toast({
+        title: isArabic ? 'تم إرسال التذكيرات' : 'Reminders Sent',
+        description: isArabic 
+          ? `تم إرسال ${successCount} تذكير${failCount > 0 ? ` (فشل ${failCount})` : ''}`
+          : `Sent ${successCount} reminder(s)${failCount > 0 ? ` (${failCount} failed)` : ''}`,
+      });
+
+      refetch();
+    } catch (error) {
+      console.error('Error sending reminders:', error);
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل إرسال التذكيرات' : 'Failed to send reminders',
+        variant: 'destructive',
+      });
+    } finally {
+      setSendingReminders(false);
+    }
+  };
+
 
   const statsCards = [
     {

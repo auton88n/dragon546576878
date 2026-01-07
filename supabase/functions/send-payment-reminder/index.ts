@@ -268,8 +268,8 @@ const handler = async (req: Request): Promise<Response> => {
       ? `⏰ تذكير: أكمل دفع حجزك #${booking.booking_reference}` 
       : `⏰ Reminder: Complete Your Payment #${booking.booking_reference}`;
 
-    // Generate payment URL
-    const paymentUrl = `https://tickets.almufaijer.com/pay/${bookingId}`;
+    // Generate payment URL - use production domain
+    const paymentUrl = `https://almufaijer.com/pay/${bookingId}`;
     
     const html = generateReminderTemplate(booking, isArabic, paymentUrl);
 

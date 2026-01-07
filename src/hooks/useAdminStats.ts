@@ -10,6 +10,8 @@ export interface AdminStats {
   totalBookings: number;
   pendingEmails: number;
   todayScans: number;
+  pendingPaymentsCount: number;
+  pendingPaymentsAmount: number;
 }
 
 const DEFAULT_STATS: AdminStats = {
@@ -20,6 +22,8 @@ const DEFAULT_STATS: AdminStats = {
   totalBookings: 0,
   pendingEmails: 0,
   todayScans: 0,
+  pendingPaymentsCount: 0,
+  pendingPaymentsAmount: 0,
 };
 
 const fetchAdminStats = async (): Promise<AdminStats> => {
@@ -40,6 +44,7 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
     { count: scannedTicketsCount },
     { count: pendingEmailsCount },
     { count: todayScansCount },
+    { data: pendingPaymentsData, count: pendingPaymentsCount },
   ] = await Promise.all([
     // Total revenue with explicit limit to avoid 1000 row cap
     supabase
@@ -71,6 +76,11 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
       .select('*', { count: 'exact', head: true })
       .gte('scan_timestamp', startOfDay)
       .lte('scan_timestamp', endOfDay),
+    // Pending payments
+    supabase
+      .from('bookings')
+      .select('total_amount', { count: 'exact' })
+      .eq('payment_status', 'pending'),
   ]);
 
   const totalRevenue = allBookings?.reduce((sum, b) => sum + Number(b.total_amount ?? 0), 0) || 0;
@@ -79,6 +89,7 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
       sum + Number(b.adult_count ?? 0) + Number(b.child_count ?? 0) + Number(b.senior_count ?? 0),
     0
   ) || 0;
+  const pendingPaymentsAmount = pendingPaymentsData?.reduce((sum, b) => sum + Number(b.total_amount ?? 0), 0) || 0;
 
   return {
     totalRevenue,
@@ -88,6 +99,8 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
     totalBookings: totalBookingsCount || 0,
     pendingEmails: pendingEmailsCount || 0,
     todayScans: todayScansCount || 0,
+    pendingPaymentsCount: pendingPaymentsCount || 0,
+    pendingPaymentsAmount,
   };
 };
 
