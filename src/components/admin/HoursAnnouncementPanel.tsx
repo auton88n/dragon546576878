@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, Users, Clock, AlertCircle, CheckCircle2, RotateCcw, ChevronDown, ChevronUp, Edit3, RefreshCw, Eye, X, User } from 'lucide-react';
+import { Mail, Users, Clock, AlertCircle, CheckCircle2, RotateCcw, ChevronDown, ChevronUp, Edit3, RefreshCw, Eye, X, User, XCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -40,6 +40,14 @@ interface Customer {
   email: string;
   name: string;
   language: string;
+}
+
+type EmailStatus = 'pending' | 'sending' | 'delivered' | 'failed';
+
+interface EmailResult {
+  email: string;
+  status: EmailStatus;
+  error?: string;
 }
 
 interface CustomContent {
@@ -206,6 +214,7 @@ export const HoursAnnouncementPanel = () => {
   const [previewCustomer, setPreviewCustomer] = useState<Customer | null>(null);
   const [sendingProgress, setSendingProgress] = useState<{ current: number; total: number; currentCustomer: string | null }>({ current: 0, total: 0, currentCustomer: null });
   const [isCancelled, setIsCancelled] = useState(false);
+  const [emailResults, setEmailResults] = useState<Map<string, EmailResult>>(new Map());
 
   // Get preview customer name
   const previewCustomerName = previewCustomer?.name || 'Test User';
@@ -288,63 +297,53 @@ export const HoursAnnouncementPanel = () => {
     setIsSendingAll(true);
     setIsCancelled(false);
     setSendingProgress({ current: 0, total: customers.length, currentCustomer: null });
+    
+    // Initialize all as pending
+    const initialResults = new Map<string, EmailResult>();
+    customers.forEach(c => initialResults.set(c.email, { email: c.email, status: 'pending' }));
+    setEmailResults(initialResults);
 
     let successCount = 0;
     let failCount = 0;
 
     try {
       for (let i = 0; i < customers.length; i++) {
-        // Check if cancelled
         if (isCancelled) {
           toast.info(isArabic ? 'تم إلغاء الإرسال' : 'Sending cancelled');
           break;
         }
 
         const customer = customers[i];
-        setSendingProgress({ 
-          current: i + 1, 
-          total: customers.length, 
-          currentCustomer: customer.name 
-        });
+        setSendingProgress({ current: i + 1, total: customers.length, currentCustomer: customer.name });
+        
+        // Mark as sending
+        setEmailResults(prev => new Map(prev).set(customer.email, { email: customer.email, status: 'sending' }));
 
         try {
           const { data, error } = await supabase.functions.invoke('send-hours-announcement', {
-            body: { 
-              singleEmail: {
-                email: customer.email,
-                name: customer.name,
-                language: customer.language
-              },
-              customContent 
-            },
+            body: { singleEmail: { email: customer.email, name: customer.name, language: customer.language }, customContent },
           });
 
           if (error || !data?.success) {
-            console.error(`Failed to send to ${customer.email}:`, error || data?.error);
             failCount++;
+            setEmailResults(prev => new Map(prev).set(customer.email, { email: customer.email, status: 'failed', error: error?.message || data?.error }));
           } else {
             successCount++;
+            setEmailResults(prev => new Map(prev).set(customer.email, { email: customer.email, status: 'delivered' }));
           }
 
-          // Small delay between emails
           await new Promise(resolve => setTimeout(resolve, 300));
         } catch (err) {
-          console.error(`Error sending to ${customer.email}:`, err);
           failCount++;
+          setEmailResults(prev => new Map(prev).set(customer.email, { email: customer.email, status: 'failed', error: String(err) }));
         }
       }
 
       if (!isCancelled) {
-        const message = isArabic 
-          ? `تم الإرسال: ${successCount} ناجح، ${failCount} فشل`
-          : `Sent: ${successCount} successful, ${failCount} failed`;
-        
-        if (failCount === 0) {
-          toast.success(message);
-        } else {
-          toast.warning(message);
-        }
+        const message = isArabic ? `تم الإرسال: ${successCount} ناجح، ${failCount} فشل` : `Sent: ${successCount} successful, ${failCount} failed`;
+        failCount === 0 ? toast.success(message) : toast.warning(message);
         setAllSent(true);
+        setShowCustomerList(true); // Auto-expand to show results
       }
     } catch (error) {
       console.error('Error sending announcement:', error);
@@ -610,27 +609,46 @@ export const HoursAnnouncementPanel = () => {
             )}
 
             {/* Customer List Preview */}
-            {testSent && !allSent && customerCount > 0 && (
+            {(testSent || allSent) && customerCount > 0 && (
               <Collapsible open={showCustomerList} onOpenChange={setShowCustomerList}>
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" className="w-full justify-between text-amber-700 hover:bg-amber-100">
-                    {isArabic ? 'عرض قائمة العملاء' : 'Preview Recipients'}
+                    {isArabic ? 'عرض قائمة العملاء' : allSent ? 'View Delivery Status' : 'Preview Recipients'}
                     {showCustomerList ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="border rounded-lg p-3 bg-white max-h-48 overflow-y-auto space-y-2">
-                    {customers.map((customer, idx) => (
-                      <div key={customer.email} className="flex items-center gap-2 text-sm py-1 border-b last:border-b-0">
-                        <span className="text-muted-foreground">{idx + 1}.</span>
-                        <span className="font-medium">{customer.name}</span>
-                        <span className="text-muted-foreground">-</span>
-                        <span className="text-muted-foreground truncate">{customer.email}</span>
-                        <span className="ms-auto text-xs bg-gray-100 px-2 py-0.5 rounded">
-                          {customer.language === 'ar' ? 'AR' : 'EN'}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="border rounded-lg p-3 bg-white max-h-64 overflow-y-auto space-y-2">
+                    {customers.map((customer, idx) => {
+                      const result = emailResults.get(customer.email);
+                      return (
+                        <div key={customer.email} className="flex items-center gap-2 text-sm py-1 border-b last:border-b-0">
+                          <span className="text-muted-foreground">{idx + 1}.</span>
+                          <span className="font-medium">{customer.name}</span>
+                          <span className="text-muted-foreground truncate flex-1">{customer.email}</span>
+                          {result?.status === 'delivered' && (
+                            <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                              <CheckCircle2 className="h-3 w-3" /> {isArabic ? 'تم' : 'Sent'}
+                            </span>
+                          )}
+                          {result?.status === 'failed' && (
+                            <span className="flex items-center gap-1 text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded" title={result.error}>
+                              <XCircle className="h-3 w-3" /> {isArabic ? 'فشل' : 'Failed'}
+                            </span>
+                          )}
+                          {result?.status === 'sending' && (
+                            <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+                              <Loader2 className="h-3 w-3 animate-spin" /> {isArabic ? 'جاري' : 'Sending'}
+                            </span>
+                          )}
+                          {(!result || result.status === 'pending') && !allSent && (
+                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">
+                              {customer.language === 'ar' ? 'AR' : 'EN'}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </CollapsibleContent>
               </Collapsible>
