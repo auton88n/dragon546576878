@@ -1,5 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Users, Plus, Key, Edit2, Power, PowerOff, Eye, EyeOff, Loader2, Trash2, AlertTriangle, Upload } from 'lucide-react';
+import { Users, Plus, Key, Edit2, Power, PowerOff, Eye, EyeOff, Loader2, Trash2, AlertTriangle, Upload, Mail } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useStaff, StaffMember } from '@/hooks/useStaff';
 import { useToast } from '@/hooks/use-toast';
@@ -62,8 +64,9 @@ const StaffManager = () => {
   // Bulk import states
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkInput, setBulkInput] = useState('');
-  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, errors: [] as string[] });
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, errors: [] as string[], emailsSent: 0, emailsFailed: 0 });
   const [isBulkImporting, setIsBulkImporting] = useState(false);
+  const [sendEmailNotification, setSendEmailNotification] = useState(true);
 
   // Form states
   const [newStaff, setNewStaff] = useState({
@@ -102,6 +105,30 @@ const StaffManager = () => {
 
   const bulkEntries = useMemo(() => parseBulkInput(bulkInput), [bulkInput, parseBulkInput]);
 
+  const sendCredentialsEmail = async (email: string, fullName: string, password: string, role: string): Promise<boolean> => {
+    try {
+      const response = await supabase.functions.invoke('send-staff-credentials', {
+        body: {
+          email,
+          fullName,
+          password,
+          role,
+          language: currentLanguage,
+        },
+      });
+
+      if (response.error) {
+        console.error('Email sending failed:', response.error);
+        return false;
+      }
+
+      return response.data?.success === true;
+    } catch (error) {
+      console.error('Error sending credentials email:', error);
+      return false;
+    }
+  };
+
   const handleBulkImport = async () => {
     if (bulkEntries.length === 0) {
       toast({
@@ -113,16 +140,20 @@ const StaffManager = () => {
     }
 
     setIsBulkImporting(true);
-    setBulkProgress({ current: 0, total: bulkEntries.length, errors: [] });
+    setBulkProgress({ current: 0, total: bulkEntries.length, errors: [], emailsSent: 0, emailsFailed: 0 });
 
     const errors: string[] = [];
+    let emailsSent = 0;
+    let emailsFailed = 0;
+    const defaultPassword = 'scan2024';
+
     for (let i = 0; i < bulkEntries.length; i++) {
       const entry = bulkEntries[i];
       setBulkProgress(prev => ({ ...prev, current: i + 1 }));
 
       const success = await createStaff({
         email: entry.email,
-        password: 'scan2024',
+        password: defaultPassword,
         fullName: entry.fullName,
         phone: '',
         role: 'scanner',
@@ -130,21 +161,45 @@ const StaffManager = () => {
 
       if (!success) {
         errors.push(entry.email);
+      } else if (sendEmailNotification) {
+        // Send credentials email for successfully created staff
+        const emailSent = await sendCredentialsEmail(entry.email, entry.fullName, defaultPassword, 'scanner');
+        if (emailSent) {
+          emailsSent++;
+        } else {
+          emailsFailed++;
+        }
+        setBulkProgress(prev => ({ ...prev, emailsSent, emailsFailed }));
       }
 
       // Small delay to avoid rate limiting
       await new Promise(r => setTimeout(r, 500));
     }
 
-    setBulkProgress(prev => ({ ...prev, errors }));
+    setBulkProgress(prev => ({ ...prev, errors, emailsSent, emailsFailed }));
     setIsBulkImporting(false);
 
+    const addedCount = bulkEntries.length - errors.length;
+    
     if (errors.length === 0) {
+      let description = isArabic
+        ? `تم إضافة ${addedCount} موظف`
+        : `Added ${addedCount} staff members`;
+      
+      if (sendEmailNotification) {
+        description += isArabic
+          ? `. تم إرسال ${emailsSent} بريد إلكتروني`
+          : `. ${emailsSent} emails sent`;
+        if (emailsFailed > 0) {
+          description += isArabic
+            ? `، فشل ${emailsFailed}`
+            : `, ${emailsFailed} failed`;
+        }
+      }
+      
       toast({
         title: isArabic ? 'تم بنجاح' : 'Success',
-        description: isArabic
-          ? `تم إضافة ${bulkEntries.length} موظف`
-          : `Added ${bulkEntries.length} staff members`,
+        description,
       });
       setBulkDialogOpen(false);
       setBulkInput('');
@@ -152,8 +207,8 @@ const StaffManager = () => {
       toast({
         title: isArabic ? 'نجاح جزئي' : 'Partial Success',
         description: isArabic
-          ? `تم إضافة ${bulkEntries.length - errors.length} من ${bulkEntries.length}. فشل: ${errors.join(', ')}`
-          : `Added ${bulkEntries.length - errors.length} of ${bulkEntries.length}. Failed: ${errors.join(', ')}`,
+          ? `تم إضافة ${addedCount} من ${bulkEntries.length}. فشل: ${errors.join(', ')}`
+          : `Added ${addedCount} of ${bulkEntries.length}. Failed: ${errors.join(', ')}`,
         variant: 'destructive',
       });
     }
@@ -730,10 +785,10 @@ const StaffManager = () => {
       <Dialog open={bulkDialogOpen} onOpenChange={(open) => {
         if (!isBulkImporting) {
           setBulkDialogOpen(open);
-          if (!open) {
-            setBulkInput('');
-            setBulkProgress({ current: 0, total: 0, errors: [] });
-          }
+        if (!open) {
+          setBulkInput('');
+          setBulkProgress({ current: 0, total: 0, errors: [], emailsSent: 0, emailsFailed: 0 });
+        }
         }
       }}>
         <DialogContent className="sm:max-w-lg">
