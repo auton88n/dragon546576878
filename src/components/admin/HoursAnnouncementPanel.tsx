@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, Users, Clock, AlertCircle, CheckCircle2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Mail, Users, Clock, AlertCircle, CheckCircle2, RotateCcw, ChevronDown, ChevronUp, Edit3, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -26,6 +27,32 @@ interface Customer {
   language: string;
 }
 
+interface CustomContent {
+  subjectEn: string;
+  subjectAr: string;
+  messageEn: string;
+  messageAr: string;
+  daysEn: string;
+  daysAr: string;
+  hoursEn: string;
+  hoursAr: string;
+  closingEn: string;
+  closingAr: string;
+}
+
+const defaultContent: CustomContent = {
+  subjectEn: 'Operating Hours Update - Souq Almufaijer',
+  subjectAr: 'تحديث ساعات العمل - سوق المفيجر',
+  messageEn: 'We would like to inform you about our operating hours at Souq Almufaijer Heritage Site:',
+  messageAr: 'نود إعلامكم بساعات العمل في موقع سوق المفيجر التراثي:',
+  daysEn: 'Open Daily (Including Fridays)',
+  daysAr: 'مفتوح يومياً (بما في ذلك الجمعة)',
+  hoursEn: '3:00 PM - 12:00 AM (Midnight)',
+  hoursAr: '٣:٠٠ م - ١٢:٠٠ ص (منتصف الليل)',
+  closingEn: 'Your tickets are valid anytime during these hours on your selected visit date.',
+  closingAr: 'تذاكركم صالحة في أي وقت خلال هذه الساعات في تاريخ زيارتكم المحدد.',
+};
+
 export const HoursAnnouncementPanel = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
@@ -39,6 +66,8 @@ export const HoursAnnouncementPanel = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const [showCustomerList, setShowCustomerList] = useState(false);
+  const [showCustomize, setShowCustomize] = useState(false);
+  const [customContent, setCustomContent] = useState<CustomContent>(defaultContent);
 
   // Fetch unique customers on mount
   useEffect(() => {
@@ -84,7 +113,7 @@ export const HoursAnnouncementPanel = () => {
     setIsSendingTest(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-hours-announcement', {
-        body: { testEmail },
+        body: { testEmail, customContent },
       });
 
       if (error) throw error;
@@ -113,7 +142,7 @@ export const HoursAnnouncementPanel = () => {
     setIsSendingAll(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-hours-announcement', {
-        body: { sendToAll: true },
+        body: { sendToAll: true, customContent },
       });
 
       if (error) throw error;
@@ -132,6 +161,15 @@ export const HoursAnnouncementPanel = () => {
     }
   };
 
+  const handleResetContent = () => {
+    setCustomContent(defaultContent);
+    toast.info(isArabic ? 'تم استعادة المحتوى الافتراضي' : 'Content reset to defaults');
+  };
+
+  const updateContent = (field: keyof CustomContent, value: string) => {
+    setCustomContent(prev => ({ ...prev, [field]: value }));
+  };
+
   const customerCount = customers.length;
 
   return (
@@ -144,17 +182,145 @@ export const HoursAnnouncementPanel = () => {
           </CardTitle>
           <CardDescription className="text-amber-700">
             {isArabic 
-              ? 'أرسل بريداً للعملاء لإعلامهم بساعات العمل الجديدة: ٣ مساءً - ١٢ منتصف الليل، مفتوح يومياً'
-              : 'Send email to customers about new hours: 3 PM - 12 AM, Open Daily'}
+              ? 'أرسل بريداً للعملاء لإعلامهم بساعات العمل الجديدة'
+              : 'Send email to customers about new operating hours'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Customize Message Section */}
+          <Collapsible open={showCustomize} onOpenChange={setShowCustomize}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between border-amber-300 hover:bg-amber-100">
+                <span className="flex items-center gap-2">
+                  <Edit3 className="h-4 w-4" />
+                  {isArabic ? 'تخصيص محتوى الرسالة' : 'Customize Message Content'}
+                </span>
+                {showCustomize ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4 space-y-4 border rounded-lg p-4 bg-white">
+              {/* Subject */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm">{isArabic ? 'العنوان (EN)' : 'Subject (EN)'}</Label>
+                  <Input 
+                    value={customContent.subjectEn}
+                    onChange={(e) => updateContent('subjectEn', e.target.value)}
+                    placeholder="Subject in English"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm">{isArabic ? 'العنوان (AR)' : 'Subject (AR)'}</Label>
+                  <Input 
+                    value={customContent.subjectAr}
+                    onChange={(e) => updateContent('subjectAr', e.target.value)}
+                    placeholder="العنوان بالعربية"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              {/* Opening Message */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm">{isArabic ? 'الرسالة الافتتاحية (EN)' : 'Opening Message (EN)'}</Label>
+                  <Textarea 
+                    value={customContent.messageEn}
+                    onChange={(e) => updateContent('messageEn', e.target.value)}
+                    placeholder="Opening message in English"
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm">{isArabic ? 'الرسالة الافتتاحية (AR)' : 'Opening Message (AR)'}</Label>
+                  <Textarea 
+                    value={customContent.messageAr}
+                    onChange={(e) => updateContent('messageAr', e.target.value)}
+                    placeholder="الرسالة الافتتاحية بالعربية"
+                    dir="rtl"
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              {/* Days */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm">{isArabic ? 'أيام العمل (EN)' : 'Days Open (EN)'}</Label>
+                  <Input 
+                    value={customContent.daysEn}
+                    onChange={(e) => updateContent('daysEn', e.target.value)}
+                    placeholder="Open Daily (Including Fridays)"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm">{isArabic ? 'أيام العمل (AR)' : 'Days Open (AR)'}</Label>
+                  <Input 
+                    value={customContent.daysAr}
+                    onChange={(e) => updateContent('daysAr', e.target.value)}
+                    placeholder="مفتوح يومياً (بما في ذلك الجمعة)"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              {/* Hours */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm">{isArabic ? 'ساعات العمل (EN)' : 'Hours (EN)'}</Label>
+                  <Input 
+                    value={customContent.hoursEn}
+                    onChange={(e) => updateContent('hoursEn', e.target.value)}
+                    placeholder="3:00 PM - 12:00 AM (Midnight)"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm">{isArabic ? 'ساعات العمل (AR)' : 'Hours (AR)'}</Label>
+                  <Input 
+                    value={customContent.hoursAr}
+                    onChange={(e) => updateContent('hoursAr', e.target.value)}
+                    placeholder="٣:٠٠ م - ١٢:٠٠ ص (منتصف الليل)"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              {/* Closing Message */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm">{isArabic ? 'الرسالة الختامية (EN)' : 'Closing Message (EN)'}</Label>
+                  <Textarea 
+                    value={customContent.closingEn}
+                    onChange={(e) => updateContent('closingEn', e.target.value)}
+                    placeholder="Closing message in English"
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm">{isArabic ? 'الرسالة الختامية (AR)' : 'Closing Message (AR)'}</Label>
+                  <Textarea 
+                    value={customContent.closingAr}
+                    onChange={(e) => updateContent('closingAr', e.target.value)}
+                    placeholder="الرسالة الختامية بالعربية"
+                    dir="rtl"
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              <Button variant="outline" onClick={handleResetContent} className="w-full">
+                <RefreshCw className="h-4 w-4 me-2" />
+                {isArabic ? 'استعادة الافتراضي' : 'Reset to Defaults'}
+              </Button>
+            </CollapsibleContent>
+          </Collapsible>
+
           {/* New Hours Info */}
           <Alert className="border-amber-300 bg-amber-100">
             <Clock className="h-4 w-4 text-amber-700" />
             <AlertDescription className="text-amber-800">
-              <strong>{isArabic ? 'الساعات الجديدة:' : 'New Hours:'}</strong>{' '}
-              {isArabic ? '٣:٠٠ م - ١٢:٠٠ ص (منتصف الليل) - مفتوح يومياً' : '3:00 PM - 12:00 AM (Midnight) - Open Daily'}
+              <strong>{isArabic ? 'الساعات:' : 'Hours:'}</strong>{' '}
+              {customContent.hoursEn} - {customContent.daysEn}
             </AlertDescription>
           </Alert>
 
