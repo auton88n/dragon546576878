@@ -417,6 +417,59 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_logs: {
+        Row: {
+          amount: number | null
+          booking_id: string | null
+          changed_by: string | null
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          payment_id: string | null
+          payment_method: string | null
+          status_after: string | null
+          status_before: string | null
+        }
+        Insert: {
+          amount?: number | null
+          booking_id?: string | null
+          changed_by?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          payment_id?: string | null
+          payment_method?: string | null
+          status_after?: string | null
+          status_before?: string | null
+        }
+        Update: {
+          amount?: number | null
+          booking_id?: string | null
+          changed_by?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          payment_id?: string | null
+          payment_method?: string | null
+          status_after?: string | null
+          status_before?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null

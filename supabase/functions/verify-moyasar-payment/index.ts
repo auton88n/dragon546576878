@@ -11,6 +11,38 @@ interface VerifyPaymentRequest {
   bookingId: string;
 }
 
+// Helper function to log payment events
+async function logPaymentEvent(
+  supabase: ReturnType<typeof createClient>,
+  bookingId: string,
+  eventType: string,
+  data: {
+    paymentId?: string;
+    paymentMethod?: string;
+    amount?: number;
+    statusBefore?: string;
+    statusAfter?: string;
+    errorMessage?: string;
+    metadata?: Record<string, unknown>;
+  }
+) {
+  try {
+    await supabase.from("payment_logs").insert({
+      booking_id: bookingId,
+      event_type: eventType,
+      payment_id: data.paymentId || null,
+      payment_method: data.paymentMethod || null,
+      amount: data.amount || null,
+      status_before: data.statusBefore || null,
+      status_after: data.statusAfter || null,
+      error_message: data.errorMessage || null,
+      metadata: data.metadata || null,
+    } as Record<string, unknown>);
+  } catch (err) {
+    console.error("Failed to log payment event:", err);
+  }
+}
+
 serve(async (req) => {
   console.log("verify-moyasar-payment function called");
   
@@ -73,6 +105,13 @@ serve(async (req) => {
       );
     }
 
+    // Log payment attempt
+    await logPaymentEvent(supabase, body.bookingId, "attempt", {
+      paymentId: body.paymentId,
+      amount: booking.total_amount,
+      statusBefore: booking.payment_status,
+    });
+
     // Fetch payment from Moyasar API
     const moyasarResponse = await fetch(`https://api.moyasar.com/v1/payments/${body.paymentId}`, {
       method: "GET",
@@ -85,6 +124,15 @@ serve(async (req) => {
     if (!moyasarResponse.ok) {
       const errorText = await moyasarResponse.text();
       console.error("Moyasar API error:", moyasarResponse.status, errorText);
+      
+      // Log failure
+      await logPaymentEvent(supabase, body.bookingId, "failure", {
+        paymentId: body.paymentId,
+        statusBefore: booking.payment_status,
+        errorMessage: `Moyasar API error: ${moyasarResponse.status}`,
+        metadata: { apiError: errorText },
+      });
+
       return new Response(
         JSON.stringify({ success: false, error: "Failed to verify payment with Moyasar" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -97,6 +145,17 @@ serve(async (req) => {
     // Verify payment status is "paid"
     if (payment.status !== "paid") {
       console.log("Payment not completed, status:", payment.status);
+      
+      // Log failure
+      await logPaymentEvent(supabase, body.bookingId, "failure", {
+        paymentId: body.paymentId,
+        paymentMethod: payment.source?.type,
+        amount: payment.amount / 100, // Convert from halalas
+        statusBefore: booking.payment_status,
+        errorMessage: `Payment status: ${payment.status}`,
+        metadata: { moyasarStatus: payment.status },
+      });
+
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -111,6 +170,17 @@ serve(async (req) => {
     const expectedAmountHalalas = Math.round(booking.total_amount * 100);
     if (payment.amount !== expectedAmountHalalas) {
       console.error(`Amount mismatch: expected ${expectedAmountHalalas}, got ${payment.amount}`);
+      
+      // Log failure
+      await logPaymentEvent(supabase, body.bookingId, "failure", {
+        paymentId: body.paymentId,
+        paymentMethod: payment.source?.type,
+        amount: payment.amount / 100,
+        statusBefore: booking.payment_status,
+        errorMessage: `Amount mismatch: expected ${booking.total_amount} SAR, got ${payment.amount / 100} SAR`,
+        metadata: { expectedAmount: booking.total_amount, receivedAmount: payment.amount / 100 },
+      });
+
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -139,6 +209,16 @@ serve(async (req) => {
 
     if (updateError) {
       console.error("Failed to update booking:", updateError);
+      
+      // Log failure
+      await logPaymentEvent(supabase, body.bookingId, "failure", {
+        paymentId: body.paymentId,
+        paymentMethod,
+        amount: booking.total_amount,
+        statusBefore: booking.payment_status,
+        errorMessage: `Database update failed: ${updateError.message}`,
+      });
+
       return new Response(
         JSON.stringify({ success: false, error: "Failed to update booking status" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -146,6 +226,20 @@ serve(async (req) => {
     }
 
     console.log("Booking updated to paid status");
+
+    // Log success
+    await logPaymentEvent(supabase, body.bookingId, "success", {
+      paymentId: body.paymentId,
+      paymentMethod,
+      amount: booking.total_amount,
+      statusBefore: booking.payment_status,
+      statusAfter: "completed",
+      metadata: {
+        moyasarId: payment.id,
+        cardBrand: payment.source?.company,
+        cardLast4: payment.source?.number?.slice(-4),
+      },
+    });
 
     // Send confirmation email
     try {

@@ -5,6 +5,8 @@ import { Calendar, Clock, User, Mail, Phone, Save, Loader2, CreditCard, FileText
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { logPaymentEvent } from '@/hooks/usePaymentLogs';
 import type { Tables } from '@/integrations/supabase/types';
 import {
   Dialog,
@@ -61,6 +63,7 @@ const BOOKING_STATUSES = [
 const EditBookingDialog = ({ booking, open, onOpenChange, onBookingUpdated }: EditBookingDialogProps) => {
   const { currentLanguage } = useLanguage();
   const { toast } = useToast();
+  const { user } = useAuth();
   const isArabic = currentLanguage === 'ar';
   const [saving, setSaving] = useState(false);
 
@@ -93,6 +96,9 @@ const EditBookingDialog = ({ booking, open, onOpenChange, onBookingUpdated }: Ed
 
     setSaving(true);
     try {
+      // Check if payment status is changing
+      const paymentStatusChanged = paymentStatus !== booking.payment_status;
+      
       // Determine paid_at based on payment status change
       let paidAt = booking.paid_at;
       if (paymentStatus === 'completed' && booking.payment_status !== 'completed') {
@@ -118,6 +124,17 @@ const EditBookingDialog = ({ booking, open, onOpenChange, onBookingUpdated }: Ed
         .eq('id', booking.id);
 
       if (error) throw error;
+
+      // Log payment status change if it changed
+      if (paymentStatusChanged) {
+        await logPaymentEvent(booking.id, 'manual_update', {
+          statusBefore: booking.payment_status,
+          statusAfter: paymentStatus,
+          changedBy: user?.id,
+          amount: Number(booking.total_amount),
+          paymentMethod: 'manual',
+        });
+      }
 
       toast({
         title: isArabic ? 'تم الحفظ' : 'Saved',
