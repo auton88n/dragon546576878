@@ -359,8 +359,13 @@ const validateTicketRecord = (ticket: any): TicketValidationResult => {
     };
   }
 
-  // Check date validity
-  const today = new Date().toISOString().split('T')[0];
+  // Check date validity - use Saudi Arabia timezone
+  const getSaudiDate = () => {
+    const now = new Date();
+    const saudiTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Riyadh' }));
+    return saudiTime.toISOString().split('T')[0];
+  };
+  const today = getSaudiDate();
   if (ticket.valid_from !== today) {
     const isExpired = new Date(ticket.valid_from) < new Date(today);
     return {
