@@ -85,8 +85,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthBootstrap />
-        <ScrollToTop />
         <Suspense fallback={<PageLoader />}>
+          <ScrollToTop />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
