@@ -119,23 +119,23 @@ const generateEmailPreview = (language: 'en' | 'ar', customerName: string, conte
                 ${message}
               </p>
               
-              <!-- Hours Box -->
-              <table role="presentation" style="width: 100%; background: linear-gradient(135deg, #F5F1E8 0%, #E8E0D0 100%); border-radius: 12px; margin-bottom: 30px;">
+              <!-- Hours Box - Dark background for Gmail Dark Mode compatibility -->
+              <table role="presentation" style="width: 100%; border-radius: 12px; margin-bottom: 30px;" bgcolor="#4A3625">
                 <tr>
-                  <td style="padding: 30px; text-align: center;">
+                  <td bgcolor="#4A3625" style="background-color: #4A3625; padding: 30px; text-align: center; border-radius: 12px;">
                     <div style="margin-bottom: 16px;">
                       <span style="font-size: 28px;">📅</span>
-                      <p style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; font-size: 22px; font-weight: 800; margin: 8px 0 0 0;">
-                        <span style="color: #000000 !important; -webkit-text-fill-color: #000000 !important;">${daysMain}</span>
+                      <p style="color: #FFFFFF; font-size: 22px; font-weight: 800; margin: 8px 0 0 0;">
+                        ${daysMain}
                       </p>
-                      ${daysSub ? `<p style="color: #333333 !important; -webkit-text-fill-color: #333333 !important; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;"><span style="color: #333333 !important; -webkit-text-fill-color: #333333 !important;">${daysSub}</span></p>` : ''}
+                      ${daysSub ? `<p style="color: #D4C5B0; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">${daysSub}</p>` : ''}
                     </div>
-                    <div style="border-top: 1px solid #D4C5B0; padding-top: 16px;">
+                    <div style="border-top: 1px solid rgba(255,255,255,0.25); padding-top: 16px;">
                       <span style="font-size: 28px;">⏰</span>
-                      <p style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; font-size: 32px; font-weight: 800; margin: 8px 0 0 0;">
-                        <span style="color: #000000 !important; -webkit-text-fill-color: #000000 !important;">${hoursMain}</span>
+                      <p style="color: #FFFFFF; font-size: 32px; font-weight: 800; margin: 8px 0 0 0;">
+                        ${hoursMain}
                       </p>
-                      ${hoursSub ? `<p style="color: #333333 !important; -webkit-text-fill-color: #333333 !important; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;"><span style="color: #333333 !important; -webkit-text-fill-color: #333333 !important;">${hoursSub}</span></p>` : ''}
+                      ${hoursSub ? `<p style="color: #D4C5B0; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">${hoursSub}</p>` : ''}
                     </div>
                   </td>
                 </tr>
