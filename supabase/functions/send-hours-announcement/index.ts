@@ -21,9 +21,16 @@ interface CustomContent {
   closingAr?: string;
 }
 
+interface SingleEmailRequest {
+  email: string;
+  name: string;
+  language: string;
+}
+
 interface AnnouncementRequest {
   testEmail?: string;
   sendToAll?: boolean;
+  singleEmail?: SingleEmailRequest;
   customContent?: CustomContent;
 }
 
@@ -178,9 +185,40 @@ const handler = async (req: Request): Promise<Response> => {
     const resend = new Resend(resendApiKey);
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { testEmail, sendToAll, customContent }: AnnouncementRequest = await req.json();
+    const { testEmail, sendToAll, singleEmail, customContent }: AnnouncementRequest = await req.json();
 
-    console.log("Announcement request:", { testEmail, sendToAll, hasCustomContent: !!customContent });
+    console.log("Announcement request:", { testEmail, sendToAll, hasSingleEmail: !!singleEmail, hasCustomContent: !!customContent });
+
+    // Single email mode - for progress tracking
+    if (singleEmail) {
+      console.log("Sending single email to:", singleEmail.email);
+      
+      const html = generateEmailTemplate(singleEmail.language, singleEmail.name, customContent);
+      const subject = singleEmail.language === 'ar' 
+        ? (customContent?.subjectAr || defaultContent.subjectAr)
+        : (customContent?.subjectEn || defaultContent.subjectEn);
+      
+      const { data, error } = await resend.emails.send({
+        from: "Souq Almufaijer <info@almufaijer.com>",
+        to: [singleEmail.email],
+        subject: subject,
+        html: html,
+      });
+
+      if (error) {
+        console.error(`Failed to send to ${singleEmail.email}:`, error);
+        return new Response(
+          JSON.stringify({ success: false, error: error.message }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      console.log(`Email sent to ${singleEmail.email}:`, data?.id);
+      return new Response(
+        JSON.stringify({ success: true, emailId: data?.id }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     if (testEmail) {
       // Send test email
