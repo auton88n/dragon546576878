@@ -110,12 +110,7 @@ const ResumePaymentPage = () => {
         description: `Souq Almufaijer Ticket - ${booking.booking_reference}`,
         publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
         callback_url: callbackUrl,
-        methods: ['creditcard', 'applepay'],
-        apple_pay: {
-          country: 'SA',
-          label: 'سوق المفيجر',
-          validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
-        },
+        methods: ['creditcard'], // Apple Pay disabled temporarily - verification file serving issue
         supported_networks: ['visa', 'mastercard', 'mada', 'amex'],
         language: isArabic ? 'ar' : 'en',
         fixed_width: true,
