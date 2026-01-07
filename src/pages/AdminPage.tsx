@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
-import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send } from 'lucide-react';
+import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
@@ -17,6 +17,7 @@ import BookingDetailsDialog from '@/components/admin/BookingDetailsDialog';
 import EditBookingDialog from '@/components/admin/EditBookingDialog';
 import BulkActionsBar from '@/components/admin/BulkActionsBar';
 import StatusLegend from '@/components/admin/StatusLegend';
+import EmailPreviewDialog from '@/components/admin/EmailPreviewDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load non-critical components
@@ -56,6 +57,7 @@ const AdminPage = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [exporting, setExporting] = useState(false);
   const [sendingReminders, setSendingReminders] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleViewDetails = (booking: Booking) => {
     setSelectedBooking(booking);
@@ -235,18 +237,28 @@ const AdminPage = () => {
                     </p>
                   </div>
                 </div>
-                <Button
-                  onClick={handleSendAllReminders}
-                  disabled={sendingReminders}
-                  className="bg-amber-600 hover:bg-amber-700 text-white gap-2 w-full sm:w-auto"
-                >
-                  {sendingReminders ? (
-                    <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                  {isArabic ? 'إرسال تذكيرات للجميع' : 'Send All Reminders'}
-                </Button>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPreviewOpen(true)}
+                    className="border-amber-500/50 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-2"
+                  >
+                    <Eye className="h-4 w-4" />
+                    {isArabic ? 'معاينة' : 'Preview'}
+                  </Button>
+                  <Button
+                    onClick={handleSendAllReminders}
+                    disabled={sendingReminders}
+                    className="bg-amber-600 hover:bg-amber-700 text-white gap-2 flex-1 sm:flex-none"
+                  >
+                    {sendingReminders ? (
+                      <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    {isArabic ? 'إرسال تذكيرات للجميع' : 'Send All Reminders'}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -427,6 +439,11 @@ const AdminPage = () => {
         open={editOpen}
         onOpenChange={setEditOpen}
         onBookingUpdated={handleBookingUpdated}
+      />
+
+      <EmailPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
       />
     </div>
   );
