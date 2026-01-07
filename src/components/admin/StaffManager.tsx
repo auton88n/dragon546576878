@@ -1038,6 +1038,82 @@ const StaffManager = () => {
                     : "This will change the staff member's current password"}
                 </p>
               </div>
+              
+              {/* Email Preview */}
+              <Collapsible open={showEmailPreview} onOpenChange={setShowEmailPreview}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    <span className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      {isArabic ? 'معاينة البريد الإلكتروني' : 'Preview Email'}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showEmailPreview ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3">
+                  <div className="border rounded-lg overflow-hidden bg-[#F5F1E8]">
+                    {/* Email Header */}
+                    <div className="bg-gradient-to-r from-[#4A3625] to-[#8B6F47] p-4 text-center">
+                      <h3 className="text-white font-bold text-lg">سوق المفيجر</h3>
+                      <p className="text-[#D4C5B0] text-xs tracking-wider">SOUQ ALMUFAIJER</p>
+                    </div>
+                    
+                    {/* Welcome Banner */}
+                    <div className="bg-[#8B6F47] py-3 text-center">
+                      <p className="text-white font-semibold">
+                        {isArabic ? '🎉 مرحباً بك في الفريق!' : '🎉 Welcome to the Team!'}
+                      </p>
+                    </div>
+                    
+                    {/* Email Body */}
+                    <div className="bg-white p-4 space-y-3">
+                      <p className="text-sm text-[#2C2416]">
+                        {isArabic 
+                          ? <>مرحباً <strong>{selectedForResend.fullName}</strong>،</>
+                          : <>Hello <strong>{selectedForResend.fullName}</strong>,</>}
+                      </p>
+                      <p className="text-sm text-[#4A3625]">
+                        {isArabic 
+                          ? <>تمت إضافتك كـ <strong>{getRoleLabel(selectedForResend.role)}</strong> في سوق المفيجر.</>
+                          : <>You have been added as a <strong>{getRoleLabel(selectedForResend.role)}</strong> at Souq Almufaijer.</>}
+                      </p>
+                      
+                      {/* Credentials Box */}
+                      <div className="bg-[#4A3625] rounded-lg p-3 space-y-2">
+                        <div className="border-b border-white/20 pb-2">
+                          <p className="text-[#D4C5B0] text-xs">{isArabic ? '📧 البريد الإلكتروني' : '📧 Email'}</p>
+                          <p className="text-white font-mono text-sm">{selectedForResend.email}</p>
+                        </div>
+                        <div className="border-b border-white/20 pb-2">
+                          <p className="text-[#D4C5B0] text-xs">{isArabic ? '🔑 كلمة المرور' : '🔑 Password'}</p>
+                          <p className="text-white font-mono font-bold">{resendPassword || '••••••••'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[#D4C5B0] text-xs">{isArabic ? '👤 الدور' : '👤 Role'}</p>
+                          <p className="text-white font-semibold text-sm">{getRoleLabel(selectedForResend.role)}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Security Notice Preview */}
+                      <div className="bg-amber-50 border-s-4 border-amber-500 p-2 rounded">
+                        <p className="text-xs text-amber-800">
+                          ⚠️ <strong>{isArabic ? 'تنبيه أمني:' : 'Security Notice:'}</strong>{' '}
+                          {isArabic 
+                            ? 'يرجى تغيير كلمة المرور بعد تسجيل الدخول الأول.' 
+                            : 'Please change your password after your first login.'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Email Footer */}
+                    <div className="bg-[#F5F1E8] p-3 text-center">
+                      <p className="text-[#8B6F47] text-xs font-medium">
+                        {isArabic ? 'سوق المفيجر - تراث الرياض' : 'Souq Almufaijer - Riyadh Heritage'}
+                      </p>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           )}
           
