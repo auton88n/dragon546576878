@@ -83,7 +83,18 @@ const ResumePaymentPage = () => {
     }
 
     const amountInHalalas = Math.round(booking.total_amount * 100);
-    const callbackUrl = `${window.location.origin}/payment-callback?booking=${booking.id}`;
+    const PRODUCTION_DOMAIN = 'https://almufaijer.com';
+    const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback?booking=${booking.id}`;
+
+    // Apple Pay diagnostics
+    const currentDomain = window.location.hostname;
+    const win = window as any;
+    console.log('Apple Pay diagnostics:', {
+      currentDomain,
+      isProductionDomain: currentDomain === 'almufaijer.com',
+      hasApplePaySession: typeof win.ApplePaySession !== 'undefined',
+      canMakePayments: typeof win.ApplePaySession !== 'undefined' && win.ApplePaySession?.canMakePayments?.() || false
+    });
 
     console.log('Initializing Moyasar for resume payment:', { 
       amount: amountInHalalas, 
@@ -111,11 +122,16 @@ const ResumePaymentPage = () => {
         on_completed: (payment: MoyasarPayment) => {
           console.log('Payment completed:', payment.id, payment.status);
         },
-        on_failure: (error) => {
-          console.error('Payment failed:', error);
+        on_failure: (error: any) => {
+          console.error('Payment failed:', {
+            type: error?.type,
+            message: error?.message,
+            code: error?.code,
+            full_error: JSON.stringify(error, null, 2)
+          });
           toast({
             title: isArabic ? 'فشل الدفع' : 'Payment Failed',
-            description: error.message || (isArabic ? 'حدث خطأ في عملية الدفع' : 'An error occurred during payment'),
+            description: `${error?.type || 'Error'}: ${error?.message || (isArabic ? 'حدث خطأ في عملية الدفع' : 'An error occurred during payment')}`,
             variant: 'destructive',
           });
         },
