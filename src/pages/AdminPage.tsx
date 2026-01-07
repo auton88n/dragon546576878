@@ -212,11 +212,44 @@ const AdminPage = () => {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 rtl:[direction:rtl]">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-4 rtl:[direction:rtl]">
             {statsCards.map((stat, index) => (
               <StatsCard key={index} {...stat} loading={statsLoading} />
             ))}
           </div>
+
+          {/* Pending Payments Card with Bulk Reminder */}
+          {stats.pendingPaymentsCount > 0 && (
+            <Card className="mb-6 border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20">
+              <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4">
+                <div className="flex items-center gap-3 rtl:flex-row-reverse">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                    <Bell className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
+                    <p className="font-semibold text-foreground">
+                      {isArabic ? 'مدفوعات معلقة' : 'Pending Payments'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {stats.pendingPaymentsCount} {isArabic ? 'حجز' : 'booking(s)'} · {stats.pendingPaymentsAmount.toLocaleString()} {isArabic ? 'ر.س' : 'SAR'}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleSendAllReminders}
+                  disabled={sendingReminders}
+                  className="bg-amber-600 hover:bg-amber-700 text-white gap-2 w-full sm:w-auto"
+                >
+                  {sendingReminders ? (
+                    <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  {isArabic ? 'إرسال تذكيرات للجميع' : 'Send All Reminders'}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
 
           {/* Tabs Navigation */}
