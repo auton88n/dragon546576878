@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard, Phone, Users, Baby, User, CreditCard, Mail } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard, Phone, Users, Baby, User, CreditCard, Mail, Clock, Ticket, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
@@ -34,6 +34,33 @@ interface ScanResult {
   paymentStatus?: string;
   bookingReference?: string;
   visitDate?: string;
+  // Email cooldown
+  lastEmailSentAt?: string | null;
+  // Employee detail lookup
+  employeeId?: string;
+}
+
+interface FullBookingDetails {
+  id: string;
+  booking_reference: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  visit_date: string;
+  visit_time: string;
+  adult_count: number;
+  child_count: number;
+  senior_count: number;
+  total_amount: number;
+  payment_status: string;
+  last_email_sent_at: string | null;
+  tickets: {
+    id: string;
+    ticket_code: string;
+    ticket_type: string;
+    is_used: boolean;
+    scanned_at: string | null;
+  }[];
 }
 
 import { safeLocalStorage } from '@/lib/safeStorage';
@@ -106,6 +133,11 @@ const ScannerPage = () => {
   const [isMarkingPaid, setIsMarkingPaid] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [countdownProgress, setCountdownProgress] = useState(100);
+  const [emailCooldownRemaining, setEmailCooldownRemaining] = useState(0);
+  const [fullBookingDetails, setFullBookingDetails] = useState<FullBookingDetails | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [employeeDetails, setEmployeeDetails] = useState<{ full_name: string; email: string; phone: string | null; department: string; is_active: boolean } | null>(null);
+  const [employeeScansToday, setEmployeeScansToday] = useState(0);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const resultTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -144,6 +176,81 @@ const ScannerPage = () => {
       return () => clearInterval(interval);
     }
   }, [showResultOverlay]);
+
+  // Email cooldown timer
+  useEffect(() => {
+    const lastSentAt = selectedScanDetail?.lastEmailSentAt || fullBookingDetails?.last_email_sent_at;
+    if (lastSentAt) {
+      const lastSent = new Date(lastSentAt).getTime();
+      const cooldownMs = 5 * 60 * 1000; // 5 minutes
+      const remaining = Math.max(0, cooldownMs - (Date.now() - lastSent));
+      setEmailCooldownRemaining(Math.ceil(remaining / 1000));
+      
+      if (remaining > 0) {
+        const interval = setInterval(() => {
+          setEmailCooldownRemaining(prev => Math.max(0, prev - 1));
+        }, 1000);
+        return () => clearInterval(interval);
+      }
+    } else {
+      setEmailCooldownRemaining(0);
+    }
+  }, [selectedScanDetail, fullBookingDetails?.last_email_sent_at]);
+
+  // Fetch full booking details when dialog opens
+  useEffect(() => {
+    if (selectedScanDetail?.bookingId && !selectedScanDetail.isEmployee) {
+      setIsLoadingDetails(true);
+      supabase
+        .from('bookings')
+        .select('*, tickets(id, ticket_code, ticket_type, is_used, scanned_at)')
+        .eq('id', selectedScanDetail.bookingId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setFullBookingDetails(data as unknown as FullBookingDetails);
+          }
+          setIsLoadingDetails(false);
+        });
+    } else {
+      setFullBookingDetails(null);
+    }
+  }, [selectedScanDetail?.bookingId, selectedScanDetail?.isEmployee]);
+
+  // Fetch employee details when employee scan is selected
+  useEffect(() => {
+    if (selectedScanDetail?.isEmployee && selectedScanDetail?.employeeId) {
+      supabase.rpc('validate_employee_badge', { 
+        employee_id: selectedScanDetail.employeeId 
+      }).then(({ data }) => {
+        if (data) setEmployeeDetails(data as any);
+      });
+    } else {
+      setEmployeeDetails(null);
+    }
+  }, [selectedScanDetail?.isEmployee, selectedScanDetail?.employeeId]);
+
+  // Fetch employee scans count for today
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const fetchCount = () => {
+      supabase
+        .from('employee_scans')
+        .select('id', { count: 'exact', head: true })
+        .gte('scanned_at', today + 'T00:00:00.000Z')
+        .then(({ count }) => {
+          setEmployeeScansToday(count || 0);
+        });
+    };
+    fetchCount();
+    
+    const channel = supabase
+      .channel('employee-scans-count')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'employee_scans' }, fetchCount)
+      .subscribe();
+      
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -346,7 +453,7 @@ const ScannerPage = () => {
   }, [isArabic, currentResult, selectedScanDetail, isMarkingPaid, playSound]);
 
   const handleResendEmail = useCallback(async (bookingId: string) => {
-    if (!bookingId || isResendingEmail) return;
+    if (!bookingId || isResendingEmail || emailCooldownRemaining > 0) return;
     setIsResendingEmail(true);
     try {
       const { error } = await supabase.functions.invoke('send-booking-confirmation', {
@@ -355,13 +462,17 @@ const ScannerPage = () => {
       
       if (error) throw error;
       toast.success(isArabic ? 'تم إرسال البريد الإلكتروني بنجاح' : 'Email sent successfully');
+      
+      // Update cooldown
+      setEmailCooldownRemaining(5 * 60);
+      setSelectedScanDetail(prev => prev ? { ...prev, lastEmailSentAt: new Date().toISOString() } : null);
     } catch (err) {
       console.error('Error resending email:', err);
       toast.error(isArabic ? 'فشل إرسال البريد الإلكتروني' : 'Failed to send email');
     } finally {
       setIsResendingEmail(false);
     }
-  }, [isArabic, isResendingEmail]);
+  }, [isArabic, isResendingEmail, emailCooldownRemaining]);
 
   const handleManualLookup = useCallback(async () => {
     if (!searchQuery.trim()) return;
@@ -522,13 +633,14 @@ const ScannerPage = () => {
         playFeedback('error');
       }
 
-      // Add to recent scans with employee flag
+      // Add to recent scans with employee flag and ID for detail lookup
       setRecentScans(prev => [{
         timestamp: new Date(),
         status: empResult.isValid ? 'employee_valid' : 'employee_inactive',
         isEmployee: true,
         employeeName: empResult.employee?.name,
         employeeDepartment: empResult.employee?.department,
+        employeeId: empResult.employee?.id,
       }, ...prev.slice(0, 9)]);
 
       // Stats: employees don't affect ticket counts
@@ -977,40 +1089,49 @@ const ScannerPage = () => {
             </Button>
           </div>
 
-          {/* Stats Grid - 4 clear mini cards */}
-          <div className="grid grid-cols-4 gap-2 mb-4">
+          {/* Stats Grid - 5 clear mini cards */}
+          <div className="grid grid-cols-5 gap-1.5 mb-4">
             {/* Total Scans */}
-            <div className="bg-card border border-border/50 rounded-xl p-2.5 text-center">
-              <p className="text-xl font-bold tabular-nums">{todayStats.totalScans}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
+            <div className="bg-card border border-border/50 rounded-xl p-2 text-center">
+              <p className="text-lg font-bold tabular-nums">{todayStats.totalScans}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">
                 {isArabic ? 'إجمالي' : 'Total'}
               </p>
             </div>
             
             {/* Valid Scans */}
-            <div className="bg-success/10 border border-success/30 rounded-xl p-2.5 text-center">
-              <p className="text-xl font-bold tabular-nums text-success">{todayStats.validScans}</p>
-              <p className="text-[10px] text-success/80 mt-0.5 flex items-center justify-center gap-0.5">
+            <div className="bg-success/10 border border-success/30 rounded-xl p-2 text-center">
+              <p className="text-lg font-bold tabular-nums text-success">{todayStats.validScans}</p>
+              <p className="text-[9px] text-success/80 mt-0.5 flex items-center justify-center gap-0.5">
                 <Check className="h-2.5 w-2.5" />
                 {isArabic ? 'صالح' : 'Valid'}
               </p>
             </div>
             
             {/* Used/Already Scanned */}
-            <div className="bg-warning/10 border border-warning/30 rounded-xl p-2.5 text-center">
-              <p className="text-xl font-bold tabular-nums text-warning">{todayStats.usedScans}</p>
-              <p className="text-[10px] text-warning/80 mt-0.5 flex items-center justify-center gap-0.5">
+            <div className="bg-warning/10 border border-warning/30 rounded-xl p-2 text-center">
+              <p className="text-lg font-bold tabular-nums text-warning">{todayStats.usedScans}</p>
+              <p className="text-[9px] text-warning/80 mt-0.5 flex items-center justify-center gap-0.5">
                 <AlertCircle className="h-2.5 w-2.5" />
                 {isArabic ? 'مستخدم' : 'Used'}
               </p>
             </div>
             
             {/* Invalid */}
-            <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-2.5 text-center">
-              <p className="text-xl font-bold tabular-nums text-destructive">{todayStats.invalidScans}</p>
-              <p className="text-[10px] text-destructive/80 mt-0.5 flex items-center justify-center gap-0.5">
+            <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-2 text-center">
+              <p className="text-lg font-bold tabular-nums text-destructive">{todayStats.invalidScans}</p>
+              <p className="text-[9px] text-destructive/80 mt-0.5 flex items-center justify-center gap-0.5">
                 <X className="h-2.5 w-2.5" />
                 {isArabic ? 'مرفوض' : 'Invalid'}
+              </p>
+            </div>
+            
+            {/* Employee Scans - Purple themed */}
+            <div className="bg-violet-500/10 border border-violet-500/30 rounded-xl p-2 text-center">
+              <p className="text-lg font-bold tabular-nums text-violet-500">{employeeScansToday}</p>
+              <p className="text-[9px] text-violet-500/80 mt-0.5 flex items-center justify-center gap-0.5">
+                <Briefcase className="h-2.5 w-2.5" />
+                {isArabic ? 'موظفين' : 'Staff'}
               </p>
             </div>
           </div>
@@ -1131,10 +1252,9 @@ const ScannerPage = () => {
                   {recentScans.map((scan, index) => (
                     <div 
                       key={index} 
-                      onClick={() => !scan.isEmployee && setSelectedScanDetail(scan)}
+                      onClick={() => setSelectedScanDetail(scan)}
                       className={cn(
-                        'flex items-center justify-between p-3 rounded-xl border transition-all',
-                        !scan.isEmployee && 'cursor-pointer hover:shadow-md',
+                        'flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer hover:shadow-md',
                       scan.isEmployee && scan.status === 'employee_valid' && 'bg-violet-500/5 border-violet-500/20',
                       scan.isEmployee && scan.status === 'employee_inactive' && 'bg-destructive/5 border-destructive/20',
                       !scan.isEmployee && scan.status === 'valid' && 'bg-success/5 border-success/20',
@@ -1192,72 +1312,161 @@ const ScannerPage = () => {
 
       {/* Scan Detail Dialog */}
       <Dialog open={!!selectedScanDetail} onOpenChange={() => setSelectedScanDetail(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isArabic ? 'تفاصيل المسح' : 'Scan Details'}</DialogTitle>
           </DialogHeader>
           {selectedScanDetail && (
             <div className="space-y-4">
-              <div className="flex justify-center">
-                <Badge variant={selectedScanDetail.status === 'valid' ? 'default' : selectedScanDetail.status === 'used' ? 'secondary' : 'destructive'} className={cn(
-                  'text-sm px-3 py-1',
-                  selectedScanDetail.status === 'valid' && 'bg-success text-white',
-                  selectedScanDetail.status === 'used' && 'bg-warning text-white'
-                )}>
-                  {getStatusText(selectedScanDetail.status)}
-                </Badge>
-              </div>
-              
-              <div className="bg-muted/50 rounded-xl p-4 space-y-3">
-                <p className="font-bold text-lg text-center">{selectedScanDetail.customerName}</p>
-                
-                {selectedScanDetail.customerPhone && (
-                  <a href={`tel:${selectedScanDetail.customerPhone}`} className="flex items-center justify-center gap-2 text-primary hover:underline">
-                    <Phone className="h-4 w-4" />
-                    <span dir="ltr">{selectedScanDetail.customerPhone}</span>
-                  </a>
-                )}
-                
-                <div className="flex items-center justify-center gap-3 flex-wrap text-sm">
-                  {(selectedScanDetail.adultCount || 0) > 0 && (
-                    <span className="flex items-center gap-1"><User className="h-4 w-4" /> {selectedScanDetail.adultCount} {isArabic ? 'بالغ' : 'Adults'}</span>
+              {/* Employee Details View */}
+              {selectedScanDetail.isEmployee ? (
+                <>
+                  <div className="flex justify-center">
+                    <Badge className={cn(
+                      'text-sm px-3 py-1',
+                      selectedScanDetail.status === 'employee_valid' ? 'bg-violet-500 text-white' : 'bg-destructive text-white'
+                    )}>
+                      {selectedScanDetail.status === 'employee_valid' 
+                        ? (isArabic ? 'موظف فعال' : 'Active Employee')
+                        : (isArabic ? 'موظف غير فعال' : 'Inactive Employee')}
+                    </Badge>
+                  </div>
+                  
+                  <div className="bg-violet-50 dark:bg-violet-900/20 rounded-xl p-4 space-y-3">
+                    <p className="font-bold text-lg text-center">{selectedScanDetail.employeeName}</p>
+                    
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Briefcase className="h-4 w-4" />
+                      <span>{getDepartmentLabel(selectedScanDetail.employeeDepartment || 'general')}</span>
+                    </div>
+                    
+                    {employeeDetails?.phone && (
+                      <a href={`tel:${employeeDetails.phone}`} className="flex items-center justify-center gap-2 text-primary hover:underline">
+                        <Phone className="h-4 w-4" />
+                        <span dir="ltr">{employeeDetails.phone}</span>
+                      </a>
+                    )}
+                    
+                    {employeeDetails?.email && (
+                      <p className="text-center text-sm text-muted-foreground">{employeeDetails.email}</p>
+                    )}
+                    
+                    <p className="text-xs text-center text-muted-foreground">
+                      {isArabic ? 'وقت الدخول: ' : 'Entry Time: '}{selectedScanDetail.timestamp.toLocaleString()}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                /* Ticket Details View */
+                <>
+                  <div className="flex justify-center">
+                    <Badge variant={selectedScanDetail.status === 'valid' ? 'default' : selectedScanDetail.status === 'used' ? 'secondary' : 'destructive'} className={cn(
+                      'text-sm px-3 py-1',
+                      selectedScanDetail.status === 'valid' && 'bg-success text-white',
+                      selectedScanDetail.status === 'used' && 'bg-warning text-white'
+                    )}>
+                      {getStatusText(selectedScanDetail.status)}
+                    </Badge>
+                  </div>
+                  
+                  <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                    <p className="font-bold text-lg text-center">{selectedScanDetail.customerName}</p>
+                    
+                    {selectedScanDetail.customerPhone && (
+                      <a href={`tel:${selectedScanDetail.customerPhone}`} className="flex items-center justify-center gap-2 text-primary hover:underline">
+                        <Phone className="h-4 w-4" />
+                        <span dir="ltr">{selectedScanDetail.customerPhone}</span>
+                      </a>
+                    )}
+                    
+                    <div className="flex items-center justify-center gap-3 flex-wrap text-sm">
+                      {(selectedScanDetail.adultCount || 0) > 0 && (
+                        <span className="flex items-center gap-1"><User className="h-4 w-4" /> {selectedScanDetail.adultCount} {isArabic ? 'بالغ' : 'Adults'}</span>
+                      )}
+                      {(selectedScanDetail.childCount || 0) > 0 && (
+                        <span className="flex items-center gap-1"><Baby className="h-4 w-4" /> {selectedScanDetail.childCount} {isArabic ? 'طفل' : 'Children'}</span>
+                      )}
+                    </div>
+                    
+                    <div className="text-center text-sm text-muted-foreground space-y-1">
+                      <p className="font-mono">{selectedScanDetail.ticketCode}</p>
+                      <p>{isArabic ? 'الحجز: ' : 'Ref: '}{selectedScanDetail.bookingReference}</p>
+                      {selectedScanDetail.visitDate && (
+                        <p>{isArabic ? 'التاريخ: ' : 'Date: '}{new Date(selectedScanDetail.visitDate).toLocaleDateString()}</p>
+                      )}
+                      <p className="text-xs">{isArabic ? 'المسح: ' : 'Scanned: '}{selectedScanDetail.timestamp.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  
+                  {/* All Tickets Section */}
+                  {fullBookingDetails?.tickets && fullBookingDetails.tickets.length > 1 && (
+                    <div className="bg-muted/30 rounded-xl p-4">
+                      <h4 className="font-semibold mb-3 flex items-center gap-2 text-sm">
+                        <Ticket className="h-4 w-4" />
+                        {isArabic ? 'جميع التذاكر' : 'All Tickets'} ({fullBookingDetails.tickets.length})
+                      </h4>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {fullBookingDetails.tickets.map((ticket) => (
+                          <div key={ticket.id} className={cn(
+                            "flex items-center justify-between p-2 rounded-lg text-sm",
+                            ticket.is_used ? 'bg-warning/10' : 'bg-success/10'
+                          )}>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs">{ticket.ticket_code}</span>
+                              <span className="text-xs">
+                                {ticket.ticket_type === 'adult' ? '👨' : ticket.ticket_type === 'child' ? '👶' : '👴'}
+                              </span>
+                            </div>
+                            <Badge variant="secondary" className={cn(
+                              'text-xs',
+                              ticket.is_used ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success'
+                            )}>
+                              {ticket.is_used ? (isArabic ? 'مستخدم' : 'Used') : (isArabic ? 'صالح' : 'Valid')}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                  {(selectedScanDetail.childCount || 0) > 0 && (
-                    <span className="flex items-center gap-1"><Baby className="h-4 w-4" /> {selectedScanDetail.childCount} {isArabic ? 'طفل' : 'Children'}</span>
+                  
+                  {/* Total Amount */}
+                  {fullBookingDetails && (
+                    <p className="text-sm text-center text-muted-foreground">
+                      {isArabic ? 'الإجمالي: ' : 'Total: '}{fullBookingDetails.total_amount} SAR
+                    </p>
                   )}
-                </div>
-                
-                <div className="text-center text-sm text-muted-foreground space-y-1">
-                  <p className="font-mono">{selectedScanDetail.ticketCode}</p>
-                  <p>{isArabic ? 'الحجز: ' : 'Ref: '}{selectedScanDetail.bookingReference}</p>
-                  {selectedScanDetail.visitDate && (
-                    <p>{isArabic ? 'التاريخ: ' : 'Date: '}{new Date(selectedScanDetail.visitDate).toLocaleDateString()}</p>
+                  
+                  {selectedScanDetail.paymentStatus !== 'completed' && selectedScanDetail.bookingId && (
+                    <Button 
+                      className="w-full bg-green-600 hover:bg-green-700 gap-2"
+                      disabled={isMarkingPaid}
+                      onClick={() => handleMarkAsPaid(selectedScanDetail.bookingId!)}
+                    >
+                      {isMarkingPaid ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                      {isArabic ? 'تحديد كمدفوع' : 'Mark as Paid'}
+                    </Button>
                   )}
-                  <p className="text-xs">{isArabic ? 'المسح: ' : 'Scanned: '}{selectedScanDetail.timestamp.toLocaleString()}</p>
-                </div>
-              </div>
-              
-              {selectedScanDetail.paymentStatus !== 'completed' && selectedScanDetail.bookingId && (
-                <Button 
-                  className="w-full bg-green-600 hover:bg-green-700 gap-2"
-                  disabled={isMarkingPaid}
-                  onClick={() => handleMarkAsPaid(selectedScanDetail.bookingId!)}
-                >
-                  {isMarkingPaid ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                  {isArabic ? 'تحديد كمدفوع' : 'Mark as Paid'}
-                </Button>
-              )}
-              
-              {selectedScanDetail.bookingId && (
-                <Button 
-                  variant="outline"
-                  className="w-full gap-2"
-                  disabled={isResendingEmail}
-                  onClick={() => handleResendEmail(selectedScanDetail.bookingId!)}
-                >
-                  {isResendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
-                </Button>
+                  
+                  {selectedScanDetail.bookingId && (
+                    <Button 
+                      variant="outline"
+                      className="w-full gap-2"
+                      disabled={isResendingEmail || emailCooldownRemaining > 0}
+                      onClick={() => handleResendEmail(selectedScanDetail.bookingId!)}
+                    >
+                      {isResendingEmail ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : emailCooldownRemaining > 0 ? (
+                        <Clock className="h-4 w-4" />
+                      ) : (
+                        <Mail className="h-4 w-4" />
+                      )}
+                      {emailCooldownRemaining > 0 
+                        ? `${isArabic ? 'انتظر' : 'Wait'} ${Math.floor(emailCooldownRemaining / 60)}:${(emailCooldownRemaining % 60).toString().padStart(2, '0')}`
+                        : (isArabic ? 'إعادة إرسال البريد' : 'Resend Email')}
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           )}
