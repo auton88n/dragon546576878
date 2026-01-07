@@ -22,10 +22,10 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const moyasarSecretKey = Deno.env.get("MOYASAR_SECRET_KEY");
+    const moyasarSecretKey = Deno.env.get("MOYASAR_SECRET_KEY-1");
 
     if (!moyasarSecretKey) {
-      console.error("MOYASAR_SECRET_KEY not configured");
+      console.error("MOYASAR_SECRET_KEY-1 not configured");
       return new Response(
         JSON.stringify({ success: false, error: "Payment verification not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
