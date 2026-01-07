@@ -74,7 +74,7 @@ const generateEmailTemplate = (
     visitDetails: isArabic ? "تفاصيل الزيارة" : "Visit Details",
     date: isArabic ? "التاريخ" : "Date",
     validAllDay: isArabic ? "صالحة طوال اليوم" : "Valid All Day",
-    operatingHours: isArabic ? "(9 ص - 6 م)" : "(9 AM - 6 PM)",
+    operatingHours: isArabic ? "(٣ م - ١٢ ص منتصف الليل)" : "(3 PM - 12 AM Midnight)",
     tickets: isArabic ? "التذاكر" : "Tickets",
     adult: isArabic ? "بالغ" : "Adult",
     child: isArabic ? "طفل" : "Child",
