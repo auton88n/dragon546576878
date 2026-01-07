@@ -32,6 +32,7 @@ interface ScanResult {
   childCount?: number;
   seniorCount?: number;
   paymentStatus?: string;
+  totalAmount?: number;
   bookingReference?: string;
   visitDate?: string;
   // Email cooldown
@@ -786,6 +787,14 @@ const ScannerPage = () => {
       ticketCode: result.ticket?.ticketCode,
       customerName: result.ticket?.customerName,
       ticketType: result.ticket?.ticketType,
+      paymentStatus: result.ticket?.paymentStatus,
+      totalAmount: result.ticket?.totalAmount,
+      bookingId: result.ticket?.bookingId,
+      bookingReference: result.ticket?.bookingReference,
+      visitDate: result.ticket?.visitDate,
+      customerPhone: result.ticket?.customerPhone,
+      adultCount: result.ticket?.adultCount,
+      childCount: result.ticket?.childCount,
     }, ...prev.slice(0, 9)]);
 
     resultTimeoutRef.current = setTimeout(async () => {
@@ -1025,6 +1034,7 @@ const ScannerPage = () => {
                     <Banknote className="h-6 w-6" />
                     <div className="text-center">
                       <p className="text-lg">{isArabic ? '⚠️ لم يتم الدفع' : '⚠️ NOT PAID'}</p>
+                      <p className="text-sm font-mono opacity-90">{currentResult.ticket.totalAmount || 0} SAR</p>
                     </div>
                   </div>
                   
@@ -1392,7 +1402,8 @@ const ScannerPage = () => {
                         'flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer hover:shadow-md',
                       scan.isEmployee && scan.status === 'employee_valid' && 'bg-violet-500/5 border-violet-500/20',
                       scan.isEmployee && scan.status === 'employee_inactive' && 'bg-destructive/5 border-destructive/20',
-                      !scan.isEmployee && scan.status === 'valid' && 'bg-success/5 border-success/20',
+                      !scan.isEmployee && scan.status === 'valid' && scan.paymentStatus === 'completed' && 'bg-success/5 border-success/20',
+                      !scan.isEmployee && scan.status === 'valid' && scan.paymentStatus !== 'completed' && 'bg-amber-100 border-amber-400 dark:bg-amber-900/30 dark:border-amber-600',
                       !scan.isEmployee && scan.status === 'used' && 'bg-warning/5 border-warning/20',
                       !scan.isEmployee && !['valid', 'used'].includes(scan.status) && 'bg-destructive/5 border-destructive/20'
                     )}>
@@ -1401,13 +1412,15 @@ const ScannerPage = () => {
                           "w-8 h-8 rounded-xl flex items-center justify-center",
                           scan.isEmployee && scan.status === 'employee_valid' && 'bg-violet-500/10',
                           scan.isEmployee && scan.status === 'employee_inactive' && 'bg-destructive/10',
-                          !scan.isEmployee && scan.status === 'valid' && 'bg-success/10',
+                          !scan.isEmployee && scan.status === 'valid' && scan.paymentStatus === 'completed' && 'bg-success/10',
+                          !scan.isEmployee && scan.status === 'valid' && scan.paymentStatus !== 'completed' && 'bg-amber-500/10',
                           !scan.isEmployee && scan.status === 'used' && 'bg-warning/10',
                           !scan.isEmployee && !['valid', 'used'].includes(scan.status) && 'bg-destructive/10'
                         )}>
                           {scan.isEmployee && scan.status === 'employee_valid' && <CheckCircle className="h-4 w-4 text-violet-500" />}
                           {scan.isEmployee && scan.status === 'employee_inactive' && <XCircle className="h-4 w-4 text-destructive" />}
-                          {!scan.isEmployee && scan.status === 'valid' && <CheckCircle className="h-4 w-4 text-success" />}
+                          {!scan.isEmployee && scan.status === 'valid' && scan.paymentStatus === 'completed' && <CheckCircle className="h-4 w-4 text-success" />}
+                          {!scan.isEmployee && scan.status === 'valid' && scan.paymentStatus !== 'completed' && <AlertTriangle className="h-4 w-4 text-amber-600" />}
                           {!scan.isEmployee && scan.status === 'used' && <AlertTriangle className="h-4 w-4 text-warning" />}
                           {!scan.isEmployee && !['valid', 'used'].includes(scan.status) && <XCircle className="h-4 w-4 text-destructive" />}
                         </div>
@@ -1430,10 +1443,15 @@ const ScannerPage = () => {
                           "text-xs font-medium",
                           scan.isEmployee && scan.status === 'employee_valid' && 'text-violet-500',
                           scan.isEmployee && scan.status === 'employee_inactive' && 'text-destructive',
-                          !scan.isEmployee && scan.status === 'valid' && 'text-success',
+                          !scan.isEmployee && scan.status === 'valid' && scan.paymentStatus === 'completed' && 'text-success',
+                          !scan.isEmployee && scan.status === 'valid' && scan.paymentStatus !== 'completed' && 'text-amber-600',
                           !scan.isEmployee && scan.status === 'used' && 'text-warning',
                           !scan.isEmployee && !['valid', 'used'].includes(scan.status) && 'text-destructive'
-                        )}>{getStatusText(scan.status)}</p>
+                        )}>
+                          {!scan.isEmployee && scan.status === 'valid' && scan.paymentStatus !== 'completed' 
+                            ? (isArabic ? 'صالحة - غير مدفوعة' : 'Valid - Not Paid')
+                            : getStatusText(scan.status)}
+                        </p>
                         <p className="text-xs text-muted-foreground">{scan.timestamp.toLocaleTimeString()}</p>
                       </div>
                     </div>
