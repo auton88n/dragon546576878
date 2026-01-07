@@ -315,7 +315,7 @@ const ScannerPage = () => {
     setTodayStats(prev => ({
       totalScans: prev.totalScans + 1,
       validScans: result.isValid ? prev.validScans + 1 : prev.validScans,
-      invalidScans: ['invalid', 'not_found'].includes(result.status) ? prev.invalidScans + 1 : prev.invalidScans,
+      invalidScans: ['invalid', 'not_found', 'wrong_date', 'expired'].includes(result.status) ? prev.invalidScans + 1 : prev.invalidScans,
       usedScans: result.status === 'used' ? prev.usedScans + 1 : prev.usedScans,
     }));
 
@@ -514,7 +514,7 @@ const ScannerPage = () => {
     setTodayStats(prev => ({
       totalScans: prev.totalScans + 1,
       validScans: result.isValid ? prev.validScans + 1 : prev.validScans,
-      invalidScans: result.status === 'invalid' || result.status === 'not_found' ? prev.invalidScans + 1 : prev.invalidScans,
+      invalidScans: ['invalid', 'not_found', 'wrong_date', 'expired'].includes(result.status) ? prev.invalidScans + 1 : prev.invalidScans,
       usedScans: result.status === 'used' ? prev.usedScans + 1 : prev.usedScans,
     }));
 
