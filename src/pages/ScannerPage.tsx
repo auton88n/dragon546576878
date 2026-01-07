@@ -814,8 +814,16 @@ const ScannerPage = () => {
         scannerRef.current = new Html5Qrcode('qr-reader');
       }
 
-      // Optimized for faster screen-to-screen scanning
-      const qrConfig = { fps: 15, qrbox: { width: 300, height: 300 }, aspectRatio: 1 };
+      // Optimized for ultra-fast QR detection
+      const qrConfig = { 
+        fps: 30, // Increased from 15 to 30 for faster detection
+        qrbox: { width: 350, height: 350 }, // Larger scan area
+        aspectRatio: 1,
+        formatsToSupport: [ 0 ], // 0 = QR_CODE only, skip other formats for speed
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true // Use native detector when available (much faster)
+        }
+      };
       let cameraId: string | { facingMode: string } = { facingMode: 'environment' };
       
       try {
