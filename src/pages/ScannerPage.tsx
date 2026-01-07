@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard, Phone, Users, Baby, User } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, VolumeX, Search, Loader2, Wifi, WifiOff, RefreshCw, Check, AlertCircle, X, Keyboard, Phone, Users, Baby, User, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
@@ -12,7 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ScanResult {
   timestamp: Date;
@@ -23,6 +25,15 @@ interface ScanResult {
   isEmployee?: boolean;
   employeeName?: string;
   employeeDepartment?: string;
+  // Extended fields for detail view
+  bookingId?: string;
+  customerPhone?: string;
+  adultCount?: number;
+  childCount?: number;
+  seniorCount?: number;
+  paymentStatus?: string;
+  bookingReference?: string;
+  visitDate?: string;
 }
 
 import { safeLocalStorage } from '@/lib/safeStorage';
@@ -91,6 +102,8 @@ const ScannerPage = () => {
   const [showCodeEntry, setShowCodeEntry] = useState(false);
   const [enteredCode, setEnteredCode] = useState('');
   const [isValidatingCode, setIsValidatingCode] = useState(false);
+  const [selectedScanDetail, setSelectedScanDetail] = useState<ScanResult | null>(null);
+  const [isMarkingPaid, setIsMarkingPaid] = useState(false);
   const [countdownProgress, setCountdownProgress] = useState(100);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -282,6 +295,38 @@ const ScannerPage = () => {
     }
   }, []);
 
+  const handleMarkAsPaid = useCallback(async (bookingId: string) => {
+    if (!bookingId || isMarkingPaid) return;
+    setIsMarkingPaid(true);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ payment_status: 'completed', paid_at: new Date().toISOString() })
+        .eq('id', bookingId);
+      
+      if (error) throw error;
+      toast.success(isArabic ? 'تم تحديث الدفع بنجاح' : 'Payment marked as complete');
+      
+      // Update current result if showing
+      if (currentResult && 'ticket' in currentResult && currentResult.ticket) {
+        setCurrentResult({
+          ...currentResult,
+          ticket: { ...currentResult.ticket, paymentStatus: 'completed' }
+        });
+      }
+      
+      // Update selected scan detail if open
+      if (selectedScanDetail) {
+        setSelectedScanDetail({ ...selectedScanDetail, paymentStatus: 'completed' });
+      }
+    } catch (err) {
+      console.error('Error marking as paid:', err);
+      toast.error(isArabic ? 'فشل تحديث الدفع' : 'Failed to update payment');
+    } finally {
+      setIsMarkingPaid(false);
+    }
+  }, [isArabic, currentResult, selectedScanDetail, isMarkingPaid]);
+
   const handleManualLookup = useCallback(async () => {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
@@ -325,6 +370,14 @@ const ScannerPage = () => {
       ticketCode: result.ticket?.ticketCode,
       customerName: result.ticket?.customerName,
       ticketType: result.ticket?.ticketType,
+      bookingId: result.ticket?.bookingId,
+      customerPhone: result.ticket?.customerPhone,
+      adultCount: result.ticket?.adultCount,
+      childCount: result.ticket?.childCount,
+      seniorCount: result.ticket?.seniorCount,
+      paymentStatus: result.ticket?.paymentStatus,
+      bookingReference: result.ticket?.bookingReference,
+      visitDate: result.ticket?.visitDate,
     }, ...prev.slice(0, 9)]);
 
     handleManualLookup();
@@ -747,10 +800,24 @@ const ScannerPage = () => {
                 )}
               </div>
               
-              {/* Payment Warning */}
+              {/* Payment Warning with Mark as Paid button */}
               {currentResult.ticket.paymentStatus !== 'completed' && (
-                <div className="bg-amber-500/80 text-white rounded-lg px-3 py-1.5 text-sm font-semibold mb-3">
-                  ⚠️ {isArabic ? 'في انتظار الدفع' : 'Payment Pending'}
+                <div className="flex flex-col items-center gap-2 mb-3">
+                  <div className="bg-amber-500/80 text-white rounded-lg px-3 py-1.5 text-sm font-semibold">
+                    ⚠️ {isArabic ? 'في انتظار الدفع' : 'Payment Pending'}
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                    disabled={isMarkingPaid}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMarkAsPaid(currentResult.ticket!.bookingId);
+                    }}
+                  >
+                    {isMarkingPaid ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                    {isArabic ? 'تم الدفع' : 'Mark as Paid'}
+                  </Button>
                 </div>
               )}
               
@@ -1026,8 +1093,12 @@ const ScannerPage = () => {
               ) : (
                 <div className="space-y-2">
                   {recentScans.map((scan, index) => (
-                    <div key={index} className={cn(
-                      'flex items-center justify-between p-3 rounded-xl border',
+                    <div 
+                      key={index} 
+                      onClick={() => !scan.isEmployee && setSelectedScanDetail(scan)}
+                      className={cn(
+                        'flex items-center justify-between p-3 rounded-xl border transition-all',
+                        !scan.isEmployee && 'cursor-pointer hover:shadow-md',
                       scan.isEmployee && scan.status === 'employee_valid' && 'bg-violet-500/5 border-violet-500/20',
                       scan.isEmployee && scan.status === 'employee_inactive' && 'bg-destructive/5 border-destructive/20',
                       !scan.isEmployee && scan.status === 'valid' && 'bg-success/5 border-success/20',
@@ -1082,6 +1153,68 @@ const ScannerPage = () => {
           </Card>
         </div>
       </main>
+
+      {/* Scan Detail Dialog */}
+      <Dialog open={!!selectedScanDetail} onOpenChange={() => setSelectedScanDetail(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isArabic ? 'تفاصيل المسح' : 'Scan Details'}</DialogTitle>
+          </DialogHeader>
+          {selectedScanDetail && (
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <Badge variant={selectedScanDetail.status === 'valid' ? 'default' : selectedScanDetail.status === 'used' ? 'secondary' : 'destructive'} className={cn(
+                  'text-sm px-3 py-1',
+                  selectedScanDetail.status === 'valid' && 'bg-success text-white',
+                  selectedScanDetail.status === 'used' && 'bg-warning text-white'
+                )}>
+                  {getStatusText(selectedScanDetail.status)}
+                </Badge>
+              </div>
+              
+              <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                <p className="font-bold text-lg text-center">{selectedScanDetail.customerName}</p>
+                
+                {selectedScanDetail.customerPhone && (
+                  <a href={`tel:${selectedScanDetail.customerPhone}`} className="flex items-center justify-center gap-2 text-primary hover:underline">
+                    <Phone className="h-4 w-4" />
+                    <span dir="ltr">{selectedScanDetail.customerPhone}</span>
+                  </a>
+                )}
+                
+                <div className="flex items-center justify-center gap-3 flex-wrap text-sm">
+                  {(selectedScanDetail.adultCount || 0) > 0 && (
+                    <span className="flex items-center gap-1"><User className="h-4 w-4" /> {selectedScanDetail.adultCount} {isArabic ? 'بالغ' : 'Adults'}</span>
+                  )}
+                  {(selectedScanDetail.childCount || 0) > 0 && (
+                    <span className="flex items-center gap-1"><Baby className="h-4 w-4" /> {selectedScanDetail.childCount} {isArabic ? 'طفل' : 'Children'}</span>
+                  )}
+                </div>
+                
+                <div className="text-center text-sm text-muted-foreground space-y-1">
+                  <p className="font-mono">{selectedScanDetail.ticketCode}</p>
+                  <p>{isArabic ? 'الحجز: ' : 'Ref: '}{selectedScanDetail.bookingReference}</p>
+                  {selectedScanDetail.visitDate && (
+                    <p>{isArabic ? 'التاريخ: ' : 'Date: '}{new Date(selectedScanDetail.visitDate).toLocaleDateString()}</p>
+                  )}
+                  <p className="text-xs">{isArabic ? 'المسح: ' : 'Scanned: '}{selectedScanDetail.timestamp.toLocaleString()}</p>
+                </div>
+              </div>
+              
+              {selectedScanDetail.paymentStatus !== 'completed' && selectedScanDetail.bookingId && (
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700 gap-2"
+                  disabled={isMarkingPaid}
+                  onClick={() => handleMarkAsPaid(selectedScanDetail.bookingId!)}
+                >
+                  {isMarkingPaid ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                  {isArabic ? 'تحديد كمدفوع' : 'Mark as Paid'}
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Powered by AYN Footer */}
       <PoweredByAYN className="border-t border-border" />
