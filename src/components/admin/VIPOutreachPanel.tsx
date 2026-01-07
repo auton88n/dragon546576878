@@ -535,8 +535,43 @@ export const VIPOutreachPanel = () => {
                           <p className="font-medium truncate">{log.contact_name}</p>
                           <p className="text-sm text-muted-foreground truncate">{log.contact_email}</p>
                         </div>
+
+                        {/* Email Open Status */}
+                        <div className="flex items-center gap-2">
+                          {log.opened_at ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                                  <MailOpen className="h-3.5 w-3.5" />
+                                  <span>{isArabic ? 'مفتوح' : 'Opened'}</span>
+                                  {(log.open_count || 0) > 1 && (
+                                    <span className="bg-green-600 text-white px-1.5 rounded-full text-[10px]">
+                                      ×{log.open_count}
+                                    </span>
+                                  )}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs">
+                                <p className="text-xs">
+                                  {isArabic ? 'تم الفتح: ' : 'Opened: '}
+                                  {format(new Date(log.opened_at), 'PPp', { locale: isArabic ? ar : enUS })}
+                                </p>
+                                {(log.open_count || 0) > 1 && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {isArabic ? `عدد مرات الفتح: ${log.open_count}` : `Opened ${log.open_count} times`}
+                                  </p>
+                                )}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : log.status === 'sent' ? (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 text-xs">
+                              <Mail className="h-3.5 w-3.5" />
+                              <span>{isArabic ? 'لم يُفتح' : 'Not opened'}</span>
+                            </div>
+                          ) : null}
+                        </div>
                         
-                        <div className="text-end">
+                        <div className="text-end min-w-[120px]">
                           <Badge variant="outline">{templateTypes.find(t => t.id === log.template_type)?.[isArabic ? 'ar' : 'en'] || log.template_type}</Badge>
                           <p className="text-xs text-muted-foreground mt-1">
                             {log.sent_at ? format(new Date(log.sent_at), 'PPp', { locale: isArabic ? ar : enUS }) : '-'}
