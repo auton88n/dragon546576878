@@ -176,7 +176,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
           customerPhone: customerInfo.phone,
           specialRequests: customerInfo.specialRequests || null,
           visitDate: visitDate!,
-          visitTime: '09:00',
+          visitTime: '15:00',
           adultCount: tickets.adult,
           childCount: tickets.child,
           adultPrice: pricing.adult,
