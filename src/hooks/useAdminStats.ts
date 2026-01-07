@@ -38,12 +38,12 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
     supabase
       .from('bookings')
       .select('total_amount, adult_count, child_count, senior_count')
-      .eq('payment_status', 'completed'),
+      .eq('booking_status', 'confirmed'),
     supabase
       .from('bookings')
       .select('adult_count, child_count, senior_count')
       .eq('visit_date', today)
-      .eq('payment_status', 'completed'),
+      .eq('booking_status', 'confirmed'),
     supabase
       .from('tickets')
       .select('id')

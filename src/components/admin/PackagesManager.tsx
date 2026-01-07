@@ -42,14 +42,32 @@ const SortablePackage = ({ pkg, isArabic, onEdit, onDelete, editingId, editForm,
       {editingId === pkg.id ? (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <Input value={editForm.name_en} onChange={(e) => setEditForm({ ...editForm, name_en: e.target.value })} placeholder="Name (EN)" />
-            <Input value={editForm.name_ar} onChange={(e) => setEditForm({ ...editForm, name_ar: e.target.value })} placeholder="Name (AR)" />
+            <div>
+              <Label className="text-xs">{isArabic ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label>
+              <Input value={editForm.name_en} onChange={(e) => setEditForm({ ...editForm, name_en: e.target.value })} />
+            </div>
+            <div>
+              <Label className="text-xs">{isArabic ? 'الاسم (عربي)' : 'Name (AR)'}</Label>
+              <Input value={editForm.name_ar} onChange={(e) => setEditForm({ ...editForm, name_ar: e.target.value })} />
+            </div>
           </div>
           <div className="grid grid-cols-4 gap-3">
-            <Input type="number" min="0" value={editForm.adult_count} onChange={(e) => setEditForm({ ...editForm, adult_count: Number(e.target.value) })} />
-            <Input type="number" min="0" value={editForm.child_count} onChange={(e) => setEditForm({ ...editForm, child_count: Number(e.target.value) })} />
-            <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })} />
-            <Input type="number" min="0" value={editForm.display_order} onChange={(e) => setEditForm({ ...editForm, display_order: Number(e.target.value) })} />
+            <div>
+              <Label className="text-xs flex items-center gap-1"><Users className="h-3 w-3" /> {isArabic ? 'بالغين' : 'Adults'}</Label>
+              <Input type="number" min="0" value={editForm.adult_count} onChange={(e) => setEditForm({ ...editForm, adult_count: Number(e.target.value) })} />
+            </div>
+            <div>
+              <Label className="text-xs flex items-center gap-1"><Baby className="h-3 w-3" /> {isArabic ? 'أطفال' : 'Children'}</Label>
+              <Input type="number" min="0" value={editForm.child_count} onChange={(e) => setEditForm({ ...editForm, child_count: Number(e.target.value) })} />
+            </div>
+            <div>
+              <Label className="text-xs">{isArabic ? 'السعر' : 'Price'}</Label>
+              <Input type="number" min="0" step="0.01" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })} />
+            </div>
+            <div>
+              <Label className="text-xs">{isArabic ? 'الترتيب' : 'Order'}</Label>
+              <Input type="number" min="0" value={editForm.display_order} onChange={(e) => setEditForm({ ...editForm, display_order: Number(e.target.value) })} />
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -67,8 +85,8 @@ const SortablePackage = ({ pkg, isArabic, onEdit, onDelete, editingId, editForm,
           </button>
           <div className="flex-1">
             <p className="font-medium">{isArabic ? pkg.name_ar : pkg.name_en}</p>
-            <p className="text-sm text-muted-foreground">
-              {pkg.adult_count} {isArabic ? 'بالغ' : 'adult'} + {pkg.child_count} {isArabic ? 'طفل' : 'child'} • {pkg.price} SAR
+            <p className="text-sm text-muted-foreground" dir="ltr">
+              {pkg.adult_count} Adult + {pkg.child_count} Child • {pkg.price} SAR
             </p>
           </div>
           <div className="flex gap-2">

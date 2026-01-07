@@ -433,12 +433,13 @@ const StaffManager = () => {
                   value={newStaff.password}
                   onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
                   placeholder={isArabic ? '8 أحرف على الأقل' : 'Min 8 characters'}
+                  className="pe-10"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                  className="absolute end-1 top-1/2 -translate-y-1/2 h-8 w-8"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -494,12 +495,13 @@ const StaffManager = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder={isArabic ? '8 أحرف على الأقل' : 'Min 8 characters'}
+                  className="pe-10"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                  className="absolute end-1 top-1/2 -translate-y-1/2 h-8 w-8"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
