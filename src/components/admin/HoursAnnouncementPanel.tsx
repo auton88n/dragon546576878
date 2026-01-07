@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Mail, Users, Clock, AlertCircle, CheckCircle2, RotateCcw, ChevronDown, ChevronUp, Edit3, RefreshCw } from 'lucide-react';
+import { Mail, Users, Clock, AlertCircle, CheckCircle2, RotateCcw, ChevronDown, ChevronUp, Edit3, RefreshCw, Eye, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -19,7 +19,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Customer {
   email: string;
@@ -53,8 +60,124 @@ const defaultContent: CustomContent = {
   closingAr: 'تذاكركم صالحة في أي وقت خلال هذه الساعات في تاريخ زيارتكم المحدد.',
 };
 
+// Generate email HTML for preview
+const generateEmailPreview = (language: 'en' | 'ar', customerName: string, content: CustomContent): string => {
+  const isArabic = language === 'ar';
+  const dir = isArabic ? 'rtl' : 'ltr';
+  
+  const subject = isArabic ? content.subjectAr : content.subjectEn;
+  const message = isArabic ? content.messageAr : content.messageEn;
+  const days = isArabic ? content.daysAr : content.daysEn;
+  const hours = isArabic ? content.hoursAr : content.hoursEn;
+  const closing = isArabic ? content.closingAr : content.closingEn;
+
+  // Split days text
+  const daysMatch = days.match(/^([^(]+)(\(.+\))?$/);
+  const daysMain = daysMatch?.[1]?.trim() || days;
+  const daysSub = daysMatch?.[2]?.trim() || '';
+
+  // Split hours text
+  const hoursMatch = hours.match(/^([^(]+)(\(.+\))?$/);
+  const hoursMain = hoursMatch?.[1]?.trim() || hours;
+  const hoursSub = hoursMatch?.[2]?.trim() || '';
+  
+  return `
+<!DOCTYPE html>
+<html lang="${language}" dir="${dir}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F5F1E8; direction: ${dir};">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(139, 111, 71, 0.15);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #8B6F47 0%, #6B5A3A 100%); padding: 40px 30px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">
+                ${isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
+              </h1>
+              <p style="color: #ffffff; margin: 12px 0 0 0; font-size: 18px; opacity: 0.95;">
+                ${isArabic ? 'تحديث ساعات العمل' : 'Operating Hours Update'}
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="color: #4A3625; font-size: 18px; margin: 0 0 24px 0; line-height: 1.6;">
+                ${isArabic ? `زائرنا الكريم ${customerName}،` : `Dear ${customerName},`}
+              </p>
+              
+              <p style="color: #5C4A32; font-size: 16px; margin: 0 0 30px 0; line-height: 1.7;">
+                ${message}
+              </p>
+              
+              <!-- Hours Box -->
+              <table role="presentation" style="width: 100%; background: linear-gradient(135deg, #F5F1E8 0%, #E8E0D0 100%); border-radius: 12px; margin-bottom: 30px;">
+                <tr>
+                  <td style="padding: 30px; text-align: center;">
+                    <div style="margin-bottom: 16px;">
+                      <span style="font-size: 28px;">📅</span>
+                      <p style="color: #000000; font-size: 22px; font-weight: 800; margin: 8px 0 0 0;">
+                        ${daysMain}
+                      </p>
+                      ${daysSub ? `<p style="color: #333333; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">${daysSub}</p>` : ''}
+                    </div>
+                    <div style="border-top: 1px solid #D4C5B0; padding-top: 16px;">
+                      <span style="font-size: 28px;">⏰</span>
+                      <p style="color: #000000; font-size: 32px; font-weight: 800; margin: 8px 0 0 0;">
+                        ${hoursMain}
+                      </p>
+                      ${hoursSub ? `<p style="color: #333333; font-size: 16px; font-weight: 600; margin: 4px 0 0 0;">${hoursSub}</p>` : ''}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #5C4A32; font-size: 16px; margin: 0 0 24px 0; line-height: 1.7;">
+                ${closing}
+              </p>
+              
+              <p style="color: #5C4A32; font-size: 16px; margin: 0 0 8px 0; line-height: 1.7;">
+                ${isArabic ? 'للاستفسارات، تواصلوا معنا على:' : 'If you have any questions, please contact us at:'}
+              </p>
+              <p style="margin: 0 0 30px 0;">
+                <a href="mailto:info@almufaijer.com" style="color: #8B6F47; font-weight: 600; text-decoration: none;">info@almufaijer.com</a>
+              </p>
+              
+              <p style="color: #4A3625; font-size: 18px; font-weight: 600; margin: 0; line-height: 1.6;">
+                ${isArabic ? 'نتطلع لاستقبالكم!' : 'We look forward to welcoming you!'}
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #4A3625; padding: 24px 30px; text-align: center;">
+              <p style="color: #D4C5B0; font-size: 14px; margin: 0 0 8px 0;">
+                ${isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team'}
+              </p>
+              <p style="color: #A89880; font-size: 12px; margin: 0;">
+                ${isArabic ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+};
+
 export const HoursAnnouncementPanel = () => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
   
   const [testEmail, setTestEmail] = useState('crossmint7@gmail.com');
@@ -68,6 +191,13 @@ export const HoursAnnouncementPanel = () => {
   const [showCustomerList, setShowCustomerList] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
   const [customContent, setCustomContent] = useState<CustomContent>(defaultContent);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewLanguage, setPreviewLanguage] = useState<'en' | 'ar'>('en');
+
+  // Generate preview HTML
+  const previewHtml = useMemo(() => {
+    return generateEmailPreview(previewLanguage, 'Test User', customContent);
+  }, [previewLanguage, customContent]);
 
   // Fetch unique customers on mount
   useEffect(() => {
@@ -308,12 +438,28 @@ export const HoursAnnouncementPanel = () => {
                 </div>
               </div>
 
-              <Button variant="outline" onClick={handleResetContent} className="w-full">
-                <RefreshCw className="h-4 w-4 me-2" />
-                {isArabic ? 'استعادة الافتراضي' : 'Reset to Defaults'}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleResetContent} className="flex-1">
+                  <RefreshCw className="h-4 w-4 me-2" />
+                  {isArabic ? 'استعادة الافتراضي' : 'Reset to Defaults'}
+                </Button>
+                <Button variant="secondary" onClick={() => setShowPreview(true)} className="flex-1">
+                  <Eye className="h-4 w-4 me-2" />
+                  {isArabic ? 'معاينة البريد' : 'Preview Email'}
+                </Button>
+              </div>
             </CollapsibleContent>
           </Collapsible>
+
+          {/* Preview Button (always visible) */}
+          <Button 
+            variant="outline" 
+            onClick={() => setShowPreview(true)} 
+            className="w-full border-amber-300 hover:bg-amber-100"
+          >
+            <Eye className="h-4 w-4 me-2" />
+            {isArabic ? 'معاينة البريد الإلكتروني' : 'Preview Email'}
+          </Button>
 
           {/* New Hours Info */}
           <Alert className="border-amber-300 bg-amber-100">
@@ -442,6 +588,52 @@ export const HoursAnnouncementPanel = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Email Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b">
+            <DialogTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Eye className="h-5 w-5" />
+                {isArabic ? 'معاينة البريد الإلكتروني' : 'Email Preview'}
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="px-6 py-4">
+            <Tabs value={previewLanguage} onValueChange={(v) => setPreviewLanguage(v as 'en' | 'ar')}>
+              <TabsList className="mb-4">
+                <TabsTrigger value="en">English</TabsTrigger>
+                <TabsTrigger value="ar">العربية</TabsTrigger>
+              </TabsList>
+              <TabsContent value="en" className="mt-0">
+                <div className="border rounded-lg overflow-hidden bg-gray-100">
+                  <div className="bg-white px-4 py-2 border-b text-sm text-muted-foreground">
+                    <strong>Subject:</strong> {customContent.subjectEn}
+                  </div>
+                  <iframe
+                    srcDoc={previewHtml}
+                    className="w-full h-[500px] bg-white"
+                    title="Email Preview (English)"
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="ar" className="mt-0">
+                <div className="border rounded-lg overflow-hidden bg-gray-100">
+                  <div className="bg-white px-4 py-2 border-b text-sm text-muted-foreground" dir="rtl">
+                    <strong>العنوان:</strong> {customContent.subjectAr}
+                  </div>
+                  <iframe
+                    srcDoc={previewHtml}
+                    className="w-full h-[500px] bg-white"
+                    title="Email Preview (Arabic)"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
