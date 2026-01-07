@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Users, Plus, Key, Edit2, Power, PowerOff, Eye, EyeOff, Loader2, Trash2, AlertTriangle } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { Users, Plus, Key, Edit2, Power, PowerOff, Eye, EyeOff, Loader2, Trash2, AlertTriangle, Upload } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useStaff, StaffMember } from '@/hooks/useStaff';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
@@ -56,6 +58,12 @@ const StaffManager = () => {
   const [toggleDialogOpen, setToggleDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  
+  // Bulk import states
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkInput, setBulkInput] = useState('');
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, errors: [] as string[] });
+  const [isBulkImporting, setIsBulkImporting] = useState(false);
 
   // Form states
   const [newStaff, setNewStaff] = useState({
@@ -79,6 +87,77 @@ const StaffManager = () => {
     if (!newStaff.email) return false;
     return staff.some(s => s.email.toLowerCase() === newStaff.email.toLowerCase());
   }, [newStaff.email, staff]);
+
+  // Parse bulk input text
+  const parseBulkInput = useCallback((input: string) => {
+    const lines = input.trim().split('\n').filter(line => line.trim());
+    return lines.map(line => {
+      const parts = line.split(',').map(p => p.trim());
+      return {
+        email: parts[0] || '',
+        fullName: parts[1] || parts[0]?.split('@')[0] || 'Staff Member',
+      };
+    }).filter(entry => entry.email.includes('@'));
+  }, []);
+
+  const bulkEntries = useMemo(() => parseBulkInput(bulkInput), [bulkInput, parseBulkInput]);
+
+  const handleBulkImport = async () => {
+    if (bulkEntries.length === 0) {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'لم يتم العثور على إدخالات صالحة' : 'No valid entries found',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsBulkImporting(true);
+    setBulkProgress({ current: 0, total: bulkEntries.length, errors: [] });
+
+    const errors: string[] = [];
+    for (let i = 0; i < bulkEntries.length; i++) {
+      const entry = bulkEntries[i];
+      setBulkProgress(prev => ({ ...prev, current: i + 1 }));
+
+      const success = await createStaff({
+        email: entry.email,
+        password: 'scan2024',
+        fullName: entry.fullName,
+        phone: '',
+        role: 'scanner',
+      });
+
+      if (!success) {
+        errors.push(entry.email);
+      }
+
+      // Small delay to avoid rate limiting
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    setBulkProgress(prev => ({ ...prev, errors }));
+    setIsBulkImporting(false);
+
+    if (errors.length === 0) {
+      toast({
+        title: isArabic ? 'تم بنجاح' : 'Success',
+        description: isArabic
+          ? `تم إضافة ${bulkEntries.length} موظف`
+          : `Added ${bulkEntries.length} staff members`,
+      });
+      setBulkDialogOpen(false);
+      setBulkInput('');
+    } else {
+      toast({
+        title: isArabic ? 'نجاح جزئي' : 'Partial Success',
+        description: isArabic
+          ? `تم إضافة ${bulkEntries.length - errors.length} من ${bulkEntries.length}. فشل: ${errors.join(', ')}`
+          : `Added ${bulkEntries.length - errors.length} of ${bulkEntries.length}. Failed: ${errors.join(', ')}`,
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleAddStaff = async () => {
     if (!newStaff.email || !newStaff.password || !newStaff.fullName) {
@@ -272,10 +351,16 @@ const StaffManager = () => {
               </CardDescription>
             </div>
           </div>
-          <Button onClick={() => setAddDialogOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            {isArabic ? 'إضافة موظف' : 'Add Staff'}
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={() => setAddDialogOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              {isArabic ? 'إضافة موظف' : 'Add Staff'}
+            </Button>
+            <Button variant="outline" onClick={() => setBulkDialogOpen(true)} className="gap-2">
+              <Upload className="h-4 w-4" />
+              {isArabic ? 'استيراد مجمع' : 'Bulk Import'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-lg border border-border/50 overflow-hidden">
@@ -640,6 +725,78 @@ const StaffManager = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bulk Import Dialog */}
+      <Dialog open={bulkDialogOpen} onOpenChange={(open) => {
+        if (!isBulkImporting) {
+          setBulkDialogOpen(open);
+          if (!open) {
+            setBulkInput('');
+            setBulkProgress({ current: 0, total: 0, errors: [] });
+          }
+        }
+      }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{isArabic ? 'استيراد موظفين' : 'Bulk Import Staff'}</DialogTitle>
+            <DialogDescription>
+              {isArabic 
+                ? 'أدخل بيانات الموظفين (بريد إلكتروني, اسم) - سطر لكل موظف'
+                : 'Enter staff data (email, name) - one per line'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="bg-muted/50 rounded-lg p-3 text-sm">
+              <p className="font-medium mb-1">{isArabic ? 'التنسيق:' : 'Format:'}</p>
+              <code className="text-xs block font-mono">
+                email@example.com, Full Name<br/>
+                another@email.com, Another Name
+              </code>
+              <p className="text-xs text-muted-foreground mt-2">
+                {isArabic 
+                  ? 'الدور: ماسح | كلمة المرور: scan2024' 
+                  : 'Role: Scanner | Password: scan2024'}
+              </p>
+            </div>
+            
+            <Textarea
+              placeholder={isArabic ? 'الصق البيانات هنا...' : 'Paste data here...'}
+              value={bulkInput}
+              onChange={(e) => setBulkInput(e.target.value)}
+              rows={8}
+              className="font-mono text-sm"
+              disabled={isBulkImporting}
+            />
+            
+            {isBulkImporting && (
+              <div className="space-y-2">
+                <Progress value={(bulkProgress.current / bulkProgress.total) * 100} />
+                <p className="text-sm text-center text-muted-foreground">
+                  {bulkProgress.current} / {bulkProgress.total}
+                </p>
+              </div>
+            )}
+            
+            <p className="text-sm text-muted-foreground">
+              {isArabic ? 'عدد الإدخالات:' : 'Entries found:'} <span className="font-bold">{bulkEntries.length}</span>
+            </p>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDialogOpen(false)} disabled={isBulkImporting}>
+              {isArabic ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button 
+              onClick={handleBulkImport} 
+              disabled={isBulkImporting || bulkEntries.length === 0}
+            >
+              {isBulkImporting && <Loader2 className="h-4 w-4 animate-spin me-2" />}
+              {isArabic ? 'استيراد' : 'Import'} ({bulkEntries.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
