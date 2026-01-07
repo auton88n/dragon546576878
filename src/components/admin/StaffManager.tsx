@@ -67,6 +67,8 @@ const StaffManager = () => {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, errors: [] as string[], emailsSent: 0, emailsFailed: 0 });
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [sendEmailNotification, setSendEmailNotification] = useState(true);
+  const [sendSingleEmailNotification, setSendSingleEmailNotification] = useState(true);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   // Form states
   const [newStaff, setNewStaff] = useState({
@@ -235,9 +237,27 @@ const StaffManager = () => {
 
     const success = await createStaff(newStaff);
     if (success) {
+      let emailSent = false;
+      
+      // Send credentials email if enabled
+      if (sendSingleEmailNotification) {
+        setIsSendingEmail(true);
+        emailSent = await sendCredentialsEmail(
+          newStaff.email, 
+          newStaff.fullName, 
+          newStaff.password, 
+          newStaff.role
+        );
+        setIsSendingEmail(false);
+      }
+      
       toast({
         title: isArabic ? 'تم بنجاح' : 'Success',
-        description: isArabic ? 'تم إضافة الموظف بنجاح' : 'Staff member added successfully',
+        description: sendSingleEmailNotification
+          ? (emailSent 
+              ? (isArabic ? 'تم إضافة الموظف وإرسال بيانات الدخول' : 'Staff added and credentials sent')
+              : (isArabic ? 'تم إضافة الموظف، فشل إرسال البريد' : 'Staff added, email failed'))
+          : (isArabic ? 'تم إضافة الموظف بنجاح' : 'Staff member added successfully'),
       });
       setAddDialogOpen(false);
       setNewStaff({ email: '', password: '', fullName: '', phone: '', role: 'scanner' as 'scanner' | 'manager' | 'support' });
@@ -602,14 +622,37 @@ const StaffManager = () => {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Email notification checkbox */}
+            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+              <Checkbox 
+                id="sendSingleEmailNotification"
+                checked={sendSingleEmailNotification}
+                onCheckedChange={(checked) => setSendSingleEmailNotification(checked === true)}
+                disabled={actionLoading || isSendingEmail}
+              />
+              <label 
+                htmlFor="sendSingleEmailNotification" 
+                className="flex items-center gap-2 text-sm cursor-pointer select-none"
+              >
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span>
+                  {isArabic 
+                    ? 'إرسال بيانات الدخول بالبريد الإلكتروني' 
+                    : 'Send login credentials via email'}
+                </span>
+              </label>
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setAddDialogOpen(false)} disabled={actionLoading || isSendingEmail}>
               {isArabic ? 'إلغاء' : 'Cancel'}
             </Button>
-            <Button onClick={handleAddStaff} disabled={actionLoading || emailExists}>
-              {actionLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              {isArabic ? 'إضافة' : 'Add'}
+            <Button onClick={handleAddStaff} disabled={actionLoading || emailExists || isSendingEmail}>
+              {(actionLoading || isSendingEmail) && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {isSendingEmail 
+                ? (isArabic ? 'جاري الإرسال...' : 'Sending...') 
+                : (isArabic ? 'إضافة' : 'Add')}
             </Button>
           </DialogFooter>
         </DialogContent>
