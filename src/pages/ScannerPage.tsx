@@ -417,6 +417,8 @@ const ScannerPage = () => {
     setShowResultOverlay(false);
     setCurrentResult(null);
     setIsEmployeeResult(false);
+    // CRITICAL: Release the processing lock so scanner can read again
+    isProcessingScanRef.current = false;
     if (scannerRef.current) {
       try { scannerRef.current.resume(); } catch (e) {}
     }
@@ -655,61 +657,148 @@ const ScannerPage = () => {
     }
     isProcessingScanRef.current = true;
 
-    // Normalize text to handle invisible characters
-    const normalizedText = decodedText
-      .trim()
-      .replace(/\u0000/g, '')
-      .replace(/\uFEFF/g, '')
-      .replace(/[\u200B-\u200D\u2060]/g, '');
+    try {
+      // Normalize text to handle invisible characters
+      const normalizedText = decodedText
+        .trim()
+        .replace(/\u0000/g, '')
+        .replace(/\uFEFF/g, '')
+        .replace(/[\u200B-\u200D\u2060]/g, '');
 
-    const now = Date.now();
-    if (lastScannedCodeRef.current === normalizedText && now - lastScanTimeRef.current < DUPLICATE_SCAN_THRESHOLD) {
-      isProcessingScanRef.current = false;
-      return;
-    }
-    lastScannedCodeRef.current = normalizedText;
-    lastScanTimeRef.current = now;
-    scanCountSinceRestartRef.current++;
+      const now = Date.now();
+      if (lastScannedCodeRef.current === normalizedText && now - lastScanTimeRef.current < DUPLICATE_SCAN_THRESHOLD) {
+        isProcessingScanRef.current = false;
+        return;
+      }
+      lastScannedCodeRef.current = normalizedText;
+      lastScanTimeRef.current = now;
+      scanCountSinceRestartRef.current++;
 
-    if (scannerRef.current) {
-      try { await scannerRef.current.pause(); } catch (e) {}
-    }
+      if (scannerRef.current) {
+        try { await scannerRef.current.pause(); } catch (e) {}
+      }
 
-    // Detect QR code type using normalized text
-    const { kind } = detectQRKind(normalizedText);
+      // Detect QR code type using normalized text
+      const { kind } = detectQRKind(normalizedText);
 
-    // Check if this is an employee badge
-    if (kind === 'employee') {
-      const empResult = await validateEmployeeQR(normalizedText);
-      setCurrentResult(empResult);
-      setIsEmployeeResult(true);
+      // Check if this is an employee badge
+      if (kind === 'employee') {
+        const empResult = await validateEmployeeQR(normalizedText);
+        setCurrentResult(empResult);
+        setIsEmployeeResult(true);
+        setShowResultOverlay(true);
+
+        if (empResult.isValid) {
+          playFeedback('success');
+          // Log for attendance (optional) - no "mark as used" for employees
+          if (empResult.employee && isOnline) {
+            await logEmployeeScan(empResult.employee.id, user?.id, 'main_entrance');
+          }
+        } else {
+          playFeedback('error');
+        }
+
+        // Add to recent scans with employee flag and ID for detail lookup
+        setRecentScans(prev => [{
+          timestamp: new Date(),
+          status: empResult.isValid ? 'employee_valid' : 'employee_inactive',
+          isEmployee: true,
+          employeeName: empResult.employee?.name,
+          employeeDepartment: empResult.employee?.department,
+          employeeId: empResult.employee?.id,
+        }, ...prev.slice(0, 9)]);
+
+        // Stats: employees don't affect ticket counts
+        setTodayStats(prev => ({
+          ...prev,
+          totalScans: prev.totalScans + 1,
+        }));
+
+        resultTimeoutRef.current = setTimeout(async () => {
+          setShowResultOverlay(false);
+          setCurrentResult(null);
+          setIsEmployeeResult(false);
+          isProcessingScanRef.current = false;
+          if (scannerRef.current) {
+            try { await scannerRef.current.resume(); } catch (e) {}
+          }
+          await restartScannerIfNeeded();
+        }, RESULT_DISPLAY_TIMEOUT);
+        return;
+      }
+
+      // Handle unknown QR codes
+      if (kind === 'unknown') {
+        setCurrentResult({
+          isValid: false,
+          status: 'invalid',
+          message: isArabic ? 'رمز QR غير معروف' : 'Unrecognized QR code',
+        } as TicketValidationResult);
+        setIsEmployeeResult(false);
+        setShowResultOverlay(true);
+        playFeedback('error');
+
+        setTodayStats(prev => ({
+          ...prev,
+          totalScans: prev.totalScans + 1,
+          invalidScans: prev.invalidScans + 1,
+        }));
+
+        resultTimeoutRef.current = setTimeout(async () => {
+          setShowResultOverlay(false);
+          setCurrentResult(null);
+          isProcessingScanRef.current = false;
+          if (scannerRef.current) {
+            try { await scannerRef.current.resume(); } catch (e) {}
+          }
+        }, RESULT_DISPLAY_TIMEOUT);
+        return;
+      }
+
+      // Standard ticket validation (kind === 'ticket')
+      const result = await validateTicket(normalizedText);
+      setCurrentResult(result);
+      setIsEmployeeResult(false);
       setShowResultOverlay(true);
 
-      if (empResult.isValid) {
+      if (result.isValid) {
         playFeedback('success');
-        // Log for attendance (optional) - no "mark as used" for employees
-        if (empResult.employee && isOnline) {
-          await logEmployeeScan(empResult.employee.id, user?.id, 'main_entrance');
+        if (result.ticket) {
+          if (isOnline) {
+            await markTicketAsUsed(result.ticket.id, user?.id, 'main_entrance');
+            await logScanAttempt(result.ticket.id, result.status, user?.id, navigator.userAgent);
+          } else {
+            addToQueue(result.ticket.id, result.ticket.ticketCode, result.status, navigator.userAgent);
+          }
         }
+      } else if (result.status === 'used') {
+        playFeedback('warning');
       } else {
         playFeedback('error');
       }
 
-      // Add to recent scans with employee flag and ID for detail lookup
+      setTodayStats(prev => ({
+        totalScans: prev.totalScans + 1,
+        validScans: result.isValid ? prev.validScans + 1 : prev.validScans,
+        invalidScans: ['invalid', 'not_found', 'wrong_date', 'expired'].includes(result.status) ? prev.invalidScans + 1 : prev.invalidScans,
+        usedScans: result.status === 'used' ? prev.usedScans + 1 : prev.usedScans,
+      }));
+
       setRecentScans(prev => [{
         timestamp: new Date(),
-        status: empResult.isValid ? 'employee_valid' : 'employee_inactive',
-        isEmployee: true,
-        employeeName: empResult.employee?.name,
-        employeeDepartment: empResult.employee?.department,
-        employeeId: empResult.employee?.id,
+        status: result.status,
+        ticketCode: result.ticket?.ticketCode,
+        customerName: result.ticket?.customerName,
+        ticketType: result.ticket?.ticketType,
+        paymentStatus: result.ticket?.paymentStatus,
+        totalAmount: result.ticket?.totalAmount,
+        bookingId: result.ticket?.bookingId,
+        bookingReference: result.ticket?.bookingReference,
+        visitDate: result.ticket?.visitDate,
+        customerPhone: result.ticket?.customerPhone,
+        adultCount: result.ticket?.adultCount,
+        childCount: result.ticket?.childCount,
       }, ...prev.slice(0, 9)]);
-
-      // Stats: employees don't affect ticket counts
-      setTodayStats(prev => ({
-        ...prev,
-        totalScans: prev.totalScans + 1,
-      }));
 
       resultTimeoutRef.current = setTimeout(async () => {
         setShowResultOverlay(false);
@@ -721,97 +810,21 @@ const ScannerPage = () => {
         }
         await restartScannerIfNeeded();
       }, RESULT_DISPLAY_TIMEOUT);
-      return;
-    }
-
-    // Handle unknown QR codes
-    if (kind === 'unknown') {
-      setCurrentResult({
-        isValid: false,
-        status: 'invalid',
-        message: isArabic ? 'رمز QR غير معروف' : 'Unrecognized QR code',
-      } as TicketValidationResult);
-      setIsEmployeeResult(false);
-      setShowResultOverlay(true);
-      playFeedback('error');
-
-      setTodayStats(prev => ({
-        ...prev,
-        totalScans: prev.totalScans + 1,
-        invalidScans: prev.invalidScans + 1,
-      }));
-
-      resultTimeoutRef.current = setTimeout(async () => {
-        setShowResultOverlay(false);
-        setCurrentResult(null);
-        isProcessingScanRef.current = false;
-        if (scannerRef.current) {
-          try { await scannerRef.current.resume(); } catch (e) {}
-        }
-      }, RESULT_DISPLAY_TIMEOUT);
-      return;
-    }
-
-    // Standard ticket validation (kind === 'ticket')
-    const result = await validateTicket(normalizedText);
-    setCurrentResult(result);
-    setIsEmployeeResult(false);
-    setShowResultOverlay(true);
-
-    if (result.isValid) {
-      playFeedback('success');
-      if (result.ticket) {
-        if (isOnline) {
-          await markTicketAsUsed(result.ticket.id, user?.id, 'main_entrance');
-          await logScanAttempt(result.ticket.id, result.status, user?.id, navigator.userAgent);
-        } else {
-          addToQueue(result.ticket.id, result.ticket.ticketCode, result.status, navigator.userAgent);
-        }
-      }
-    } else if (result.status === 'used') {
-      playFeedback('warning');
-    } else {
-      playFeedback('error');
-    }
-
-    setTodayStats(prev => ({
-      totalScans: prev.totalScans + 1,
-      validScans: result.isValid ? prev.validScans + 1 : prev.validScans,
-      invalidScans: ['invalid', 'not_found', 'wrong_date', 'expired'].includes(result.status) ? prev.invalidScans + 1 : prev.invalidScans,
-      usedScans: result.status === 'used' ? prev.usedScans + 1 : prev.usedScans,
-    }));
-
-    setRecentScans(prev => [{
-      timestamp: new Date(),
-      status: result.status,
-      ticketCode: result.ticket?.ticketCode,
-      customerName: result.ticket?.customerName,
-      ticketType: result.ticket?.ticketType,
-      paymentStatus: result.ticket?.paymentStatus,
-      totalAmount: result.ticket?.totalAmount,
-      bookingId: result.ticket?.bookingId,
-      bookingReference: result.ticket?.bookingReference,
-      visitDate: result.ticket?.visitDate,
-      customerPhone: result.ticket?.customerPhone,
-      adultCount: result.ticket?.adultCount,
-      childCount: result.ticket?.childCount,
-    }, ...prev.slice(0, 9)]);
-
-    resultTimeoutRef.current = setTimeout(async () => {
-      setShowResultOverlay(false);
-      setCurrentResult(null);
-      setIsEmployeeResult(false);
+    } catch (err) {
+      // Safety net: if anything throws, release the lock and resume scanning
+      console.error('Scan processing error:', err);
       isProcessingScanRef.current = false;
       if (scannerRef.current) {
         try { await scannerRef.current.resume(); } catch (e) {}
       }
-      await restartScannerIfNeeded();
-    }, RESULT_DISPLAY_TIMEOUT);
+    }
   }, [playFeedback, user, isOnline, addToQueue, restartScannerIfNeeded, isArabic]);
 
   const startScanning = async () => {
     setCameraError(null);
     setIsScanning(true);
+    // Reset processing lock to ensure clean start
+    isProcessingScanRef.current = false;
     
     // Play ready beep to unlock audio on user interaction
     if (soundEnabled) {
@@ -867,6 +880,14 @@ const ScannerPage = () => {
   };
 
   const stopScanning = async () => {
+    // Clear any pending result timeout
+    if (resultTimeoutRef.current) {
+      clearTimeout(resultTimeoutRef.current);
+      resultTimeoutRef.current = null;
+    }
+    // Reset processing lock
+    isProcessingScanRef.current = false;
+    
     if (scannerRef.current) {
       try {
         const state = scannerRef.current.getState();
