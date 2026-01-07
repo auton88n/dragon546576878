@@ -12,8 +12,9 @@ interface VerifyPaymentRequest {
 }
 
 // Helper function to log payment events
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function logPaymentEvent(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   bookingId: string,
   eventType: string,
   data: {
@@ -27,7 +28,7 @@ async function logPaymentEvent(
   }
 ) {
   try {
-    await supabase.from("payment_logs").insert({
+    await supabase.from("payment_logs").insert([{
       booking_id: bookingId,
       event_type: eventType,
       payment_id: data.paymentId || null,
@@ -37,7 +38,7 @@ async function logPaymentEvent(
       status_after: data.statusAfter || null,
       error_message: data.errorMessage || null,
       metadata: data.metadata || null,
-    } as Record<string, unknown>);
+    }]);
   } catch (err) {
     console.error("Failed to log payment event:", err);
   }

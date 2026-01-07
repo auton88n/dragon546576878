@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface PaymentLog {
   id: string;
@@ -98,12 +99,12 @@ export const logPaymentEvent = async (
       status_after: data.statusAfter || null,
       error_message: data.errorMessage || null,
       changed_by: data.changedBy || null,
-      metadata: data.metadata || null,
+      metadata: (data.metadata || null) as Json,
     };
 
     const { error } = await supabase
       .from('payment_logs')
-      .insert(insertData);
+      .insert([insertData]);
 
     if (error) throw error;
     return true;
