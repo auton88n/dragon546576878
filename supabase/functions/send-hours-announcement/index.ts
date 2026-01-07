@@ -36,10 +36,12 @@ const generateEmailTemplate = (language: string, customerName: string): string =
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #8B6F47 0%, #6B5A3A 100%); padding: 40px 30px; text-align: center;">
-              <img src="https://hekgkfdunwpxqbrotfpn.supabase.co/storage/v1/object/public/assets/logo-white-email.png" alt="Souq Almufaijer" style="height: 60px; margin-bottom: 16px;" />
-              <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">
-                ${isArabic ? 'تحديث ساعات العمل' : 'Operating Hours Update'}
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">
+                ${isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
               </h1>
+              <p style="color: #ffffff; margin: 12px 0 0 0; font-size: 18px; opacity: 0.95;">
+                ${isArabic ? 'تحديث ساعات العمل' : 'Operating Hours Update'}
+              </p>
             </td>
           </tr>
           
@@ -62,19 +64,19 @@ const generateEmailTemplate = (language: string, customerName: string): string =
                   <td style="padding: 30px; text-align: center;">
                     <div style="margin-bottom: 16px;">
                       <span style="font-size: 28px;">📅</span>
-                      <p style="color: #8B6F47; font-size: 18px; font-weight: 600; margin: 8px 0 0 0;">
+                      <p style="color: #1a1a1a; font-size: 18px; font-weight: 700; margin: 8px 0 0 0;">
                         ${isArabic ? 'مفتوح يومياً' : 'Open Daily'}
                       </p>
-                      <p style="color: #6B5A3A; font-size: 14px; margin: 4px 0 0 0;">
+                      <p style="color: #444444; font-size: 14px; margin: 4px 0 0 0;">
                         ${isArabic ? '(بما في ذلك الجمعة)' : '(Including Fridays)'}
                       </p>
                     </div>
                     <div style="border-top: 1px solid #D4C5B0; padding-top: 16px;">
                       <span style="font-size: 28px;">⏰</span>
-                      <p style="color: #4A3625; font-size: 24px; font-weight: 700; margin: 8px 0 0 0;">
+                      <p style="color: #000000; font-size: 26px; font-weight: 800; margin: 8px 0 0 0;">
                         ${isArabic ? '٣:٠٠ م - ١٢:٠٠ ص' : '3:00 PM - 12:00 AM'}
                       </p>
-                      <p style="color: #6B5A3A; font-size: 14px; margin: 4px 0 0 0;">
+                      <p style="color: #444444; font-size: 14px; margin: 4px 0 0 0;">
                         ${isArabic ? '(منتصف الليل)' : '(Midnight)'}
                       </p>
                     </div>
