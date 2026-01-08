@@ -86,16 +86,6 @@ const ResumePaymentPage = () => {
     const PRODUCTION_DOMAIN = 'https://almufaijer.com';
     const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback?booking=${booking.id}`;
 
-    // Apple Pay diagnostics
-    const currentDomain = window.location.hostname;
-    const win = window as any;
-    console.log('Apple Pay diagnostics:', {
-      currentDomain,
-      isProductionDomain: currentDomain === 'almufaijer.com',
-      hasApplePaySession: typeof win.ApplePaySession !== 'undefined',
-      canMakePayments: typeof win.ApplePaySession !== 'undefined' && win.ApplePaySession?.canMakePayments?.() || false
-    });
-
     console.log('Initializing Moyasar for resume payment:', { 
       amount: amountInHalalas, 
       bookingId: booking.id, 
@@ -104,18 +94,21 @@ const ResumePaymentPage = () => {
 
     try {
       window.Moyasar.init({
-        element: '.moyasar-form',
+        element: '#moyasar-resume-mount',
         amount: amountInHalalas,
         currency: 'SAR',
         description: `Souq Almufaijer Ticket - ${booking.booking_reference}`,
         publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
         callback_url: callbackUrl,
-        methods: ['creditcard'], // Apple Pay disabled temporarily - verification file serving issue
+        methods: ['creditcard'],
         supported_networks: ['visa', 'mastercard', 'mada', 'amex'],
         language: isArabic ? 'ar' : 'en',
         fixed_width: true,
         on_completed: (payment: MoyasarPayment) => {
-          console.log('Payment completed:', payment.id, payment.status);
+          console.log('Payment completed, forcing redirect:', payment.id, payment.status);
+          // Force redirect - don't rely on gateway auto-redirect
+          const redirectUrl = `${PRODUCTION_DOMAIN}/payment-callback?booking=${booking.id}&id=${payment.id}&status=${payment.status}`;
+          window.location.href = redirectUrl;
         },
         on_failure: (error: any) => {
           console.error('Payment failed:', {
@@ -145,9 +138,10 @@ const ResumePaymentPage = () => {
 
   const handleProceedToPayment = () => {
     setShowPaymentForm(true);
-    setTimeout(() => {
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
       initializeMoyasar();
-    }, 100);
+    });
   };
 
   // Format date
@@ -315,7 +309,12 @@ const ResumePaymentPage = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="moyasar-form rounded-xl overflow-hidden" />
+              {/* Moyasar Mount - always rendered with ID selector for Safari compatibility */}
+              <div 
+                id="moyasar-resume-mount"
+                className="moyasar-form rounded-2xl overflow-hidden bg-card p-6 border-2 border-border shadow-lg"
+                style={{ minHeight: '320px' }}
+              />
               
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <Lock className="h-3.5 w-3.5" />

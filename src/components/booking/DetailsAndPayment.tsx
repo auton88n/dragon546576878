@@ -159,7 +159,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
 
     try {
       window.Moyasar.init({
-        element: '.moyasar-form',
+        element: '#moyasar-mount',
         amount: amountInHalalas,
         currency: 'SAR',
         description: `Souq Almufaijer Ticket - ${bookingReference}`,
@@ -173,7 +173,10 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
           console.log('Payment form initiating for booking:', bookingId);
         },
         on_completed: (payment: MoyasarPayment) => {
-          console.log('Payment completed:', payment.id, payment.status);
+          console.log('Payment completed, forcing redirect:', payment.id, payment.status);
+          // Force redirect - don't rely on gateway auto-redirect
+          const redirectUrl = `${PRODUCTION_DOMAIN}/payment-callback?booking=${bookingId}&id=${payment.id}&status=${payment.status}`;
+          window.location.href = redirectUrl;
         },
         on_failure: async (error: any) => {
           console.error('Payment failed:', {
@@ -479,59 +482,61 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
           </form>
         ) : (
           <div className="space-y-4">
-            {/* Payment Form Loading Skeleton or Timeout */}
-            {!isMoyasarReady && (
-              <div className="rounded-2xl bg-card p-6 md:p-8 border-2 border-border shadow-lg space-y-6">
-                {moyasarTimeout ? (
-                  <div className="text-center space-y-4">
-                    <p className="text-muted-foreground">
-                      {isArabic ? 'تأخر تحميل نموذج الدفع. يرجى المحاولة مرة أخرى.' : 'Payment form is taking longer than expected.'}
-                    </p>
-                    <Button onClick={handleRetryMoyasar} variant="outline" className="gap-2">
-                      <Loader2 className="h-4 w-4" />
-                      {isArabic ? 'إعادة المحاولة' : 'Retry'}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="animate-pulse">
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                      <Loader2 className="h-5 w-5 animate-spin text-accent" />
-                      <span className="text-muted-foreground font-medium">
-                        {isArabic ? 'جاري تحضير الدفع الآمن...' : 'Preparing secure payment...'}
-                      </span>
+            {/* Payment Form Container - always visible for Safari compatibility */}
+            <div className="relative rounded-2xl overflow-hidden bg-card border-2 border-border shadow-lg">
+              {/* Loading overlay - shown on top while loading */}
+              {!isMoyasarReady && (
+                <div className="absolute inset-0 z-10 bg-card p-6 md:p-8">
+                  {moyasarTimeout ? (
+                    <div className="text-center space-y-4 h-full flex flex-col items-center justify-center">
+                      <p className="text-muted-foreground">
+                        {isArabic ? 'تأخر تحميل نموذج الدفع. يرجى المحاولة مرة أخرى.' : 'Payment form is taking longer than expected.'}
+                      </p>
+                      <Button onClick={handleRetryMoyasar} variant="outline" className="gap-2">
+                        <Loader2 className="h-4 w-4" />
+                        {isArabic ? 'إعادة المحاولة' : 'Retry'}
+                      </Button>
                     </div>
-                    <div className="space-y-2">
-                      <div className="h-4 w-24 bg-muted rounded" />
-                      <div className="h-14 bg-muted rounded-xl" />
-                    </div>
-                    <div className="space-y-2 mt-4">
-                      <div className="h-4 w-28 bg-muted rounded" />
-                      <div className="h-14 bg-muted rounded-xl" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="space-y-2">
-                        <div className="h-4 w-20 bg-muted rounded" />
-                        <div className="h-14 bg-muted rounded-xl" />
+                  ) : (
+                    <div className="animate-pulse">
+                      <div className="flex items-center justify-center gap-3 mb-4">
+                        <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                        <span className="text-muted-foreground font-medium">
+                          {isArabic ? 'جاري تحضير الدفع الآمن...' : 'Preparing secure payment...'}
+                        </span>
                       </div>
                       <div className="space-y-2">
-                        <div className="h-4 w-12 bg-muted rounded" />
+                        <div className="h-4 w-24 bg-muted rounded" />
                         <div className="h-14 bg-muted rounded-xl" />
                       </div>
+                      <div className="space-y-2 mt-4">
+                        <div className="h-4 w-28 bg-muted rounded" />
+                        <div className="h-14 bg-muted rounded-xl" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div className="space-y-2">
+                          <div className="h-4 w-20 bg-muted rounded" />
+                          <div className="h-14 bg-muted rounded-xl" />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="h-4 w-12 bg-muted rounded" />
+                          <div className="h-14 bg-muted rounded-xl" />
+                        </div>
+                      </div>
+                      <div className="h-16 bg-muted rounded-xl mt-4" />
                     </div>
-                    <div className="h-16 bg-muted rounded-xl mt-4" />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Moyasar Payment Form Container */}
-            <div 
-              ref={paymentFormRef}
-              className={cn(
-                "moyasar-form rounded-2xl overflow-hidden bg-card p-6 md:p-8 border-2 border-border shadow-lg",
-                !isMoyasarReady && "hidden"
+                  )}
+                </div>
               )}
-            />
+              
+              {/* Moyasar Mount - always rendered, never hidden */}
+              <div 
+                id="moyasar-mount"
+                ref={paymentFormRef}
+                className="moyasar-form p-6 md:p-8"
+                style={{ minHeight: '320px' }}
+              />
+            </div>
 
             {/* Security Notice */}
             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
