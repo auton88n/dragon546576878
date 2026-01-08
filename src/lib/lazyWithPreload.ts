@@ -26,8 +26,8 @@ export function lazyWithPreload<T extends ComponentType<any>>(
   const LazyComponent = lazy(() => preload());
 
   // Wrap in forwardRef to suppress ref warnings
-  const Component = forwardRef(function LazyWrapper(props, _ref) {
-    return createElement(LazyComponent, props);
+  const Component = forwardRef<unknown, Record<string, unknown>>(function LazyWrapper(props, _ref) {
+    return createElement(LazyComponent as any, props as any);
   });
   Component.displayName = 'LazyWithPreload';
 
