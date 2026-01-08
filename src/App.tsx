@@ -22,6 +22,7 @@ const { Component: BookingPage, preload: preloadBooking } = lazyWithPreload(() =
 const { Component: ConfirmationPage } = lazyWithPreload(() => import('./pages/ConfirmationPage'));
 const { Component: PaymentCallbackPage } = lazyWithPreload(() => import('./pages/PaymentCallbackPage'));
 const { Component: ResumePaymentPage } = lazyWithPreload(() => import('./pages/ResumePaymentPage'));
+const { Component: PaymentPage } = lazyWithPreload(() => import('./pages/PaymentPage'));
 const { Component: MyTicketsPage, preload: preloadMyTickets } = lazyWithPreload(() => import('./pages/MyTicketsPage'));
 const { Component: LoginPage } = lazyWithPreload(() => import('./pages/LoginPage'));
 const { Component: ScannerPage } = lazyWithPreload(() => import('./pages/ScannerPage'));
@@ -98,7 +99,7 @@ const App = () => (
             <Route path="/confirmation/:bookingId" element={<ConfirmationPage />} />
             <Route path="/payment-callback" element={<PaymentCallbackPage />} />
             <Route path="/payment-callback/:bookingId" element={<PaymentCallbackPage />} />
-            <Route path="/pay/:bookingId" element={<ResumePaymentPage />} />
+            <Route path="/pay/:bookingId" element={<PaymentPage />} />
             <Route path="/my-tickets" element={<MyTicketsPage />} />
             <Route path="/group-bookings" element={<GroupBookingsPage />} />
             <Route path="/support" element={<SupportPage />} />
