@@ -86,6 +86,7 @@ const PaymentPage = () => {
   }, []);
 
   useEffect(() => {
+    // If we have navigation state, use it.
     if (bookingFromState) {
       if (bookingFromState.id !== bookingId) {
         setError(isArabic ? 'معرف الحجز غير متطابق' : 'Booking ID mismatch');
@@ -97,12 +98,33 @@ const PaymentPage = () => {
       return;
     }
 
-    if (!bookingId) {
-      setError(isArabic ? 'معرف الحجز غير صالح' : 'Invalid booking ID');
-    } else {
-      setError(isArabic ? 'انتهت صلاحية بيانات الحجز. يرجى إعادة الحجز.' : 'Booking session expired. Please start a new booking.');
-    }
-    setLoading(false);
+    // Otherwise fetch minimal booking details from an Edge Function.
+    const run = async () => {
+      if (!bookingId) {
+        setError(isArabic ? 'معرف الحجز غير صالح' : 'Invalid booking ID');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      const { data, error } = await supabase.functions.invoke('get-booking-for-payment', {
+        body: { bookingId },
+      });
+
+      if (error || !data?.success) {
+        const message = data?.error || error?.message || 'Failed to load booking details';
+        setError(isArabic ? 'تعذر تحميل بيانات الحجز. يرجى إعادة الحجز.' : message);
+        setLoading(false);
+        return;
+      }
+
+      setBooking(data.booking as BookingDetails);
+      setLoading(false);
+    };
+
+    void run();
   }, [bookingId, bookingFromState, isArabic]);
 
   const checkMountHasElements = useCallback(() => {
