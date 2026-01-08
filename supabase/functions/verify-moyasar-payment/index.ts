@@ -43,8 +43,12 @@ async function logPaymentEvent(
   }
 }
 
+// Version stamp for deployment verification
+const VERIFY_PAYMENT_VERSION = "2026-01-08-v2-debug";
+
 serve(async (req) => {
-  console.log("verify-moyasar-payment function called");
+  const startTime = Date.now();
+  console.log(`[${VERIFY_PAYMENT_VERSION}] verify-moyasar-payment called at ${new Date().toISOString()}`);
   
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -52,22 +56,51 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const moyasarSecretKey = Deno.env.get("MOYASAR_SECRET_KEY2");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const moyasarSecretKey = Deno.env.get("MOYASAR_SECRET_KEY2");
+    
+    // Enhanced environment logging
+    console.log("Environment check:", {
+      supabaseUrl: supabaseUrl ? `...${supabaseUrl.slice(-20)}` : "MISSING",
+      supabaseServiceKey: supabaseServiceKey ? `...${supabaseServiceKey.slice(-10)}` : "MISSING",
+      moyasarSecretKey: moyasarSecretKey ? `${moyasarSecretKey.slice(0, 8)}...${moyasarSecretKey.slice(-4)}` : "MISSING",
+      moyasarKeyPrefix: moyasarSecretKey?.slice(0, 8) || "N/A",
+    });
   
-  if (!moyasarSecretKey) {
-    console.error("MOYASAR_SECRET_KEY2 not configured");
+    if (!moyasarSecretKey) {
+      console.error("CRITICAL: MOYASAR_SECRET_KEY2 not configured in environment");
       return new Response(
-        JSON.stringify({ success: false, error: "Payment verification not configured" }),
+        JSON.stringify({ success: false, error: "Payment verification not configured - missing secret key" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Validate secret key format (should start with sk_live_ or sk_test_)
+    if (!moyasarSecretKey.startsWith("sk_live_") && !moyasarSecretKey.startsWith("sk_test_")) {
+      console.error("CRITICAL: MOYASAR_SECRET_KEY2 has invalid format - should start with sk_live_ or sk_test_");
+      return new Response(
+        JSON.stringify({ success: false, error: "Payment verification misconfigured - invalid key format" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("CRITICAL: Missing Supabase configuration");
+      return new Response(
+        JSON.stringify({ success: false, error: "Server configuration error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     const body: VerifyPaymentRequest = await req.json();
 
-    console.log("Verifying payment:", body.paymentId, "for booking:", body.bookingId);
+    console.log("Request body received:", {
+      paymentId: body.paymentId,
+      bookingId: body.bookingId,
+      timestamp: new Date().toISOString(),
+    });
 
     if (!body.paymentId || !body.bookingId) {
       return new Response(
@@ -113,17 +146,33 @@ serve(async (req) => {
     });
 
     // Fetch payment from Moyasar API
-    const moyasarResponse = await fetch(`https://api.moyasar.com/v1/payments/${body.paymentId}`, {
+    console.log("Calling Moyasar API for payment:", body.paymentId);
+    const moyasarApiUrl = `https://api.moyasar.com/v1/payments/${body.paymentId}`;
+    const authHeader = `Basic ${btoa(moyasarSecretKey + ":")}`;
+    
+    console.log("Moyasar API request:", {
+      url: moyasarApiUrl,
+      authHeaderPrefix: authHeader.slice(0, 20) + "...",
+    });
+    
+    const moyasarResponse = await fetch(moyasarApiUrl, {
       method: "GET",
       headers: {
-        "Authorization": `Basic ${btoa(moyasarSecretKey + ":")}`,
+        "Authorization": authHeader,
         "Content-Type": "application/json",
       },
     });
 
+    console.log("Moyasar API response status:", moyasarResponse.status);
+
     if (!moyasarResponse.ok) {
       const errorText = await moyasarResponse.text();
-      console.error("Moyasar API error:", moyasarResponse.status, errorText);
+      console.error("Moyasar API error:", {
+        status: moyasarResponse.status,
+        statusText: moyasarResponse.statusText,
+        body: errorText,
+        paymentId: body.paymentId,
+      });
       
       // Log failure
       await logPaymentEvent(supabase, body.bookingId, "failure", {
