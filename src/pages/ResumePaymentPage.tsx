@@ -8,12 +8,17 @@ import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import type { MoyasarPayment } from '@/types/moyasar.d';
+import { loadMoyasarSdk, isMoyasarLoaded, getMoyasarDiagnostics } from '@/lib/loadMoyasarSdk';
+import { 
+  buildMoyasarConfig, 
+  getPaymentErrorMessage, 
+  handlePaymentCompletion,
+  MOYASAR_PUBLISHABLE_KEY 
+} from '@/lib/moyasarConfig';
+import type { MoyasarPayment, MoyasarError } from '@/types/moyasar.d';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Booking = Tables<'bookings'>;
-
-const MOYASAR_PUBLISHABLE_KEY = 'pk_live_Ah7AU1kvj5r64sAV369hkXhVuNi6bmAmVt1Pf1ZN';
 
 const ResumePaymentPage = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
@@ -85,8 +90,7 @@ const ResumePaymentPage = () => {
   }, [bookingId, navigate, isArabic]);
 
   // Initialize Moyasar payment form
-  const initializeMoyasar = useCallback(() => {
-    // Clear any previous errors
+  const initializeMoyasar = useCallback(async () => {
     setMoyasarError(null);
     
     if (!booking) {
@@ -94,102 +98,57 @@ const ResumePaymentPage = () => {
       return;
     }
 
-    // Log comprehensive diagnostic info
-    const diagnosticInfo = {
-      sdkLoaded: typeof window.Moyasar !== 'undefined',
-      sdkType: typeof window.Moyasar,
-      hasInit: typeof window.Moyasar?.init === 'function',
-      container: document.getElementById('moyasar-resume-mount') ? 'exists' : 'missing',
-      domain: window.location.hostname,
-      publishableKey: `...${MOYASAR_PUBLISHABLE_KEY.slice(-8)}`,
-      bookingId: booking.id,
-      timestamp: new Date().toISOString(),
-    };
-    console.log('Moyasar diagnostic info (Resume):', diagnosticInfo);
-
-    // Check if already initialized
     if (moyasarInitialized.current) {
       console.warn('Moyasar already initialized, skipping');
       return;
     }
 
-    // Check if SDK loaded
-    if (typeof window.Moyasar === 'undefined') {
-      const errorMsg = 'Moyasar SDK failed to load from CDN. Please check your internet connection and refresh the page.';
-      console.error(errorMsg, diagnosticInfo);
-      setMoyasarError(errorMsg);
+    // Load SDK using shared loader
+    try {
+      const loadResult = await loadMoyasarSdk();
+      console.log('Moyasar SDK load result (Resume):', loadResult);
+    } catch (sdkError) {
+      const errorMsg = sdkError instanceof Error ? sdkError.message : 'Failed to load payment SDK';
+      console.error('Moyasar SDK load failed:', errorMsg, getMoyasarDiagnostics());
+      setMoyasarError(isArabic ? 'فشل تحميل نظام الدفع. يرجى تحديث الصفحة.' : errorMsg);
       return;
     }
 
-    // Check if init function exists
-    if (typeof window.Moyasar.init !== 'function') {
-      const errorMsg = 'Moyasar SDK loaded but init() not available. SDK may be corrupted.';
-      console.error(errorMsg, diagnosticInfo);
-      setMoyasarError(errorMsg);
+    if (!isMoyasarLoaded()) {
+      setMoyasarError('Payment SDK failed to initialize');
       return;
     }
 
-    // Check if mount container exists
     const container = document.getElementById('moyasar-resume-mount');
     if (!container) {
-      const errorMsg = 'Payment form container not found in DOM.';
-      console.error(errorMsg, diagnosticInfo);
-      setMoyasarError(errorMsg);
+      setMoyasarError('Payment form container not found');
       return;
     }
 
     const amountInHalalas = Math.round(booking.total_amount * 100);
-    const PRODUCTION_DOMAIN = 'https://almufaijer.com';
-    const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback/${booking.id}`;
-
-    console.log('Initializing Moyasar for resume payment:', { 
-      amount: amountInHalalas, 
-      bookingId: booking.id, 
-      callbackUrl 
-    });
+    console.log('Initializing Moyasar for resume payment:', { amount: amountInHalalas, bookingId: booking.id });
 
     try {
-      window.Moyasar.init({
-        element: '#moyasar-resume-mount',
-        amount: amountInHalalas,
-        currency: 'SAR',
-        description: `Souq Almufaijer Ticket - ${booking.booking_reference}`,
-        publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
-        callback_url: callbackUrl,
-        methods: ['creditcard'],
-        supported_networks: ['visa', 'mastercard', 'mada', 'amex'],
-        language: isArabic ? 'ar' : 'en',
-        fixed_width: true,
-        on_completed: (payment: MoyasarPayment) => {
-          console.log('on_completed fired:', payment.id, payment.status, payment.source?.transaction_url);
-          
-          // Handle 3D Secure / bank verification
-          if (payment.status === 'initiated' && payment.source?.transaction_url) {
-            console.log('3DS required, redirecting to:', payment.source.transaction_url);
-            window.location.href = payment.source.transaction_url;
-            return;
-          }
-          
-          // Payment completed - redirect to callback
-          console.log('Payment completed, forcing redirect');
-          const redirectUrl = `${PRODUCTION_DOMAIN}/payment-callback/${booking.id}?id=${payment.id}&status=${payment.status}`;
-          window.location.href = redirectUrl;
+      const config = buildMoyasarConfig({
+        mountSelector: '#moyasar-resume-mount',
+        amountInHalalas,
+        bookingId: booking.id,
+        bookingReference: booking.booking_reference,
+        isArabic,
+        onCompleted: (payment: MoyasarPayment) => {
+          handlePaymentCompletion(payment, booking.id);
         },
-        on_failure: (error: any) => {
-          console.error('Payment failed:', {
-            type: error?.type,
-            message: error?.message,
-            code: error?.code,
-            full_error: JSON.stringify(error, null, 2)
-          });
+        onFailure: (error: MoyasarError) => {
+          console.error('Payment failed:', error);
           toast({
             title: isArabic ? 'فشل الدفع' : 'Payment Failed',
-            description: `${error?.type || 'Error'}: ${error?.message || (isArabic ? 'حدث خطأ في عملية الدفع' : 'An error occurred during payment')}`,
+            description: getPaymentErrorMessage(isArabic, error?.type, error?.code, error?.message),
             variant: 'destructive',
           });
         },
       });
 
+      window.Moyasar.init(config);
       moyasarInitialized.current = true;
       console.log('Moyasar.init() called successfully (Resume), setting up MutationObserver');
       
@@ -240,10 +199,10 @@ const ResumePaymentPage = () => {
     moyasarReadyRef.current = false;
     setMoyasarTimeout(false);
     setMoyasarError(null);
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(() => {
+    // Use setTimeout to ensure DOM is ready, then call async init
+    setTimeout(() => {
       initializeMoyasar();
-    });
+    }, 50);
     
     // Set timeout fallback - use ref to get current value
     setTimeout(() => {
