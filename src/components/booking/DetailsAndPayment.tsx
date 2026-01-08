@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Phone, Calendar, CheckCircle, CreditCard, FileText, Shield, Lock } from 'lucide-react';
+import { User, Mail, Phone, Calendar, CheckCircle, CreditCard, FileText, Shield, Lock, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { supabase } from '@/integrations/supabase/client';
@@ -248,9 +248,9 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
       setShowPaymentForm(true);
 
       // Wait for DOM to update, then initialize Moyasar
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         initializeMoyasar(data.bookingId, data.bookingReference);
-      }, 100);
+      });
 
     } catch (error) {
       console.error('Booking creation error:', error);
@@ -438,10 +438,48 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
           </form>
         ) : (
           <div className="space-y-4">
+            {/* Payment Form Loading Skeleton */}
+            {!moyasarInitialized.current && (
+              <div className="rounded-2xl bg-card p-6 md:p-8 border-2 border-border shadow-lg space-y-6 animate-pulse">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                  <span className="text-muted-foreground font-medium">
+                    {isArabic ? 'جاري تحضير الدفع الآمن...' : 'Preparing secure payment...'}
+                  </span>
+                </div>
+                {/* Skeleton for card name field */}
+                <div className="space-y-2">
+                  <div className="h-4 w-24 bg-muted rounded" />
+                  <div className="h-14 bg-muted rounded-xl" />
+                </div>
+                {/* Skeleton for card number field */}
+                <div className="space-y-2">
+                  <div className="h-4 w-28 bg-muted rounded" />
+                  <div className="h-14 bg-muted rounded-xl" />
+                </div>
+                {/* Skeleton for expiry and CVC row */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="h-4 w-20 bg-muted rounded" />
+                    <div className="h-14 bg-muted rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-12 bg-muted rounded" />
+                    <div className="h-14 bg-muted rounded-xl" />
+                  </div>
+                </div>
+                {/* Skeleton for submit button */}
+                <div className="h-16 bg-muted rounded-xl mt-4" />
+              </div>
+            )}
+
             {/* Moyasar Payment Form Container */}
             <div 
               ref={paymentFormRef}
-              className="moyasar-form rounded-2xl overflow-hidden bg-card p-6 md:p-8 border-2 border-border shadow-lg"
+              className={cn(
+                "moyasar-form rounded-2xl overflow-hidden bg-card p-6 md:p-8 border-2 border-border shadow-lg",
+                !moyasarInitialized.current && "hidden"
+              )}
             />
 
             {/* Security Notice */}
