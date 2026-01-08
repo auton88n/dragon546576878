@@ -337,6 +337,28 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     }
   }, [totalAmount, isArabic, toast]);
 
+  // Wait for DOM element to exist with polling
+  const waitForElement = useCallback((selector: string, maxAttempts = 20, interval = 50): Promise<HTMLElement | null> => {
+    return new Promise((resolve) => {
+      let attempts = 0;
+      const check = () => {
+        attempts++;
+        const element = document.querySelector<HTMLElement>(selector);
+        if (element) {
+          console.log(`Element ${selector} found after ${attempts} attempts`);
+          resolve(element);
+        } else if (attempts >= maxAttempts) {
+          console.error(`Element ${selector} not found after ${maxAttempts} attempts`);
+          resolve(null);
+        } else {
+          requestAnimationFrame(check);
+        }
+      };
+      // Use double RAF to ensure React has finished rendering
+      requestAnimationFrame(() => requestAnimationFrame(check));
+    });
+  }, []);
+
   // Initialize Moyasar when payment form is shown
   useEffect(() => {
     if (showPaymentForm && pendingBookingId && pendingBookingRef && !moyasarInitStarted.current) {
@@ -344,11 +366,20 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
       setIsMoyasarReady(false);
       moyasarReadyRef.current = false;
       setMoyasarTimeout(false);
+      setMoyasarError(null);
       
-      // Initialize after DOM render
-      requestAnimationFrame(() => {
-        initializeMoyasar(pendingBookingId, pendingBookingRef);
-      });
+      // Wait for mount container then initialize
+      const initPayment = async () => {
+        const container = await waitForElement('#moyasar-mount');
+        if (container) {
+          console.log('Mount container found, dimensions:', container.offsetWidth, 'x', container.offsetHeight);
+          initializeMoyasar(pendingBookingId, pendingBookingRef);
+        } else {
+          setMoyasarError('Payment form container failed to render. Please refresh.');
+        }
+      };
+      
+      initPayment();
 
       // Set timeout fallback - use ref to get current value
       const timeoutId = setTimeout(() => {
@@ -363,10 +394,10 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         observerRef.current?.disconnect();
       };
     }
-  }, [showPaymentForm, pendingBookingId, pendingBookingRef, initializeMoyasar]);
+  }, [showPaymentForm, pendingBookingId, pendingBookingRef, initializeMoyasar, waitForElement]);
 
-  // Retry handler
-  const handleRetryMoyasar = () => {
+  // Retry handler with proper DOM wait
+  const handleRetryMoyasar = async () => {
     moyasarInitStarted.current = false;
     moyasarReadyRef.current = false;
     setMoyasarTimeout(false);
@@ -374,14 +405,21 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     setMoyasarError(null);
     setSubmissionStalled(false);
     observerRef.current?.disconnect();
+    
     // Clear the form container
     if (paymentFormRef.current) {
       paymentFormRef.current.innerHTML = '';
     }
+    
     if (pendingBookingId && pendingBookingRef) {
-      requestAnimationFrame(() => {
+      // Wait a moment for DOM to stabilize, then wait for element
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const container = await waitForElement('#moyasar-mount');
+      if (container) {
         initializeMoyasar(pendingBookingId, pendingBookingRef);
-      });
+      } else {
+        setMoyasarError('Payment form container not found. Please refresh the page.');
+      }
     }
   };
 
