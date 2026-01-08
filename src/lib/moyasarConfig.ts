@@ -1,10 +1,12 @@
 /**
  * Moyasar Configuration Builder
- * Centralized, documentation-compliant config for all payment entry points
+ * Minimal, documentation-compliant config for all payment entry points
  * SDK: moyasar-payment-form v2.2.5
+ * 
+ * IMPORTANT: Uses ONLY required fields to avoid "Form configuration issue" errors
  */
 
-import type { MoyasarConfig, MoyasarPayment, MoyasarError } from '@/types/moyasar.d';
+import type { MoyasarPayment, MoyasarError } from '@/types/moyasar.d';
 
 export const MOYASAR_PUBLISHABLE_KEY = 'pk_live_Ah7AU1kvj5r64sAV369hkXhVuNi6bmAmVt1Pf1ZN';
 export const PRODUCTION_DOMAIN = 'https://almufaijer.com';
@@ -15,51 +17,44 @@ export interface MoyasarConfigParams {
   amountInHalalas: number;
   bookingId: string;
   bookingReference: string;
-  isArabic: boolean;
-  onSubmissionStart?: () => void;
   onCompleted: (payment: MoyasarPayment) => void;
-  onFailure: (error: MoyasarError) => void;
+  onFailure?: (error: MoyasarError) => void;
 }
 
 /**
- * Build a Moyasar config object that matches official MPF v2.2.5 documentation
+ * Build a MINIMAL Moyasar config - only required fields per official docs
+ * This avoids "Form configuration issue" errors caused by optional/unsupported params
  */
-export function buildMoyasarConfig(params: MoyasarConfigParams): MoyasarConfig {
+export function buildMoyasarConfig(params: MoyasarConfigParams) {
   const {
     mountSelector,
     amountInHalalas,
     bookingId,
     bookingReference,
-    isArabic,
-    onSubmissionStart,
     onCompleted,
     onFailure,
   } = params;
 
   const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback/${bookingId}`;
 
-  return {
+  // MINIMAL CONFIG - only officially required fields
+  const config: Record<string, unknown> = {
     element: mountSelector,
     amount: amountInHalalas,
     currency: 'SAR',
-    description: `Souq Almufaijer Ticket - ${bookingReference}`,
+    description: `Souq Almufaijer - ${bookingReference}`,
     publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
     callback_url: callbackUrl,
     methods: ['creditcard'],
-    // Use only widely-supported networks (amex can cause issues with some issuers)
-    supported_networks: ['visa', 'mastercard', 'mada'],
-    language: isArabic ? 'ar' : 'en',
-    fixed_width: true,
-    on_initiating: () => {
-      console.log('Payment form initiating for booking:', bookingId);
-      if (onSubmissionStart) {
-        onSubmissionStart();
-      }
-      return true; // Proceed with payment
-    },
     on_completed: onCompleted,
-    on_failure: onFailure,
   };
+
+  // Add on_failure only if provided
+  if (onFailure) {
+    config.on_failure = onFailure;
+  }
+
+  return config;
 }
 
 /**

@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import "@/lib/i18n";
 import LoadingSpinner from "./components/shared/LoadingSpinner";
 import ScrollToTop from "./components/shared/ScrollToTop";
@@ -21,7 +21,6 @@ const { Component: ContactPage, preload: preloadContact } = lazyWithPreload(() =
 const { Component: BookingPage, preload: preloadBooking } = lazyWithPreload(() => import('./pages/BookingPage'));
 const { Component: ConfirmationPage } = lazyWithPreload(() => import('./pages/ConfirmationPage'));
 const { Component: PaymentCallbackPage } = lazyWithPreload(() => import('./pages/PaymentCallbackPage'));
-const { Component: ResumePaymentPage } = lazyWithPreload(() => import('./pages/ResumePaymentPage'));
 const { Component: PaymentPage } = lazyWithPreload(() => import('./pages/PaymentPage'));
 const { Component: MyTicketsPage, preload: preloadMyTickets } = lazyWithPreload(() => import('./pages/MyTicketsPage'));
 const { Component: LoginPage } = lazyWithPreload(() => import('./pages/LoginPage'));
@@ -32,6 +31,12 @@ const { Component: GroupBookingsPage, preload: preloadGroupBookings } = lazyWith
 const { Component: SupportPage, preload: preloadSupport } = lazyWithPreload(() => import('./pages/SupportPage'));
 const { Component: TermsPage, preload: preloadTerms } = lazyWithPreload(() => import('./pages/TermsPage'));
 const { Component: NotFound } = lazyWithPreload(() => import('./pages/NotFound'));
+
+// Redirect helper for resume-payment route
+const ResumePaymentRedirect = () => {
+  const { bookingId } = useParams();
+  return <Navigate to={`/pay/${bookingId}`} replace />;
+};
 
 // Lazy load chat widget - use direct import to avoid ref warning
 const { Component: ChatWidgetComponent } = lazyWithPreload(() => import('./components/support/ChatWidget'));
@@ -100,6 +105,7 @@ const App = () => (
             <Route path="/payment-callback" element={<PaymentCallbackPage />} />
             <Route path="/payment-callback/:bookingId" element={<PaymentCallbackPage />} />
             <Route path="/pay/:bookingId" element={<PaymentPage />} />
+            <Route path="/resume-payment/:bookingId" element={<ResumePaymentRedirect />} />
             <Route path="/my-tickets" element={<MyTicketsPage />} />
             <Route path="/group-bookings" element={<GroupBookingsPage />} />
             <Route path="/support" element={<SupportPage />} />
