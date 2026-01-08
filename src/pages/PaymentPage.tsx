@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { Loader2, AlertTriangle, CreditCard, Shield, Lock, ExternalLink, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import type { MoyasarPayment } from '@/types/moyasar.d';
 
 const MOYASAR_PUBLISHABLE_KEY = 'pk_live_Ah7AU1kvj5r64sAV369hkXhVuNi6bmAmVt1Pf1ZN';
@@ -16,22 +16,31 @@ interface BookingDetails {
   customer_name: string;
   customer_email: string;
   total_amount: number;
-  payment_status: string;
+  payment_status?: string;
   visit_date: string;
   visit_time: string;
   adult_count: number;
   child_count: number;
 }
 
+interface LocationState {
+  booking?: BookingDetails;
+}
+
 const PaymentPage = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { toast } = useToast();
 
-  const [booking, setBooking] = useState<BookingDetails | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Get booking from navigation state (passed from DetailsAndPayment)
+  const locationState = location.state as LocationState | null;
+  const bookingFromState = locationState?.booking;
+
+  const [booking, setBooking] = useState<BookingDetails | null>(bookingFromState || null);
+  const [loading, setLoading] = useState(!bookingFromState);
   const [error, setError] = useState<string | null>(null);
   const [isMoyasarReady, setIsMoyasarReady] = useState(false);
   const [moyasarError, setMoyasarError] = useState<string | null>(null);
@@ -43,44 +52,28 @@ const PaymentPage = () => {
   const submissionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const observerRef = useRef<MutationObserver | null>(null);
 
-  // Fetch booking details
+  // Only fetch if we don't have booking data from navigation state
   useEffect(() => {
-    const fetchBooking = async () => {
-      if (!bookingId) {
-        setError(isArabic ? 'معرف الحجز غير صالح' : 'Invalid booking ID');
+    if (bookingFromState) {
+      // Validate the booking ID matches
+      if (bookingFromState.id !== bookingId) {
+        setError(isArabic ? 'معرف الحجز غير متطابق' : 'Booking ID mismatch');
         setLoading(false);
         return;
       }
+      setBooking(bookingFromState);
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('bookings')
-          .select('id, booking_reference, customer_name, customer_email, total_amount, payment_status, visit_date, visit_time, adult_count, child_count')
-          .eq('id', bookingId)
-          .single();
-
-        if (fetchError || !data) {
-          setError(isArabic ? 'لم يتم العثور على الحجز' : 'Booking not found');
-          setLoading(false);
-          return;
-        }
-
-        if (data.payment_status === 'completed') {
-          navigate(`/confirmation/${bookingId}`);
-          return;
-        }
-
-        setBooking(data);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching booking:', err);
-        setError(isArabic ? 'حدث خطأ في تحميل بيانات الحجز' : 'Error loading booking data');
-        setLoading(false);
-      }
-    };
-
-    fetchBooking();
-  }, [bookingId, isArabic, navigate]);
+    // No state data - show error (RLS prevents direct fetch)
+    if (!bookingId) {
+      setError(isArabic ? 'معرف الحجز غير صالح' : 'Invalid booking ID');
+    } else {
+      setError(isArabic ? 'انتهت صلاحية بيانات الحجز. يرجى إعادة الحجز.' : 'Booking session expired. Please start a new booking.');
+    }
+    setLoading(false);
+  }, [bookingId, bookingFromState, isArabic]);
 
   // Initialize Moyasar once booking is loaded
   const initializeMoyasar = useCallback(() => {

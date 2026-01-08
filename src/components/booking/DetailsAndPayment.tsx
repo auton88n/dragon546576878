@@ -471,8 +471,22 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
       }
 
       console.log('Booking created, redirecting to payment page:', data.bookingId);
-      // Redirect to standalone payment page for reliable SDK mounting
-      navigate(`/pay/${data.bookingId}`);
+      // Redirect to standalone payment page with booking data to avoid RLS issues
+      navigate(`/pay/${data.bookingId}`, {
+        state: {
+          booking: {
+            id: data.bookingId,
+            booking_reference: data.bookingReference,
+            customer_name: customerInfo.name,
+            customer_email: customerInfo.email,
+            total_amount: totalAmount,
+            visit_date: visitDate,
+            visit_time: '15:00',
+            adult_count: tickets.adult,
+            child_count: tickets.child,
+          }
+        }
+      });
 
     } catch (error) {
       console.error('Booking creation error:', error);
