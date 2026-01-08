@@ -1,15 +1,12 @@
 /**
  * Moyasar Configuration Builder
- * Minimal, documentation-compliant config for all payment entry points
+ * MINIMAL config matching official docs exactly to avoid "Form configuration issue"
  * SDK: moyasar-payment-form v2.2.5
- * 
- * IMPORTANT: Uses ONLY required fields to avoid "Form configuration issue" errors
  */
 
-import type { MoyasarPayment, MoyasarError } from '@/types/moyasar.d';
+import type { MoyasarPayment } from '@/types/moyasar.d';
 
 export const MOYASAR_PUBLISHABLE_KEY = 'pk_live_Ah7AU1kvj5r64sAV369hkXhVuNi6bmAmVt1Pf1ZN';
-export const PRODUCTION_DOMAIN = 'https://almufaijer.com';
 export const ALLOWED_DOMAINS = ['almufaijer.com', 'tickets.almufaijer.com', 'localhost'];
 
 export interface MoyasarConfigParams {
@@ -17,15 +14,12 @@ export interface MoyasarConfigParams {
   amountInHalalas: number;
   bookingId: string;
   bookingReference: string;
-  language?: 'ar' | 'en';
-  onInitiating?: () => void;
   onCompleted: (payment: MoyasarPayment) => void;
-  onFailure?: (error: MoyasarError) => void;
 }
 
 /**
- * Build a MINIMAL Moyasar config - only required fields per official docs
- * This avoids "Form configuration issue" errors caused by optional/unsupported params
+ * Build MINIMAL Moyasar config - ONLY required fields per official docs
+ * NO optional fields (language, on_initiating, on_failure) to prevent config rejection
  */
 export function buildMoyasarConfig(params: MoyasarConfigParams) {
   const {
@@ -33,41 +27,24 @@ export function buildMoyasarConfig(params: MoyasarConfigParams) {
     amountInHalalas,
     bookingId,
     bookingReference,
-    language = 'en',
-    onInitiating,
     onCompleted,
-    onFailure,
   } = params;
 
-  const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback/${bookingId}`;
+  // Use current origin for callback (handles almufaijer.com vs tickets.almufaijer.com)
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://almufaijer.com';
+  const callbackUrl = `${origin}/payment-callback/${bookingId}`;
 
-  // Doc-compliant config (Card payments)
-  const config: Record<string, unknown> = {
+  // MINIMAL config - exactly matching official docs "Basic Integration"
+  return {
     element: mountSelector,
     amount: amountInHalalas,
     currency: 'SAR',
     description: `Souq Almufaijer - ${bookingReference}`,
     publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
     callback_url: callbackUrl,
-    supported_networks: ['visa', 'mastercard', 'mada'],
     methods: ['creditcard'],
-    language,
     on_completed: onCompleted,
   };
-
-  // Start watchdog only when submission starts
-  if (onInitiating) {
-    config.on_initiating = () => {
-      onInitiating();
-      return true;
-    };
-  }
-
-  if (onFailure) {
-    config.on_failure = onFailure;
-  }
-
-  return config;
 }
 
 /**
@@ -79,36 +56,14 @@ export function isAllowedPaymentDomain(): boolean {
 }
 
 /**
- * Get user-friendly error message from Moyasar error
+ * Get user-friendly error message
  */
-export function getPaymentErrorMessage(
-  isArabic: boolean,
-  errorType?: string,
-  errorCode?: string,
-  errorMessage?: string
-): string {
-  const errorMessages: Record<string, { en: string; ar: string }> = {
-    rejected: { en: 'Card was declined by your bank', ar: 'تم رفض البطاقة من قبل البنك' },
-    insufficient_funds: { en: 'Insufficient funds', ar: 'رصيد غير كافٍ' },
-    expired_card: { en: 'Card has expired', ar: 'البطاقة منتهية الصلاحية' },
-    invalid_card: { en: 'Invalid card details', ar: 'تفاصيل البطاقة غير صحيحة' },
-    processing_error: { en: 'Payment processing error. Please try again.', ar: 'خطأ في معالجة الدفع. يرجى المحاولة مرة أخرى.' },
-    '3ds_failed': { en: '3D Secure verification failed', ar: 'فشل التحقق الأمني' },
-    cancelled: { en: 'Payment was cancelled', ar: 'تم إلغاء الدفع' },
-    timeout: { en: 'Payment timed out. Please try again.', ar: 'انتهت مهلة الدفع. يرجى المحاولة مرة أخرى.' },
-    network_error: { en: 'Network error. Check your connection.', ar: 'خطأ في الشبكة. تحقق من اتصالك.' },
-    configuration: { en: 'Payment form configuration error', ar: 'خطأ في إعدادات نموذج الدفع' },
-  };
-  
-  const key = errorCode || errorType || '';
-  const mapped = errorMessages[key.toLowerCase()];
-  if (mapped) return isArabic ? mapped.ar : mapped.en;
-  
+export function getPaymentErrorMessage(isArabic: boolean, errorMessage?: string): string {
   return errorMessage || (isArabic ? 'حدث خطأ في عملية الدفع' : 'An error occurred during payment');
 }
 
 /**
- * Handle 3DS redirect or direct completion
+ * Handle payment completion - redirect to callback or 3DS
  */
 export function handlePaymentCompletion(
   payment: MoyasarPayment,
@@ -116,6 +71,8 @@ export function handlePaymentCompletion(
   setTransactionUrl?: (url: string) => void
 ): void {
   console.log('Payment completed:', payment.id, payment.status, payment.source?.transaction_url);
+  
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://almufaijer.com';
   
   // Handle 3D Secure / bank verification
   if (payment.status === 'initiated' && payment.source?.transaction_url) {
@@ -129,6 +86,6 @@ export function handlePaymentCompletion(
   
   // Payment completed - redirect to callback
   console.log('Payment completed, redirecting to callback');
-  const redirectUrl = `${PRODUCTION_DOMAIN}/payment-callback/${bookingId}?id=${payment.id}&status=${payment.status}`;
+  const redirectUrl = `${origin}/payment-callback/${bookingId}?id=${payment.id}&status=${payment.status}`;
   window.location.href = redirectUrl;
 }

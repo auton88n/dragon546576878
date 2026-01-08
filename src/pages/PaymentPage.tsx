@@ -11,12 +11,12 @@ import {
   isAllowedPaymentDomain, 
   getPaymentErrorMessage, 
   handlePaymentCompletion,
-  PRODUCTION_DOMAIN,
   ALLOWED_DOMAINS 
 } from '@/lib/moyasarConfig';
-import type { MoyasarPayment, MoyasarError } from '@/types/moyasar.d';
+import type { MoyasarPayment } from '@/types/moyasar.d';
 
 const SDK_LOAD_TIMEOUT_MS = 12000;
+const PRODUCTION_URL = 'https://almufaijer.com';
 
 interface BookingDetails {
   id: string;
@@ -130,7 +130,13 @@ const PaymentPage = () => {
   const checkMountHasElements = useCallback(() => {
     const mount = document.getElementById('moyasar-mount');
     if (!mount) return false;
-    return !!(mount.querySelector('form, iframe, input') || mount.children.length > 0);
+    // Check for actual form elements OR if mount has "Form configuration issue" text (error)
+    const hasFormElements = !!(mount.querySelector('form, iframe, input') || mount.children.length > 0);
+    // Detect if Moyasar rendered an error message
+    if (hasFormElements && mount.textContent?.includes('Form configuration issue')) {
+      return false; // Not ready - it's an error state
+    }
+    return hasFormElements;
   }, []);
 
   const startInjectionPolling = useCallback(() => {
@@ -141,6 +147,22 @@ const PaymentPage = () => {
     }
 
     pollingIntervalRef.current = setInterval(() => {
+      const mount = document.getElementById('moyasar-mount');
+      
+      // Check for Moyasar "Form configuration issue" error
+      if (mount?.textContent?.includes('Form configuration issue')) {
+        console.error('Moyasar returned "Form configuration issue"');
+        setMoyasarError(isArabic 
+          ? 'خطأ في إعدادات نموذج الدفع. يرجى التواصل مع الدعم.'
+          : 'Payment form configuration error. Please contact support.');
+        setInitPhase('error');
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        return;
+      }
+      
       if (checkMountHasElements()) {
         console.log('SDK elements detected via polling');
         setIsMoyasarReady(true);
@@ -168,7 +190,7 @@ const PaymentPage = () => {
         }
       }
     }, SDK_LOAD_TIMEOUT_MS);
-  }, [checkMountHasElements, isMoyasarReady, updateDebugInfo]);
+  }, [checkMountHasElements, isMoyasarReady, updateDebugInfo, isArabic]);
 
   const initializeMoyasar = useCallback(async () => {
     if (!booking || moyasarInitStarted.current || !isAllowedDomain) return;
@@ -207,7 +229,7 @@ const PaymentPage = () => {
     
     const amountInHalalas = Math.round(booking.total_amount * 100);
 
-    console.log('Initializing Moyasar on standalone page:', { 
+    console.log('Initializing Moyasar with MINIMAL config:', { 
       amount: amountInHalalas, 
       bookingId: booking.id, 
       hostname: currentHostname,
@@ -238,6 +260,7 @@ const PaymentPage = () => {
       }
     };
 
+    // Watchdog functions - triggered by DOM events, not on_initiating
     const startSubmissionWatchdog = () => {
       if (submissionTimerRef.current) {
         clearTimeout(submissionTimerRef.current);
@@ -258,53 +281,50 @@ const PaymentPage = () => {
     };
 
     try {
+      // MINIMAL config - only required fields per official docs
       const config = buildMoyasarConfig({
         mountSelector: '#moyasar-mount',
         amountInHalalas,
         bookingId: booking.id,
         bookingReference: booking.booking_reference,
-        language: isArabic ? 'ar' : 'en',
-        onInitiating: () => {
-          startSubmissionWatchdog();
-        },
         onCompleted: (payment: MoyasarPayment) => {
           clearSubmissionWatchdog();
           handlePaymentCompletion(payment, booking.id, setTransactionUrl);
         },
-        onFailure: async (error: MoyasarError) => {
-          clearSubmissionWatchdog();
-          console.error('Payment failed:', error);
-          await logFailureToServer(error);
-
-          toast({
-            title: isArabic ? 'فشل الدفع' : 'Payment Failed',
-            description: getPaymentErrorMessage(isArabic, error?.type, error?.code, error?.message),
-            variant: 'destructive',
-          });
-        },
       });
 
-      console.log('Moyasar config built:', { ...config, publishable_api_key: '***' });
+      console.log('Moyasar MINIMAL config:', { ...config, publishable_api_key: '***' });
       window.Moyasar.init(config as any);
 
-      startInjectionPolling();
-
+      // DOM-based watchdog: listen for form submission events
       setTimeout(() => {
         const mount = document.getElementById('moyasar-mount');
-        console.log('Mount status after 500ms:', mount?.children.length, 'children');
+        if (mount) {
+          // Capture form submit
+          mount.addEventListener('submit', () => {
+            console.log('Form submit detected - starting watchdog');
+            startSubmissionWatchdog();
+          }, true);
+          
+          // Capture button clicks as fallback
+          mount.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'BUTTON' || target.closest('button')) {
+              console.log('Button click detected - starting watchdog');
+              startSubmissionWatchdog();
+            }
+          }, true);
+        }
       }, 500);
 
-      setTimeout(() => {
-        const mount = document.getElementById('moyasar-mount');
-        console.log('Mount status after 2000ms:', mount?.children.length, 'children');
-      }, 2000);
+      startInjectionPolling();
 
     } catch (err) {
       console.error('Failed to initialize Moyasar:', err);
       setMoyasarError(isArabic ? 'فشل في تهيئة نظام الدفع' : 'Failed to initialize payment system');
       setInitPhase('error');
     }
-  }, [booking, isArabic, toast, isAllowedDomain, currentHostname, startInjectionPolling, updateDebugInfo]);
+  }, [booking, isArabic, isAllowedDomain, currentHostname, startInjectionPolling, updateDebugInfo]);
 
   useEffect(() => {
     if (booking && !moyasarInitStarted.current && isAllowedDomain) {
@@ -345,7 +365,7 @@ const PaymentPage = () => {
   };
 
   const handleOpenProduction = () => {
-    const productionUrl = `${PRODUCTION_DOMAIN}/pay/${bookingId}`;
+    const productionUrl = `${PRODUCTION_URL}/pay/${bookingId}`;
     window.open(productionUrl, '_blank');
   };
 
@@ -402,7 +422,7 @@ const PaymentPage = () => {
             {isArabic ? 'فتح الموقع الرسمي' : 'Open Official Site'}
           </Button>
           <p className="text-xs text-muted-foreground">
-            {PRODUCTION_DOMAIN}
+            {PRODUCTION_URL}
           </p>
           
           {isDebugMode && (
