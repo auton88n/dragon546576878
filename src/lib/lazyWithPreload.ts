@@ -1,20 +1,17 @@
-import { lazy, ComponentType } from 'react';
+import { lazy, ComponentType, forwardRef, createElement } from 'react';
 
-type LazyFactory<T extends ComponentType<unknown>> = () => Promise<{ default: T }>;
+type LazyFactory<T extends ComponentType<any>> = () => Promise<{ default: T }>;
 
-interface LazyComponentWithPreload<T extends ComponentType<unknown>> {
-  Component: React.LazyExoticComponent<T>;
+interface LazyComponentWithPreload<T extends ComponentType<any>> {
+  Component: React.ForwardRefExoticComponent<any>;
   preload: () => Promise<{ default: T }>;
 }
 
 /**
  * Creates a lazy-loaded component with a preload function.
- * Usage:
- *   const { Component: AboutPage, preload: preloadAbout } = lazyWithPreload(() => import('./pages/AboutPage'));
- *   // In JSX: <AboutPage />
- *   // On hover: preloadAbout()
+ * Wraps the lazy component in forwardRef to avoid React ref warnings.
  */
-export function lazyWithPreload<T extends ComponentType<unknown>>(
+export function lazyWithPreload<T extends ComponentType<any>>(
   factory: LazyFactory<T>
 ): LazyComponentWithPreload<T> {
   let modulePromise: Promise<{ default: T }> | null = null;
@@ -26,7 +23,13 @@ export function lazyWithPreload<T extends ComponentType<unknown>>(
     return modulePromise;
   };
 
-  const Component = lazy(() => preload());
+  const LazyComponent = lazy(() => preload());
+
+  // Wrap in forwardRef to suppress ref warnings
+  const Component = forwardRef(function LazyWrapper(props, _ref) {
+    return createElement(LazyComponent, props);
+  });
+  Component.displayName = 'LazyWithPreload';
 
   return { Component, preload };
 }
