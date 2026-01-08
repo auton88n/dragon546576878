@@ -34,7 +34,7 @@ export function buildMoyasarConfig(params: MoyasarConfigParams) {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://almufaijer.com';
   const callbackUrl = `${origin}/payment-callback/${bookingId}`;
 
-  // MINIMAL config - exactly matching official docs "Basic Integration"
+  // Config matching official Moyasar docs EXACTLY
   return {
     element: mountSelector,
     amount: amountInHalalas,
@@ -43,6 +43,7 @@ export function buildMoyasarConfig(params: MoyasarConfigParams) {
     publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
     callback_url: callbackUrl,
     methods: ['creditcard'],
+    supported_networks: ['visa', 'mastercard', 'mada'],
     on_completed: onCompleted,
   };
 }

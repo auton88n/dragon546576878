@@ -281,9 +281,9 @@ const PaymentPage = () => {
     };
 
     try {
-      // MINIMAL config - only required fields per official docs
+      // Config matching official Moyasar docs exactly - use class selector
       const config = buildMoyasarConfig({
-        mountSelector: '#moyasar-mount',
+        mountSelector: '.mysr-form',
         amountInHalalas,
         bookingId: booking.id,
         bookingReference: booking.booking_reference,
@@ -557,7 +557,7 @@ const PaymentPage = () => {
           {/* Moyasar Mount Point - Always visible for SDK injection */}
           <div 
             id="moyasar-mount" 
-            className="min-h-[320px]"
+            className="mysr-form min-h-[320px]"
           />
         </div>
 
