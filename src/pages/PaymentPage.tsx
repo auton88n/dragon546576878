@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Loader2, AlertTriangle, CreditCard, Shield, Lock, ExternalLink, ArrowLeft } from 'lucide-react';
+import { useParams, useNavigate, useLocation, Link, useSearchParams } from 'react-router-dom';
+import { Loader2, AlertTriangle, CreditCard, Shield, Lock, ExternalLink, ArrowLeft, RefreshCw, MessageCircle } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -9,6 +9,8 @@ import type { MoyasarPayment } from '@/types/moyasar.d';
 
 const MOYASAR_PUBLISHABLE_KEY = 'pk_live_Ah7AU1kvj5r64sAV369hkXhVuNi6bmAmVt1Pf1ZN';
 const PRODUCTION_DOMAIN = 'https://almufaijer.com';
+const ALLOWED_DOMAINS = ['almufaijer.com', 'tickets.almufaijer.com', 'localhost'];
+const SDK_LOAD_TIMEOUT_MS = 12000; // 12 seconds
 
 interface BookingDetails {
   id: string;
@@ -27,13 +29,20 @@ interface LocationState {
   booking?: BookingDetails;
 }
 
+type InitPhase = 'idle' | 'waiting_mount' | 'initializing' | 'waiting_injection' | 'ready' | 'timeout' | 'error';
+
 const PaymentPage = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { toast } = useToast();
+
+  const isDebugMode = searchParams.get('debug') === '1';
+  const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isAllowedDomain = ALLOWED_DOMAINS.some(d => currentHostname.includes(d) || currentHostname === 'localhost');
 
   // Get booking from navigation state (passed from DetailsAndPayment)
   const locationState = location.state as LocationState | null;
@@ -46,16 +55,36 @@ const PaymentPage = () => {
   const [moyasarError, setMoyasarError] = useState<string | null>(null);
   const [submissionStalled, setSubmissionStalled] = useState(false);
   const [transactionUrl, setTransactionUrl] = useState<string | null>(null);
+  const [sdkLoadTimeout, setSdkLoadTimeout] = useState(false);
+  const [initPhase, setInitPhase] = useState<InitPhase>('idle');
+
+  // Debug state
+  const [debugInfo, setDebugInfo] = useState({
+    sdkLoaded: false,
+    mountExists: false,
+    mountChildCount: 0,
+    lastCheck: '',
+  });
 
   const moyasarInitStarted = useRef(false);
-  const moyasarReadyRef = useRef(false);
   const submissionTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const observerRef = useRef<MutationObserver | null>(null);
+  const sdkLoadTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Update debug info periodically
+  const updateDebugInfo = useCallback(() => {
+    const mount = document.getElementById('moyasar-mount');
+    setDebugInfo({
+      sdkLoaded: typeof window.Moyasar !== 'undefined',
+      mountExists: !!mount,
+      mountChildCount: mount?.children.length || 0,
+      lastCheck: new Date().toLocaleTimeString(),
+    });
+  }, []);
 
   // Only fetch if we don't have booking data from navigation state
   useEffect(() => {
     if (bookingFromState) {
-      // Validate the booking ID matches
       if (bookingFromState.id !== bookingId) {
         setError(isArabic ? 'معرف الحجز غير متطابق' : 'Booking ID mismatch');
         setLoading(false);
@@ -66,7 +95,6 @@ const PaymentPage = () => {
       return;
     }
 
-    // No state data - show error (RLS prevents direct fetch)
     if (!bookingId) {
       setError(isArabic ? 'معرف الحجز غير صالح' : 'Invalid booking ID');
     } else {
@@ -75,31 +103,88 @@ const PaymentPage = () => {
     setLoading(false);
   }, [bookingId, bookingFromState, isArabic]);
 
+  // Check if mount has SDK elements injected
+  const checkMountHasElements = useCallback(() => {
+    const mount = document.getElementById('moyasar-mount');
+    if (!mount) return false;
+    // Check for form, iframe, or any input elements
+    return !!(mount.querySelector('form, iframe, input') || mount.children.length > 0);
+  }, []);
+
+  // Start polling for SDK injection
+  const startInjectionPolling = useCallback(() => {
+    setInitPhase('waiting_injection');
+    
+    // Clear any existing polling
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+
+    // Poll every 100ms
+    pollingIntervalRef.current = setInterval(() => {
+      if (checkMountHasElements()) {
+        console.log('SDK elements detected via polling');
+        setIsMoyasarReady(true);
+        setInitPhase('ready');
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        if (sdkLoadTimerRef.current) {
+          clearTimeout(sdkLoadTimerRef.current);
+          sdkLoadTimerRef.current = null;
+        }
+      }
+      updateDebugInfo();
+    }, 100);
+
+    // Set timeout for SDK load failure
+    sdkLoadTimerRef.current = setTimeout(() => {
+      if (!isMoyasarReady) {
+        console.error('SDK load timeout - no elements injected within', SDK_LOAD_TIMEOUT_MS, 'ms');
+        setInitPhase('timeout');
+        setSdkLoadTimeout(true);
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      }
+    }, SDK_LOAD_TIMEOUT_MS);
+  }, [checkMountHasElements, isMoyasarReady, updateDebugInfo]);
+
   // Initialize Moyasar once booking is loaded
   const initializeMoyasar = useCallback(() => {
-    if (!booking || moyasarInitStarted.current) return;
+    if (!booking || moyasarInitStarted.current || !isAllowedDomain) return;
+
+    setInitPhase('waiting_mount');
+    updateDebugInfo();
 
     const container = document.getElementById('moyasar-mount');
     if (!container) {
       console.error('Mount container not found');
       setMoyasarError(isArabic ? 'لم يتم العثور على نموذج الدفع' : 'Payment form container not found');
+      setInitPhase('error');
       return;
     }
 
     if (typeof window.Moyasar === 'undefined' || typeof window.Moyasar.init !== 'function') {
       console.error('Moyasar SDK not loaded');
       setMoyasarError(isArabic ? 'فشل تحميل نظام الدفع' : 'Payment system failed to load');
+      setInitPhase('error');
       return;
     }
 
     moyasarInitStarted.current = true;
+    setInitPhase('initializing');
+    
     const amountInHalalas = Math.round(booking.total_amount * 100);
     const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback/${booking.id}`;
 
     console.log('Initializing Moyasar on standalone page:', { 
       amount: amountInHalalas, 
       bookingId: booking.id, 
-      callbackUrl 
+      callbackUrl,
+      hostname: currentHostname,
     });
 
     const getErrorMessage = (errorType?: string, errorCode?: string, errorMessage?: string): string => {
@@ -138,6 +223,7 @@ const PaymentPage = () => {
               language: navigator.language,
               timestamp: new Date().toISOString(),
               page: 'standalone-payment',
+              hostname: currentHostname,
             },
           },
         });
@@ -205,57 +291,59 @@ const PaymentPage = () => {
         },
       });
 
-      // Use MutationObserver to detect form injection
-      observerRef.current = new MutationObserver(() => {
-        if (container.querySelector('form, iframe, input')) {
-          moyasarReadyRef.current = true;
-          setIsMoyasarReady(true);
-          observerRef.current?.disconnect();
-        }
-      });
+      // Start polling for injection
+      startInjectionPolling();
 
-      observerRef.current.observe(container, {
-        childList: true,
-        subtree: true,
-      });
+      // Also log mount status after delays for debugging
+      setTimeout(() => {
+        const mount = document.getElementById('moyasar-mount');
+        console.log('Mount status after 500ms:', mount?.children.length, 'children');
+      }, 500);
 
-      // Check if already present
-      if (container.querySelector('form, iframe, input')) {
-        moyasarReadyRef.current = true;
-        setIsMoyasarReady(true);
-        observerRef.current?.disconnect();
-      }
+      setTimeout(() => {
+        const mount = document.getElementById('moyasar-mount');
+        console.log('Mount status after 2000ms:', mount?.children.length, 'children');
+      }, 2000);
+
     } catch (err) {
       console.error('Failed to initialize Moyasar:', err);
       setMoyasarError(isArabic ? 'فشل في تهيئة نظام الدفع' : 'Failed to initialize payment system');
+      setInitPhase('error');
     }
-  }, [booking, isArabic, toast]);
+  }, [booking, isArabic, toast, isAllowedDomain, currentHostname, startInjectionPolling, updateDebugInfo]);
 
-  // Initialize Moyasar when booking is loaded
+  // Initialize Moyasar when booking is loaded (and on allowed domain)
   useEffect(() => {
-    if (booking && !moyasarInitStarted.current) {
-      // Small delay to ensure DOM is ready
+    if (booking && !moyasarInitStarted.current && isAllowedDomain) {
       const timer = setTimeout(initializeMoyasar, 100);
       return () => clearTimeout(timer);
     }
-  }, [booking, initializeMoyasar]);
+  }, [booking, initializeMoyasar, isAllowedDomain]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (submissionTimerRef.current) {
-        clearTimeout(submissionTimerRef.current);
-      }
-      observerRef.current?.disconnect();
+      if (submissionTimerRef.current) clearTimeout(submissionTimerRef.current);
+      if (sdkLoadTimerRef.current) clearTimeout(sdkLoadTimerRef.current);
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
     };
   }, []);
 
+  // Debug mode: update info periodically
+  useEffect(() => {
+    if (isDebugMode) {
+      const interval = setInterval(updateDebugInfo, 500);
+      return () => clearInterval(interval);
+    }
+  }, [isDebugMode, updateDebugInfo]);
+
   const handleRetry = () => {
     moyasarInitStarted.current = false;
-    moyasarReadyRef.current = false;
     setMoyasarError(null);
     setSubmissionStalled(false);
+    setSdkLoadTimeout(false);
     setIsMoyasarReady(false);
+    setInitPhase('idle');
     
     const container = document.getElementById('moyasar-mount');
     if (container) {
@@ -263,6 +351,11 @@ const PaymentPage = () => {
     }
     
     setTimeout(initializeMoyasar, 100);
+  };
+
+  const handleOpenProduction = () => {
+    const productionUrl = `${PRODUCTION_DOMAIN}/pay/${bookingId}`;
+    window.open(productionUrl, '_blank');
   };
 
   if (loading) {
@@ -298,8 +391,58 @@ const PaymentPage = () => {
     );
   }
 
+  // Domain block UI - shown when on non-production domain
+  if (!isAllowedDomain) {
+    return (
+      <div className={`min-h-screen bg-background flex items-center justify-center p-4 ${isArabic ? 'rtl' : 'ltr'}`} dir={isArabic ? 'rtl' : 'ltr'}>
+        <div className="text-center max-w-md bg-card rounded-lg border p-8">
+          <div className="bg-amber-100 dark:bg-amber-900/30 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <Lock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">
+            {isArabic ? 'الدفع على الموقع الرسمي فقط' : 'Payment on Official Site Only'}
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            {isArabic 
+              ? 'لأسباب أمنية، يمكن إتمام الدفع فقط على الموقع الرسمي. يرجى الضغط على الزر أدناه للمتابعة.'
+              : 'For security reasons, payment can only be completed on the official website. Please click the button below to continue.'}
+          </p>
+          <Button onClick={handleOpenProduction} className="w-full mb-4">
+            <ExternalLink className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+            {isArabic ? 'فتح الموقع الرسمي' : 'Open Official Site'}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            {PRODUCTION_DOMAIN}
+          </p>
+          
+          {isDebugMode && (
+            <div className="mt-4 p-3 bg-muted rounded text-left text-xs font-mono">
+              <div>Current: {currentHostname}</div>
+              <div>Allowed: {ALLOWED_DOMAINS.join(', ')}</div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-background ${isArabic ? 'rtl' : 'ltr'}`} dir={isArabic ? 'rtl' : 'ltr'}>
+      {/* Debug Panel */}
+      {isDebugMode && (
+        <div className="fixed top-4 right-4 z-50 bg-black/90 text-green-400 p-3 rounded-lg text-xs font-mono max-w-xs">
+          <div className="font-bold mb-2">Debug Panel</div>
+          <div>Hostname: {currentHostname}</div>
+          <div>Allowed: {isAllowedDomain ? '✅ Yes' : '❌ No'}</div>
+          <div>SDK: {debugInfo.sdkLoaded ? '✅ Loaded' : '❌ Not loaded'}</div>
+          <div>Mount: {debugInfo.mountExists ? '✅ Exists' : '❌ Missing'}</div>
+          <div>Children: {debugInfo.mountChildCount}</div>
+          <div>Phase: {initPhase}</div>
+          <div>Ready: {isMoyasarReady ? '✅' : '❌'}</div>
+          <div>Last: {debugInfo.lastCheck}</div>
+        </div>
+      )}
+
       {/* Simple Header */}
       <header className="bg-primary text-primary-foreground py-4">
         <div className="container mx-auto px-4 flex items-center justify-between">
@@ -363,7 +506,7 @@ const PaymentPage = () => {
 
           <div className="p-6">
             {/* Loading State */}
-            {!isMoyasarReady && !moyasarError && !submissionStalled && (
+            {!isMoyasarReady && !moyasarError && !submissionStalled && !sdkLoadTimeout && (
               <div className="flex flex-col items-center justify-center py-8">
                 <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
                 <p className="text-muted-foreground">
@@ -372,11 +515,59 @@ const PaymentPage = () => {
               </div>
             )}
 
-            {/* Moyasar Mount Point */}
+            {/* Moyasar Mount Point - NEVER hidden with display:none */}
             <div 
               id="moyasar-mount" 
-              className={`min-h-[200px] ${!isMoyasarReady && !moyasarError ? 'opacity-0 h-0 overflow-hidden' : ''}`}
+              className="min-h-[200px]"
+              style={{ 
+                visibility: isMoyasarReady ? 'visible' : 'hidden',
+                height: isMoyasarReady ? 'auto' : '0',
+                overflow: isMoyasarReady ? 'visible' : 'hidden',
+              }}
             />
+
+            {/* SDK Load Timeout - Recovery UI */}
+            {sdkLoadTimeout && !moyasarError && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-medium text-amber-800 dark:text-amber-200">
+                      {isArabic ? 'تعذر تحميل نموذج الدفع' : 'Payment form failed to load'}
+                    </p>
+                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1 mb-4">
+                      {isArabic 
+                        ? 'قد يكون هذا بسبب اتصال الإنترنت أو إعدادات المتصفح. يرجى المحاولة مرة أخرى.'
+                        : 'This may be due to your internet connection or browser settings. Please try again.'}
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button onClick={handleRetry} variant="default" size="sm">
+                        <RefreshCw className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                        {isArabic ? 'إعادة المحاولة' : 'Retry Payment'}
+                      </Button>
+                      <Button 
+                        onClick={() => window.location.reload()} 
+                        variant="outline" 
+                        size="sm"
+                      >
+                        {isArabic ? 'تحديث الصفحة' : 'Refresh Page'}
+                      </Button>
+                      <a 
+                        href="https://wa.me/966500000000" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex"
+                      >
+                        <Button variant="ghost" size="sm">
+                          <MessageCircle className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                          {isArabic ? 'تواصل معنا' : 'Contact Support'}
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Error State */}
             {moyasarError && (
