@@ -72,12 +72,15 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
   const [submissionStalled, setSubmissionStalled] = useState(false);
   const [transactionUrl, setTransactionUrl] = useState<string | null>(null);
   const [moyasarError, setMoyasarError] = useState<string | null>(null);
+  // Debug states (avoid querying DOM during render)
+  const [debugMountState, setDebugMountState] = useState<'unknown' | 'exists' | 'missing'>('unknown');
+  const [debugInitPhase, setDebugInitPhase] = useState<'idle' | 'waiting_mount' | 'initializing' | 'initialized' | 'failed'>('idle');
+
   const moyasarInitStarted = useRef(false);
   const moyasarReadyRef = useRef(false); // Track readiness with ref to avoid stale closures
   const submissionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const paymentFormRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<MutationObserver | null>(null);
-  
   // Debug mode - append ?debug=1 to URL to see diagnostics
   const isDebugMode = new URLSearchParams(window.location.search).get('debug') === '1';
 
@@ -337,25 +340,25 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     }
   }, [totalAmount, isArabic, toast]);
 
-  // Wait for DOM element to exist with polling
-  const waitForElement = useCallback((selector: string, maxAttempts = 20, interval = 50): Promise<HTMLElement | null> => {
+  // Wait for DOM element to exist with polling (use setTimeout, not DOM queries during render)
+  const waitForElement = useCallback((selector: string, maxAttempts = 40, interval = 50): Promise<HTMLElement | null> => {
     return new Promise((resolve) => {
       let attempts = 0;
       const check = () => {
-        attempts++;
+        attempts += 1;
         const element = document.querySelector<HTMLElement>(selector);
         if (element) {
-          console.log(`Element ${selector} found after ${attempts} attempts`);
           resolve(element);
-        } else if (attempts >= maxAttempts) {
-          console.error(`Element ${selector} not found after ${maxAttempts} attempts`);
-          resolve(null);
-        } else {
-          requestAnimationFrame(check);
+          return;
         }
+        if (attempts >= maxAttempts) {
+          resolve(null);
+          return;
+        }
+        setTimeout(check, interval);
       };
-      // Use double RAF to ensure React has finished rendering
-      requestAnimationFrame(() => requestAnimationFrame(check));
+      // small delay to allow React commit
+      setTimeout(check, interval);
     });
   }, []);
 
@@ -367,18 +370,24 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
       moyasarReadyRef.current = false;
       setMoyasarTimeout(false);
       setMoyasarError(null);
-      
-      // Wait for mount container then initialize
+      setDebugMountState('unknown');
+      setDebugInitPhase('waiting_mount');
+
       const initPayment = async () => {
         const container = await waitForElement('#moyasar-mount');
-        if (container) {
-          console.log('Mount container found, dimensions:', container.offsetWidth, 'x', container.offsetHeight);
-          initializeMoyasar(pendingBookingId, pendingBookingRef);
-        } else {
+        if (!container) {
+          setDebugMountState('missing');
+          setDebugInitPhase('failed');
           setMoyasarError('Payment form container failed to render. Please refresh.');
+          return;
         }
+
+        setDebugMountState('exists');
+        setDebugInitPhase('initializing');
+        initializeMoyasar(pendingBookingId, pendingBookingRef);
+        setDebugInitPhase('initialized');
       };
-      
+
       initPayment();
 
       // Set timeout fallback - use ref to get current value
@@ -404,22 +413,28 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     setIsMoyasarReady(false);
     setMoyasarError(null);
     setSubmissionStalled(false);
+    setDebugMountState('unknown');
+    setDebugInitPhase('waiting_mount');
     observerRef.current?.disconnect();
-    
+
     // Clear the form container
     if (paymentFormRef.current) {
       paymentFormRef.current.innerHTML = '';
     }
-    
+
     if (pendingBookingId && pendingBookingRef) {
-      // Wait a moment for DOM to stabilize, then wait for element
-      await new Promise(resolve => setTimeout(resolve, 100));
       const container = await waitForElement('#moyasar-mount');
-      if (container) {
-        initializeMoyasar(pendingBookingId, pendingBookingRef);
-      } else {
+      if (!container) {
+        setDebugMountState('missing');
+        setDebugInitPhase('failed');
         setMoyasarError('Payment form container not found. Please refresh the page.');
+        return;
       }
+
+      setDebugMountState('exists');
+      setDebugInitPhase('initializing');
+      initializeMoyasar(pendingBookingId, pendingBookingRef);
+      setDebugInitPhase('initialized');
     }
   };
 
@@ -692,13 +707,39 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
             {isDebugMode && (
               <div className="mb-4 p-4 bg-muted border border-border rounded-xl font-mono text-xs space-y-1">
                 <p className="font-bold text-foreground mb-2">🔧 Moyasar Debug Panel</p>
-                <p>SDK Loaded: <span className={typeof window.Moyasar !== 'undefined' ? 'text-green-600' : 'text-red-600'}>{typeof window.Moyasar !== 'undefined' ? 'Yes' : 'No'}</span></p>
-                <p>SDK init(): <span className={typeof window.Moyasar?.init === 'function' ? 'text-green-600' : 'text-red-600'}>{typeof window.Moyasar?.init === 'function' ? 'Available' : 'Missing'}</span></p>
+                <p>
+                  SDK Loaded:{' '}
+                  <span className={typeof window.Moyasar !== 'undefined' ? 'text-green-600' : 'text-red-600'}>
+                    {typeof window.Moyasar !== 'undefined' ? 'Yes' : 'No'}
+                  </span>
+                </p>
+                <p>
+                  SDK init():{' '}
+                  <span className={typeof window.Moyasar?.init === 'function' ? 'text-green-600' : 'text-red-600'}>
+                    {typeof window.Moyasar?.init === 'function' ? 'Available' : 'Missing'}
+                  </span>
+                </p>
                 <p>Publishable Key: ...{MOYASAR_PUBLISHABLE_KEY.slice(-8)}</p>
                 <p>Domain: {window.location.hostname}</p>
-                <p>Mount Container: <span className={document.getElementById('moyasar-mount') ? 'text-green-600' : 'text-red-600'}>{document.getElementById('moyasar-mount') ? 'Exists' : 'Missing'}</span></p>
-                <p>Form Ready: <span className={isMoyasarReady ? 'text-green-600' : 'text-amber-600'}>{isMoyasarReady ? 'Yes' : 'Loading...'}</span></p>
-                <p>Init Started: {moyasarInitStarted.current ? 'Yes' : 'No'}</p>
+                <p>
+                  Mount Container:{' '}
+                  <span className={debugMountState === 'exists' ? 'text-green-600' : debugMountState === 'missing' ? 'text-red-600' : 'text-amber-600'}>
+                    {debugMountState === 'exists' ? 'Exists' : debugMountState === 'missing' ? 'Missing' : 'Checking...'}
+                  </span>
+                </p>
+                <p>
+                  Init Phase:{' '}
+                  <span className={debugInitPhase === 'initialized' ? 'text-green-600' : debugInitPhase === 'failed' ? 'text-red-600' : 'text-amber-600'}>
+                    {debugInitPhase}
+                  </span>
+                </p>
+                <p>
+                  Form Ready:{' '}
+                  <span className={isMoyasarReady ? 'text-green-600' : 'text-amber-600'}>
+                    {isMoyasarReady ? 'Yes' : 'Loading...'}
+                  </span>
+                </p>
+                <p>Init Started (ref): {moyasarInitStarted.current ? 'Yes' : 'No'}</p>
                 {moyasarError && <p className="text-red-600">Error: {moyasarError}</p>}
                 {pendingBookingId && <p>Booking ID: {pendingBookingId.slice(0, 8)}...</p>}
               </div>
