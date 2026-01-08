@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 // Version stamp for deployment verification
-const CREATE_BOOKING_VERSION = "2026-01-08-v5-optimized";
+const CREATE_BOOKING_VERSION = "2026-01-08-v6-enhanced-logging";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +49,9 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
+  const startTime = Date.now();
+  console.log(`[${CREATE_BOOKING_VERSION}] create-booking called at ${new Date().toISOString()}`);
+  
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -56,6 +59,13 @@ serve(async (req) => {
 
   try {
     const body: BookingRequest = await req.json();
+    console.log("Booking request received:", {
+      customerEmail: body.customerEmail?.slice(0, 5) + "...",
+      visitDate: body.visitDate,
+      adultCount: body.adultCount,
+      childCount: body.childCount,
+      totalAmount: body.totalAmount,
+    });
 
     // Quick validation (fail fast)
     if (!body.customerName || !body.customerEmail || !body.customerPhone || !body.visitDate) {
@@ -124,12 +134,22 @@ serve(async (req) => {
       .single();
 
     if (bookingError) {
-      console.error("Booking insert error:", bookingError.message);
+      console.error("Booking insert error:", {
+        message: bookingError.message,
+        code: bookingError.code,
+        details: bookingError.details,
+      });
       return new Response(
         JSON.stringify({ success: false, error: "Failed to create booking", details: bookingError.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const elapsed = Date.now() - startTime;
+    console.log(`Booking created successfully in ${elapsed}ms:`, {
+      bookingId: booking.id,
+      bookingReference: bookingReference,
+    });
 
     // Return success immediately
     return new Response(
