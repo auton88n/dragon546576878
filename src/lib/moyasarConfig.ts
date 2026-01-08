@@ -17,6 +17,8 @@ export interface MoyasarConfigParams {
   amountInHalalas: number;
   bookingId: string;
   bookingReference: string;
+  language?: 'ar' | 'en';
+  onInitiating?: () => void;
   onCompleted: (payment: MoyasarPayment) => void;
   onFailure?: (error: MoyasarError) => void;
 }
@@ -31,13 +33,15 @@ export function buildMoyasarConfig(params: MoyasarConfigParams) {
     amountInHalalas,
     bookingId,
     bookingReference,
+    language = 'en',
+    onInitiating,
     onCompleted,
     onFailure,
   } = params;
 
   const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback/${bookingId}`;
 
-  // MINIMAL CONFIG - only officially required fields
+  // Doc-compliant config (Card payments)
   const config: Record<string, unknown> = {
     element: mountSelector,
     amount: amountInHalalas,
@@ -45,11 +49,20 @@ export function buildMoyasarConfig(params: MoyasarConfigParams) {
     description: `Souq Almufaijer - ${bookingReference}`,
     publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
     callback_url: callbackUrl,
+    supported_networks: ['visa', 'mastercard', 'mada'],
     methods: ['creditcard'],
+    language,
     on_completed: onCompleted,
   };
 
-  // Add on_failure only if provided
+  // Start watchdog only when submission starts
+  if (onInitiating) {
+    config.on_initiating = () => {
+      onInitiating();
+      return true;
+    };
+  }
+
   if (onFailure) {
     config.on_failure = onFailure;
   }

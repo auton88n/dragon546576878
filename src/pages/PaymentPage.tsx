@@ -258,12 +258,15 @@ const PaymentPage = () => {
     };
 
     try {
-      // Use MINIMAL config to avoid "Form configuration issue"
       const config = buildMoyasarConfig({
         mountSelector: '#moyasar-mount',
         amountInHalalas,
         bookingId: booking.id,
         bookingReference: booking.booking_reference,
+        language: isArabic ? 'ar' : 'en',
+        onInitiating: () => {
+          startSubmissionWatchdog();
+        },
         onCompleted: (payment: MoyasarPayment) => {
           clearSubmissionWatchdog();
           handlePaymentCompletion(payment, booking.id, setTransactionUrl);
@@ -272,7 +275,7 @@ const PaymentPage = () => {
           clearSubmissionWatchdog();
           console.error('Payment failed:', error);
           await logFailureToServer(error);
-          
+
           toast({
             title: isArabic ? 'فشل الدفع' : 'Payment Failed',
             description: getPaymentErrorMessage(isArabic, error?.type, error?.code, error?.message),
@@ -281,7 +284,7 @@ const PaymentPage = () => {
         },
       });
 
-      console.log('Moyasar config built (minimal):', { ...config, publishable_api_key: '***' });
+      console.log('Moyasar config built:', { ...config, publishable_api_key: '***' });
       window.Moyasar.init(config as any);
 
       startInjectionPolling();
