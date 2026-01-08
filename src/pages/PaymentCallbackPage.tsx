@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -11,6 +11,7 @@ type VerificationStatus = 'verifying' | 'success' | 'failed' | 'already_paid';
 
 const PaymentCallbackPage = () => {
   const navigate = useNavigate();
+  const { bookingId: pathBookingId } = useParams<{ bookingId: string }>();
   const [searchParams] = useSearchParams();
   const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
@@ -23,7 +24,8 @@ const PaymentCallbackPage = () => {
 
   const paymentId = searchParams.get('id');
   const paymentStatus = searchParams.get('status');
-  const bookingId = searchParams.get('booking');
+  // Support both path param and query param for bookingId
+  const bookingId = pathBookingId || searchParams.get('booking');
   const moyasarMessage = searchParams.get('message');
 
   useEffect(() => {

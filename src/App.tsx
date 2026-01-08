@@ -97,6 +97,7 @@ const App = () => (
             <Route path="/booking" element={<BookingPage />} />
             <Route path="/confirmation/:bookingId" element={<ConfirmationPage />} />
             <Route path="/payment-callback" element={<PaymentCallbackPage />} />
+            <Route path="/payment-callback/:bookingId" element={<PaymentCallbackPage />} />
             <Route path="/pay/:bookingId" element={<ResumePaymentPage />} />
             <Route path="/my-tickets" element={<MyTicketsPage />} />
             <Route path="/group-bookings" element={<GroupBookingsPage />} />

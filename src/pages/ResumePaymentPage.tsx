@@ -84,7 +84,7 @@ const ResumePaymentPage = () => {
 
     const amountInHalalas = Math.round(booking.total_amount * 100);
     const PRODUCTION_DOMAIN = 'https://almufaijer.com';
-    const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback?booking=${booking.id}`;
+    const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback/${booking.id}`;
 
     console.log('Initializing Moyasar for resume payment:', { 
       amount: amountInHalalas, 
@@ -105,9 +105,18 @@ const ResumePaymentPage = () => {
         language: isArabic ? 'ar' : 'en',
         fixed_width: true,
         on_completed: (payment: MoyasarPayment) => {
-          console.log('Payment completed, forcing redirect:', payment.id, payment.status);
-          // Force redirect - don't rely on gateway auto-redirect
-          const redirectUrl = `${PRODUCTION_DOMAIN}/payment-callback?booking=${booking.id}&id=${payment.id}&status=${payment.status}`;
+          console.log('on_completed fired:', payment.id, payment.status, payment.source?.transaction_url);
+          
+          // Handle 3D Secure / bank verification
+          if (payment.status === 'initiated' && payment.source?.transaction_url) {
+            console.log('3DS required, redirecting to:', payment.source.transaction_url);
+            window.location.href = payment.source.transaction_url;
+            return;
+          }
+          
+          // Payment completed - redirect to callback
+          console.log('Payment completed, forcing redirect');
+          const redirectUrl = `${PRODUCTION_DOMAIN}/payment-callback/${booking.id}?id=${payment.id}&status=${payment.status}`;
           window.location.href = redirectUrl;
         },
         on_failure: (error: any) => {
