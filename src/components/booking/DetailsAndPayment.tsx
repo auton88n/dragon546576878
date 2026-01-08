@@ -71,9 +71,13 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
   const [moyasarTimeout, setMoyasarTimeout] = useState(false);
   const [submissionStalled, setSubmissionStalled] = useState(false);
   const [transactionUrl, setTransactionUrl] = useState<string | null>(null);
+  const [moyasarError, setMoyasarError] = useState<string | null>(null);
   const moyasarInitStarted = useRef(false);
   const submissionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const paymentFormRef = useRef<HTMLDivElement>(null);
+  
+  // Debug mode - append ?debug=1 to URL to see diagnostics
+  const isDebugMode = new URLSearchParams(window.location.search).get('debug') === '1';
 
   const form = useForm<FormValues>({
     resolver: zodResolver(createFormSchema(isArabic)),
@@ -109,8 +113,50 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
 
   // Initialize Moyasar payment form
   const initializeMoyasar = useCallback((bookingId: string, bookingReference: string) => {
-    if (moyasarInitStarted.current || !window.Moyasar) {
-      console.error('Moyasar SDK not loaded or already initialized');
+    // Clear any previous errors
+    setMoyasarError(null);
+    
+    // Log comprehensive diagnostic info
+    const diagnosticInfo = {
+      sdkLoaded: typeof window.Moyasar !== 'undefined',
+      sdkType: typeof window.Moyasar,
+      hasInit: typeof window.Moyasar?.init === 'function',
+      container: document.getElementById('moyasar-mount') ? 'exists' : 'missing',
+      domain: window.location.hostname,
+      publishableKey: `...${MOYASAR_PUBLISHABLE_KEY.slice(-8)}`,
+      bookingId,
+      timestamp: new Date().toISOString(),
+    };
+    console.log('Moyasar diagnostic info:', diagnosticInfo);
+
+    // Check if already initialized
+    if (moyasarInitStarted.current) {
+      console.warn('Moyasar already initialized, skipping');
+      return;
+    }
+
+    // Check if SDK loaded
+    if (typeof window.Moyasar === 'undefined') {
+      const errorMsg = 'Moyasar SDK failed to load from CDN. Please check your internet connection and refresh the page.';
+      console.error(errorMsg, diagnosticInfo);
+      setMoyasarError(errorMsg);
+      return;
+    }
+
+    // Check if init function exists
+    if (typeof window.Moyasar.init !== 'function') {
+      const errorMsg = 'Moyasar SDK loaded but init() not available. SDK may be corrupted.';
+      console.error(errorMsg, diagnosticInfo);
+      setMoyasarError(errorMsg);
+      return;
+    }
+
+    // Check if mount container exists
+    const container = document.getElementById('moyasar-mount');
+    if (!container) {
+      const errorMsg = 'Payment form container not found in DOM.';
+      console.error(errorMsg, diagnosticInfo);
+      setMoyasarError(errorMsg);
       return;
     }
 
@@ -262,7 +308,9 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         }
       }, 100);
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown initialization error';
       console.error('Failed to initialize Moyasar:', error);
+      setMoyasarError(errorMsg);
       toast({
         title: isArabic ? 'خطأ' : 'Error',
         description: isArabic ? 'فشل في تهيئة نظام الدفع' : 'Failed to initialize payment system',
@@ -299,6 +347,8 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     moyasarInitStarted.current = false;
     setMoyasarTimeout(false);
     setIsMoyasarReady(false);
+    setMoyasarError(null);
+    setSubmissionStalled(false);
     // Clear the form container
     if (paymentFormRef.current) {
       paymentFormRef.current.innerHTML = '';
@@ -573,20 +623,80 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
               </div>
             )}
 
+            {/* Debug Panel */}
+            {isDebugMode && (
+              <div className="mb-4 p-4 bg-muted border border-border rounded-xl font-mono text-xs space-y-1">
+                <p className="font-bold text-foreground mb-2">🔧 Moyasar Debug Panel</p>
+                <p>SDK Loaded: <span className={typeof window.Moyasar !== 'undefined' ? 'text-green-600' : 'text-red-600'}>{typeof window.Moyasar !== 'undefined' ? 'Yes' : 'No'}</span></p>
+                <p>SDK init(): <span className={typeof window.Moyasar?.init === 'function' ? 'text-green-600' : 'text-red-600'}>{typeof window.Moyasar?.init === 'function' ? 'Available' : 'Missing'}</span></p>
+                <p>Publishable Key: ...{MOYASAR_PUBLISHABLE_KEY.slice(-8)}</p>
+                <p>Domain: {window.location.hostname}</p>
+                <p>Mount Container: <span className={document.getElementById('moyasar-mount') ? 'text-green-600' : 'text-red-600'}>{document.getElementById('moyasar-mount') ? 'Exists' : 'Missing'}</span></p>
+                <p>Form Ready: <span className={isMoyasarReady ? 'text-green-600' : 'text-amber-600'}>{isMoyasarReady ? 'Yes' : 'Loading...'}</span></p>
+                <p>Init Started: {moyasarInitStarted.current ? 'Yes' : 'No'}</p>
+                {moyasarError && <p className="text-red-600">Error: {moyasarError}</p>}
+                {pendingBookingId && <p>Booking ID: {pendingBookingId.slice(0, 8)}...</p>}
+              </div>
+            )}
+
+            {/* Moyasar Error Display */}
+            {moyasarError && (
+              <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                  <div className="space-y-2 flex-1">
+                    <p className="text-sm text-red-800 dark:text-red-200 font-medium">
+                      {isArabic ? 'فشل تحميل نموذج الدفع' : 'Payment form failed to load'}
+                    </p>
+                    <p className="text-xs text-red-600 dark:text-red-300">{moyasarError}</p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Button size="sm" onClick={handleRetryMoyasar} className="gap-2">
+                        <Loader2 className="h-4 w-4" />
+                        {isArabic ? 'إعادة المحاولة' : 'Retry Payment'}
+                      </Button>
+                      <Button size="sm" variant="outline" asChild>
+                        <a href="https://wa.me/966500000000" target="_blank" rel="noopener noreferrer">
+                          {isArabic ? 'تواصل مع الدعم' : 'Contact Support'}
+                        </a>
+                      </Button>
+                    </div>
+                    {pendingBookingRef && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {isArabic ? 'رقم الحجز:' : 'Booking Ref:'} <span className="font-mono font-bold">{pendingBookingRef}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Payment Form Container - always visible for Safari compatibility */}
             <div className="relative rounded-2xl overflow-hidden bg-card border-2 border-border shadow-lg">
               {/* Loading overlay - shown on top while loading */}
-              {!isMoyasarReady && (
+              {!isMoyasarReady && !moyasarError && (
                 <div className="absolute inset-0 z-10 bg-card p-6 md:p-8">
                   {moyasarTimeout ? (
                     <div className="text-center space-y-4 h-full flex flex-col items-center justify-center">
+                      <AlertTriangle className="h-8 w-8 text-amber-500" />
                       <p className="text-muted-foreground">
                         {isArabic ? 'تأخر تحميل نموذج الدفع. يرجى المحاولة مرة أخرى.' : 'Payment form is taking longer than expected.'}
                       </p>
-                      <Button onClick={handleRetryMoyasar} variant="outline" className="gap-2">
-                        <Loader2 className="h-4 w-4" />
-                        {isArabic ? 'إعادة المحاولة' : 'Retry'}
-                      </Button>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        <Button onClick={handleRetryMoyasar} variant="outline" className="gap-2">
+                          <Loader2 className="h-4 w-4" />
+                          {isArabic ? 'إعادة المحاولة' : 'Retry'}
+                        </Button>
+                        <Button variant="outline" asChild>
+                          <a href="https://wa.me/966500000000" target="_blank" rel="noopener noreferrer">
+                            {isArabic ? 'تواصل مع الدعم' : 'Contact Support'}
+                          </a>
+                        </Button>
+                      </div>
+                      {pendingBookingRef && (
+                        <p className="text-xs text-muted-foreground">
+                          {isArabic ? 'رقم الحجز:' : 'Booking Ref:'} <span className="font-mono font-bold">{pendingBookingRef}</span>
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <div className="animate-pulse">
