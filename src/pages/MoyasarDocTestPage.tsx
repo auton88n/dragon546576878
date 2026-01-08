@@ -71,7 +71,7 @@ export default function MoyasarDocTestPage() {
         callback_url: `${origin}/payment-callback/test`,
         supported_networks: ['visa', 'mastercard', 'mada'] as const,
         methods: ['creditcard'] as const,
-        on_completed: function(payment: unknown) {
+        on_completed: async function(payment: unknown) {
           console.log('[Doc Test] Payment completed:', payment);
           setStatus('Payment completed! Check console.');
         }
