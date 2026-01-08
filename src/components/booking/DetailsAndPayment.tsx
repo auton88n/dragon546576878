@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Phone, Calendar, CheckCircle, CreditCard, FileText, Shield, Lock, Loader2 } from 'lucide-react';
+import { User, Mail, Phone, Calendar, CheckCircle, CreditCard, FileText, Shield, Lock, Loader2, AlertTriangle, ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +28,7 @@ interface DetailsAndPaymentProps {
 }
 
 const MOYASAR_PUBLISHABLE_KEY = 'pk_live_Z4WZcnyWGhaDva7QgnBdb53DWzokQmiCATjFmST2';
+const PRODUCTION_DOMAIN = 'https://almufaijer.com';
 
 const createFormSchema = (isArabic: boolean) => z.object({
   name: z.string()
@@ -68,7 +69,10 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
   const [isCreatingBooking, setIsCreatingBooking] = useState(false);
   const [isMoyasarReady, setIsMoyasarReady] = useState(false);
   const [moyasarTimeout, setMoyasarTimeout] = useState(false);
+  const [submissionStalled, setSubmissionStalled] = useState(false);
+  const [transactionUrl, setTransactionUrl] = useState<string | null>(null);
   const moyasarInitStarted = useRef(false);
+  const submissionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const paymentFormRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<FormValues>({
@@ -94,6 +98,15 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     return () => subscription.unsubscribe();
   }, [form, setCustomerInfo]);
 
+  // Cleanup submission timer on unmount
+  useEffect(() => {
+    return () => {
+      if (submissionTimerRef.current) {
+        clearTimeout(submissionTimerRef.current);
+      }
+    };
+  }, []);
+
   // Initialize Moyasar payment form
   const initializeMoyasar = useCallback((bookingId: string, bookingReference: string) => {
     if (moyasarInitStarted.current || !window.Moyasar) {
@@ -103,8 +116,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
 
     moyasarInitStarted.current = true;
     const amountInHalalas = Math.round(totalAmount * 100);
-    const PRODUCTION_DOMAIN = 'https://almufaijer.com';
-    const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback?booking=${bookingId}`;
+    const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback/${bookingId}`;
 
     console.log('Initializing Moyasar with:', { 
       amount: amountInHalalas, 
@@ -134,12 +146,12 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     };
 
     // Log payment failure to server
-    const logFailureToServer = async (error: any) => {
+    const logFailureToServer = async (error: any, errorType?: string) => {
       try {
         await supabase.functions.invoke('log-payment-failure', {
           body: {
             bookingId,
-            errorType: error?.type,
+            errorType: errorType || error?.type,
             errorCode: error?.code,
             errorMessage: error?.message,
             paymentId: error?.id,
@@ -157,6 +169,27 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
       }
     };
 
+    // Start submission watchdog when user submits
+    const startSubmissionWatchdog = () => {
+      if (submissionTimerRef.current) {
+        clearTimeout(submissionTimerRef.current);
+      }
+      console.log('Starting 25s submission watchdog');
+      submissionTimerRef.current = setTimeout(async () => {
+        console.warn('Submission watchdog triggered - payment stalled');
+        setSubmissionStalled(true);
+        await logFailureToServer({ type: 'client_timeout', message: 'Payment submission stalled' }, 'client_timeout');
+      }, 25000);
+    };
+
+    // Clear watchdog on success/failure
+    const clearSubmissionWatchdog = () => {
+      if (submissionTimerRef.current) {
+        clearTimeout(submissionTimerRef.current);
+        submissionTimerRef.current = null;
+      }
+    };
+
     try {
       window.Moyasar.init({
         element: '#moyasar-mount',
@@ -171,14 +204,28 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         fixed_width: true,
         on_initiating: () => {
           console.log('Payment form initiating for booking:', bookingId);
+          startSubmissionWatchdog();
         },
         on_completed: (payment: MoyasarPayment) => {
-          console.log('Payment completed, forcing redirect:', payment.id, payment.status);
-          // Force redirect - don't rely on gateway auto-redirect
-          const redirectUrl = `${PRODUCTION_DOMAIN}/payment-callback?booking=${bookingId}&id=${payment.id}&status=${payment.status}`;
+          clearSubmissionWatchdog();
+          console.log('on_completed fired:', payment.id, payment.status, payment.source?.transaction_url);
+          
+          // Handle 3D Secure / bank verification
+          if (payment.status === 'initiated' && payment.source?.transaction_url) {
+            console.log('3DS required, redirecting to:', payment.source.transaction_url);
+            setTransactionUrl(payment.source.transaction_url);
+            // Navigate to 3DS page
+            window.location.href = payment.source.transaction_url;
+            return;
+          }
+          
+          // Payment completed (paid status) - redirect to callback
+          console.log('Payment completed, forcing redirect');
+          const redirectUrl = `${PRODUCTION_DOMAIN}/payment-callback/${bookingId}?id=${payment.id}&status=${payment.status}`;
           window.location.href = redirectUrl;
         },
         on_failure: async (error: any) => {
+          clearSubmissionWatchdog();
           console.error('Payment failed:', {
             type: error?.type,
             message: error?.message,
@@ -482,6 +529,50 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
           </form>
         ) : (
           <div className="space-y-4">
+            {/* Submission Stalled UI */}
+            {submissionStalled && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl mb-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="space-y-2 flex-1">
+                    <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+                      {isArabic ? 'يستغرق الدفع وقتاً أطول من المتوقع' : 'Payment is taking longer than expected'}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {transactionUrl && (
+                        <Button
+                          size="sm"
+                          onClick={() => window.location.href = transactionUrl}
+                          className="btn-gold gap-2"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          {isArabic ? 'متابعة التحقق البنكي' : 'Continue Bank Verification'}
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleRetryMoyasar}
+                      >
+                        {isArabic ? 'إعادة المحاولة' : 'Retry Payment'}
+                      </Button>
+                      {pendingBookingId && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          asChild
+                        >
+                          <Link to={`/pay/${pendingBookingId}`}>
+                            {isArabic ? 'صفحة دفع منفصلة' : 'Separate Payment Page'}
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Payment Form Container - always visible for Safari compatibility */}
             <div className="relative rounded-2xl overflow-hidden bg-card border-2 border-border shadow-lg">
               {/* Loading overlay - shown on top while loading */}
