@@ -73,8 +73,10 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
   const [transactionUrl, setTransactionUrl] = useState<string | null>(null);
   const [moyasarError, setMoyasarError] = useState<string | null>(null);
   const moyasarInitStarted = useRef(false);
+  const moyasarReadyRef = useRef(false); // Track readiness with ref to avoid stale closures
   const submissionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const paymentFormRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<MutationObserver | null>(null);
   
   // Debug mode - append ?debug=1 to URL to see diagnostics
   const isDebugMode = new URLSearchParams(window.location.search).get('debug') === '1';
@@ -292,21 +294,37 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         },
       });
 
-      // Poll for form injection to detect when Moyasar is ready
-      let pollCount = 0;
-      const pollInterval = setInterval(() => {
-        pollCount++;
+      console.log('Moyasar.init() called successfully, setting up MutationObserver');
+
+      // Use MutationObserver to reliably detect form injection
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+
+      observerRef.current = new MutationObserver((mutations) => {
         const formEl = paymentFormRef.current;
         if (formEl && formEl.querySelector('form, iframe, input')) {
-          clearInterval(pollInterval);
+          console.log('MutationObserver: Moyasar form elements detected');
+          moyasarReadyRef.current = true;
           setIsMoyasarReady(true);
-          console.log('Moyasar form ready');
-        } else if (pollCount > 50) { // 5 seconds max
-          clearInterval(pollInterval);
-          setIsMoyasarReady(true); // Show anyway to avoid infinite skeleton
-          console.warn('Moyasar polling timeout, showing form anyway');
+          observerRef.current?.disconnect();
         }
-      }, 100);
+      });
+
+      if (container) {
+        observerRef.current.observe(container, {
+          childList: true,
+          subtree: true,
+        });
+      }
+
+      // Also check immediately in case elements already injected
+      if (container.querySelector('form, iframe, input')) {
+        console.log('Moyasar form elements already present');
+        moyasarReadyRef.current = true;
+        setIsMoyasarReady(true);
+        observerRef.current?.disconnect();
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown initialization error';
       console.error('Failed to initialize Moyasar:', error);
@@ -324,6 +342,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     if (showPaymentForm && pendingBookingId && pendingBookingRef && !moyasarInitStarted.current) {
       // Reset states
       setIsMoyasarReady(false);
+      moyasarReadyRef.current = false;
       setMoyasarTimeout(false);
       
       // Initialize after DOM render
@@ -331,30 +350,38 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         initializeMoyasar(pendingBookingId, pendingBookingRef);
       });
 
-      // Set timeout fallback
+      // Set timeout fallback - use ref to get current value
       const timeoutId = setTimeout(() => {
-        if (!isMoyasarReady) {
+        if (!moyasarReadyRef.current) {
+          console.warn('Moyasar 12s timeout triggered - form did not load');
           setMoyasarTimeout(true);
         }
       }, 12000); // 12 second timeout
 
-      return () => clearTimeout(timeoutId);
+      return () => {
+        clearTimeout(timeoutId);
+        observerRef.current?.disconnect();
+      };
     }
-  }, [showPaymentForm, pendingBookingId, pendingBookingRef, initializeMoyasar, isMoyasarReady]);
+  }, [showPaymentForm, pendingBookingId, pendingBookingRef, initializeMoyasar]);
 
   // Retry handler
   const handleRetryMoyasar = () => {
     moyasarInitStarted.current = false;
+    moyasarReadyRef.current = false;
     setMoyasarTimeout(false);
     setIsMoyasarReady(false);
     setMoyasarError(null);
     setSubmissionStalled(false);
+    observerRef.current?.disconnect();
     // Clear the form container
     if (paymentFormRef.current) {
       paymentFormRef.current.innerHTML = '';
     }
     if (pendingBookingId && pendingBookingRef) {
-      initializeMoyasar(pendingBookingId, pendingBookingRef);
+      requestAnimationFrame(() => {
+        initializeMoyasar(pendingBookingId, pendingBookingRef);
+      });
     }
   };
 

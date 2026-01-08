@@ -30,7 +30,9 @@ const ResumePaymentPage = () => {
   const [moyasarReady, setMoyasarReady] = useState(false);
   const [moyasarTimeout, setMoyasarTimeout] = useState(false);
   const moyasarInitialized = useRef(false);
+  const moyasarReadyRef = useRef(false); // Track readiness with ref to avoid stale closures
   const paymentFormRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<MutationObserver | null>(null);
   
   // Debug mode - append ?debug=1 to URL to see diagnostics
   const isDebugMode = new URLSearchParams(window.location.search).get('debug') === '1';
@@ -189,22 +191,37 @@ const ResumePaymentPage = () => {
       });
 
       moyasarInitialized.current = true;
+      console.log('Moyasar.init() called successfully (Resume), setting up MutationObserver');
       
-      // Poll for form injection to detect when Moyasar is ready
-      let pollCount = 0;
-      const pollInterval = setInterval(() => {
-        pollCount++;
+      // Use MutationObserver to reliably detect form injection
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+
+      observerRef.current = new MutationObserver((mutations) => {
         const formEl = paymentFormRef.current;
         if (formEl && formEl.querySelector('form, iframe, input')) {
-          clearInterval(pollInterval);
+          console.log('MutationObserver: Moyasar form elements detected (Resume)');
+          moyasarReadyRef.current = true;
           setMoyasarReady(true);
-          console.log('Moyasar form ready (Resume)');
-        } else if (pollCount > 50) { // 5 seconds max
-          clearInterval(pollInterval);
-          setMoyasarReady(true); // Show anyway to avoid infinite skeleton
-          console.warn('Moyasar polling timeout (Resume), showing form anyway');
+          observerRef.current?.disconnect();
         }
-      }, 100);
+      });
+
+      if (container) {
+        observerRef.current.observe(container, {
+          childList: true,
+          subtree: true,
+        });
+      }
+
+      // Also check immediately in case elements already injected
+      if (container.querySelector('form, iframe, input')) {
+        console.log('Moyasar form elements already present (Resume)');
+        moyasarReadyRef.current = true;
+        setMoyasarReady(true);
+        observerRef.current?.disconnect();
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown initialization error';
       console.error('Failed to initialize Moyasar:', error);
@@ -220,6 +237,7 @@ const ResumePaymentPage = () => {
   const handleProceedToPayment = () => {
     setShowPaymentForm(true);
     setMoyasarReady(false);
+    moyasarReadyRef.current = false;
     setMoyasarTimeout(false);
     setMoyasarError(null);
     // Use requestAnimationFrame to ensure DOM is ready
@@ -227,9 +245,10 @@ const ResumePaymentPage = () => {
       initializeMoyasar();
     });
     
-    // Set timeout fallback
+    // Set timeout fallback - use ref to get current value
     setTimeout(() => {
-      if (!moyasarReady) {
+      if (!moyasarReadyRef.current) {
+        console.warn('Moyasar 12s timeout triggered (Resume) - form did not load');
         setMoyasarTimeout(true);
       }
     }, 12000);
@@ -237,14 +256,18 @@ const ResumePaymentPage = () => {
   
   const handleRetryMoyasar = () => {
     moyasarInitialized.current = false;
+    moyasarReadyRef.current = false;
     setMoyasarTimeout(false);
     setMoyasarReady(false);
     setMoyasarError(null);
+    observerRef.current?.disconnect();
     // Clear the form container
     if (paymentFormRef.current) {
       paymentFormRef.current.innerHTML = '';
     }
-    initializeMoyasar();
+    requestAnimationFrame(() => {
+      initializeMoyasar();
+    });
   };
 
   // Format date
