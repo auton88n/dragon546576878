@@ -27,7 +27,7 @@ interface DetailsAndPaymentProps {
   isProcessing: boolean;
 }
 
-const MOYASAR_PUBLISHABLE_KEY = 'pk_live_Z4WZcnyWGhaDva7QgnBdb53DWzokQmiCATjFmST2';
+const MOYASAR_PUBLISHABLE_KEY = 'pk_live_LfPdUccwaeh8SBpL9rbj8FpDshb2QahMUDnVurfT';
 const PRODUCTION_DOMAIN = 'https://almufaijer.com';
 
 const createFormSchema = (isArabic: boolean) => z.object({
