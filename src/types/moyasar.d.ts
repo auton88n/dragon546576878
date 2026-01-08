@@ -1,4 +1,5 @@
-// Moyasar Payment SDK Type Definitions
+// Moyasar Payment Form SDK v2.2.5 Type Definitions
+// Based on official documentation: https://docs.moyasar.com/
 
 declare global {
   interface Window {
@@ -15,7 +16,7 @@ export interface MoyasarConfig {
   description: string;
   publishable_api_key: string;
   callback_url: string;
-  methods: ('creditcard' | 'applepay' | 'stcpay')[];
+  methods: ('creditcard' | 'applepay' | 'stcpay' | 'samsungpay')[];
   apple_pay?: {
     country: string;
     label: string;
@@ -25,12 +26,21 @@ export interface MoyasarConfig {
     save_card?: boolean;
     verify?: boolean;
   };
-  on_initiating?: () => void;
+  // on_initiating can return boolean, override object, or Promise
+  on_initiating?: () => boolean | MoyasarInitiatingOverride | Promise<boolean | MoyasarInitiatingOverride> | void;
   on_completed?: (payment: MoyasarPayment) => void;
   on_failure?: (error: MoyasarError) => void;
   fixed_width?: boolean;
-  language?: 'ar' | 'en';
+  language?: string; // 'ar', 'en', 'fr', etc.
   supported_networks?: ('visa' | 'mastercard' | 'mada' | 'amex')[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface MoyasarInitiatingOverride {
+  amount?: number;
+  description?: string;
+  callback_url?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface MoyasarPayment {
@@ -54,9 +64,9 @@ export interface MoyasarPayment {
   callback_url: string;
   created_at: string;
   updated_at: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   source: {
-    type: 'creditcard' | 'applepay' | 'stcpay';
+    type: 'creditcard' | 'applepay' | 'stcpay' | 'samsungpay';
     company: string;
     name: string;
     number: string;
@@ -71,6 +81,7 @@ export interface MoyasarPayment {
 export interface MoyasarError {
   type: string;
   message: string;
+  code?: string;
   errors?: Record<string, string[]>;
 }
 
