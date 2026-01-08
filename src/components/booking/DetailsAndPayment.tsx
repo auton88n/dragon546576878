@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { User, Mail, Phone, Calendar, CheckCircle, CreditCard, FileText, Shield, Lock, Loader2, AlertTriangle, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useBookingStore } from '@/stores/bookingStore';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +48,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { 
     customerInfo, 
     setCustomerInfo, 
@@ -468,10 +470,9 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         throw new Error(data?.error || error?.message || 'Failed to create booking');
       }
 
-      console.log('Booking created:', data.bookingId);
-      setPendingBookingId(data.bookingId);
-      setPendingBookingRef(data.bookingReference);
-      setShowPaymentForm(true);
+      console.log('Booking created, redirecting to payment page:', data.bookingId);
+      // Redirect to standalone payment page for reliable SDK mounting
+      navigate(`/pay/${data.bookingId}`);
 
     } catch (error) {
       console.error('Booking creation error:', error);
