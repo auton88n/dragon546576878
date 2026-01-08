@@ -264,6 +264,9 @@ const PaymentPage = () => {
     };
 
     try {
+      // Start watchdog before init
+      startSubmissionWatchdog();
+      
       window.Moyasar.init({
         element: '#moyasar-mount',
         amount: amountInHalalas,
@@ -272,11 +275,7 @@ const PaymentPage = () => {
         publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
         callback_url: callbackUrl,
         methods: ['creditcard'],
-        supported_networks: ['visa', 'mastercard', 'mada', 'amex'],
-        language: isArabic ? 'ar' : 'en',
-        fixed_width: true,
-        on_initiating: () => {
-          startSubmissionWatchdog();
+        supported_networks: ['visa', 'mastercard', 'mada'],
         },
         on_completed: (payment: MoyasarPayment) => {
           clearSubmissionWatchdog();
