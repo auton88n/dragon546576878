@@ -276,7 +276,6 @@ const PaymentPage = () => {
         callback_url: callbackUrl,
         methods: ['creditcard'],
         supported_networks: ['visa', 'mastercard', 'mada'],
-        },
         on_completed: (payment: MoyasarPayment) => {
           clearSubmissionWatchdog();
           console.log('Payment completed:', payment.id, payment.status);
