@@ -505,26 +505,25 @@ const PaymentPage = () => {
           </div>
 
           <div className="p-6">
-            {/* Loading State */}
-            {!isMoyasarReady && !moyasarError && !submissionStalled && !sdkLoadTimeout && (
-              <div className="flex flex-col items-center justify-center py-8">
-                <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-                <p className="text-muted-foreground">
-                  {isArabic ? 'جاري تحميل نموذج الدفع...' : 'Loading payment form...'}
-                </p>
-              </div>
-            )}
-
-            {/* Moyasar Mount Point - NEVER hidden with display:none */}
-            <div 
-              id="moyasar-mount" 
-              className="min-h-[200px]"
-              style={{ 
-                visibility: isMoyasarReady ? 'visible' : 'hidden',
-                height: isMoyasarReady ? 'auto' : '0',
-                overflow: isMoyasarReady ? 'visible' : 'hidden',
-              }}
-            />
+            {/* Payment Form Container - relative wrapper for overlay approach */}
+            <div className="relative min-h-[320px]">
+              {/* Moyasar Mount Point - ALWAYS visible to SDK, never hidden */}
+              <div 
+                id="moyasar-mount" 
+                className="min-h-[320px] moyasar-form"
+                style={{ minHeight: '320px' }}
+              />
+              
+              {/* Loading Overlay - positioned on top, removed when ready */}
+              {!isMoyasarReady && !moyasarError && !submissionStalled && !sdkLoadTimeout && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-card z-10 rounded-lg">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+                  <p className="text-muted-foreground">
+                    {isArabic ? 'جاري تحميل نموذج الدفع...' : 'Loading payment form...'}
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* SDK Load Timeout - Recovery UI */}
             {sdkLoadTimeout && !moyasarError && (
