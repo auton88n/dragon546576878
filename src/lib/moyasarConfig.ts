@@ -14,7 +14,7 @@ export interface MoyasarConfigParams {
   amountInHalalas: number;
   bookingId: string;
   bookingReference: string;
-  onCompleted: (payment: MoyasarPayment) => void;
+  onCompleted: (payment: MoyasarPayment) => Promise<void> | void;
 }
 
 /**

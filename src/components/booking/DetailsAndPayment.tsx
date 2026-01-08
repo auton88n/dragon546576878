@@ -254,7 +254,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
           console.log('Payment form initiating for booking:', bookingId);
           startSubmissionWatchdog();
         },
-        on_completed: (payment: MoyasarPayment) => {
+        on_completed: async (payment: MoyasarPayment) => {
           clearSubmissionWatchdog();
           console.log('on_completed fired:', payment.id, payment.status, payment.source?.transaction_url);
           

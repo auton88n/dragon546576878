@@ -28,7 +28,7 @@ export interface MoyasarConfig {
   };
   // on_initiating can return boolean, override object, or Promise
   on_initiating?: () => boolean | MoyasarInitiatingOverride | Promise<boolean | MoyasarInitiatingOverride> | void;
-  on_completed?: (payment: MoyasarPayment) => void;
+  on_completed?: (payment: MoyasarPayment) => Promise<void> | void;
   on_failure?: (error: MoyasarError) => void;
   fixed_width?: boolean;
   language?: string; // 'ar', 'en', 'fr', etc.

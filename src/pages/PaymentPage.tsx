@@ -287,7 +287,7 @@ const PaymentPage = () => {
         amountInHalalas,
         bookingId: booking.id,
         bookingReference: booking.booking_reference,
-        onCompleted: (payment: MoyasarPayment) => {
+        onCompleted: async (payment: MoyasarPayment) => {
           clearSubmissionWatchdog();
           handlePaymentCompletion(payment, booking.id, setTransactionUrl);
         },
