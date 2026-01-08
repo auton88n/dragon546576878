@@ -13,7 +13,7 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Booking = Tables<'bookings'>;
 
-const MOYASAR_PUBLISHABLE_KEY = 'pk_live_LfPdUccwaeh8SBpL9rbj8FpDshb2QahMUDnVurfT';
+const MOYASAR_PUBLISHABLE_KEY = 'pk_live_Ah7AU1kvj5r64sAV369hkXhVuNi6bmAmVt1Pf1ZN';
 
 const ResumePaymentPage = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
