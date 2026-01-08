@@ -64,8 +64,11 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
+  const [pendingBookingRef, setPendingBookingRef] = useState<string | null>(null);
   const [isCreatingBooking, setIsCreatingBooking] = useState(false);
-  const moyasarInitialized = useRef(false);
+  const [isMoyasarReady, setIsMoyasarReady] = useState(false);
+  const [moyasarTimeout, setMoyasarTimeout] = useState(false);
+  const moyasarInitStarted = useRef(false);
   const paymentFormRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<FormValues>({
@@ -93,24 +96,15 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
 
   // Initialize Moyasar payment form
   const initializeMoyasar = useCallback((bookingId: string, bookingReference: string) => {
-    if (moyasarInitialized.current || !window.Moyasar) {
+    if (moyasarInitStarted.current || !window.Moyasar) {
       console.error('Moyasar SDK not loaded or already initialized');
       return;
     }
 
+    moyasarInitStarted.current = true;
     const amountInHalalas = Math.round(totalAmount * 100);
     const PRODUCTION_DOMAIN = 'https://almufaijer.com';
     const callbackUrl = `${PRODUCTION_DOMAIN}/payment-callback?booking=${bookingId}`;
-
-    // Apple Pay diagnostics
-    const currentDomain = window.location.hostname;
-    const win = window as any;
-    console.log('Apple Pay diagnostics:', {
-      currentDomain,
-      isProductionDomain: currentDomain === 'almufaijer.com',
-      hasApplePaySession: typeof win.ApplePaySession !== 'undefined',
-      canMakePayments: typeof win.ApplePaySession !== 'undefined' && win.ApplePaySession?.canMakePayments?.() || false
-    });
 
     console.log('Initializing Moyasar with:', { 
       amount: amountInHalalas, 
@@ -202,7 +196,21 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
         },
       });
 
-      moyasarInitialized.current = true;
+      // Poll for form injection to detect when Moyasar is ready
+      let pollCount = 0;
+      const pollInterval = setInterval(() => {
+        pollCount++;
+        const formEl = paymentFormRef.current;
+        if (formEl && formEl.querySelector('form, iframe, input')) {
+          clearInterval(pollInterval);
+          setIsMoyasarReady(true);
+          console.log('Moyasar form ready');
+        } else if (pollCount > 50) { // 5 seconds max
+          clearInterval(pollInterval);
+          setIsMoyasarReady(true); // Show anyway to avoid infinite skeleton
+          console.warn('Moyasar polling timeout, showing form anyway');
+        }
+      }, 100);
     } catch (error) {
       console.error('Failed to initialize Moyasar:', error);
       toast({
@@ -212,6 +220,43 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
       });
     }
   }, [totalAmount, isArabic, toast]);
+
+  // Initialize Moyasar when payment form is shown
+  useEffect(() => {
+    if (showPaymentForm && pendingBookingId && pendingBookingRef && !moyasarInitStarted.current) {
+      // Reset states
+      setIsMoyasarReady(false);
+      setMoyasarTimeout(false);
+      
+      // Initialize after DOM render
+      requestAnimationFrame(() => {
+        initializeMoyasar(pendingBookingId, pendingBookingRef);
+      });
+
+      // Set timeout fallback
+      const timeoutId = setTimeout(() => {
+        if (!isMoyasarReady) {
+          setMoyasarTimeout(true);
+        }
+      }, 12000); // 12 second timeout
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [showPaymentForm, pendingBookingId, pendingBookingRef, initializeMoyasar, isMoyasarReady]);
+
+  // Retry handler
+  const handleRetryMoyasar = () => {
+    moyasarInitStarted.current = false;
+    setMoyasarTimeout(false);
+    setIsMoyasarReady(false);
+    // Clear the form container
+    if (paymentFormRef.current) {
+      paymentFormRef.current.innerHTML = '';
+    }
+    if (pendingBookingId && pendingBookingRef) {
+      initializeMoyasar(pendingBookingId, pendingBookingRef);
+    }
+  };
 
   // Create booking and show payment form
   const handleProceedToPayment = async (e: React.FormEvent) => {
@@ -245,12 +290,8 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
 
       console.log('Booking created:', data.bookingId);
       setPendingBookingId(data.bookingId);
+      setPendingBookingRef(data.bookingReference);
       setShowPaymentForm(true);
-
-      // Wait for DOM to update, then initialize Moyasar
-      requestAnimationFrame(() => {
-        initializeMoyasar(data.bookingId, data.bookingReference);
-      });
 
     } catch (error) {
       console.error('Booking creation error:', error);
@@ -438,38 +479,48 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
           </form>
         ) : (
           <div className="space-y-4">
-            {/* Payment Form Loading Skeleton */}
-            {!moyasarInitialized.current && (
-              <div className="rounded-2xl bg-card p-6 md:p-8 border-2 border-border shadow-lg space-y-6 animate-pulse">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-accent" />
-                  <span className="text-muted-foreground font-medium">
-                    {isArabic ? 'جاري تحضير الدفع الآمن...' : 'Preparing secure payment...'}
-                  </span>
-                </div>
-                {/* Skeleton for card name field */}
-                <div className="space-y-2">
-                  <div className="h-4 w-24 bg-muted rounded" />
-                  <div className="h-14 bg-muted rounded-xl" />
-                </div>
-                {/* Skeleton for card number field */}
-                <div className="space-y-2">
-                  <div className="h-4 w-28 bg-muted rounded" />
-                  <div className="h-14 bg-muted rounded-xl" />
-                </div>
-                {/* Skeleton for expiry and CVC row */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="h-4 w-20 bg-muted rounded" />
-                    <div className="h-14 bg-muted rounded-xl" />
+            {/* Payment Form Loading Skeleton or Timeout */}
+            {!isMoyasarReady && (
+              <div className="rounded-2xl bg-card p-6 md:p-8 border-2 border-border shadow-lg space-y-6">
+                {moyasarTimeout ? (
+                  <div className="text-center space-y-4">
+                    <p className="text-muted-foreground">
+                      {isArabic ? 'تأخر تحميل نموذج الدفع. يرجى المحاولة مرة أخرى.' : 'Payment form is taking longer than expected.'}
+                    </p>
+                    <Button onClick={handleRetryMoyasar} variant="outline" className="gap-2">
+                      <Loader2 className="h-4 w-4" />
+                      {isArabic ? 'إعادة المحاولة' : 'Retry'}
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <div className="h-4 w-12 bg-muted rounded" />
-                    <div className="h-14 bg-muted rounded-xl" />
+                ) : (
+                  <div className="animate-pulse">
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                      <span className="text-muted-foreground font-medium">
+                        {isArabic ? 'جاري تحضير الدفع الآمن...' : 'Preparing secure payment...'}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 w-24 bg-muted rounded" />
+                      <div className="h-14 bg-muted rounded-xl" />
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <div className="h-4 w-28 bg-muted rounded" />
+                      <div className="h-14 bg-muted rounded-xl" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="space-y-2">
+                        <div className="h-4 w-20 bg-muted rounded" />
+                        <div className="h-14 bg-muted rounded-xl" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-4 w-12 bg-muted rounded" />
+                        <div className="h-14 bg-muted rounded-xl" />
+                      </div>
+                    </div>
+                    <div className="h-16 bg-muted rounded-xl mt-4" />
                   </div>
-                </div>
-                {/* Skeleton for submit button */}
-                <div className="h-16 bg-muted rounded-xl mt-4" />
+                )}
               </div>
             )}
 
@@ -478,7 +529,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
               ref={paymentFormRef}
               className={cn(
                 "moyasar-form rounded-2xl overflow-hidden bg-card p-6 md:p-8 border-2 border-border shadow-lg",
-                !moyasarInitialized.current && "hidden"
+                !isMoyasarReady && "hidden"
               )}
             />
 
