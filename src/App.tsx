@@ -31,6 +31,7 @@ const { Component: GroupBookingsPage, preload: preloadGroupBookings } = lazyWith
 const { Component: SupportPage, preload: preloadSupport } = lazyWithPreload(() => import('./pages/SupportPage'));
 const { Component: TermsPage, preload: preloadTerms } = lazyWithPreload(() => import('./pages/TermsPage'));
 const { Component: NotFound } = lazyWithPreload(() => import('./pages/NotFound'));
+const { Component: MoyasarDocTestPage } = lazyWithPreload(() => import('./pages/MoyasarDocTestPage'));
 
 // Redirect helper for resume-payment route
 const ResumePaymentRedirect = () => {
@@ -111,6 +112,7 @@ const App = () => (
             <Route path="/support" element={<SupportPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/moyasar-doc-test" element={<MoyasarDocTestPage />} />
             
             {/* Protected Routes - Scanner */}
             <Route
