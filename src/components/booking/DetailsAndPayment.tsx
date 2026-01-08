@@ -441,7 +441,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
             {/* Moyasar Payment Form Container */}
             <div 
               ref={paymentFormRef}
-              className="moyasar-form rounded-xl overflow-hidden"
+              className="moyasar-form rounded-2xl overflow-hidden bg-card p-6 md:p-8 border-2 border-border shadow-lg"
             />
 
             {/* Security Notice */}
