@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { loadMoyasarSdk, isMoyasarLoaded, getMoyasarDiagnostics } from '@/lib/loadMoyasarSdk';
 import type { MoyasarPayment } from '@/types/moyasar.d';
 
 interface DetailsAndPaymentProps {
@@ -119,22 +120,13 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
   }, []);
 
   // Initialize Moyasar payment form
-  const initializeMoyasar = useCallback((bookingId: string, bookingReference: string) => {
+  const initializeMoyasar = useCallback(async (bookingId: string, bookingReference: string) => {
     // Clear any previous errors
     setMoyasarError(null);
     
     // Log comprehensive diagnostic info
-    const diagnosticInfo = {
-      sdkLoaded: typeof window.Moyasar !== 'undefined',
-      sdkType: typeof window.Moyasar,
-      hasInit: typeof window.Moyasar?.init === 'function',
-      container: document.getElementById('moyasar-mount') ? 'exists' : 'missing',
-      domain: window.location.hostname,
-      publishableKey: `...${MOYASAR_PUBLISHABLE_KEY.slice(-8)}`,
-      bookingId,
-      timestamp: new Date().toISOString(),
-    };
-    console.log('Moyasar diagnostic info:', diagnosticInfo);
+    const diagnosticInfo = getMoyasarDiagnostics();
+    console.log('Moyasar diagnostic info:', { ...diagnosticInfo, bookingId });
 
     // Check if already initialized
     if (moyasarInitStarted.current) {
@@ -142,18 +134,21 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
       return;
     }
 
-    // Check if SDK loaded
-    if (typeof window.Moyasar === 'undefined') {
-      const errorMsg = 'Moyasar SDK failed to load from CDN. Please check your internet connection and refresh the page.';
-      console.error(errorMsg, diagnosticInfo);
-      setMoyasarError(errorMsg);
+    // Ensure SDK is loaded (use loader utility with fallback)
+    try {
+      const loadResult = await loadMoyasarSdk();
+      console.log('Moyasar SDK load result:', loadResult);
+    } catch (sdkError) {
+      const errorMsg = sdkError instanceof Error ? sdkError.message : 'Failed to load payment SDK';
+      console.error('Moyasar SDK load failed:', errorMsg, getMoyasarDiagnostics());
+      setMoyasarError(isArabic ? 'فشل تحميل نظام الدفع. يرجى تحديث الصفحة.' : errorMsg);
       return;
     }
 
-    // Check if init function exists
-    if (typeof window.Moyasar.init !== 'function') {
+    // Double-check SDK is available
+    if (!isMoyasarLoaded()) {
       const errorMsg = 'Moyasar SDK loaded but init() not available. SDK may be corrupted.';
-      console.error(errorMsg, diagnosticInfo);
+      console.error(errorMsg, getMoyasarDiagnostics());
       setMoyasarError(errorMsg);
       return;
     }
@@ -162,7 +157,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
     const container = document.getElementById('moyasar-mount');
     if (!container) {
       const errorMsg = 'Payment form container not found in DOM.';
-      console.error(errorMsg, diagnosticInfo);
+      console.error(errorMsg);
       setMoyasarError(errorMsg);
       return;
     }

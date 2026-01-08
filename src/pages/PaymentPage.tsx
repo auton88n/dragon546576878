@@ -5,6 +5,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { loadMoyasarSdk, isMoyasarLoaded, getMoyasarDiagnostics } from '@/lib/loadMoyasarSdk';
 import type { MoyasarPayment } from '@/types/moyasar.d';
 
 const MOYASAR_PUBLISHABLE_KEY = 'pk_live_Ah7AU1kvj5r64sAV369hkXhVuNi6bmAmVt1Pf1ZN';
@@ -153,7 +154,7 @@ const PaymentPage = () => {
   }, [checkMountHasElements, isMoyasarReady, updateDebugInfo]);
 
   // Initialize Moyasar once booking is loaded
-  const initializeMoyasar = useCallback(() => {
+  const initializeMoyasar = useCallback(async () => {
     if (!booking || moyasarInitStarted.current || !isAllowedDomain) return;
 
     setInitPhase('waiting_mount');
@@ -167,8 +168,20 @@ const PaymentPage = () => {
       return;
     }
 
-    if (typeof window.Moyasar === 'undefined' || typeof window.Moyasar.init !== 'function') {
-      console.error('Moyasar SDK not loaded');
+    // Ensure SDK is loaded (use loader utility)
+    try {
+      const loadResult = await loadMoyasarSdk();
+      console.log('Moyasar SDK load result:', loadResult);
+    } catch (sdkError) {
+      const errorMsg = sdkError instanceof Error ? sdkError.message : 'Failed to load payment SDK';
+      console.error('Moyasar SDK load failed:', errorMsg, getMoyasarDiagnostics());
+      setMoyasarError(isArabic ? 'فشل تحميل نظام الدفع. يرجى تحديث الصفحة.' : errorMsg);
+      setInitPhase('error');
+      return;
+    }
+
+    if (!isMoyasarLoaded()) {
+      console.error('Moyasar SDK not loaded after loader');
       setMoyasarError(isArabic ? 'فشل تحميل نظام الدفع' : 'Payment system failed to load');
       setInitPhase('error');
       return;
