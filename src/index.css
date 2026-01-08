@@ -538,26 +538,43 @@ svg.lucide {
   background-color: hsl(var(--border)) !important;
 }
 
-/* Form labels */
+/* Form labels - LARGER */
 .mysr-form label,
 .moyasar-form .mpy-form-label {
   color: hsl(var(--foreground)) !important;
   font-family: 'Tajawal', 'Arial', sans-serif !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  margin-bottom: 10px !important;
+  display: block !important;
 }
 
-/* Input fields - heritage styling */
+/* Form group spacing */
+.mysr-form .mysr-form-group,
+.moyasar-form .mpy-form-group {
+  margin-bottom: 20px !important;
+}
+
+/* Card details row spacing */
+.mysr-form .mysr-card-details,
+.moyasar-form .mpy-card-details {
+  gap: 16px !important;
+}
+
+/* Input fields - LARGER heritage styling */
 .mysr-form input,
 .mysr-form .mysr-input,
 .moyasar-form input,
 .moyasar-form .mpy-input {
   border: 2px solid hsl(var(--border)) !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   background-color: hsl(var(--card)) !important;
   color: hsl(var(--foreground)) !important;
   font-family: 'Tajawal', 'Arial', sans-serif !important;
+  font-size: 1.125rem !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
-  padding: 12px 14px !important;
+  padding: 18px 16px !important;
+  min-height: 58px !important;
 }
 
 .mysr-form input:focus,
@@ -566,16 +583,29 @@ svg.lucide {
 .moyasar-form .mpy-input:focus {
   border-color: hsl(var(--accent)) !important;
   outline: none !important;
-  box-shadow: 0 0 0 3px hsla(38, 45%, 60%, 0.15) !important;
+  box-shadow: 0 0 0 4px hsla(38, 45%, 60%, 0.2) !important;
 }
 
 /* Input placeholder */
 .mysr-form input::placeholder,
 .moyasar-form input::placeholder {
   color: hsl(var(--muted-foreground)) !important;
+  font-size: 1rem !important;
 }
 
-/* Submit/Pay button - Heritage gold styling */
+/* Card network icons - larger */
+.mysr-form .mysr-card-icons,
+.moyasar-form .mpy-card-icons,
+.moyasar-form img[alt*="card"],
+.moyasar-form img[alt*="visa"],
+.moyasar-form img[alt*="master"],
+.moyasar-form img[alt*="mada"],
+.moyasar-form img[alt*="amex"] {
+  height: 28px !important;
+  opacity: 1 !important;
+}
+
+/* Submit/Pay button - LARGER Heritage gold styling */
 .mysr-form button[type="submit"],
 .mysr-form .mysr-button,
 .moyasar-form button[type="submit"],
@@ -583,15 +613,18 @@ svg.lucide {
   background: linear-gradient(145deg, hsl(40 55% 68%) 0%, hsl(38 50% 62%) 50%, hsl(36 45% 55%) 100%) !important;
   color: hsl(25 30% 15%) !important;
   border: 1px solid rgba(201, 168, 108, 0.2) !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   font-family: 'Tajawal', 'Arial', sans-serif !important;
-  font-weight: 600 !important;
-  font-size: 1rem !important;
-  padding: 14px 24px !important;
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+  padding: 20px 32px !important;
+  min-height: 64px !important;
+  width: 100% !important;
+  margin-top: 20px !important;
   box-shadow: 
-    0 4px 16px rgba(201, 168, 108, 0.25),
-    0 2px 4px rgba(201, 168, 108, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+    0 6px 24px rgba(201, 168, 108, 0.3),
+    0 3px 6px rgba(201, 168, 108, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
   transition: all 0.3s ease !important;
   cursor: pointer !important;
 }
@@ -601,18 +634,23 @@ svg.lucide {
 .moyasar-form button[type="submit"]:hover,
 .moyasar-form .mpy-button:hover {
   background: linear-gradient(145deg, hsl(40 58% 72%) 0%, hsl(38 52% 66%) 50%, hsl(36 48% 58%) 100%) !important;
-  transform: translateY(-1px) !important;
+  transform: translateY(-2px) !important;
   box-shadow: 
-    0 8px 28px rgba(201, 168, 108, 0.35),
-    0 4px 8px rgba(201, 168, 108, 0.2),
+    0 10px 32px rgba(201, 168, 108, 0.4),
+    0 6px 12px rgba(201, 168, 108, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
 }
 
-/* Footer text */
+/* Footer text - cleaner */
 .mysr-form .mysr-footer,
 .moyasar-form .mpy-footer {
   color: hsl(var(--muted-foreground)) !important;
   font-family: 'Tajawal', 'Arial', sans-serif !important;
+  font-size: 0.875rem !important;
+  text-align: center !important;
+  margin-top: 24px !important;
+  padding-top: 16px !important;
+  border-top: 1px solid hsl(var(--border)) !important;
 }
 
 /* Error states */
@@ -627,4 +665,6 @@ svg.lucide {
 .moyasar-form .mpy-error-message {
   color: hsl(var(--destructive)) !important;
   font-family: 'Tajawal', 'Arial', sans-serif !important;
+  font-size: 0.875rem !important;
+  margin-top: 8px !important;
 }
