@@ -38,7 +38,7 @@ export interface TicketValidationResult {
 // NEW: Group ticket validation result
 export interface GroupTicketValidationResult {
   isValid: boolean;
-  status: 'valid' | 'invalid' | 'arrived' | 'expired' | 'wrong_date' | 'not_found';
+  status: 'valid' | 'invalid' | 'arrived' | 'expired' | 'wrong_date' | 'not_found' | 'not_paid';
   message: string;
   isGroupTicket: true;
   booking?: {

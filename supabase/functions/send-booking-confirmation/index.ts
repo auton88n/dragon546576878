@@ -154,39 +154,78 @@ const generateEmailTemplate = (
     });
   }
 
-  // Generate QR codes HTML
+  // Generate single group QR code HTML (one QR per reservation)
+  const totalGuests = (booking.adult_count || 0) + (booking.child_count || 0) + (booking.senior_count || 0);
+  
   let qrCodesHtml = '';
-  if (tickets.length > 0) {
-    const qrItems = tickets.map((ticket, index) => {
-      const ticketType = ticket.ticket_type === 'adult' ? translations.adult 
-        : ticket.ticket_type === 'child' ? translations.child 
-        : translations.senior;
-      return `
-        <td align="center" valign="top" style="padding: 12px;">
-          <table cellpadding="0" cellspacing="0" border="0" width="220" style="background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E8DED0;">
-            <tr>
-              <td align="center" style="padding: 16px 16px 12px 16px;">
-                <span style="display: inline-block; background-color: #5C4A3A; color: #FFFFFF; padding: 6px 12px; border-radius: 16px; font-size: 11px; font-weight: 600; font-family: Arial, sans-serif;">
-                  ${ticketType} #${index + 1}
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding: 0 16px 12px 16px;">
-                <img src="${ticket.qr_code_url}" alt="QR Code" width="180" height="180" style="display: block; border: 2px solid #C9A86C; border-radius: 8px;" />
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding: 0 16px 16px 16px; font-family: monospace; font-size: 10px; color: #3D2E1F; letter-spacing: 1px; font-weight: 600;">
-                ${ticket.ticket_code}
-              </td>
-            </tr>
-          </table>
-        </td>`;
-    });
-    qrCodesHtml = `<table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>${qrItems.join('')}</tr></table>`;
+  // Find the group ticket (new format) or use first ticket (backward compatibility)
+  const groupTicket = tickets.find(t => t.ticket_type === 'group') || tickets[0];
+  
+  if (groupTicket?.qr_code_url) {
+    qrCodesHtml = `
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td align="center" style="padding: 12px;">
+            <table cellpadding="0" cellspacing="0" border="0" width="280" style="background-color: #FFFFFF; border-radius: 16px; border: 2px solid #C9A86C; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+              <tr>
+                <td align="center" style="padding: 20px 20px 12px 20px;">
+                  <span style="display: inline-block; background-color: #5C4A3A; color: #FFFFFF; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; font-family: Arial, sans-serif;">
+                    ${isArabic ? `${totalGuests} زوار` : `${totalGuests} Guest${totalGuests > 1 ? 's' : ''}`}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding: 0 20px 16px 20px;">
+                  <img src="${groupTicket.qr_code_url}" alt="Group QR Code" width="220" height="220" style="display: block; border: 3px solid #C9A86C; border-radius: 12px;" />
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding: 0 20px 8px 20px;">
+                  <p style="margin: 0; font-family: Arial, sans-serif; font-size: 12px; color: #5C4A3A; font-weight: 600;">
+                    ${isArabic ? 'رمز QR واحد للمجموعة كلها' : 'One QR for entire group'}
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding: 0 20px 20px 20px; font-family: monospace; font-size: 11px; color: #3D2E1F; letter-spacing: 1px; font-weight: 600;">
+                  ${groupTicket.ticket_code}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>`;
+  } else if (tickets.length === 0) {
+    qrCodesHtml = `<p style="color: #3D2E1F; font-style: italic; text-align: center; padding: 20px; font-family: Arial, sans-serif;">${isArabic ? 'سيتم إرسال رمز QR قريباً' : 'QR code will be sent shortly'}</p>`;
   } else {
-    qrCodesHtml = `<p style="color: #3D2E1F; font-style: italic; text-align: center; padding: 20px; font-family: Arial, sans-serif;">${isArabic ? 'سيتم إرسال رموز QR قريباً' : 'QR codes will be sent shortly'}</p>`;
+    // Fallback for old individual tickets - show just the first one
+    const firstTicket = tickets[0];
+    qrCodesHtml = `
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td align="center" style="padding: 12px;">
+            <table cellpadding="0" cellspacing="0" border="0" width="280" style="background-color: #FFFFFF; border-radius: 16px; border: 2px solid #C9A86C;">
+              <tr>
+                <td align="center" style="padding: 20px 20px 12px 20px;">
+                  <span style="display: inline-block; background-color: #5C4A3A; color: #FFFFFF; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; font-family: Arial, sans-serif;">
+                    ${isArabic ? `${totalGuests} زوار` : `${totalGuests} Guest${totalGuests > 1 ? 's' : ''}`}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding: 0 20px 16px 20px;">
+                  <img src="${firstTicket.qr_code_url}" alt="Entry QR Code" width="220" height="220" style="display: block; border: 3px solid #C9A86C; border-radius: 12px;" />
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding: 0 20px 20px 20px; font-family: monospace; font-size: 11px; color: #3D2E1F; letter-spacing: 1px; font-weight: 600;">
+                  ${firstTicket.ticket_code}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>`;
   }
 
   // Generate ticket rows HTML
