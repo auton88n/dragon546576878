@@ -544,10 +544,14 @@ export function CustomInvoicesPanel() {
               <div className="space-y-2">
                 <Label>{isArabic ? 'المبلغ الإجمالي (ريال)' : 'Total Amount (SAR)'}</Label>
                 <Input
-                  type="number"
-                  min={1}
+                  type="text"
+                  inputMode="decimal"
                   value={totalAmount}
-                  onChange={(e) => setTotalAmount(e.target.value)}
+                  onChange={(e) => {
+                    // Allow only numbers and decimal point
+                    const value = e.target.value.replace(/[^0-9.]/g, '');
+                    setTotalAmount(value);
+                  }}
                   placeholder="0.00"
                   dir="ltr"
                 />
