@@ -207,17 +207,8 @@ const Index = () => {
                       <Clock className="w-6 h-6 text-foreground" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">{isArabic ? 'السبت - الخميس' : 'Saturday - Thursday'}</p>
+                      <p className="font-semibold text-foreground">{isArabic ? 'يومياً (بما في ذلك الجمعة)' : 'Daily (Including Friday)'}</p>
                       <p className="text-accent font-bold">{hoursDisplay}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110">
-                      <Clock className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">{isArabic ? 'الجمعة' : 'Friday'}</p>
-                      <p className="text-destructive font-medium">{isArabic ? 'مغلق' : 'Closed'}</p>
                     </div>
                   </div>
                 </div>

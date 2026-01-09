@@ -271,8 +271,7 @@ const TermsPage = () => {
                     {isArabic ? 'ساعات العمل الرسمية:' : 'Official Business Hours:'}
                   </h3>
                   <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• {isArabic ? 'السبت - الخميس: 9:00 صباحاً - 6:00 مساءً' : 'Saturday - Thursday: 9:00 AM - 6:00 PM'}</li>
-                    <li>• {isArabic ? 'الجمعة: مغلق' : 'Friday: Closed'}</li>
+                    <li>• {isArabic ? 'يومياً (بما في ذلك الجمعة): ٣:٠٠ م - ١٢:٠٠ ص' : 'Daily (Including Friday): 3:00 PM - 12:00 AM'}</li>
                     <li className="text-xs text-muted-foreground/70">
                       {isArabic 
                         ? 'الطلبات خارج هذه الأوقات تُعالج في يوم العمل التالي'
@@ -334,8 +333,8 @@ const TermsPage = () => {
                     <Clock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
                     <div>
                       <p className="font-medium text-foreground">{isArabic ? 'ساعات العمل' : 'Business Hours'}</p>
-                      <p>{isArabic ? 'السبت - الخميس: 9:00 ص - 6:00 م' : 'Sat - Thu: 9:00 AM - 6:00 PM'}</p>
-                      <p>{isArabic ? 'الجمعة: مغلق' : 'Friday: Closed'}</p>
+                      <p>{isArabic ? 'يومياً (بما في ذلك الجمعة)' : 'Daily (Including Friday)'}</p>
+                      <p>{isArabic ? '٣:٠٠ م - ١٢:٠٠ ص' : '3:00 PM - 12:00 AM'}</p>
                     </div>
                   </div>
                   

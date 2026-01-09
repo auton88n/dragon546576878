@@ -159,8 +159,8 @@ const faqData: FAQItem[] = [
       ar: 'ما هي ساعات العمل؟'
     },
     answer: {
-      en: 'We are open Saturday to Thursday from 9:00 AM to 6:00 PM. Last entry is at 5:00 PM. We are closed on Fridays.',
-      ar: 'نحن مفتوحون من السبت إلى الخميس من ٩:٠٠ صباحاً إلى ٦:٠٠ مساءً. آخر دخول في ٥:٠٠ مساءً. مغلقون يوم الجمعة.'
+      en: 'We are open daily, including Fridays, from 3:00 PM to 12:00 AM (Midnight). Last entry is at 11:00 PM.',
+      ar: 'نحن مفتوحون يومياً، بما في ذلك الجمعة، من ٣:٠٠ مساءً إلى ١٢:٠٠ صباحاً (منتصف الليل). آخر دخول في ١١:٠٠ مساءً.'
     }
   },
   {
