@@ -276,7 +276,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
 
   // Get journey stage for tracking where customer is
   const getJourneyStage = (booking: Booking) => {
-    const { payment_status, payment_id, qr_codes_generated, booking_status } = booking;
+    const { payment_status, payment_id, qr_codes_generated, booking_status, created_at } = booking;
     
     if (booking_status === 'cancelled') {
       return { label: isArabic ? 'ملغي' : 'Cancelled', icon: XCircle, color: 'text-red-500' };
@@ -286,18 +286,30 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
       if (qr_codes_generated) {
         return { label: isArabic ? 'مكتمل' : 'Complete', icon: CheckCircle, color: 'text-emerald-500' };
       }
-      return { label: isArabic ? 'تذاكر مفقودة' : 'Missing Tickets', icon: AlertTriangle, color: 'text-red-500 animate-pulse' };
+      return { label: isArabic ? 'مدفوع - بدون تذاكر' : 'Paid - No Tickets', icon: AlertTriangle, color: 'text-red-500 animate-pulse' };
     }
     
     if (payment_status === 'failed') {
       return { label: isArabic ? 'فشل الدفع' : 'Payment Failed', icon: XCircle, color: 'text-red-500' };
     }
     
+    // Check if booking is recent (within 10 minutes) - might still be completing payment
+    const createdTime = created_at ? new Date(created_at).getTime() : 0;
+    const isRecent = Date.now() - createdTime < 10 * 60 * 1000; // 10 minutes
+    
     if (payment_id) {
-      return { label: isArabic ? 'في معالجة الدفع' : 'Processing', icon: Clock, color: 'text-amber-500' };
+      // Has payment_id - customer started payment process
+      if (isRecent) {
+        return { label: isArabic ? 'جاري الدفع' : 'In Progress', icon: Clock, color: 'text-amber-500 animate-pulse' };
+      }
+      return { label: isArabic ? 'دفع معلق' : 'Payment Started', icon: Clock, color: 'text-amber-500' };
     }
     
-    return { label: isArabic ? 'في انتظار الدفع' : 'Awaiting Payment', icon: Clock, color: 'text-muted-foreground' };
+    // No payment_id - customer never tried to pay
+    if (isRecent) {
+      return { label: isArabic ? 'جديد' : 'New', icon: Clock, color: 'text-blue-500' };
+    }
+    return { label: isArabic ? 'نموذج فقط' : 'Form Only', icon: Clock, color: 'text-muted-foreground' };
   };
 
   const formatDate = (date: string) => {

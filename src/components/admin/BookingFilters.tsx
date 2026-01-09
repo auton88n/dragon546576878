@@ -24,6 +24,7 @@ export interface BookingFiltersState {
   paymentStatus: string;
   dateFrom: string;
   dateTo: string;
+  hideAbandoned: boolean;
 }
 
 interface BookingFiltersProps {
