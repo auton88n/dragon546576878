@@ -41,9 +41,10 @@ import {
 } from 'lucide-react';
 
 // Generate invoice email preview HTML (mirrors the Edge Function template)
-function generateInvoiceEmailPreview(invoice: CustomInvoice): string {
+function generateInvoiceEmailPreview(invoice: CustomInvoice, previewLang: 'ar' | 'en' = 'ar'): string {
+  const isPreviewArabic = previewLang === 'ar';
   const paymentLink = `https://almufaijer.com/invoice/${invoice.id}`;
-  const expiresAt = new Date(invoice.expires_at).toLocaleDateString('en-US', {
+  const expiresAt = new Date(invoice.expires_at).toLocaleDateString(isPreviewArabic ? 'ar-SA' : 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -53,9 +54,46 @@ function generateInvoiceEmailPreview(invoice: CustomInvoice): string {
     .map((s: string) => AVAILABLE_SERVICES.find(svc => svc.id === s))
     .filter(Boolean) as { id: string; en: string; ar: string }[];
 
+  const texts = {
+    ar: {
+      invoiceNumber: 'فاتورة رقم',
+      greeting: `عزيزي/عزيزتي ${invoice.client_name}،`,
+      intro: 'شكراً لاختياركم سوق المفيجر. تجدون أدناه تفاصيل الفاتورة:',
+      visitDate: 'تاريخ الزيارة',
+      time: 'الوقت',
+      visitors: 'عدد الزوار',
+      services: 'الخدمات',
+      totalAmount: 'المبلغ الإجمالي',
+      currency: 'ريال',
+      expires: 'ينتهي رابط الدفع في',
+      payNow: 'ادفع الآن',
+      adultsText: `${invoice.num_adults} بالغ${invoice.num_children > 0 ? ` + ${invoice.num_children} طفل` : ''}`,
+      servicesText: servicesList.map(s => s.ar).join('، '),
+    },
+    en: {
+      invoiceNumber: 'Invoice',
+      greeting: `Dear ${invoice.client_name},`,
+      intro: 'Thank you for choosing Souq Almufaijer. Please find your invoice details below:',
+      visitDate: 'Visit Date',
+      time: 'Time',
+      visitors: 'Visitors',
+      services: 'Services',
+      totalAmount: 'Total Amount',
+      currency: 'SAR',
+      expires: 'Payment link expires',
+      payNow: 'Pay Now',
+      adultsText: `${invoice.num_adults} Adult${invoice.num_adults > 1 ? 's' : ''}${invoice.num_children > 0 ? ` + ${invoice.num_children} Child${invoice.num_children > 1 ? 'ren' : ''}` : ''}`,
+      servicesText: servicesList.map(s => s.en).join(', '),
+    },
+  };
+
+  const t = texts[previewLang];
+  const dir = isPreviewArabic ? 'rtl' : 'ltr';
+  const textAlign = isPreviewArabic ? 'right' : 'left';
+
   return `
 <!DOCTYPE html>
-<html dir="rtl">
+<html dir="${dir}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -78,93 +116,52 @@ function generateInvoiceEmailPreview(invoice: CustomInvoice): string {
           <!-- Content -->
           <tr>
             <td style="padding: 40px 30px;">
-              <!-- Arabic Section -->
-              <div style="text-align: right; margin-bottom: 40px;">
-                <h2 style="color: #3D2E1F; margin: 0 0 20px 0;">فاتورة رقم: ${invoice.invoice_number}</h2>
+              <div style="text-align: ${textAlign};">
+                <h2 style="color: #3D2E1F; margin: 0 0 20px 0;">${t.invoiceNumber}: ${invoice.invoice_number}</h2>
                 <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
-                  عزيزي/عزيزتي ${invoice.client_name}،
+                  ${t.greeting}
                 </p>
                 <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
-                  شكراً لاختياركم سوق المفيجر. تجدون أدناه تفاصيل الفاتورة:
+                  ${t.intro}
                 </p>
                 
                 <div style="background-color: #f5f1e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
                   <table width="100%" cellpadding="5">
                     <tr>
-                      <td style="color: #3D2E1F;">تاريخ الزيارة:</td>
+                      <td style="color: #3D2E1F;">${t.visitDate}:</td>
                       <td style="color: #3D2E1F; font-weight: bold;">${invoice.visit_date}</td>
                     </tr>
                     <tr>
-                      <td style="color: #3D2E1F;">الوقت:</td>
+                      <td style="color: #3D2E1F;">${t.time}:</td>
                       <td style="color: #3D2E1F; font-weight: bold;">${invoice.visit_time}</td>
                     </tr>
                     <tr>
-                      <td style="color: #3D2E1F;">عدد الزوار:</td>
-                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.num_adults} بالغ${invoice.num_children > 0 ? ` + ${invoice.num_children} طفل` : ''}</td>
+                      <td style="color: #3D2E1F;">${t.visitors}:</td>
+                      <td style="color: #3D2E1F; font-weight: bold;">${t.adultsText}</td>
                     </tr>
                     ${servicesList.length > 0 ? `
                     <tr>
-                      <td style="color: #3D2E1F;">الخدمات:</td>
-                      <td style="color: #3D2E1F; font-weight: bold;">${servicesList.map(s => s.ar).join('، ')}</td>
+                      <td style="color: #3D2E1F;">${t.services}:</td>
+                      <td style="color: #3D2E1F; font-weight: bold;">${t.servicesText}</td>
                     </tr>
                     ` : ''}
                   </table>
                 </div>
                 
                 <div style="background-color: #5C4A3A; color: #fff; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-                  <p style="margin: 0; font-size: 14px; color: #C9A86C;">المبلغ الإجمالي</p>
-                  <p style="margin: 10px 0 0 0; font-size: 32px; font-weight: bold; color: #ffffff;">${invoice.total_amount.toLocaleString()} ريال</p>
+                  <p style="margin: 0; font-size: 14px; color: #C9A86C;">${t.totalAmount}</p>
+                  <p style="margin: 10px 0 0 0; font-size: 32px; font-weight: bold; color: #ffffff;">${invoice.total_amount.toLocaleString()} ${t.currency}</p>
                 </div>
                 
                 <p style="color: #666; font-size: 14px;">
-                  ينتهي رابط الدفع في: ${expiresAt}
-                </p>
-              </div>
-              
-              <hr style="border: none; border-top: 1px solid #eee; margin: 40px 0;">
-              
-              <!-- English Section -->
-              <div style="text-align: left;">
-                <h2 style="color: #3D2E1F; margin: 0 0 20px 0;">Invoice: ${invoice.invoice_number}</h2>
-                <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
-                  Dear ${invoice.client_name},
-                </p>
-                <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
-                  Thank you for choosing Souq Almufaijer. Please find your invoice details below:
-                </p>
-                
-                <div style="background-color: #f5f1e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                  <table width="100%" cellpadding="5">
-                    <tr>
-                      <td style="color: #3D2E1F;">Visit Date:</td>
-                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.visit_date}</td>
-                    </tr>
-                    <tr>
-                      <td style="color: #3D2E1F;">Time:</td>
-                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.visit_time}</td>
-                    </tr>
-                    <tr>
-                      <td style="color: #3D2E1F;">Visitors:</td>
-                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.num_adults} Adult${invoice.num_adults > 1 ? 's' : ''}${invoice.num_children > 0 ? ` + ${invoice.num_children} Child${invoice.num_children > 1 ? 'ren' : ''}` : ''}</td>
-                    </tr>
-                    ${servicesList.length > 0 ? `
-                    <tr>
-                      <td style="color: #3D2E1F;">Services:</td>
-                      <td style="color: #3D2E1F; font-weight: bold;">${servicesList.map(s => s.en).join(', ')}</td>
-                    </tr>
-                    ` : ''}
-                  </table>
-                </div>
-                
-                <p style="color: #666; font-size: 14px;">
-                  Payment link expires: ${expiresAt}
+                  ${t.expires}: ${expiresAt}
                 </p>
               </div>
               
               <!-- CTA Button -->
               <div style="text-align: center; margin: 40px 0;">
                 <a href="${paymentLink}" style="display: inline-block; background-color: #5C4A3A; color: #ffffff; text-decoration: none; padding: 16px 48px; border-radius: 8px; font-size: 18px; font-weight: bold;">
-                  ادفع الآن | Pay Now
+                  ${t.payNow}
                 </a>
               </div>
             </td>
