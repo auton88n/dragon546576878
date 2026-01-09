@@ -84,10 +84,13 @@ export default function InvoicePage() {
   // Check if invoice is expired
   const isExpired = invoice && new Date(invoice.expires_at) < new Date();
 
-  // Initialize Moyasar when ready
+  // Initialize Moyasar when ready - MINIMAL config to avoid "Form configuration issue"
   useEffect(() => {
     if (!invoice || invoice.status !== 'pending' || isExpired) return;
     if (!isAllowedPaymentDomain()) return;
+
+    let checkInterval: ReturnType<typeof setInterval>;
+    let checkTimeout: ReturnType<typeof setTimeout>;
 
     const initPayment = async () => {
       setIsPaymentLoading(true);
@@ -95,52 +98,98 @@ export default function InvoicePage() {
         const result = await loadMoyasarSdk();
         if (!result.success) {
           setPaymentError(isArabic ? 'فشل تحميل نظام الدفع' : 'Failed to load payment system');
+          setIsPaymentLoading(false);
           return;
         }
 
-        if (!window.Moyasar || !paymentFormRef.current) return;
+        if (!window.Moyasar || !paymentFormRef.current) {
+          setIsPaymentLoading(false);
+          return;
+        }
 
-        const callbackUrl = `${window.location.origin}/invoice-callback?invoiceId=${invoice.id}`;
+        const origin = window.location.origin;
+        const callbackUrl = `${origin}/invoice-callback?invoiceId=${invoice.id}`;
         
+        // MINIMAL Moyasar config - matches working PaymentPage approach
+        // NO stcpay, NO language, NO on_failure (these cause SDK errors)
         window.Moyasar.init({
           element: '.mysr-form',
-          amount: Math.round(invoice.total_amount * 100), // Convert to halalas
+          amount: Math.round(invoice.total_amount * 100),
           currency: 'SAR',
-          description: `Invoice ${invoice.invoice_number}`,
+          description: `Souq Almufaijer - ${invoice.invoice_number}`,
           publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
           callback_url: callbackUrl,
-          methods: ['creditcard', 'applepay', 'stcpay'],
+          methods: ['creditcard', 'applepay'],
+          supported_networks: ['visa', 'mastercard', 'mada'],
           apple_pay: {
             country: 'SA',
             label: 'Souq Almufaijer',
-            validate_merchant_url: 'https://hekgkfdunwpxqbrotfpn.supabase.co/functions/v1/apple-pay-domain-association',
+            validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
           },
-          supported_networks: ['visa', 'mastercard', 'mada'],
-          language: isArabic ? 'ar' : 'en',
           on_completed: async (payment) => {
-            // Verify payment on server
-            await supabase.functions.invoke('verify-invoice-payment', {
-              body: { paymentId: payment.id, invoiceId: invoice.id },
-            });
-            navigate(`/invoice-success?invoiceId=${invoice.id}`);
-          },
-          on_failure: (error) => {
-            console.error('Payment failed:', error);
-            setPaymentError(isArabic ? 'فشل الدفع. يرجى المحاولة مرة أخرى.' : 'Payment failed. Please try again.');
+            console.log('Invoice payment completed:', payment.id, payment.status);
+            
+            // Handle 3D Secure redirect
+            if (payment.status === 'initiated' && payment.source?.transaction_url) {
+              console.log('3DS required, redirecting to:', payment.source.transaction_url);
+              window.location.href = payment.source.transaction_url;
+              return;
+            }
+            
+            // Redirect to callback page for verification
+            const redirectUrl = `${origin}/invoice-callback?invoiceId=${invoice.id}&id=${payment.id}&status=${payment.status}`;
+            window.location.href = redirectUrl;
           },
         });
 
-        setMoyasarReady(true);
+        // Poll for form readiness or configuration errors
+        checkInterval = setInterval(() => {
+          const mount = paymentFormRef.current;
+          if (!mount) return;
+          
+          // Check for configuration error
+          if (mount.textContent?.includes('Form configuration issue')) {
+            clearInterval(checkInterval);
+            setPaymentError(isArabic 
+              ? 'خطأ في إعدادات نموذج الدفع. يرجى التواصل مع الدعم.'
+              : 'Payment form configuration error. Please contact support.');
+            setIsPaymentLoading(false);
+            return;
+          }
+          
+          // Check if form elements are injected
+          if (mount.querySelector('form, iframe, input')) {
+            clearInterval(checkInterval);
+            setMoyasarReady(true);
+            setIsPaymentLoading(false);
+          }
+        }, 100);
+
+        // Timeout after 12 seconds
+        checkTimeout = setTimeout(() => {
+          clearInterval(checkInterval);
+          if (!moyasarReady) {
+            setPaymentError(isArabic 
+              ? 'انتهى وقت تحميل نموذج الدفع'
+              : 'Payment form loading timed out');
+            setIsPaymentLoading(false);
+          }
+        }, 12000);
+
       } catch (err) {
         console.error('Payment init error:', err);
         setPaymentError(isArabic ? 'حدث خطأ في تهيئة الدفع' : 'Payment initialization error');
-      } finally {
         setIsPaymentLoading(false);
       }
     };
 
     initPayment();
-  }, [invoice, isArabic, isExpired, navigate]);
+
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+      if (checkTimeout) clearTimeout(checkTimeout);
+    };
+  }, [invoice, isArabic, isExpired, moyasarReady]);
 
   if (isLoading) {
     return (
