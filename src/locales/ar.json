@@ -264,7 +264,15 @@
       "adminNotes": "ملاحظات المدير",
       "saveNotes": "حفظ الملاحظات",
       "confirmDelete": "تأكيد الحذف",
-      "deleteMessage": "هل أنت متأكد من حذف هذه الرسالة؟ لا يمكن التراجع عن هذا الإجراء."
+      "deleteMessage": "هل أنت متأكد من حذف هذه الرسالة؟ لا يمكن التراجع عن هذا الإجراء.",
+      "replyToCustomer": "الرد على العميل",
+      "sendReply": "إرسال الرد",
+      "replySent": "تم إرسال الرد",
+      "replyPlaceholder": "اكتب ردك للعميل هنا...",
+      "sendingReply": "جاري الإرسال...",
+      "replySuccess": "تم إرسال الرد بنجاح",
+      "replyFailed": "فشل إرسال الرد",
+      "sentOn": "أُرسل في"
     },
     "corporate": {
       "title": "طلبات الشركات",
