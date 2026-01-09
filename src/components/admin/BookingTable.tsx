@@ -6,6 +6,7 @@ import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, User
 import { useLanguage } from '@/hooks/useLanguage';
 import { resendConfirmationEmail, sendPaymentReminder } from '@/lib/emailService';
 import { supabase } from '@/integrations/supabase/client';
+import { markBookingAsPaid } from '@/lib/manualPaymentService';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
@@ -93,18 +94,13 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
   const handleMarkAsPaid = async (booking: Booking) => {
     setActionLoadingId(booking.id);
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
-          payment_status: 'completed', 
-          paid_at: new Date().toISOString(),
-          booking_status: 'confirmed'
-        })
-        .eq('id', booking.id);
-      if (error) throw error;
+      const result = await markBookingAsPaid(booking.id);
+      if (!result.success) throw new Error(result.error);
       toast({
         title: isArabic ? 'تم التحديث' : 'Updated',
-        description: isArabic ? 'تم تحديث حالة الدفع' : 'Payment marked as paid',
+        description: isArabic 
+          ? 'تم تحديث حالة الدفع وإنشاء التذاكر' 
+          : 'Payment marked as paid and tickets generated',
       });
       onBookingUpdated?.();
     } catch {
