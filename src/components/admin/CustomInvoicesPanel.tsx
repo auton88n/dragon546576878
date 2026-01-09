@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -35,8 +36,159 @@ import {
   ExternalLink,
   CheckCircle2,
   Clock,
-  Ban
+  Ban,
+  FileSearch
 } from 'lucide-react';
+
+// Generate invoice email preview HTML (mirrors the Edge Function template)
+function generateInvoiceEmailPreview(invoice: CustomInvoice): string {
+  const paymentLink = `https://almufaijer.com/invoice/${invoice.id}`;
+  const expiresAt = new Date(invoice.expires_at).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const servicesList = (invoice.services || [])
+    .map((s: string) => AVAILABLE_SERVICES.find(svc => svc.id === s))
+    .filter(Boolean) as { id: string; en: string; ar: string }[];
+
+  return `
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f1e8;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f1e8; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #5C4A3A; padding: 30px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px;">سوق المفيجر</h1>
+              <p style="color: #C9A86C; margin: 10px 0 0 0; font-size: 14px;">Souq Almufaijer</p>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <!-- Arabic Section -->
+              <div style="text-align: right; margin-bottom: 40px;">
+                <h2 style="color: #3D2E1F; margin: 0 0 20px 0;">فاتورة رقم: ${invoice.invoice_number}</h2>
+                <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
+                  عزيزي/عزيزتي ${invoice.client_name}،
+                </p>
+                <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
+                  شكراً لاختياركم سوق المفيجر. تجدون أدناه تفاصيل الفاتورة:
+                </p>
+                
+                <div style="background-color: #f5f1e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <table width="100%" cellpadding="5">
+                    <tr>
+                      <td style="color: #3D2E1F;">تاريخ الزيارة:</td>
+                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.visit_date}</td>
+                    </tr>
+                    <tr>
+                      <td style="color: #3D2E1F;">الوقت:</td>
+                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.visit_time}</td>
+                    </tr>
+                    <tr>
+                      <td style="color: #3D2E1F;">عدد الزوار:</td>
+                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.num_adults} بالغ${invoice.num_children > 0 ? ` + ${invoice.num_children} طفل` : ''}</td>
+                    </tr>
+                    ${servicesList.length > 0 ? `
+                    <tr>
+                      <td style="color: #3D2E1F;">الخدمات:</td>
+                      <td style="color: #3D2E1F; font-weight: bold;">${servicesList.map(s => s.ar).join('، ')}</td>
+                    </tr>
+                    ` : ''}
+                  </table>
+                </div>
+                
+                <div style="background-color: #5C4A3A; color: #fff; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+                  <p style="margin: 0; font-size: 14px; color: #C9A86C;">المبلغ الإجمالي</p>
+                  <p style="margin: 10px 0 0 0; font-size: 32px; font-weight: bold; color: #ffffff;">${invoice.total_amount.toLocaleString()} ريال</p>
+                </div>
+                
+                <p style="color: #666; font-size: 14px;">
+                  ينتهي رابط الدفع في: ${expiresAt}
+                </p>
+              </div>
+              
+              <hr style="border: none; border-top: 1px solid #eee; margin: 40px 0;">
+              
+              <!-- English Section -->
+              <div style="text-align: left;">
+                <h2 style="color: #3D2E1F; margin: 0 0 20px 0;">Invoice: ${invoice.invoice_number}</h2>
+                <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
+                  Dear ${invoice.client_name},
+                </p>
+                <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
+                  Thank you for choosing Souq Almufaijer. Please find your invoice details below:
+                </p>
+                
+                <div style="background-color: #f5f1e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <table width="100%" cellpadding="5">
+                    <tr>
+                      <td style="color: #3D2E1F;">Visit Date:</td>
+                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.visit_date}</td>
+                    </tr>
+                    <tr>
+                      <td style="color: #3D2E1F;">Time:</td>
+                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.visit_time}</td>
+                    </tr>
+                    <tr>
+                      <td style="color: #3D2E1F;">Visitors:</td>
+                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.num_adults} Adult${invoice.num_adults > 1 ? 's' : ''}${invoice.num_children > 0 ? ` + ${invoice.num_children} Child${invoice.num_children > 1 ? 'ren' : ''}` : ''}</td>
+                    </tr>
+                    ${servicesList.length > 0 ? `
+                    <tr>
+                      <td style="color: #3D2E1F;">Services:</td>
+                      <td style="color: #3D2E1F; font-weight: bold;">${servicesList.map(s => s.en).join(', ')}</td>
+                    </tr>
+                    ` : ''}
+                  </table>
+                </div>
+                
+                <p style="color: #666; font-size: 14px;">
+                  Payment link expires: ${expiresAt}
+                </p>
+              </div>
+              
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 40px 0;">
+                <a href="${paymentLink}" style="display: inline-block; background-color: #5C4A3A; color: #ffffff; text-decoration: none; padding: 16px 48px; border-radius: 8px; font-size: 18px; font-weight: bold;">
+                  ادفع الآن | Pay Now
+                </a>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #3D2E1F; padding: 20px; text-align: center;">
+              <p style="color: #C9A86C; margin: 0; font-size: 14px;">
+                سوق المفيجر - Souq Almufaijer
+              </p>
+              <p style="color: #C9A86C; margin: 10px 0 0 0; font-size: 12px;">
+                info@almufaijer.com
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+}
 
 interface CustomInvoice {
   id: string;
@@ -85,6 +237,7 @@ export function CustomInvoicesPanel() {
   
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<CustomInvoice | null>(null);
+  const [previewInvoice, setPreviewInvoice] = useState<CustomInvoice | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
   
