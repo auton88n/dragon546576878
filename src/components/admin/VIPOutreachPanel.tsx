@@ -13,10 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Crown, Users, Mail, History, Plus, Trash2, Edit, Send, Eye, Loader2, User, Phone, Building, Globe, CheckCircle, XCircle, Clock, MailOpen } from 'lucide-react';
+import { Crown, Users, Mail, History, Plus, Trash2, Edit, Send, Eye, Loader2, User, Phone, Building, Globe, CheckCircle, XCircle, Clock, MailOpen, Video, Gift, Camera, Utensils, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 
@@ -45,6 +46,15 @@ const templateTypes = [
   { id: 'partnership', en: 'Partnership Proposal', ar: 'عرض شراكة' },
   { id: 'vip_experience', en: 'VIP Experience', ar: 'تجربة استثنائية' },
   { id: 'thank_you', en: 'Thank You', ar: 'شكر وتقدير' },
+];
+
+// VIP Perks
+const vipPerks = [
+  { id: 'private_tour', en: 'Private guided tour', ar: 'جولة خاصة مع مرشد', icon: MapPin },
+  { id: 'photography', en: 'Professional photography session', ar: 'جلسة تصوير احترافية', icon: Camera },
+  { id: 'dinner', en: 'Traditional Saudi hospitality dinner', ar: 'عشاء ضيافة سعودية تقليدية', icon: Utensils },
+  { id: 'vip_seating', en: 'VIP seating at cultural performances', ar: 'مقاعد VIP في العروض الثقافية', icon: Users },
+  { id: 'special_gift', en: 'Special gift from Souq Almufaijer', ar: 'هدية خاصة من سوق المفيجر', icon: Gift },
 ];
 
 // Empty contact form
@@ -92,15 +102,21 @@ export const VIPOutreachPanel = () => {
   // Compose state
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [templateType, setTemplateType] = useState('exclusive_invitation');
-  const [subjectEn, setSubjectEn] = useState('Exclusive Invitation to Souq Almufaijer');
+  const [subjectEn, setSubjectEn] = useState('Exclusive VIP Invitation to Souq Almufaijer');
   const [subjectAr, setSubjectAr] = useState('دعوة حصرية لزيارة سوق المفيجر');
-  const [messageEn, setMessageEn] = useState('We are honored to invite you to experience the rich heritage of Souq Almufaijer.\n\nAs a distinguished guest, you will enjoy a private guided tour showcasing our traditional crafts, authentic cuisine, and cultural performances.');
-  const [messageAr, setMessageAr] = useState('يسرنا دعوتكم لتجربة التراث العريق في سوق المفيجر.\n\nكضيف مميز، ستستمتعون بجولة خاصة تعرض الحرف التقليدية والمأكولات الأصيلة والعروض الثقافية.');
+  const [messageEn, setMessageEn] = useState('We are honored to extend this exclusive invitation to experience the rich heritage of Souq Almufaijer.\n\nAs our distinguished guest, you will enjoy a personalized VIP experience showcasing our traditional crafts, authentic cuisine, and cultural performances.');
+  const [messageAr, setMessageAr] = useState('يسرنا دعوتكم لتجربة التراث العريق في سوق المفيجر.\n\nكضيف مميز، ستستمتعون بتجربة استثنائية تعرض الحرف التقليدية والمأكولات الأصيلة والعروض الثقافية.');
   const [offerDetails, setOfferDetails] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [eventTime, setEventTime] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+
+  // NEW: Enhanced compose state
+  const [guestAllowance, setGuestAllowance] = useState<number>(2);
+  const [selectedPerks, setSelectedPerks] = useState<Set<string>>(new Set(['private_tour', 'photography', 'dinner', 'vip_seating', 'special_gift']));
+  const [includeVideo, setIncludeVideo] = useState(true);
+  const [enableRSVP, setEnableRSVP] = useState(true);
 
   // Filtered contacts
   const filteredContacts = useMemo(() => {
@@ -186,6 +202,17 @@ export const VIPOutreachPanel = () => {
     setSelectedContacts(newSet);
   };
 
+  // Toggle perk selection
+  const togglePerkSelection = (perkId: string) => {
+    const newSet = new Set(selectedPerks);
+    if (newSet.has(perkId)) {
+      newSet.delete(perkId);
+    } else {
+      newSet.add(perkId);
+    }
+    setSelectedPerks(newSet);
+  };
+
   // Select all filtered
   const selectAllFiltered = () => {
     const newSet = new Set(filteredContacts.map(c => c.id));
@@ -229,6 +256,11 @@ export const VIPOutreachPanel = () => {
           offerDetails: offerDetails || undefined,
           eventDate: eventDate || undefined,
           eventTime: eventTime || undefined,
+          // NEW: Enhanced fields
+          guestAllowance,
+          perks: Array.from(selectedPerks),
+          includeVideo,
+          enableRSVP,
         });
         successCount++;
       } catch (error) {
@@ -459,35 +491,107 @@ export const VIPOutreachPanel = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>{isArabic ? 'نص الرسالة (EN)' : 'Message (EN)'}</Label>
-                  <Textarea value={messageEn} onChange={e => setMessageEn(e.target.value)} rows={5} />
+                  <Textarea value={messageEn} onChange={e => setMessageEn(e.target.value)} rows={4} />
                 </div>
                 <div className="space-y-2">
                   <Label>{isArabic ? 'نص الرسالة (AR)' : 'Message (AR)'}</Label>
-                  <Textarea value={messageAr} onChange={e => setMessageAr(e.target.value)} rows={5} dir="rtl" />
+                  <Textarea value={messageAr} onChange={e => setMessageAr(e.target.value)} rows={4} dir="rtl" />
                 </div>
               </div>
 
-              {/* Offer Details */}
-              <div className="space-y-2">
-                <Label>{isArabic ? 'تفاصيل العرض الخاص (اختياري)' : 'Offer Details (optional)'}</Label>
-                <Textarea 
-                  value={offerDetails} 
-                  onChange={e => setOfferDetails(e.target.value)} 
-                  rows={2}
-                  placeholder={isArabic ? 'جولة خاصة مع مرشد...' : 'Private guided tour...'}
-                />
+              {/* NEW: Guest Allowance & Toggles */}
+              <div className="p-4 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 space-y-4">
+                <h3 className="font-semibold text-amber-800 flex items-center gap-2">
+                  <Crown className="h-4 w-4" />
+                  {isArabic ? 'امتيازات VIP' : 'VIP Privileges'}
+                </h3>
+                
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label>{isArabic ? 'عدد المرافقين المسموح' : 'Guest Allowance'}</Label>
+                    <Select value={String(guestAllowance)} onValueChange={(v) => setGuestAllowance(Number(v))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 5, 10].map(n => (
+                          <SelectItem key={n} value={String(n)}>
+                            {n} {isArabic ? 'ضيوف' : 'guests'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <Label className="flex items-center gap-2 cursor-pointer">
+                      <Video className="h-4 w-4 text-amber-600" />
+                      {isArabic ? 'تضمين الفيديو' : 'Include Video'}
+                    </Label>
+                    <Switch checked={includeVideo} onCheckedChange={setIncludeVideo} />
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <Label className="flex items-center gap-2 cursor-pointer">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      {isArabic ? 'تفعيل تأكيد الحضور' : 'Enable RSVP'}
+                    </Label>
+                    <Switch checked={enableRSVP} onCheckedChange={setEnableRSVP} />
+                  </div>
+                </div>
+              </div>
+
+              {/* NEW: Perks Selection */}
+              <div className="p-4 rounded-lg bg-white border space-y-3">
+                <Label className="font-medium flex items-center gap-2">
+                  <Gift className="h-4 w-4 text-amber-600" />
+                  {isArabic ? 'الامتيازات الحصرية' : 'Exclusive Perks'}
+                </Label>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {vipPerks.map(perk => {
+                    const Icon = perk.icon;
+                    return (
+                      <label 
+                        key={perk.id} 
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedPerks.has(perk.id) 
+                            ? 'bg-amber-50 border-amber-300' 
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <Checkbox 
+                          checked={selectedPerks.has(perk.id)}
+                          onCheckedChange={() => togglePerkSelection(perk.id)}
+                        />
+                        <Icon className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                        <span className="text-sm">{isArabic ? perk.ar : perk.en}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Date/Time */}
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'تاريخ الزيارة (اختياري)' : 'Event Date (optional)'}</Label>
+                  <Label>{isArabic ? 'تاريخ الزيارة' : 'Event Date'}</Label>
                   <Input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'وقت الزيارة (اختياري)' : 'Event Time (optional)'}</Label>
+                  <Label>{isArabic ? 'وقت الزيارة' : 'Event Time'}</Label>
                   <Input type="time" value={eventTime} onChange={e => setEventTime(e.target.value)} />
                 </div>
+              </div>
+
+              {/* Offer Details */}
+              <div className="space-y-2">
+                <Label>{isArabic ? 'تفاصيل إضافية (اختياري)' : 'Additional Details (optional)'}</Label>
+                <Textarea 
+                  value={offerDetails} 
+                  onChange={e => setOfferDetails(e.target.value)} 
+                  rows={2}
+                  placeholder={isArabic ? 'ملاحظات خاصة للضيف...' : 'Special notes for the guest...'}
+                />
               </div>
 
               {/* Actions */}
@@ -733,29 +837,87 @@ export const VIPOutreachPanel = () => {
 
       {/* Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-3xl max-h-[90vh]">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isArabic ? 'معاينة الرسالة' : 'Email Preview'}</DialogTitle>
           </DialogHeader>
           <div className="border rounded-lg overflow-hidden bg-gray-100 p-4">
-            <div className="bg-white rounded shadow-lg max-w-[600px] mx-auto p-6">
-              <div className="text-center mb-6 p-6 rounded-lg" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
+            <div className="bg-white rounded shadow-lg max-w-[600px] mx-auto overflow-hidden">
+              {/* Header */}
+              <div className="text-center p-8" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
+                <div className="h-1 w-32 mx-auto mb-4 rounded" style={{ background: 'linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962)' }} />
                 <h2 className="text-white text-2xl font-bold">{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</h2>
-                <p className="text-amber-200 mt-2">{isArabic ? '~ دعوة خاصة ~' : '~ Special Invitation ~'}</p>
+                <p className="text-amber-200 mt-2">{isArabic ? '~ دعوة حصرية ~' : '~ Exclusive VIP Invitation ~'}</p>
               </div>
-              <p className="text-lg mb-4">{isArabic ? 'حضرة [الاسم] المحترم/ة،' : 'Dear [Name],'}</p>
-              <div className="whitespace-pre-wrap text-gray-700 mb-6">
-                {isArabic ? messageAr : messageEn}
-              </div>
-              {(offerDetails || eventDate) && (
-                <div className="p-4 rounded-lg mb-6" style={{ backgroundColor: '#4A3625' }}>
-                  {eventDate && <p className="text-white mb-1"><strong>{isArabic ? 'التاريخ:' : 'Date:'}</strong> {eventDate}</p>}
-                  {eventTime && <p className="text-white mb-2"><strong>{isArabic ? 'الوقت:' : 'Time:'}</strong> {eventTime}</p>}
-                  {offerDetails && <p className="text-gray-200">{offerDetails}</p>}
+              
+              <div className="p-6 space-y-6">
+                <p className="text-lg">{isArabic ? 'حضرة [الاسم] المحترم/ة،' : 'Dear [Name],'}</p>
+                <div className="whitespace-pre-wrap text-gray-700">
+                  {isArabic ? messageAr : messageEn}
                 </div>
-              )}
-              <p className="text-gray-600">{isArabic ? 'مع أطيب التحيات،' : 'With warm regards,'}</p>
-              <p className="font-semibold">{isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team'}</p>
+                
+                {/* Video Preview */}
+                {includeVideo && (
+                  <div className="rounded-lg overflow-hidden border-2 border-amber-200">
+                    <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-8 text-center">
+                      <Video className="h-12 w-12 mx-auto text-amber-600 mb-2" />
+                      <p className="font-medium text-amber-800">{isArabic ? '🎬 اكتشف سحر المفيجر' : '🎬 Discover the Magic'}</p>
+                      <p className="text-sm text-amber-600">{isArabic ? 'اضغط لمشاهدة الفيديو' : 'Click to watch video'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Guest Allowance */}
+                <div className="p-4 rounded-lg text-center" style={{ backgroundColor: '#F5F1E8' }}>
+                  <p className="text-amber-800 font-medium">
+                    👥 {isArabic ? `يمكنكم اصطحاب حتى ${guestAllowance} ضيوف مميزين` : `You may bring up to ${guestAllowance} honored guests`}
+                  </p>
+                </div>
+
+                {/* Perks Preview */}
+                {selectedPerks.size > 0 && (
+                  <div className="p-4 rounded-lg" style={{ backgroundColor: '#4A3625' }}>
+                    <p className="text-amber-300 text-sm mb-3 font-medium">
+                      {isArabic ? '✨ تجربتكم المميزة تتضمن' : '✨ Your VIP Experience Includes'}
+                    </p>
+                    <div className="space-y-2">
+                      {vipPerks.filter(p => selectedPerks.has(p.id)).map(perk => (
+                        <div key={perk.id} className="flex items-center gap-2 text-white text-sm">
+                          <CheckCircle className="h-4 w-4 text-amber-400" />
+                          <span>{isArabic ? perk.ar : perk.en}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Event Details */}
+                {(eventDate || eventTime) && (
+                  <div className="p-4 rounded-lg border border-amber-200 bg-amber-50">
+                    <p className="text-amber-800 font-medium mb-2">📅 {isArabic ? 'تفاصيل الفعالية' : 'Event Details'}</p>
+                    {eventDate && <p className="text-gray-700">{isArabic ? 'التاريخ:' : 'Date:'} {eventDate}</p>}
+                    {eventTime && <p className="text-gray-700">{isArabic ? 'الوقت:' : 'Time:'} {eventTime}</p>}
+                  </div>
+                )}
+
+                {/* RSVP Button */}
+                {enableRSVP && (
+                  <div className="text-center">
+                    <div className="inline-block px-8 py-4 rounded-lg text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
+                      ✅ {isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-gray-600">{isArabic ? 'مع أطيب التحيات،' : 'With warm regards,'}</p>
+                <p className="font-semibold">{isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team'}</p>
+              </div>
+              
+              {/* Footer */}
+              <div className="text-center p-4" style={{ backgroundColor: '#4A3625' }}>
+                <p className="text-amber-300 text-sm">{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</p>
+                <p className="text-gray-400 text-xs">{isArabic ? 'قرية المفيجر التراثية | الرياض' : 'Almufaijer Heritage Village | Riyadh'}</p>
+              </div>
             </div>
           </div>
         </DialogContent>
