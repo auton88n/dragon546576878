@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { 
   AlertTriangle, Search, Undo2, RefreshCw, 
-  Users, DollarSign, CheckCircle, XCircle, Mail, Link, CreditCard 
+  Users, DollarSign, CheckCircle, XCircle, Mail, Link, CreditCard, Copy 
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useToast } from '@/hooks/use-toast';
@@ -689,7 +689,25 @@ const RefundsPanel = () => {
                     <TableBody>
                       {orphanPayments.map((payment) => (
                         <TableRow key={payment.id}>
-                          <TableCell className="font-mono text-xs">{payment.id.slice(0, 12)}...</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            <div className="flex items-center gap-1">
+                              <span>{payment.id.slice(0, 12)}...</span>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(payment.id);
+                                  toast({
+                                    title: isArabic ? 'تم النسخ' : 'Copied',
+                                    description: payment.id,
+                                  });
+                                }}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
                           <TableCell className="font-medium">{payment.amount} SAR</TableCell>
                           <TableCell className="text-sm max-w-[150px] truncate">{payment.description || '-'}</TableCell>
                           <TableCell className="text-sm">{formatDateTime(payment.createdAt)}</TableCell>
