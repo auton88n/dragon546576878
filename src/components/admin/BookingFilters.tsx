@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Calendar, Filter, RotateCcw, CreditCard, Download, CalendarDays, CalendarClock, AlertCircle } from 'lucide-react';
+import { Search, Calendar, Filter, RotateCcw, CreditCard, Download, CalendarDays, CalendarClock, AlertCircle, EyeOff } from 'lucide-react';
 import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export interface BookingFiltersState {
   search: string;
@@ -246,6 +248,22 @@ const BookingFilters = ({ filters, onFiltersChange, onReset, onExport, exporting
           <RotateCcw className="h-4 w-4" />
           {isArabic ? 'إعادة تعيين' : 'Reset'}
         </Button>
+      </div>
+
+      {/* Hide Abandoned Toggle */}
+      <div className="flex items-center gap-3 pt-2 border-t border-border/30 rtl:flex-row-reverse">
+        <Switch
+          id="hide-abandoned"
+          checked={filters.hideAbandoned}
+          onCheckedChange={(checked) => onFiltersChange({ ...filters, hideAbandoned: checked })}
+        />
+        <Label 
+          htmlFor="hide-abandoned" 
+          className="text-sm text-muted-foreground cursor-pointer flex items-center gap-2"
+        >
+          <EyeOff className="h-4 w-4" />
+          {isArabic ? 'إخفاء الحجوزات المهجورة (أقدم من 7 أيام وغير مدفوعة)' : 'Hide abandoned bookings (older than 7 days, unpaid)'}
+        </Label>
       </div>
     </div>
   );
