@@ -113,8 +113,9 @@ export function useSettings() {
   const settingsQuery = useQuery({
     queryKey: ['settings'] as const,
     queryFn: fetchSettingsFromDB,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes - settings rarely change
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch when tab regains focus
   });
 
   const settingsMutation = useMutation({
