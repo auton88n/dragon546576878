@@ -234,12 +234,11 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     return format(new Date(date), 'PP', { locale: isArabic ? ar : enUS });
   };
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? (isArabic ? 'م' : 'PM') : (isArabic ? 'ص' : 'AM');
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
+  const formatDateTime = (dateTimeString: string | null) => {
+    if (!dateTimeString) return '-';
+    const date = new Date(dateTimeString);
+    // Format: "Jan 9, 8:00 AM"
+    return format(date, 'MMM d, h:mm a', { locale: isArabic ? ar : enUS });
   };
 
   // Mobile Card Component
@@ -275,11 +274,15 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
         <p className="text-sm text-muted-foreground truncate">{booking.customer_email}</p>
       </div>
 
-      {/* Date, Time, Tickets */}
+      {/* Date, Purchased, Tickets */}
       <div className="flex flex-wrap gap-3 text-sm rtl:[direction:rtl]">
         <div className="flex items-center gap-1.5 text-muted-foreground rtl:flex-row-reverse">
           <Calendar className="h-4 w-4 text-accent" />
           <span>{formatDate(booking.visit_date)}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-muted-foreground rtl:flex-row-reverse">
+          <Clock className="h-4 w-4 text-accent" />
+          <span>{formatDateTime(booking.created_at)}</span>
         </div>
         <div className="flex items-center gap-1.5 text-muted-foreground rtl:flex-row-reverse">
           <Users className="h-4 w-4 text-accent" />
@@ -399,7 +402,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
         </div>
       </TableCell>
       <TableCell className="text-foreground text-start text-sm p-2 truncate">{formatDate(booking.visit_date)}</TableCell>
-      <TableCell className="text-foreground text-start text-sm p-2">{formatTime(booking.visit_time)}</TableCell>
+      <TableCell className="text-foreground text-start text-sm p-2">{formatDateTime(booking.created_at)}</TableCell>
       <TableCell className="text-center p-2">
         <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-accent font-semibold text-sm">
           {booking.adult_count + booking.child_count + (booking.senior_count || 0)}
@@ -556,8 +559,8 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                   )}
                   <TableHead className="w-[11%] text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Ref'}</TableHead>
                   <TableHead className="w-[17%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-                  <TableHead className="w-[12%] text-accent font-semibold text-start">{isArabic ? 'التاريخ' : 'Date'}</TableHead>
-                  <TableHead className="w-[7%] text-accent font-semibold text-start">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+                  <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'الزيارة' : 'Visit'}</TableHead>
+                  <TableHead className="w-[12%] text-accent font-semibold text-start">{isArabic ? 'وقت الشراء' : 'Purchased'}</TableHead>
                   <TableHead className="w-[5%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
                   <TableHead className="w-[9%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
                   <TableHead className="w-[13%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
@@ -602,8 +605,8 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                     )}
                     <TableHead className="w-[11%] text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Ref'}</TableHead>
                     <TableHead className="w-[17%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-                    <TableHead className="w-[12%] text-accent font-semibold text-start">{isArabic ? 'التاريخ' : 'Date'}</TableHead>
-                    <TableHead className="w-[7%] text-accent font-semibold text-start">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+                    <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'الزيارة' : 'Visit'}</TableHead>
+                    <TableHead className="w-[12%] text-accent font-semibold text-start">{isArabic ? 'وقت الشراء' : 'Purchased'}</TableHead>
                     <TableHead className="w-[5%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
                     <TableHead className="w-[9%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
                     <TableHead className="w-[13%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>

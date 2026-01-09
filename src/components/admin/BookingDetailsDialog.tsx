@@ -135,12 +135,10 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     return format(new Date(date), 'PPP', { locale: isArabic ? ar : enUS });
   };
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? (isArabic ? 'م' : 'PM') : (isArabic ? 'ص' : 'AM');
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
+  const formatFullDateTime = (dateTimeString: string | null) => {
+    if (!dateTimeString) return '-';
+    const date = new Date(dateTimeString);
+    return format(date, 'PPP, h:mm:ss a', { locale: isArabic ? ar : enUS });
   };
 
   const getTicketTypeLabel = (type: string) => {
@@ -230,26 +228,62 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
             </div>
           </div>
 
-          {/* Visit Details */}
+          {/* Transaction Timeline */}
           <div className="glass-card rounded-xl p-5 border border-accent/10">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                <Calendar className="h-4 w-4 text-purple-600" />
+                <Clock className="h-4 w-4 text-purple-600" />
               </div>
-              {isArabic ? 'تفاصيل الزيارة' : 'Visit Details'}
+              {isArabic ? 'الجدول الزمني' : 'Transaction Timeline'}
             </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="text-start rtl:text-end">
-                <p className="text-sm text-muted-foreground">{isArabic ? 'التاريخ' : 'Date'}</p>
-                <p className="font-medium text-foreground">{formatDate(booking.visit_date)}</p>
+            <div className="space-y-4">
+              {/* Visit Date */}
+              <div className="flex items-start gap-3 rtl:flex-row-reverse">
+                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Calendar className="h-4 w-4 text-accent" />
+                </div>
+                <div className="text-start rtl:text-end">
+                  <p className="text-sm text-muted-foreground">{isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</p>
+                  <p className="font-medium text-foreground">{formatDate(booking.visit_date)}</p>
+                </div>
               </div>
-              <div className="text-start rtl:text-end">
-                <p className="text-sm text-muted-foreground">{isArabic ? 'الوقت' : 'Time'}</p>
-                <p className="font-medium text-foreground flex items-center gap-2 rtl:flex-row-reverse rtl:justify-end">
-                  <Clock className="h-4 w-4 text-accent" />
-                  {formatTime(booking.visit_time)}
-                </p>
+              
+              {/* Booking Created */}
+              <div className="flex items-start gap-3 rtl:flex-row-reverse">
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Clock className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="text-start rtl:text-end">
+                  <p className="text-sm text-muted-foreground">{isArabic ? 'تم إنشاء الحجز' : 'Booking Created'}</p>
+                  <p className="font-medium text-foreground">{formatFullDateTime(booking.created_at)}</p>
+                </div>
               </div>
+              
+              {/* Payment Completed */}
+              {booking.paid_at && (
+                <div className="flex items-start gap-3 rtl:flex-row-reverse">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle className="h-4 w-4 text-emerald-600" />
+                  </div>
+                  <div className="text-start rtl:text-end">
+                    <p className="text-sm text-muted-foreground">{isArabic ? 'تم الدفع' : 'Payment Completed'}</p>
+                    <p className="font-medium text-emerald-600">{formatFullDateTime(booking.paid_at)}</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Cancelled At */}
+              {booking.cancelled_at && (
+                <div className="flex items-start gap-3 rtl:flex-row-reverse">
+                  <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-4 w-4 text-red-600" />
+                  </div>
+                  <div className="text-start rtl:text-end">
+                    <p className="text-sm text-muted-foreground">{isArabic ? 'تم الإلغاء' : 'Cancelled At'}</p>
+                    <p className="font-medium text-red-600">{formatFullDateTime(booking.cancelled_at)}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
