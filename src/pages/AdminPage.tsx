@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
-import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send, Eye, RefreshCw, Undo2 } from 'lucide-react';
+import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send, Eye, RefreshCw, Undo2, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
@@ -28,6 +28,7 @@ const ReportsPanel = lazy(() => import('@/components/admin/ReportsPanel'));
 const GroupBookingsPanel = lazy(() => import('@/components/admin/GroupBookingsPanel'));
 const ContactSubmissionsPanel = lazy(() => import('@/components/admin/ContactSubmissionsPanel'));
 const AYNSupportPanel = lazy(() => import('@/components/admin/AYNSupportPanel'));
+const RefundsPanel = lazy(() => import('@/components/admin/RefundsPanel'));
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -212,17 +213,6 @@ const AdminPage = () => {
         <div className="container px-0">
           {/* Quick Actions */}
           <div className="flex justify-end rtl:justify-start gap-2 mb-4">
-            <Link to="/admin/refunds">
-              <Button variant="outline" className="border-amber-500/50 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-2 text-sm text-amber-700 dark:text-amber-400 relative">
-                <Undo2 className="h-4 w-4" />
-                <span className="hidden sm:inline">{isArabic ? 'مركز الاسترداد' : 'Refund Center'}</span>
-                {stats.duplicateBookingsCount > 0 && (
-                  <span className="absolute -top-2 -end-2 min-w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold px-1">
-                    {stats.duplicateBookingsCount}
-                  </span>
-                )}
-              </Button>
-            </Link>
             <Link to="/scan">
               <Button className="btn-gold gap-2 text-sm">
                 <QrCode className="h-4 w-4" />
@@ -326,6 +316,18 @@ const AdminPage = () => {
               >
                 <Headset className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 {isArabic ? 'دعم AYN' : 'AYN Support'}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="refunds" 
+                className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse relative"
+              >
+                <CreditCard className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                {isArabic ? 'الاسترداد' : 'Refunds'}
+                {stats.duplicateBookingsCount > 0 && (
+                  <span className="absolute -top-1 -end-1 min-w-4 h-4 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
+                    {stats.duplicateBookingsCount}
+                  </span>
+                )}
               </TabsTrigger>
             </TabsList>
 
@@ -440,6 +442,13 @@ const AdminPage = () => {
             <TabsContent value="ayn-support">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
                 <AYNSupportPanel />
+              </Suspense>
+            </TabsContent>
+
+            {/* Refunds Tab */}
+            <TabsContent value="refunds">
+              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                <RefundsPanel />
               </Suspense>
             </TabsContent>
           </Tabs>
