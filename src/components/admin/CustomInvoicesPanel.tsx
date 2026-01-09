@@ -735,3 +735,5 @@ export function CustomInvoicesPanel() {
     </div>
   );
 }
+
+export default CustomInvoicesPanel;
