@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Mail, MailOpen, Trash2, MessageSquare, Eye } from 'lucide-react';
+import { Mail, MailOpen, Trash2, MessageSquare, Eye, Send, CheckCircle2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,9 @@ interface ContactSubmission {
   status: string;
   admin_notes: string | null;
   created_at: string;
+  reply_sent?: boolean;
+  reply_message?: string | null;
+  reply_sent_at?: string | null;
 }
 
 const ContactSubmissionsPanel = () => {
@@ -53,7 +56,9 @@ const ContactSubmissionsPanel = () => {
   const queryClient = useQueryClient();
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
+  const [replyMessage, setReplyMessage] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isSendingReply, setIsSendingReply] = useState(false);
 
   const { data: submissions, isLoading } = useQuery({
     queryKey: ['contact-submissions'],
@@ -129,6 +134,7 @@ const ContactSubmissionsPanel = () => {
   const handleViewSubmission = (submission: ContactSubmission) => {
     setSelectedSubmission(submission);
     setAdminNotes(submission.admin_notes || '');
+    setReplyMessage('');
     
     // Mark as read if unread
     if (submission.status === 'unread') {
@@ -158,7 +164,40 @@ const ContactSubmissionsPanel = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const handleSendReply = async () => {
+    if (!selectedSubmission || !replyMessage.trim()) return;
+
+    setIsSendingReply(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-contact-reply', {
+        body: {
+          submissionId: selectedSubmission.id,
+          replyMessage: replyMessage.trim(),
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(t('admin.messages.replySuccess'));
+      queryClient.invalidateQueries({ queryKey: ['contact-submissions'] });
+      setSelectedSubmission(null);
+    } catch (error) {
+      console.error('Error sending reply:', error);
+      toast.error(t('admin.messages.replyFailed'));
+    } finally {
+      setIsSendingReply(false);
+    }
+  };
+
+  const getStatusBadge = (status: string, replySent?: boolean) => {
+    if (replySent) {
+      return (
+        <Badge className="bg-green-500 gap-1">
+          <CheckCircle2 className="h-3 w-3" />
+          {t('admin.messages.replySent')}
+        </Badge>
+      );
+    }
     switch (status) {
       case 'unread':
         return <Badge variant="destructive">{t('admin.messages.unread')}</Badge>;
@@ -219,7 +258,7 @@ const ContactSubmissionsPanel = () => {
                   key={submission.id}
                   className={submission.status === 'unread' ? 'bg-accent/5' : ''}
                 >
-                  <TableCell>{getStatusBadge(submission.status)}</TableCell>
+                  <TableCell>{getStatusBadge(submission.status, submission.reply_sent)}</TableCell>
                   <TableCell>
                     <div>
                       <p className="font-medium">{submission.name}</p>
@@ -266,7 +305,7 @@ const ContactSubmissionsPanel = () => {
 
       {/* View Submission Dialog */}
       <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-        <DialogContent className="max-w-2xl pt-10">
+        <DialogContent className="max-w-2xl pt-10 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pe-12">
             <DialogTitle className="flex items-center gap-3">
               <div className="shrink-0">
@@ -310,6 +349,56 @@ const ContactSubmissionsPanel = () => {
                 <p className="mt-2 p-4 bg-muted rounded-lg whitespace-pre-wrap">
                   {selectedSubmission.message}
                 </p>
+              </div>
+
+              {/* Reply Section */}
+              <div className="border-t pt-4">
+                <span className="text-sm font-medium flex items-center gap-2">
+                  <Send className="h-4 w-4 text-primary" />
+                  {t('admin.messages.replyToCustomer')}:
+                </span>
+                
+                {selectedSubmission.reply_sent ? (
+                  <div className="mt-2 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <div className="flex items-center gap-2 text-green-700 dark:text-green-400 text-sm mb-2">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>{t('admin.messages.replySent')}</span>
+                      {selectedSubmission.reply_sent_at && (
+                        <span className="text-muted-foreground">
+                          • {t('admin.messages.sentOn')} {format(new Date(selectedSubmission.reply_sent_at), 'PPpp')}
+                        </span>
+                      )}
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm">{selectedSubmission.reply_message}</p>
+                  </div>
+                ) : (
+                  <>
+                    <Textarea
+                      value={replyMessage}
+                      onChange={(e) => setReplyMessage(e.target.value)}
+                      placeholder={t('admin.messages.replyPlaceholder')}
+                      className="mt-2"
+                      rows={4}
+                    />
+                    <Button
+                      onClick={handleSendReply}
+                      disabled={!replyMessage.trim() || isSendingReply}
+                      className="mt-2 btn-gold"
+                    >
+                      {isSendingReply ? (
+                        <>
+                          <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                          {t('admin.messages.sendingReply')}
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 me-2" />
+                          {t('admin.messages.sendReply')}
+                        </>
+                      )}
+                    </Button>
+                  </>
+                )}
               </div>
 
               <div className="border-t pt-4">

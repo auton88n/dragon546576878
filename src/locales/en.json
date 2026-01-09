@@ -264,7 +264,15 @@
       "adminNotes": "Admin Notes",
       "saveNotes": "Save Notes",
       "confirmDelete": "Confirm Delete",
-      "deleteMessage": "Are you sure you want to delete this message? This action cannot be undone."
+      "deleteMessage": "Are you sure you want to delete this message? This action cannot be undone.",
+      "replyToCustomer": "Reply to Customer",
+      "sendReply": "Send Reply",
+      "replySent": "Reply Sent",
+      "replyPlaceholder": "Type your reply to the customer here...",
+      "sendingReply": "Sending...",
+      "replySuccess": "Reply sent successfully",
+      "replyFailed": "Failed to send reply",
+      "sentOn": "Sent on"
     },
     "corporate": {
       "title": "Corporate Requests",

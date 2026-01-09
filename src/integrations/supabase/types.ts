@@ -167,6 +167,9 @@ export type Database = {
           message: string
           name: string
           phone: string | null
+          reply_message: string | null
+          reply_sent: boolean | null
+          reply_sent_at: string | null
           status: string
           subject: string
           updated_at: string
@@ -179,6 +182,9 @@ export type Database = {
           message: string
           name: string
           phone?: string | null
+          reply_message?: string | null
+          reply_sent?: boolean | null
+          reply_sent_at?: string | null
           status?: string
           subject: string
           updated_at?: string
@@ -191,6 +197,9 @@ export type Database = {
           message?: string
           name?: string
           phone?: string | null
+          reply_message?: string | null
+          reply_sent?: boolean | null
+          reply_sent_at?: string | null
           status?: string
           subject?: string
           updated_at?: string
