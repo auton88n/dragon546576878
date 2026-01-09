@@ -18,7 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface ScanResult {
   timestamp: Date;
-  status: TicketValidationResult['status'] | 'employee_valid' | 'employee_inactive' | 'arrived';
+  status: TicketValidationResult['status'] | 'employee_valid' | 'employee_inactive' | 'arrived' | 'not_paid';
   ticketCode?: string;
   customerName?: string;
   ticketType?: string;
