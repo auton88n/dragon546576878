@@ -94,6 +94,11 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const [showRefundDialog, setShowRefundDialog] = useState(false);
   const [refundAmount, setRefundAmount] = useState('');
 
+  // Find orphan payment state
+  const [searchingPayment, setSearchingPayment] = useState(false);
+  const [foundPayments, setFoundPayments] = useState<any[]>([]);
+  const [linkingPayment, setLinkingPayment] = useState<string | null>(null);
+
   useEffect(() => {
     if (booking && open) {
       fetchTickets();
@@ -142,6 +147,60 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
       toast({ title: isArabic ? 'خطأ' : 'Error', description: isArabic ? 'فشل في معالجة الاسترداد' : 'Failed to process refund', variant: 'destructive' });
     } finally {
       setRefunding(false);
+    }
+  };
+
+  // Search for orphan payments in Moyasar
+  const handleSearchOrphanPayment = async () => {
+    if (!booking) return;
+    setSearchingPayment(true);
+    setFoundPayments([]);
+    try {
+      const visitDate = new Date(booking.visit_date);
+      const dateFrom = new Date(booking.created_at || visitDate);
+      dateFrom.setDate(dateFrom.getDate() - 1);
+      const dateTo = new Date(visitDate);
+      dateTo.setDate(dateTo.getDate() + 1);
+
+      const { data, error } = await supabase.functions.invoke('search-moyasar-payments', {
+        body: { 
+          email: booking.customer_email,
+          amount: booking.total_amount,
+          dateFrom: dateFrom.toISOString(),
+          dateTo: dateTo.toISOString(),
+        }
+      });
+      if (error) throw error;
+      setFoundPayments(data.payments || []);
+      if ((data.payments || []).length === 0) {
+        toast({ title: isArabic ? 'لا توجد نتائج' : 'No Results', description: isArabic ? 'لم يتم العثور على مدفوعات مطابقة' : 'No matching payments found in Moyasar' });
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+      toast({ title: isArabic ? 'خطأ' : 'Error', description: isArabic ? 'فشل البحث' : 'Failed to search', variant: 'destructive' });
+    } finally {
+      setSearchingPayment(false);
+    }
+  };
+
+  // Link orphan payment to booking
+  const handleLinkPayment = async (paymentId: string) => {
+    if (!booking) return;
+    setLinkingPayment(paymentId);
+    try {
+      const { data, error } = await supabase.functions.invoke('link-orphan-payment', {
+        body: { bookingId: booking.id, paymentId }
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      toast({ title: isArabic ? 'تم الربط' : 'Linked', description: isArabic ? 'تم ربط الدفع وإنشاء التذاكر' : 'Payment linked and tickets generated!' });
+      setFoundPayments([]);
+      onBookingUpdated?.();
+      onOpenChange(false);
+    } catch (err: any) {
+      toast({ title: isArabic ? 'خطأ' : 'Error', description: err.message || (isArabic ? 'فشل الربط' : 'Failed to link'), variant: 'destructive' });
+    } finally {
+      setLinkingPayment(null);
     }
   };
 
@@ -591,6 +650,59 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
             </h3>
             <EmailStatusTracker bookingId={booking.id} />
           </div>
+
+          {/* Find Orphan Payment - Only show when payment_id is null */}
+          {!booking.payment_id && booking.payment_status !== 'completed' && (
+            <div className="glass-card rounded-xl p-5 border border-amber-500/30 bg-amber-500/5">
+              <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
+                <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  </div>
+                  {isArabic ? 'البحث عن دفع مفقود' : 'Find Lost Payment'}
+                </h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSearchOrphanPayment}
+                  disabled={searchingPayment}
+                  className="gap-2 border-amber-500/30 text-amber-700 hover:bg-amber-500/10"
+                >
+                  {searchingPayment ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+                  {isArabic ? 'بحث في Moyasar' : 'Search Moyasar'}
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                {isArabic ? 'ابحث عن مدفوعات في Moyasar قد تكون مرتبطة بهذا الحجز' : 'Search for payments in Moyasar that may belong to this booking'}
+              </p>
+              
+              {foundPayments.length > 0 && (
+                <div className="space-y-2 mt-4">
+                  <p className="text-sm font-medium">{isArabic ? 'المدفوعات الموجودة:' : 'Found Payments:'}</p>
+                  {foundPayments.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-background border">
+                      <div className="text-sm">
+                        <p className="font-mono text-xs text-muted-foreground">{p.id}</p>
+                        <p className="font-medium">{p.amount} SAR - <Badge variant={p.status === 'paid' ? 'default' : 'secondary'}>{p.status}</Badge></p>
+                        {p.isLinked && <p className="text-xs text-amber-600">{isArabic ? 'مرتبط بـ' : 'Linked to'} {p.linkedBookingRef}</p>}
+                      </div>
+                      {p.status === 'paid' && !p.isLinked && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleLinkPayment(p.id)}
+                          disabled={linkingPayment === p.id}
+                          className="gap-1"
+                        >
+                          {linkingPayment === p.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3" />}
+                          {isArabic ? 'ربط' : 'Link'}
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Moyasar Verification Panel */}
           {booking.payment_id && (
