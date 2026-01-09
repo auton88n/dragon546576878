@@ -57,6 +57,9 @@ export type Database = {
         Row: {
           adult_count: number
           adult_price: number
+          arrival_status: string | null
+          arrived_at: string | null
+          arrived_scanned_by: string | null
           booking_reference: string
           booking_status: string
           cancelled_at: string | null
@@ -88,6 +91,9 @@ export type Database = {
         Insert: {
           adult_count?: number
           adult_price: number
+          arrival_status?: string | null
+          arrived_at?: string | null
+          arrived_scanned_by?: string | null
           booking_reference: string
           booking_status?: string
           cancelled_at?: string | null
@@ -119,6 +125,9 @@ export type Database = {
         Update: {
           adult_count?: number
           adult_price?: number
+          arrival_status?: string | null
+          arrived_at?: string | null
+          arrived_scanned_by?: string | null
           booking_reference?: string
           booking_status?: string
           cancelled_at?: string | null
