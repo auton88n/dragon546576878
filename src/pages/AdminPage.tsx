@@ -204,7 +204,7 @@ const AdminPage = () => {
 
   return (
     <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <StaffHeader title="Dashboard" titleAr="لوحة التحكم" />
+      <StaffHeader title="Dashboard" titleAr="لوحة التحكم" showNotifications />
 
       <main className="flex-1 pt-20 pb-4 px-3 sm:px-4 md:px-6">
         <div className="container px-0">

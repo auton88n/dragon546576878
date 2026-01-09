@@ -7,6 +7,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import BookingNotifications from '@/components/admin/BookingNotifications';
 
 interface StaffHeaderProps {
   title: string;
@@ -14,9 +15,10 @@ interface StaffHeaderProps {
   isOnline?: boolean;
   isSyncing?: boolean;
   queueCount?: number;
+  showNotifications?: boolean;
 }
 
-const StaffHeader = ({ title, titleAr, isOnline = true, isSyncing = false, queueCount = 0 }: StaffHeaderProps) => {
+const StaffHeader = ({ title, titleAr, isOnline = true, isSyncing = false, queueCount = 0, showNotifications = false }: StaffHeaderProps) => {
   const navigate = useNavigate();
   const { currentLanguage, isRTL } = useLanguage();
   const isArabic = currentLanguage === 'ar';
@@ -83,6 +85,7 @@ const StaffHeader = ({ title, titleAr, isOnline = true, isSyncing = false, queue
 
         {/* Controls */}
         <div className="flex items-center gap-2 md:gap-3 rtl:flex-row-reverse">
+          {showNotifications && <BookingNotifications />}
           <LanguageSwitcher />
           <Button
             variant="outline"
