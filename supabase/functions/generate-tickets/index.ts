@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { qrcode } from "https://deno.land/x/qrcode@v2.0.0/mod.ts";
 
 // Version stamp for deployment verification
-const GENERATE_TICKETS_VERSION = "2026-01-07-v1";
+const GENERATE_TICKETS_VERSION = "2026-01-09-v2-group-qr";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,25 +19,42 @@ interface GeneratedTicket {
   ticketCode: string;
   ticketType: string;
   qrCodeUrl: string;
+  adultCount?: number;
+  childCount?: number;
+  totalGuests?: number;
 }
 
-// Generate a unique ticket code
-const generateTicketCode = (type: string, index: number): string => {
-  const typePrefix = type.charAt(0).toUpperCase();
+// Generate a unique group ticket code
+const generateGroupTicketCode = (bookingRef: string): string => {
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `${typePrefix}${timestamp}${random}${index}`;
+  return `GRP-${bookingRef}-${timestamp}${random}`;
 };
 
-// Generate QR code data with checksum
-const generateQRData = (ticketCode: string, bookingRef: string, visitDate: string): string => {
+// Generate QR code data for GROUP ticket with guest counts
+const generateGroupQRData = (
+  ticketCode: string, 
+  bookingRef: string, 
+  visitDate: string,
+  visitTime: string,
+  adultCount: number,
+  childCount: number
+): string => {
+  const totalGuests = adultCount + childCount;
+  
   const data = {
+    type: "group", // Indicates this is a group ticket (new format)
     code: ticketCode,
     ref: bookingRef,
     date: visitDate,
+    time: visitTime,
+    adults: adultCount,
+    children: childCount,
+    total: totalGuests,
     ts: Date.now(),
   };
   
+  // Generate checksum for validation
   const checksum = btoa(JSON.stringify(data)).slice(-8);
   
   return JSON.stringify({
@@ -47,8 +64,9 @@ const generateQRData = (ticketCode: string, bookingRef: string, visitDate: strin
 };
 
 // Generate QR code image as base64 using Deno-native library
+// Larger size for group QR (800px for better scanning)
 const generateQRCodeImage = async (data: string): Promise<{ base64: string; format: string }> => {
-  const qrResult = await qrcode(data, { size: 600, errorCorrectLevel: "H" });
+  const qrResult = await qrcode(data, { size: 800, errorCorrectLevel: "H" });
   const qrDataUrl = qrResult.toString();
   return { base64: qrDataUrl, format: "gif" };
 };
@@ -79,7 +97,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const body: GenerateTicketsRequest = await req.json();
 
-    console.log("Generating tickets for booking:", body.bookingId);
+    console.log("Generating GROUP ticket for booking:", body.bookingId);
 
     if (!body.bookingId) {
       return new Response(
@@ -115,114 +133,123 @@ serve(async (req) => {
       );
     }
 
-    // Check if tickets already exist
-    const { count: existingTickets } = await supabase
+    // Check if tickets already exist for this booking
+    const { data: existingTickets, count: existingCount } = await supabase
       .from("tickets")
-      .select("id", { count: "exact", head: true })
+      .select("id, ticket_code, ticket_type, qr_code_url", { count: "exact" })
       .eq("booking_id", body.bookingId);
 
-    if (existingTickets && existingTickets > 0) {
-      console.log("Tickets already exist for this booking:", existingTickets);
+    if (existingCount && existingCount > 0 && existingTickets) {
+      console.log("Tickets already exist for this booking:", existingCount);
       
-      // Fetch existing tickets and return them
-      const { data: tickets } = await supabase
-        .from("tickets")
-        .select("id, ticket_code, ticket_type, qr_code_url")
-        .eq("booking_id", body.bookingId);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          alreadyGenerated: true,
-          tickets: tickets?.map(t => ({
-            id: t.id,
-            ticketCode: t.ticket_code,
-            ticketType: t.ticket_type,
-            qrCodeUrl: t.qr_code_url,
-          })) || [],
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    console.log("Payment verified as completed. Generating tickets...");
-
-    // Generate tickets
-    const generatedTickets: GeneratedTicket[] = [];
-    const ticketsToInsert: any[] = [];
-
-    const createTicketsForType = async (type: "adult" | "child", count: number) => {
-      for (let i = 0; i < count; i++) {
-        const ticketCode = generateTicketCode(type, i + 1);
-        const qrData = generateQRData(ticketCode, booking.booking_reference, booking.visit_date);
-        
-        console.log(`Generating QR for ticket ${ticketCode}...`);
-        
-        // Generate QR code image using Deno-native library
-        const { base64: qrDataUrl, format } = await generateQRCodeImage(qrData);
-        const qrBytes = dataURLtoUint8Array(qrDataUrl);
-        
-        console.log(`QR generated, uploading to storage...`);
-        
-        // Upload to storage
-        const fileName = `${booking.id}/${ticketCode}.${format}`;
-        const { error: uploadError } = await supabase.storage
-          .from("tickets")
-          .upload(fileName, qrBytes, {
-            contentType: `image/${format}`,
-            upsert: true,
-          });
-
-        if (uploadError) {
-          console.error("Error uploading QR code:", uploadError);
-        }
-
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from("tickets")
-          .getPublicUrl(fileName);
-
-        const qrCodeUrl = urlData?.publicUrl || null;
-        console.log(`QR uploaded: ${qrCodeUrl}`);
-
-        ticketsToInsert.push({
-          booking_id: booking.id,
-          ticket_code: ticketCode,
-          ticket_type: type,
-          qr_code_data: qrData,
-          qr_code_url: qrCodeUrl,
-          valid_from: booking.visit_date,
-          valid_until: booking.visit_date,
-          is_used: false,
-        });
-      }
-    };
-
-    // Generate tickets for each type
-    await createTicketsForType("adult", booking.adult_count || 0);
-    await createTicketsForType("child", booking.child_count || 0);
-    console.log(`Generated ${ticketsToInsert.length} tickets`);
-
-    // Insert all tickets
-    if (ticketsToInsert.length > 0) {
-      const { data: insertedTickets, error: ticketsError } = await supabase
-        .from("tickets")
-        .insert(ticketsToInsert)
-        .select();
-
-      if (ticketsError) {
-        console.error("Error inserting tickets:", ticketsError);
-        throw new Error(`Failed to insert tickets: ${ticketsError.message}`);
-      } else if (insertedTickets) {
-        generatedTickets.push(
-          ...insertedTickets.map((t: any) => ({
-            id: t.id,
-            ticketCode: t.ticket_code,
-            ticketType: t.ticket_type,
-            qrCodeUrl: t.qr_code_url || "",
-          }))
+      // Check if it's a group ticket (new format) or individual tickets (old format)
+      const groupTicket = existingTickets.find(t => t.ticket_type === "group");
+      
+      if (groupTicket) {
+        // Return group ticket format
+        return new Response(
+          JSON.stringify({
+            success: true,
+            alreadyGenerated: true,
+            isGroupTicket: true,
+            tickets: [{
+              id: groupTicket.id,
+              ticketCode: groupTicket.ticket_code,
+              ticketType: "group",
+              qrCodeUrl: groupTicket.qr_code_url,
+              adultCount: booking.adult_count || 0,
+              childCount: booking.child_count || 0,
+              totalGuests: (booking.adult_count || 0) + (booking.child_count || 0),
+            }],
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } else {
+        // Return old individual tickets format for backward compatibility
+        return new Response(
+          JSON.stringify({
+            success: true,
+            alreadyGenerated: true,
+            isGroupTicket: false,
+            tickets: existingTickets.map(t => ({
+              id: t.id,
+              ticketCode: t.ticket_code,
+              ticketType: t.ticket_type,
+              qrCodeUrl: t.qr_code_url,
+            })),
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+    }
+
+    console.log("Payment verified as completed. Generating SINGLE GROUP QR code...");
+
+    const adultCount = booking.adult_count || 0;
+    const childCount = booking.child_count || 0;
+    const totalGuests = adultCount + childCount;
+
+    // Generate single group ticket code
+    const ticketCode = generateGroupTicketCode(booking.booking_reference);
+    
+    // Generate group QR data with guest counts
+    const qrData = generateGroupQRData(
+      ticketCode, 
+      booking.booking_reference, 
+      booking.visit_date,
+      booking.visit_time,
+      adultCount,
+      childCount
+    );
+    
+    console.log(`Generating GROUP QR for ${totalGuests} guests (${adultCount} adults, ${childCount} children)...`);
+    
+    // Generate QR code image
+    const { base64: qrDataUrl, format } = await generateQRCodeImage(qrData);
+    const qrBytes = dataURLtoUint8Array(qrDataUrl);
+    
+    console.log(`GROUP QR generated, uploading to storage...`);
+    
+    // Upload to storage with group prefix
+    const fileName = `${booking.id}/GROUP-${ticketCode}.${format}`;
+    const { error: uploadError } = await supabase.storage
+      .from("tickets")
+      .upload(fileName, qrBytes, {
+        contentType: `image/${format}`,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Error uploading GROUP QR code:", uploadError);
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from("tickets")
+      .getPublicUrl(fileName);
+
+    const qrCodeUrl = urlData?.publicUrl || null;
+    console.log(`GROUP QR uploaded: ${qrCodeUrl}`);
+
+    // Insert single group ticket record
+    const { data: insertedTicket, error: ticketError } = await supabase
+      .from("tickets")
+      .insert({
+        booking_id: booking.id,
+        ticket_code: ticketCode,
+        ticket_type: "group", // Mark as group ticket
+        qr_code_data: qrData,
+        qr_code_url: qrCodeUrl,
+        valid_from: booking.visit_date,
+        valid_until: booking.visit_date,
+        is_used: false,
+      })
+      .select()
+      .single();
+
+    if (ticketError) {
+      console.error("Error inserting group ticket:", ticketError);
+      throw new Error(`Failed to insert group ticket: ${ticketError.message}`);
     }
 
     // Update booking to mark QR codes as generated
@@ -231,13 +258,27 @@ serve(async (req) => {
       .update({ qr_codes_generated: true })
       .eq("id", booking.id);
 
-    console.log("QR codes generated and marked. Total tickets:", generatedTickets.length);
+    console.log(`GROUP QR code generated successfully for booking ${booking.booking_reference}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        tickets: generatedTickets,
+        isGroupTicket: true,
+        tickets: [{
+          id: insertedTicket.id,
+          ticketCode: insertedTicket.ticket_code,
+          ticketType: "group",
+          qrCodeUrl: insertedTicket.qr_code_url,
+          adultCount,
+          childCount,
+          totalGuests,
+        }],
         bookingReference: booking.booking_reference,
+        guestSummary: {
+          adults: adultCount,
+          children: childCount,
+          total: totalGuests,
+        },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
