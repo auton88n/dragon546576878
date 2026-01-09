@@ -26,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const SettingsPanel = lazy(() => import('@/components/admin/SettingsPanel'));
 const ReportsPanel = lazy(() => import('@/components/admin/ReportsPanel'));
 const GroupBookingsPanel = lazy(() => import('@/components/admin/GroupBookingsPanel'));
+const CustomInvoicesPanel = lazy(() => import('@/components/admin/CustomInvoicesPanel'));
 const ContactSubmissionsPanel = lazy(() => import('@/components/admin/ContactSubmissionsPanel'));
 const AYNSupportPanel = lazy(() => import('@/components/admin/AYNSupportPanel'));
 const RefundsPanel = lazy(() => import('@/components/admin/RefundsPanel'));
@@ -427,7 +428,10 @@ const AdminPage = () => {
             {/* Group Bookings Tab */}
             <TabsContent value="groups">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <GroupBookingsPanel />
+                <div className="space-y-6">
+                  <GroupBookingsPanel />
+                  <CustomInvoicesPanel />
+                </div>
               </Suspense>
             </TabsContent>
 
