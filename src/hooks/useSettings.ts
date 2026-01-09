@@ -34,7 +34,7 @@ const defaultSettings: SiteSettings = {
     endDate: '2026-01-16',
     enabled: true,
   },
-  maxTicketsPerBooking: 10,
+  maxTicketsPerBooking: 25,
   advanceBookingDays: 30,
   sameDayCutoffHour: 14,
 };
