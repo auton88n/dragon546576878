@@ -106,6 +106,14 @@ const RefundsPanel = () => {
   const [linkingPayment, setLinkingPayment] = useState<string | null>(null);
   const [bookingSearch, setBookingSearch] = useState('');
 
+  // Orphan refund state
+  const [orphanRefundDialog, setOrphanRefundDialog] = useState<{
+    open: boolean;
+    payment: OrphanPayment;
+  } | null>(null);
+  const [orphanRefundAmount, setOrphanRefundAmount] = useState('');
+  const [processingOrphanRefund, setProcessingOrphanRefund] = useState(false);
+
   useEffect(() => {
     fetchDuplicates();
     fetchRefundLogs();
@@ -393,6 +401,47 @@ const RefundsPanel = () => {
     );
   });
 
+  // Open orphan refund dialog
+  const handleOpenOrphanRefundDialog = (payment: OrphanPayment) => {
+    setOrphanRefundDialog({ open: true, payment });
+    setOrphanRefundAmount(String(payment.amount));
+  };
+
+  // Process orphan payment refund
+  const handleProcessOrphanRefund = async () => {
+    if (!orphanRefundDialog) return;
+    setProcessingOrphanRefund(true);
+    try {
+      const amountInHalalas = Math.round(parseFloat(orphanRefundAmount) * 100);
+      const { data, error } = await supabase.functions.invoke('refund-orphan-payment', {
+        body: {
+          paymentId: orphanRefundDialog.payment.id,
+          amount: amountInHalalas,
+          reason: 'Orphan payment refund from admin panel',
+        }
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      toast({
+        title: isArabic ? 'تم الاسترداد' : 'Refund Processed',
+        description: isArabic ? `تم استرداد ${data.refundedAmount} ر.س` : `Refunded ${data.refundedAmount} SAR`,
+      });
+
+      setOrphanRefundDialog(null);
+      setOrphanPayments(prev => prev.filter(p => p.id !== orphanRefundDialog.payment.id));
+      fetchRefundLogs();
+    } catch (err: any) {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: err.message || (isArabic ? 'فشل الاسترداد' : 'Failed to process refund'),
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingOrphanRefund(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -645,10 +694,21 @@ const RefundsPanel = () => {
                           <TableCell className="text-sm max-w-[150px] truncate">{payment.description || '-'}</TableCell>
                           <TableCell className="text-sm">{formatDateTime(payment.createdAt)}</TableCell>
                           <TableCell>
-                            <Button size="sm" variant="outline" onClick={() => handleOpenLinkDialog(payment)} className="gap-1">
-                              <Link className="h-3 w-3" />
-                              {isArabic ? 'ربط' : 'Link'}
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="outline" onClick={() => handleOpenLinkDialog(payment)} className="gap-1">
+                                <Link className="h-3 w-3" />
+                                {isArabic ? 'ربط' : 'Link'}
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => handleOpenOrphanRefundDialog(payment)}
+                                className="gap-1 text-destructive hover:text-destructive"
+                              >
+                                <Undo2 className="h-3 w-3" />
+                                {isArabic ? 'استرداد' : 'Refund'}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -737,6 +797,111 @@ const RefundsPanel = () => {
             <AlertDialogCancel>{isArabic ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
             <AlertDialogAction onClick={handleProcessRefund} disabled={processing}>
               {processing ? <RefreshCw className="h-4 w-4 animate-spin me-2" /> : null}
+              {isArabic ? 'تأكيد الاسترداد' : 'Confirm Refund'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Link Payment Dialog */}
+      <AlertDialog open={linkDialog?.open} onOpenChange={(open) => !open && setLinkDialog(null)}>
+        <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {isArabic ? 'ربط الدفع بحجز' : 'Link Payment to Booking'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isArabic 
+                ? `المبلغ: ${linkDialog?.payment.amount} ر.س - اختر الحجز للربط`
+                : `Amount: ${linkDialog?.payment.amount} SAR - Select a booking to link`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <Input
+              placeholder={isArabic ? 'بحث بالاسم أو البريد أو رقم الحجز...' : 'Search by name, email, or reference...'}
+              value={bookingSearch}
+              onChange={(e) => setBookingSearch(e.target.value)}
+            />
+            
+            {loadingPending ? (
+              <div className="flex justify-center py-4">
+                <RefreshCw className="h-5 w-5 animate-spin" />
+              </div>
+            ) : filteredPendingBookings.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">
+                {isArabic ? 'لا توجد حجوزات معلقة' : 'No pending bookings found'}
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-[300px] overflow-auto">
+                {filteredPendingBookings.map((booking) => (
+                  <div key={booking.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="font-medium">{booking.customer_name}</p>
+                      <p className="text-sm text-muted-foreground">{booking.customer_email}</p>
+                      <div className="flex gap-2 mt-1">
+                        <Badge variant="outline">{booking.booking_reference}</Badge>
+                        <Badge variant={booking.total_amount === linkDialog?.payment.amount ? 'default' : 'secondary'}>
+                          {booking.total_amount} SAR
+                        </Badge>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => handleLinkToBooking(booking.id)}
+                      disabled={linkingPayment === booking.id}
+                    >
+                      {linkingPayment === booking.id ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Link className="h-3 w-3 me-1" />
+                          {isArabic ? 'ربط' : 'Link'}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isArabic ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Orphan Refund Dialog */}
+      <AlertDialog open={orphanRefundDialog?.open} onOpenChange={(open) => !open && setOrphanRefundDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isArabic ? 'استرداد دفعة مفقودة' : 'Refund Orphan Payment'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isArabic 
+                ? `معرف الدفع: ${orphanRefundDialog?.payment.id.slice(0, 12)}...` 
+                : `Payment ID: ${orphanRefundDialog?.payment.id.slice(0, 12)}...`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium">
+              {isArabic ? 'مبلغ الاسترداد (ر.س)' : 'Refund Amount (SAR)'}
+            </label>
+            <Input
+              type="number"
+              value={orphanRefundAmount}
+              onChange={(e) => setOrphanRefundAmount(e.target.value)}
+              max={orphanRefundDialog?.payment.amount}
+              className="mt-1"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              {isArabic ? 'الحد الأقصى:' : 'Max:'} {orphanRefundDialog?.payment.amount} SAR
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isArabic ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleProcessOrphanRefund} disabled={processingOrphanRefund} className="bg-destructive hover:bg-destructive/90">
+              {processingOrphanRefund ? <RefreshCw className="h-4 w-4 animate-spin me-2" /> : null}
               {isArabic ? 'تأكيد الاسترداد' : 'Confirm Refund'}
             </AlertDialogAction>
           </AlertDialogFooter>
