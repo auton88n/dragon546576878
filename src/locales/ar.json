@@ -1,0 +1,450 @@
+{
+  "common": {
+    "appName": "سوق المفيجر",
+    "tagline": "استكشف التراث السعودي",
+    "language": "اللغة",
+    "currency": "ريال",
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "search": "بحث",
+    "filter": "تصفية",
+    "export": "تصدير",
+    "print": "طباعة",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "next": "التالي",
+    "submit": "إرسال",
+    "yes": "نعم",
+    "no": "لا",
+    "refresh": "تحديث",
+    "actions": "الإجراءات",
+    "status": "الحالة",
+    "date": "التاريخ",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "noData": "لا توجد بيانات"
+  },
+  "nav": {
+    "home": "المفيجر",
+    "about": "من نحن",
+    "contact": "تواصل معنا",
+    "booking": "احجز مكانك",
+    "myTickets": "تذاكري",
+    "corporateBookings": "حجوزات الشركات",
+    "scanner": "الماسح الضوئي",
+    "admin": "لوحة التحكم",
+    "login": "تسجيل دخول الموظفين",
+    "logout": "تسجيل الخروج"
+  },
+  "about": {
+    "title": "من نحن",
+    "story": {
+      "titleAr": "سوق المفيجر: تراث حي ومستقبل واعد",
+      "titleEn": "Souq Almufaijer: Living Heritage, Promising Future"
+    },
+    "vision": {
+      "title": "رؤيتنا"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "مرحباً بكم في سوق المفيجر",
+      "subtitle": "اكتشف التراث السعودي الأصيل واستمتع بتجربة التقاليد الثقافية الغنية للمملكة",
+      "cta": "احجز زيارتك"
+    },
+    "about": {
+      "title": "عن الموقع التراثي",
+      "description": "عد بالزمن إلى الوراء واستمتع بتجربة الحياة السعودية التقليدية في سوق المفيجر. استكشف العمارة الأصيلة والحرف التقليدية وانغمس في تراثنا الثقافي الغني."
+    },
+    "hours": {
+      "title": "ساعات العمل",
+      "satToThu": "السبت - الخميس",
+      "time": "٩:٠٠ صباحاً - ٦:٠٠ مساءً",
+      "friday": "الجمعة: مغلق"
+    },
+    "features": {
+      "heritage": "تجربة تراثية",
+      "heritageDesc": "عمارة وحرف تقليدية أصيلة",
+      "guided": "جولات إرشادية",
+      "guidedDesc": "مرشدون خبراء يشاركون التاريخ الغني",
+      "family": "مناسب للعائلات",
+      "familyDesc": "أنشطة لجميع الأعمار"
+    }
+  },
+  "booking": {
+    "title": "احجز زيارتك",
+    "steps": {
+      "tickets": "اختر التذاكر",
+      "ticketsAndDate": "التذاكر والتاريخ",
+      "datetime": "اختر التاريخ والوقت",
+      "details": "معلومات الزائر",
+      "detailsAndPayment": "البيانات والدفع",
+      "payment": "الدفع"
+    },
+    "tickets": {
+      "adult": "بالغ",
+      "child": "طفل (أقل من ١٢ سنة)",
+      "senior": "كبير السن (أكثر من ٦٠ سنة)",
+      "quantity": "الكمية",
+      "price": "السعر",
+      "total": "المجموع الكلي",
+      "perPerson": "للشخص",
+      "minRequired": "مطلوب تذكرة واحدة على الأقل"
+    },
+    "datetime": {
+      "selectDate": "اختر تاريخ الزيارة",
+      "selectTime": "اختر الوقت",
+      "available": "متاح",
+      "full": "ممتلئ",
+      "closed": "مغلق",
+      "spotsLeft": "أماكن متبقية",
+      "noSlots": "لا توجد أوقات متاحة لهذا التاريخ"
+    },
+    "details": {
+      "fullName": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الجوال",
+      "phonePlaceholder": "+966 5XX XXX XXXX",
+      "requests": "طلبات خاصة (اختياري)",
+      "requestsPlaceholder": "أي متطلبات أو طلبات خاصة..."
+    },
+    "payment": {
+      "secure": "دفع آمن",
+      "cardNumber": "رقم البطاقة",
+      "expiryDate": "تاريخ الانتهاء",
+      "cvv": "رمز الأمان",
+      "payNow": "ادفع الآن",
+      "processing": "جاري معالجة الدفع...",
+      "orderSummary": "ملخص الطلب"
+    },
+    "buttons": {
+      "continue": "متابعة",
+      "back": "رجوع",
+      "bookNow": "احجز الآن"
+    },
+    "validation": {
+      "nameRequired": "الاسم مطلوب",
+      "nameMin": "يجب أن يكون الاسم ٣ أحرف على الأقل",
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "emailInvalid": "يرجى إدخال بريد إلكتروني صحيح",
+      "phoneRequired": "رقم الجوال مطلوب",
+      "phoneInvalid": "يرجى إدخال رقم جوال سعودي صحيح (+966...)",
+      "dateRequired": "يرجى اختيار تاريخ",
+      "timeRequired": "يرجى اختيار وقت"
+    }
+  },
+  "confirmation": {
+    "title": "تم تأكيد الحجز!",
+    "subtitle": "تم إرسال التذاكر إلى بريدك الإلكتروني",
+    "bookingRef": "رقم الحجز",
+    "qrCode": "رمز QR للتذكرة",
+    "download": "تحميل رمز QR",
+    "instructions": "أظهر هذا الرمز عند المدخل",
+    "viewTickets": "عرض تذاكري",
+    "emailSent": "تم إرسال البريد الإلكتروني إلى",
+    "visitDetails": "تفاصيل الزيارة",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "tickets": "التذاكر",
+    "total": "المجموع المدفوع"
+  },
+  "scanner": {
+    "title": "ماسح التذاكر",
+    "scanPrompt": "وجه الكاميرا نحو رمز QR",
+    "manualLookup": "بحث يدوي",
+    "todayCount": "دخول اليوم",
+    "enterRef": "أدخل رقم الحجز",
+    "valid": {
+      "title": "تذكرة صالحة",
+      "welcome": "أهلاً وسهلاً!",
+      "entry": "يُسمح بالدخول"
+    },
+    "invalid": {
+      "title": "تذكرة غير صالحة",
+      "reason": "هذه التذكرة غير صالحة"
+    },
+    "used": {
+      "title": "تم المسح مسبقاً",
+      "reason": "تم استخدام التذكرة في"
+    },
+    "wrongDate": {
+      "title": "تاريخ خاطئ",
+      "validFor": "صالحة لـ",
+      "today": "اليوم هو"
+    },
+    "expired": {
+      "title": "تذكرة منتهية",
+      "validUntil": "صالحة حتى"
+    },
+    "cameraError": "تم رفض الوصول للكاميرا",
+    "cameraPermission": "يرجى السماح بالوصول للكاميرا لمسح التذاكر"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "لوحة التحكم",
+      "todayRevenue": "إيرادات اليوم",
+      "todayVisitors": "زوار اليوم",
+      "upcomingBookings": "الحجوزات القادمة",
+      "activeScans": "عمليات المسح النشطة",
+      "recentBookings": "الحجوزات الأخيرة",
+      "viewAll": "عرض الكل"
+    },
+    "tabs": {
+      "dashboard": "لوحة التحكم",
+      "bookings": "الحجوزات",
+      "reports": "التقارير",
+      "packages": "الباقات",
+      "attractions": "المعالم",
+      "corporate": "الشركات",
+      "messages": "الرسائل",
+      "staff": "الموظفين",
+      "settings": "الإعدادات"
+    },
+    "sales": {
+      "title": "تقرير المبيعات",
+      "dateRange": "نطاق التاريخ",
+      "revenue": "الإيرادات",
+      "export": "تصدير التقرير",
+      "today": "اليوم",
+      "thisWeek": "هذا الأسبوع",
+      "thisMonth": "هذا الشهر",
+      "custom": "نطاق مخصص"
+    },
+    "bookings": {
+      "title": "إدارة الحجوزات",
+      "search": "البحث في الحجوزات...",
+      "filters": "التصفيات",
+      "status": "الحالة",
+      "actions": "الإجراءات",
+      "noBookings": "لا توجد حجوزات",
+      "viewDetails": "عرض التفاصيل",
+      "resendEmail": "إعادة إرسال البريد",
+      "cancelBooking": "إلغاء الحجز",
+      "refund": "معالجة الاسترداد",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "settings": {
+      "title": "الإعدادات",
+      "pricing": "أسعار التذاكر",
+      "hours": "ساعات العمل",
+      "capacity": "حدود السعة",
+      "closedDates": "تواريخ الإغلاق",
+      "saved": "تم حفظ الإعدادات بنجاح"
+    },
+    "staff": {
+      "title": "إدارة الموظفين",
+      "addStaff": "إضافة موظف",
+      "role": "الدور",
+      "status": "الحالة",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "lastLogin": "آخر تسجيل دخول",
+      "never": "أبداً"
+    },
+    "messages": {
+      "title": "رسائل التواصل",
+      "from": "من",
+      "subject": "الموضوع",
+      "date": "تاريخ الاستلام",
+      "status": "الحالة",
+      "unread": "غير مقروء",
+      "read": "مقروء",
+      "resolved": "تم الرد",
+      "noMessages": "لا توجد رسائل",
+      "markAsRead": "تحديد كمقروء",
+      "markResolved": "تم الرد",
+      "adminNotes": "ملاحظات المدير",
+      "saveNotes": "حفظ الملاحظات",
+      "confirmDelete": "تأكيد الحذف",
+      "deleteMessage": "هل أنت متأكد من حذف هذه الرسالة؟ لا يمكن التراجع عن هذا الإجراء."
+    },
+    "corporate": {
+      "title": "طلبات الشركات",
+      "organization": "المنظمة",
+      "contactPerson": "المسؤول",
+      "groupSize": "عدد الأشخاص",
+      "preferredDates": "التواريخ المفضلة",
+      "groupType": "نوع المجموعة",
+      "status": "الحالة",
+      "pending": "قيد الانتظار",
+      "contacted": "تم التواصل",
+      "quoted": "تم عرض السعر",
+      "confirmed": "مؤكد",
+      "cancelled": "ملغي",
+      "noRequests": "لا توجد طلبات حجوزات شركات",
+      "specialRequirements": "متطلبات خاصة",
+      "quotedAmount": "المبلغ المعروض",
+      "requestDetails": "تفاصيل الطلب",
+      "people": "شخص",
+      "types": {
+        "corporate": "بناء فرق الشركات",
+        "school": "مدرسي / تعليمي",
+        "wedding": "حفل زفاف / مناسبة خاصة",
+        "conference": "مؤتمر / حدث تجاري",
+        "other": "أخرى"
+      }
+    },
+    "support": {
+      "title": "الدعم الفني - AYN",
+      "subtitle": "أرسل المشاكل التقنية لفريق التطوير",
+      "newTicket": "إرسال طلب جديد",
+      "newTicketDesc": "صف المشكلة التي تواجهها وسيقوم فريقنا بمراجعتها",
+      "subject": "الموضوع",
+      "subjectPlaceholder": "ملخص موجز للمشكلة",
+      "category": "الفئة",
+      "priority": "الأولوية",
+      "description": "الوصف",
+      "descriptionPlaceholder": "قدم معلومات تفصيلية عن المشكلة، بما في ذلك خطوات إعادة إنتاجها إن أمكن...",
+      "minChars": "الحد الأدنى {{count}} حرف مطلوب",
+      "submit": "إرسال الطلب",
+      "history": "سجل الطلبات",
+      "historyDesc": "{{count}} طلب مرسل",
+      "noTickets": "لا توجد طلبات دعم مرسلة بعد",
+      "ticketCreated": "تم إنشاء الطلب #{{id}} بنجاح",
+      "confirmationSent": "تم إرسال بريد تأكيد إلى بريدك الإلكتروني",
+      "ticketDeleted": "تم حذف الطلب",
+      "ticketDeletedDesc": "تم إزالة طلب الدعم",
+      "statusUpdated": "تم تحديث الحالة",
+      "statusUpdatedDesc": "تم تحديث حالة الطلب",
+      "markResolved": "تم الحل",
+      "delete": "حذف",
+      "deleteConfirmTitle": "حذف الطلب؟",
+      "deleteConfirmDesc": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف الطلب نهائياً.",
+      "aynResponse": "رد AYN",
+      "categories": {
+        "bug": "تقرير خطأ",
+        "feature": "طلب ميزة",
+        "question": "سؤال",
+        "other": "أخرى"
+      },
+      "priorities": {
+        "low": "منخفضة",
+        "medium": "متوسطة",
+        "high": "عالية",
+        "critical": "حرجة"
+      },
+      "statuses": {
+        "pending": "قيد الانتظار",
+        "in_progress": "قيد المعالجة",
+        "resolved": "تم الحل",
+        "closed": "مغلق"
+      }
+    }
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "loginButton": "تسجيل الدخول",
+    "loggingIn": "جاري تسجيل الدخول...",
+    "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "staffOnly": "وصول الموظفين فقط"
+  },
+  "errors": {
+    "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "network": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
+    "notFound": "غير موجود",
+    "unauthorized": "وصول غير مصرح به",
+    "paymentFailed": "فشل الدفع. يرجى المحاولة مرة أخرى."
+  },
+  "contact": {
+    "title": "تواصل معنا",
+    "subtitle": "يسعدنا تواصلكم معنا. أرسل لنا رسالة وسنرد عليك في أقرب وقت ممكن.",
+    "success": "تم إرسال رسالتك بنجاح!",
+    "error": "فشل إرسال الرسالة. يرجى المحاولة مرة أخرى.",
+    "form": {
+      "title": "أرسل لنا رسالة",
+      "name": "الاسم الكامل",
+      "namePlaceholder": "أدخل اسمك الكامل",
+      "email": "البريد الإلكتروني",
+      "emailPlaceholder": "أدخل بريدك الإلكتروني",
+      "phone": "رقم الهاتف (اختياري)",
+      "subject": "الموضوع",
+      "subjectPlaceholder": "كيف يمكننا مساعدتك؟",
+      "message": "الرسالة",
+      "messagePlaceholder": "اكتب رسالتك هنا...",
+      "send": "إرسال الرسالة",
+      "sending": "جاري الإرسال...",
+      "successTitle": "تم إرسال الرسالة!",
+      "successMessage": "شكراً لتواصلك معنا. سنرد عليك قريباً.",
+      "sendAnother": "إرسال رسالة أخرى"
+    },
+    "map": {
+      "title": "موقعنا"
+    }
+  },
+  "myTickets": {
+    "title": "تذاكري",
+    "subtitle": "أدخل بريدك الإلكتروني لاسترجاع تذاكر حجزك",
+    "emailPlaceholder": "أدخل البريد الإلكتروني المستخدم للحجز",
+    "lookup": "البحث عن التذاكر",
+    "lookingUp": "جاري البحث...",
+    "noBookings": "لا توجد حجوزات لهذا البريد الإلكتروني",
+    "tryAgain": "يرجى التحقق من عنوان البريد الإلكتروني والمحاولة مرة أخرى.",
+    "downloadQR": "تحميل رمز QR",
+    "viewFullscreen": "عرض بملء الشاشة",
+    "ticketType": {
+      "adult": "بالغ",
+      "child": "طفل"
+    },
+    "status": {
+      "valid": "صالحة",
+      "used": "مستخدمة",
+      "expired": "منتهية"
+    }
+  },
+  "groupBookings": {
+    "title": "حجوزات الشركات والمجموعات",
+    "subtitle": "تخطط لزيارة مع ٢٠ شخصاً أو أكثر؟ نقدم باقات خاصة وتجارب مخصصة للمجموعات.",
+    "benefits": {
+      "title": "مزايا المجموعات",
+      "discounts": "خصومات خاصة",
+      "discountsDesc": "أسعار مميزة للمجموعات من ٢٠+ شخص",
+      "guide": "مرشد مخصص",
+      "guideDesc": "مرشد سياحي خاص لمجموعتك",
+      "flexible": "مواعيد مرنة",
+      "flexibleDesc": "اختر التاريخ والوقت المناسب لك",
+      "catering": "خيارات الضيافة",
+      "cateringDesc": "ضيافة تقليدية متوفرة"
+    },
+    "form": {
+      "title": "طلب حجز جماعي",
+      "organization": "اسم المنظمة",
+      "organizationPlaceholder": "اسم الشركة أو المنظمة",
+      "contact": "المسؤول",
+      "contactPlaceholder": "اسمك الكامل",
+      "email": "البريد الإلكتروني",
+      "emailPlaceholder": "your@email.com",
+      "phone": "رقم الهاتف",
+      "phonePlaceholder": "+966 5XX XXX XXXX",
+      "groupSize": "عدد الأشخاص",
+      "groupSizePlaceholder": "عدد الأشخاص",
+      "groupType": "نوع المجموعة",
+      "selectType": "اختر نوع المجموعة",
+      "preferredDates": "التواريخ المفضلة",
+      "addDate": "إضافة تاريخ آخر",
+      "specialRequirements": "متطلبات خاصة",
+      "specialRequirementsPlaceholder": "أي احتياجات أو طلبات خاصة...",
+      "submit": "إرسال الطلب",
+      "submitting": "جاري الإرسال...",
+      "success": "تم إرسال الطلب بنجاح! سنتواصل معك خلال ٢٤-٤٨ ساعة.",
+      "error": "فشل إرسال الطلب. يرجى المحاولة مرة أخرى."
+    },
+    "types": {
+      "corporate": "بناء فرق الشركات",
+      "school": "رحلة مدرسية / تعليمية",
+      "wedding": "حفل زفاف / مناسبة خاصة",
+      "conference": "مؤتمر / حدث تجاري",
+      "other": "أخرى"
+    }
+  }
+}
