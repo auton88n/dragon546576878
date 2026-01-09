@@ -621,18 +621,18 @@ export function CustomInvoicesPanel() {
 
               {/* Expiration */}
               <div className="space-y-2">
-                <Label>{isArabic ? 'صلاحية الرابط' : 'Link Expires In'}</Label>
-                <Select value={expiresIn} onValueChange={setExpiresIn}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">{isArabic ? '3 أيام' : '3 days'}</SelectItem>
-                    <SelectItem value="7">{isArabic ? '7 أيام' : '7 days'}</SelectItem>
-                    <SelectItem value="14">{isArabic ? '14 يوم' : '14 days'}</SelectItem>
-                    <SelectItem value="30">{isArabic ? '30 يوم' : '30 days'}</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>{isArabic ? 'صلاحية الرابط (بالأيام)' : 'Link Expires In (days)'}</Label>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  value={expiresIn}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, '');
+                    setExpiresIn(value);
+                  }}
+                  placeholder={isArabic ? 'مثال: 10' : 'e.g. 10'}
+                  dir="ltr"
+                />
               </div>
 
               {/* Notes */}
