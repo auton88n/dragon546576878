@@ -666,6 +666,50 @@ const ScannerPage = () => {
     }
   }, []);
 
+  // State for group ticket admission
+  const [groupResult, setGroupResult] = useState<GroupTicketValidationResult | null>(null);
+  const [isAdmittingGroup, setIsAdmittingGroup] = useState(false);
+
+  const handleAdmitGroup = useCallback(async () => {
+    if (!groupResult?.booking || isAdmittingGroup) return;
+    setIsAdmittingGroup(true);
+    try {
+      await markBookingAsArrived(groupResult.booking.id, user?.id);
+      playSound('success');
+      toast.success(isArabic ? 'تم تسجيل وصول المجموعة' : 'Group admitted successfully');
+      
+      // Update the result to show as arrived
+      setGroupResult(prev => prev ? { ...prev, status: 'arrived', booking: { ...prev.booking!, arrivalStatus: 'arrived' } } : null);
+      
+      // Add to recent scans
+      setRecentScans(prev => [{
+        timestamp: new Date(),
+        status: 'arrived',
+        customerName: groupResult.booking.customerName,
+        bookingReference: groupResult.booking.bookingReference,
+        adultCount: groupResult.booking.adultCount,
+        childCount: groupResult.booking.childCount,
+        isGroupTicket: true,
+        totalGuests: groupResult.booking.totalGuests,
+        arrivalStatus: 'arrived',
+        bookingId: groupResult.booking.id,
+        paymentStatus: groupResult.booking.paymentStatus,
+      }, ...prev.slice(0, 9)]);
+      
+      // Update stats
+      setTodayStats(prev => ({
+        ...prev,
+        totalScans: prev.totalScans + 1,
+        validScans: prev.validScans + 1,
+      }));
+    } catch (err) {
+      console.error('Error admitting group:', err);
+      toast.error(isArabic ? 'فشل تسجيل الوصول' : 'Failed to admit group');
+    } finally {
+      setIsAdmittingGroup(false);
+    }
+  }, [groupResult, isAdmittingGroup, user?.id, playSound, isArabic]);
+
   const onScanSuccess = useCallback(async (decodedText: string) => {
     // Single-thread lock to prevent race conditions from rapid callbacks
     if (isProcessingScanRef.current) {
@@ -751,6 +795,7 @@ const ScannerPage = () => {
           message: isArabic ? 'رمز QR غير معروف' : 'Unrecognized QR code',
         } as TicketValidationResult);
         setIsEmployeeResult(false);
+        setGroupResult(null);
         setShowResultOverlay(true);
         playFeedback('error');
 
@@ -771,10 +816,56 @@ const ScannerPage = () => {
         return;
       }
 
-      // Standard ticket validation (kind === 'ticket')
+      // Check if this is a GROUP ticket (new format)
+      if (kind === 'group') {
+        const grpResult = await validateGroupTicket(normalizedText);
+        setGroupResult(grpResult);
+        setCurrentResult(null);
+        setIsEmployeeResult(false);
+        setShowResultOverlay(true);
+
+        if (grpResult.isValid) {
+          playFeedback('success');
+        } else if (grpResult.status === 'arrived') {
+          playFeedback('warning');
+        } else {
+          playFeedback('error');
+        }
+
+        // Add to recent scans
+        if (grpResult.booking) {
+          setRecentScans(prev => [{
+            timestamp: new Date(),
+            status: grpResult.status,
+            customerName: grpResult.booking?.customerName,
+            bookingReference: grpResult.booking?.bookingReference,
+            adultCount: grpResult.booking?.adultCount,
+            childCount: grpResult.booking?.childCount,
+            isGroupTicket: true,
+            totalGuests: grpResult.booking?.totalGuests,
+            arrivalStatus: grpResult.booking?.arrivalStatus,
+            bookingId: grpResult.booking?.id,
+            paymentStatus: grpResult.booking?.paymentStatus,
+          }, ...prev.slice(0, 9)]);
+        }
+
+        setTodayStats(prev => ({
+          ...prev,
+          totalScans: prev.totalScans + 1,
+          validScans: grpResult.isValid ? prev.validScans + 1 : prev.validScans,
+          invalidScans: ['invalid', 'not_found', 'wrong_date', 'expired', 'not_paid'].includes(grpResult.status) ? prev.invalidScans + 1 : prev.invalidScans,
+          usedScans: grpResult.status === 'arrived' ? prev.usedScans + 1 : prev.usedScans,
+        }));
+
+        // Don't auto-dismiss for group tickets - user needs to tap "Admit"
+        return;
+      }
+
+      // Standard individual ticket validation (kind === 'ticket' - backward compatibility)
       const result = await validateTicket(normalizedText);
       setCurrentResult(result);
       setIsEmployeeResult(false);
+      setGroupResult(null);
       setShowResultOverlay(true);
 
       if (result.isValid) {
@@ -1002,8 +1093,138 @@ const ScannerPage = () => {
         queueCount={queueLength}
       />
 
-      {/* Result Overlay */}
-      {showResultOverlay && currentResult && (
+      {/* Result Overlay - Group Tickets */}
+      {showResultOverlay && groupResult && (
+        <div 
+          className={cn(
+            'fixed inset-0 z-50 flex flex-col items-center justify-center text-white p-6 animate-fade-in',
+            groupResult.status === 'valid' ? 'bg-success' :
+            groupResult.status === 'arrived' ? 'bg-warning' :
+            groupResult.status === 'not_paid' ? 'bg-amber-600' :
+            'bg-destructive'
+          )}
+        >
+          {/* Status Icon */}
+          <div className="scale-125 mb-2">
+            {groupResult.status === 'valid' ? <CheckCircle className="h-24 w-24" /> :
+             groupResult.status === 'arrived' ? <AlertTriangle className="h-24 w-24" /> :
+             <XCircle className="h-24 w-24" />}
+          </div>
+          
+          {/* Status Text */}
+          <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-2 text-center leading-tight">
+            {groupResult.status === 'valid' ? (isArabic ? 'حجز صالح' : 'Valid Reservation') :
+             groupResult.status === 'arrived' ? (isArabic ? 'وصلوا مسبقاً' : 'Already Arrived') :
+             groupResult.status === 'not_paid' ? (isArabic ? 'لم يتم الدفع' : 'Not Paid') :
+             groupResult.status === 'wrong_date' ? (isArabic ? 'تاريخ خاطئ' : 'Wrong Date') :
+             groupResult.status === 'expired' ? (isArabic ? 'منتهي الصلاحية' : 'Expired') :
+             (isArabic ? 'حجز غير صالح' : 'Invalid Reservation')}
+          </h2>
+          
+          {/* Booking Details Card */}
+          {groupResult.booking && (
+            <div className="bg-white/25 backdrop-blur-md rounded-2xl p-5 text-center border-2 border-white/40 w-full max-w-sm shadow-2xl mt-4">
+              {/* Customer Name */}
+              <p className="text-2xl md:text-3xl font-bold mb-2">{groupResult.booking.customerName}</p>
+              
+              {/* Booking Reference */}
+              <p className="text-lg opacity-90 font-mono mb-3">{groupResult.booking.bookingReference}</p>
+              
+              {/* Large Guest Count */}
+              <div className="bg-white/30 rounded-xl py-4 px-6 mb-4">
+                <div className="text-5xl font-bold mb-2">{groupResult.booking.totalGuests}</div>
+                <div className="text-lg opacity-90">{isArabic ? 'إجمالي الزوار' : 'Total Guests'}</div>
+                
+                {/* Breakdown */}
+                <div className="flex items-center justify-center gap-4 mt-3 text-base">
+                  {groupResult.booking.adultCount > 0 && (
+                    <span className="flex items-center gap-1">
+                      <User className="h-4 w-4" />
+                      {groupResult.booking.adultCount} {isArabic ? 'بالغ' : 'Adult'}
+                    </span>
+                  )}
+                  {groupResult.booking.childCount > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Baby className="h-4 w-4" />
+                      {groupResult.booking.childCount} {isArabic ? 'طفل' : 'Child'}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Payment Warning for unpaid */}
+              {groupResult.status === 'not_paid' && groupResult.booking.totalAmount && (
+                <div className="flex flex-col items-center gap-3 mb-4">
+                  <div className="bg-red-600 text-white rounded-xl px-6 py-2 text-lg font-bold animate-pulse flex items-center gap-2 shadow-lg">
+                    <Banknote className="h-5 w-5" />
+                    <span>{isArabic ? '⚠️ لم يتم الدفع' : '⚠️ NOT PAID'}</span>
+                  </div>
+                  <div className="bg-white text-red-600 rounded-xl px-6 py-3 font-bold text-xl shadow-lg border-2 border-red-600">
+                    <span className="font-mono">{groupResult.booking.totalAmount} SAR</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Visit Date */}
+              <p className="text-sm opacity-80">
+                {isArabic ? 'التاريخ: ' : 'Date: '}
+                {new Date(groupResult.booking.visitDate).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </p>
+              
+              {/* Arrived At (for already arrived) */}
+              {groupResult.status === 'arrived' && groupResult.booking.arrivedAt && (
+                <p className="text-sm opacity-90 mt-2">
+                  {isArabic ? 'وصلوا: ' : 'Arrived: '}
+                  {new Date(groupResult.booking.arrivedAt).toLocaleTimeString(isArabic ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+          )}
+          
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3 mt-6 w-full max-w-sm">
+            {/* Admit Group Button - Only show for valid groups */}
+            {groupResult.status === 'valid' && groupResult.booking && (
+              <Button
+                size="lg"
+                className="bg-white text-success hover:bg-white/90 text-xl px-8 py-8 h-auto gap-3 shadow-xl font-bold rounded-xl w-full"
+                disabled={isAdmittingGroup}
+                onClick={handleAdmitGroup}
+              >
+                {isAdmittingGroup ? (
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                ) : (
+                  <Users className="h-8 w-8" />
+                )}
+                {isArabic 
+                  ? `دخول ${groupResult.booking.totalGuests} زوار` 
+                  : `Admit ${groupResult.booking.totalGuests} Guests`}
+              </Button>
+            )}
+            
+            {/* Close Button */}
+            <Button
+              size="lg"
+              variant="ghost"
+              className="text-white border-2 border-white/40 hover:bg-white/20 text-lg px-8 py-4 h-auto gap-2 rounded-xl"
+              onClick={() => {
+                setShowResultOverlay(false);
+                setGroupResult(null);
+                isProcessingScanRef.current = false;
+                if (scannerRef.current) {
+                  try { scannerRef.current.resume(); } catch (e) {}
+                }
+              }}
+            >
+              <X className="h-5 w-5" />
+              {isArabic ? 'إغلاق' : 'Close'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Result Overlay - Individual Tickets (backward compatibility) */}
+      {showResultOverlay && currentResult && !groupResult && (
         <div 
           className={cn('fixed inset-0 z-50 flex flex-col items-center justify-center text-white p-6 animate-fade-in cursor-pointer', getStatusColor(currentResult.status, isEmployeeResult))}
           onClick={dismissResult}

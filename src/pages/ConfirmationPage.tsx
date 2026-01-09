@@ -539,6 +539,10 @@ const ConfirmationPage = () => {
       </div>;
   }
   const totalTickets = booking.adult_count + booking.child_count + (booking.senior_count || 0);
+  
+  // Get the group ticket (new format) or first ticket (backward compatibility)
+  const groupTicket = tickets.find(t => t.ticket_type === 'group') || tickets[0];
+  
   return <div className={`min-h-screen flex flex-col bg-background overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
@@ -606,7 +610,7 @@ const ConfirmationPage = () => {
                         {isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
                       </div>
                       <div className="text-primary-foreground/70 text-sm">
-                        {isArabic ? 'تذكرة دخول' : 'Entry Pass'}
+                        {isArabic ? 'تذكرة دخول جماعية' : 'Group Entry Pass'}
                       </div>
                     </div>
                   </div>
@@ -658,29 +662,29 @@ const ConfirmationPage = () => {
                           {isArabic ? 'الوقت' : 'Time'}
                         </div>
                         <div className="font-semibold text-foreground">
-                          {formatTimeDisplay(booking.visit_time)}
+                          {isArabic ? 'صالحة طوال اليوم' : 'Valid All Day'}
                         </div>
                       </div>
                     </div>
 
-                    {/* Tickets & Location */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {isArabic ? 'التذاكر' : 'Tickets'}
-                        </div>
-                        <div className="font-semibold text-foreground">
-                          {totalTickets} {isArabic ? 'تذكرة' : `ticket${totalTickets > 1 ? 's' : ''}`}
-                        </div>
+                    {/* Guest Count - PROMINENT */}
+                    <div className="bg-secondary/50 rounded-xl p-4">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        {isArabic ? 'عدد الزوار' : 'Total Guests'}
                       </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {isArabic ? 'الموقع' : 'Location'}
-                        </div>
-                        <div className="font-semibold text-foreground">
-                          {isArabic ? 'المفيجر' : 'Almufaijer'}
+                      <div className="flex items-center gap-4">
+                        <div className="text-4xl font-bold text-accent">{totalTickets}</div>
+                        <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                          {booking.adult_count > 0 && (
+                            <span>{booking.adult_count} {isArabic ? 'بالغ' : 'Adult'}{booking.adult_count > 1 && !isArabic ? 's' : ''}</span>
+                          )}
+                          {booking.child_count > 0 && (
+                            <span>{booking.child_count} {isArabic ? 'طفل' : 'Child'}{booking.child_count > 1 && !isArabic ? 'ren' : ''}</span>
+                          )}
+                          {booking.senior_count > 0 && (
+                            <span>{booking.senior_count} {isArabic ? 'كبير سن' : 'Senior'}{booking.senior_count > 1 && !isArabic ? 's' : ''}</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -698,28 +702,28 @@ const ConfirmationPage = () => {
                     <div className="absolute -right-6 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background" />
                   </div>
 
-                  {/* Right Side - QR Code or Payment Required */}
-                  <div className="flex flex-col items-center justify-center md:w-48">
+                  {/* Right Side - Single Large QR Code */}
+                  <div className="flex flex-col items-center justify-center md:w-56">
                     {booking.payment_status === 'pending' ? (
                       // Payment not completed - show payment required message
-                      <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 flex flex-col items-center justify-center p-4">
+                      <div className="w-48 h-48 md:w-56 md:h-56 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 flex flex-col items-center justify-center p-4">
                         <AlertCircle className="h-12 w-12 text-amber-600 dark:text-amber-400 mb-2" />
                         <p className="text-center text-sm font-medium text-amber-800 dark:text-amber-300">
                           {isArabic ? 'أكمل الدفع لاستلام التذاكر' : 'Complete payment to receive tickets'}
                         </p>
                       </div>
-                    ) : tickets[0]?.qr_code_url ? (
+                    ) : groupTicket?.qr_code_url ? (
                       <button onClick={() => setFullscreenQR({
-                        url: tickets[0].qr_code_url!,
-                        code: tickets[0].ticket_code
+                        url: groupTicket.qr_code_url!,
+                        code: groupTicket.ticket_code
                       })} className="p-3 bg-white rounded-2xl shadow-inner border-2 border-accent/20 hover:border-accent/40 hover:shadow-lg transition-all cursor-pointer group relative" aria-label={isArabic ? 'اضغط لتكبير رمز QR' : 'Tap to enlarge QR code'}>
-                        <img src={tickets[0].qr_code_url} alt="QR Code" className="w-40 h-40 md:w-48 md:h-48" />
+                        <img src={groupTicket.qr_code_url} alt="Group QR Code" className="w-48 h-48 md:w-56 md:h-56" />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 rounded-2xl transition-colors">
                           <Maximize2 className="h-8 w-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
                         </div>
                       </button>
                     ) : (
-                      <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl bg-muted flex items-center justify-center">
+                      <div className="w-48 h-48 md:w-56 md:h-56 rounded-2xl bg-muted flex items-center justify-center">
                         <QrCode className="h-12 w-12 text-muted-foreground" />
                       </div>
                     )}
@@ -729,12 +733,15 @@ const ConfirmationPage = () => {
                           {isArabic ? 'أكمل الدفع' : 'Complete Payment'}
                         </Button>
                       </Link>
-                    ) : tickets[0]?.qr_code_url && (
+                    ) : groupTicket?.qr_code_url && (
                       <>
                         <Badge className="mt-3 bg-accent/20 text-accent border-accent/30">
                           {isArabic ? 'اضغط للتكبير' : 'TAP TO ENLARGE'}
                         </Badge>
-                        <ScanningTips className="mt-3 w-full max-w-[200px]" />
+                        <p className="text-xs text-muted-foreground mt-2 text-center">
+                          {isArabic ? 'رمز QR واحد للمجموعة كلها' : 'One QR for entire group'}
+                        </p>
+                        <ScanningTips className="mt-3 w-full max-w-[220px]" />
                       </>
                     )}
                   </div>
@@ -756,44 +763,12 @@ const ConfirmationPage = () => {
                     </span>
                   </div>
                   <div className="text-muted-foreground">
-                    {isArabic ? 'تذكرة إلكترونية' : 'E-Ticket'}
+                    {isArabic ? 'تذكرة جماعية' : 'Group Ticket'}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Individual Tickets Section - ONLY SHOW IF PAYMENT COMPLETED AND TICKETS EXIST */}
-          {booking.payment_status === 'completed' && tickets.length > 1 && <div className="mb-8 animate-slide-up" style={{
-          animationDelay: '0.25s'
-        }}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <QrCode className="h-5 w-5 text-accent" />
-                  {isArabic ? 'جميع التذاكر' : 'All Tickets'}
-                </h3>
-                <Badge variant="outline" className="border-green-500 text-green-600">
-                  {isArabic ? 'امسح هذه عند الدخول' : 'Scan these at entrance'}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {tickets.map((ticket, index) => <div key={ticket.id} className={`glass-card p-3 rounded-xl border text-center ${ticket.is_used ? 'bg-muted/50 border-muted opacity-60' : 'border-accent/20'}`}>
-                    {ticket.qr_code_url ? <img src={ticket.qr_code_url} alt={`Ticket ${index + 1}`} className="w-full aspect-square rounded-lg mb-2" /> : <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center mb-2">
-                        <QrCode className="h-8 w-8 text-muted-foreground" />
-                      </div>}
-                    <div className="text-xs font-mono text-muted-foreground truncate mb-1">
-                      {ticket.ticket_code}
-                    </div>
-                    <Badge variant={ticket.is_used ? 'secondary' : 'outline'} className="text-[10px]">
-                      {ticket.is_used ? isArabic ? 'مستخدمة' : 'Used' : isArabic ? ticket.ticket_type === 'adult' ? 'بالغ' : 'طفل' : ticket.ticket_type.charAt(0).toUpperCase() + ticket.ticket_type.slice(1)}
-                    </Badge>
-                    {ticket.qr_code_url && !ticket.is_used && <Button size="sm" variant="ghost" className="mt-2 w-full h-7 text-xs" onClick={() => handleDownloadSingleTicket(ticket)}>
-                        <Download className="h-3 w-3 mr-1" />
-                        {isArabic ? 'تحميل' : 'Download'}
-                      </Button>}
-                  </div>)}
-              </div>
-            </div>}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 mb-8 animate-slide-up" style={{
