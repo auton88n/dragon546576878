@@ -348,7 +348,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
               <h3 className="font-semibold text-foreground text-start rtl:text-end">
                 {isArabic ? 'رموز QR' : 'QR Codes'} ({tickets.length})
               </h3>
-              {booking.payment_status === 'completed' && tickets.length === 0 && (
+              {booking.payment_status === 'completed' && (tickets.length === 0 || !booking.qr_codes_generated) && (
                 <Button 
                   size="sm" 
                   variant="outline" 
