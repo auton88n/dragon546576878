@@ -112,6 +112,8 @@ const RefundsPanel = () => {
     payment: OrphanPayment;
   } | null>(null);
   const [orphanRefundAmount, setOrphanRefundAmount] = useState('');
+  const [orphanRefundEmail, setOrphanRefundEmail] = useState('');
+  const [orphanRefundReason, setOrphanRefundReason] = useState('');
   const [processingOrphanRefund, setProcessingOrphanRefund] = useState(false);
 
   useEffect(() => {
@@ -405,6 +407,8 @@ const RefundsPanel = () => {
   const handleOpenOrphanRefundDialog = (payment: OrphanPayment) => {
     setOrphanRefundDialog({ open: true, payment });
     setOrphanRefundAmount(String(payment.amount));
+    setOrphanRefundEmail('');
+    setOrphanRefundReason('');
   };
 
   // Process orphan payment refund
@@ -417,7 +421,8 @@ const RefundsPanel = () => {
         body: {
           paymentId: orphanRefundDialog.payment.id,
           amount: amountInHalalas,
-          reason: 'Orphan payment refund from admin panel',
+          customerEmail: orphanRefundEmail.trim() || undefined,
+          reason: orphanRefundReason.trim() || undefined,
         }
       });
       if (error) throw error;
@@ -901,20 +906,53 @@ const RefundsPanel = () => {
                 : `Payment ID: ${orphanRefundDialog?.payment.id.slice(0, 12)}...`}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4">
-            <label className="text-sm font-medium">
-              {isArabic ? 'مبلغ الاسترداد (ر.س)' : 'Refund Amount (SAR)'}
-            </label>
-            <Input
-              type="number"
-              value={orphanRefundAmount}
-              onChange={(e) => setOrphanRefundAmount(e.target.value)}
-              max={orphanRefundDialog?.payment.amount}
-              className="mt-1"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              {isArabic ? 'الحد الأقصى:' : 'Max:'} {orphanRefundDialog?.payment.amount} SAR
-            </p>
+          <div className="py-4 space-y-4">
+            {/* Customer Email */}
+            <div>
+              <label className="text-sm font-medium">
+                {isArabic ? 'البريد الإلكتروني للعميل' : 'Customer Email'}
+              </label>
+              <Input
+                type="email"
+                value={orphanRefundEmail}
+                onChange={(e) => setOrphanRefundEmail(e.target.value)}
+                placeholder="customer@example.com"
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {isArabic ? 'سيتم إرسال إشعار اعتذار للعميل' : 'An apology notification will be sent'}
+              </p>
+            </div>
+
+            {/* Refund Amount */}
+            <div>
+              <label className="text-sm font-medium">
+                {isArabic ? 'مبلغ الاسترداد (ر.س)' : 'Refund Amount (SAR)'}
+              </label>
+              <Input
+                type="number"
+                value={orphanRefundAmount}
+                onChange={(e) => setOrphanRefundAmount(e.target.value)}
+                max={orphanRefundDialog?.payment.amount}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {isArabic ? 'الحد الأقصى:' : 'Max:'} {orphanRefundDialog?.payment.amount} SAR
+              </p>
+            </div>
+
+            {/* Reason */}
+            <div>
+              <label className="text-sm font-medium">
+                {isArabic ? 'سبب الاسترداد (اختياري)' : 'Reason (optional)'}
+              </label>
+              <Input
+                value={orphanRefundReason}
+                onChange={(e) => setOrphanRefundReason(e.target.value)}
+                placeholder={isArabic ? 'مثال: دفعة مكررة' : 'e.g. Duplicate payment'}
+                className="mt-1"
+              />
+            </div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>{isArabic ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
