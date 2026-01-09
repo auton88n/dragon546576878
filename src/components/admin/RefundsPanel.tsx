@@ -3,8 +3,9 @@ import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { 
   AlertTriangle, Search, Undo2, RefreshCw, 
-  Users, DollarSign, CheckCircle, XCircle, Mail, Link, CreditCard, Copy 
+  Users, DollarSign, CheckCircle, XCircle, Mail, Link, CreditCard, Copy, Eye 
 } from 'lucide-react';
+import { generateRefundApologyPreview } from '@/lib/emailPreviewTemplates';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -115,6 +116,7 @@ const RefundsPanel = () => {
   const [orphanRefundEmail, setOrphanRefundEmail] = useState('');
   const [orphanRefundReason, setOrphanRefundReason] = useState('');
   const [processingOrphanRefund, setProcessingOrphanRefund] = useState(false);
+  const [showRefundEmailPreview, setShowRefundEmailPreview] = useState(false);
 
   useEffect(() => {
     fetchDuplicates();
@@ -678,9 +680,21 @@ const RefundsPanel = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-sm text-amber-600 font-medium">
-                    {orphanPayments.length} {isArabic ? 'مدفوعات غير مرتبطة' : 'unlinked payments found'}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-amber-600 font-medium">
+                      {orphanPayments.length} {isArabic ? 'مدفوعات غير مرتبطة' : 'unlinked payments found'}
+                    </p>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={fetchOrphanPayments} 
+                      disabled={loadingOrphans}
+                      className="gap-1"
+                    >
+                      <RefreshCw className={`h-3 w-3 ${loadingOrphans ? 'animate-spin' : ''}`} />
+                      {isArabic ? 'تحديث' : 'Refresh'}
+                    </Button>
+                  </div>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -714,7 +728,9 @@ const RefundsPanel = () => {
                             </div>
                           </TableCell>
                           <TableCell className="font-medium">{payment.amount} SAR</TableCell>
-                          <TableCell className="text-sm max-w-[150px] truncate">{payment.description || '-'}</TableCell>
+                          <TableCell className="text-sm" title={payment.description || '-'}>
+                            <span className="line-clamp-2">{payment.description || '-'}</span>
+                          </TableCell>
                           <TableCell className="text-sm">{formatDateTime(payment.createdAt)}</TableCell>
                           <TableCell>
                             <div className="flex gap-1">
@@ -953,6 +969,19 @@ const RefundsPanel = () => {
                 className="mt-1"
               />
             </div>
+
+            {/* Preview Email Button */}
+            {orphanRefundEmail.trim() && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowRefundEmailPreview(true)}
+                className="w-full gap-2"
+              >
+                <Eye className="h-4 w-4" />
+                {isArabic ? 'معاينة البريد' : 'Preview Email'}
+              </Button>
+            )}
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>{isArabic ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
@@ -960,6 +989,51 @@ const RefundsPanel = () => {
               {processingOrphanRefund ? <RefreshCw className="h-4 w-4 animate-spin me-2" /> : null}
               {isArabic ? 'تأكيد الاسترداد' : 'Confirm Refund'}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Refund Email Preview Dialog */}
+      <AlertDialog open={showRefundEmailPreview} onOpenChange={setShowRefundEmailPreview}>
+        <AlertDialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              {isArabic ? 'معاينة بريد الاعتذار' : 'Refund Apology Email Preview'}
+            </AlertDialogTitle>
+            <div className="flex gap-2 mt-2">
+              <Button
+                size="sm"
+                variant={isArabic ? "outline" : "default"}
+                onClick={() => {/* Toggle handled by isArabic */}}
+                disabled
+              >
+                English
+              </Button>
+              <Button
+                size="sm"
+                variant={isArabic ? "default" : "outline"}
+                onClick={() => {/* Toggle handled by isArabic */}}
+                disabled
+              >
+                العربية
+              </Button>
+            </div>
+          </AlertDialogHeader>
+          <div className="flex-1 overflow-auto border rounded-lg bg-muted/30">
+            <iframe
+              srcDoc={generateRefundApologyPreview(
+                parseFloat(orphanRefundAmount) || orphanRefundDialog?.payment.amount || 0,
+                orphanRefundDialog?.payment.id || 'SAMPLE_PAYMENT_ID',
+                orphanRefundReason.trim() || undefined,
+                isArabic
+              )}
+              className="w-full h-[500px] border-0"
+              title="Email Preview"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isArabic ? 'إغلاق' : 'Close'}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

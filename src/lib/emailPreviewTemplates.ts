@@ -26,6 +26,166 @@ export const getSampleBookingData = (isArabic: boolean): BookingPreviewData => (
   language: isArabic ? 'ar' : 'en',
 });
 
+// Refund apology email preview
+export const generateRefundApologyPreview = (
+  refundAmount: number,
+  paymentId: string,
+  reason?: string,
+  isArabic: boolean = false
+): string => {
+  const direction = isArabic ? "rtl" : "ltr";
+  const textAlign = isArabic ? "right" : "left";
+
+  const translations = {
+    subject: isArabic ? "تأكيد استرداد المبلغ" : "Refund Confirmation",
+    title: isArabic ? "تم استرداد المبلغ" : "Refund Processed",
+    subtitle: isArabic ? "نعتذر عن أي إزعاج" : "We apologize for any inconvenience",
+    greeting: isArabic ? "عزيزي العميل،" : "Dear Customer,",
+    message: isArabic
+      ? "نود إعلامك بأنه تم استرداد المبلغ المدفوع بنجاح. نعتذر عن أي إزعاج قد تكون واجهته."
+      : "We would like to inform you that your payment has been successfully refunded. We apologize for any inconvenience this may have caused.",
+    refundAmountLabel: isArabic ? "المبلغ المسترد" : "Refund Amount",
+    paymentIdLabel: isArabic ? "معرف الدفع" : "Payment ID",
+    reasonLabel: isArabic ? "السبب" : "Reason",
+    refundNote: isArabic
+      ? "سيظهر المبلغ في حسابك خلال 5-10 أيام عمل حسب البنك."
+      : "The amount will appear in your account within 5-10 business days depending on your bank.",
+    contact: isArabic ? "تواصل معنا" : "Contact Us",
+    helpText: isArabic
+      ? "إذا كان لديك أي استفسار، لا تتردد في التواصل معنا."
+      : "If you have any questions, don't hesitate to contact us.",
+    footer: isArabic ? "سوق المفيجر - التراث الأصيل" : "Souq Almufaijer - Authentic Heritage",
+  };
+
+  return `
+<!DOCTYPE html>
+<html dir="${direction}" lang="${isArabic ? 'ar' : 'en'}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+  <title>${translations.subject}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #FAF6F1; direction: ${direction}; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #FAF6F1; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(92, 74, 58, 0.12);">
+          
+          <!-- Heritage Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%); padding: 40px 30px; text-align: center;">
+              <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <p style="color: #C9A86C; font-size: 12px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 3px; font-weight: 600;">
+                      ${isArabic ? 'سوق المفيجر' : 'SOUQ ALMUFAIJER'}
+                    </p>
+                    <h1 style="color: #FFFFFF; font-size: 28px; margin: 0 0 8px 0; font-weight: 700;">
+                      ${translations.title}
+                    </h1>
+                    <p style="color: #E8DED0; font-size: 16px; margin: 0;">
+                      ${translations.subtitle}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main Content -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="color: #3D2E1F; font-size: 18px; margin: 0 0 20px 0; text-align: ${textAlign}; line-height: 1.6; font-weight: 500;">
+                ${translations.greeting}
+              </p>
+              <p style="color: #5C4A3A; font-size: 16px; margin: 0 0 30px 0; text-align: ${textAlign}; line-height: 1.7;">
+                ${translations.message}
+              </p>
+
+              <!-- Refund Details Card -->
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #DCFCE7; border-radius: 12px; border: 1px solid #BBF7D0; margin-bottom: 30px;">
+                <tr>
+                  <td style="padding: 25px;">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr>
+                        <td style="padding: 10px 0; border-bottom: 1px solid #BBF7D0;">
+                          <p style="color: #166534; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; text-align: ${textAlign};">
+                            ${translations.refundAmountLabel}
+                          </p>
+                          <p style="color: #166534 !important; font-size: 32px; font-weight: 800; margin: 0; text-align: ${textAlign};">
+                            ${refundAmount} <span style="font-size: 16px; font-weight: 600;">SAR</span>
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 15px 0;">
+                          <p style="color: #166534; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; text-align: ${textAlign};">
+                            ${translations.paymentIdLabel}
+                          </p>
+                          <p style="color: #166534 !important; font-size: 14px; font-weight: 600; margin: 0; font-family: 'Courier New', monospace; text-align: ${textAlign};">
+                            ${paymentId.slice(0, 16)}...
+                          </p>
+                        </td>
+                      </tr>
+                      ${reason ? `
+                      <tr>
+                        <td style="padding: 10px 0 0 0; border-top: 1px solid #BBF7D0;">
+                          <p style="color: #166534; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px; text-align: ${textAlign};">
+                            ${translations.reasonLabel}
+                          </p>
+                          <p style="color: #166534 !important; font-size: 14px; margin: 0; text-align: ${textAlign};">
+                            ${reason}
+                          </p>
+                        </td>
+                      </tr>
+                      ` : ''}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Info Notice Box -->
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #FEF3C7; border-radius: 10px; border: 1px solid #FCD34D; margin-bottom: 30px;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <p style="color: #92400E; font-size: 14px; margin: 0; line-height: 1.6; text-align: ${textAlign};">
+                      ${translations.refundNote}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Help Text -->
+              <p style="color: #8B7355; font-size: 14px; margin: 0; text-align: ${textAlign}; line-height: 1.6;">
+                ${translations.helpText}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #3D2E1F; padding: 30px; text-align: center;">
+              <p style="color: #A89585; font-size: 14px; margin: 0 0 10px 0;">
+                ${translations.contact}: info@almufaijer.com
+              </p>
+              <p style="color: #C9A86C; font-size: 16px; font-weight: 600; margin: 0 0 15px 0;">
+                ${translations.footer}
+              </p>
+              <p style="color: #8B7355; font-size: 11px; margin: 0;">
+                <a href="https://aynn.io" style="color: #8B7355; text-decoration: none;">Powered by AYN</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+};
+
 export const generatePaymentReminderPreview = (
   booking: BookingPreviewData,
   isArabic: boolean
