@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -37,6 +37,11 @@ const BookingPage = () => {
   } = useBookingStore();
 
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
 
   const handleNext = () => {
     if (step === 1 && canProceed()) {
