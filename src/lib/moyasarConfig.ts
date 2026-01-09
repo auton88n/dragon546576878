@@ -42,8 +42,13 @@ export function buildMoyasarConfig(params: MoyasarConfigParams) {
     description: `Souq Almufaijer - ${bookingReference}`,
     publishable_api_key: MOYASAR_PUBLISHABLE_KEY,
     callback_url: callbackUrl,
-    methods: ['creditcard'],
+    methods: ['creditcard', 'applepay'],
     supported_networks: ['visa', 'mastercard', 'mada'],
+    apple_pay: {
+      country: 'SA',
+      label: 'Souq Almufaijer',
+      validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
+    },
     on_completed: onCompleted,
   };
 }
