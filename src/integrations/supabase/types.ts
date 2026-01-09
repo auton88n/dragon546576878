@@ -188,6 +188,89 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_invoices: {
+        Row: {
+          booking_id: string | null
+          client_email: string
+          client_name: string
+          client_phone: string
+          client_type: string
+          company_name: string | null
+          created_at: string | null
+          created_by: string | null
+          expires_at: string
+          id: string
+          invoice_number: string
+          notes: string | null
+          num_adults: number
+          num_children: number
+          paid_at: string | null
+          payment_id: string | null
+          services: Json | null
+          status: string
+          total_amount: number
+          updated_at: string | null
+          visit_date: string
+          visit_time: string
+        }
+        Insert: {
+          booking_id?: string | null
+          client_email: string
+          client_name: string
+          client_phone: string
+          client_type?: string
+          company_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          invoice_number: string
+          notes?: string | null
+          num_adults?: number
+          num_children?: number
+          paid_at?: string | null
+          payment_id?: string | null
+          services?: Json | null
+          status?: string
+          total_amount: number
+          updated_at?: string | null
+          visit_date: string
+          visit_time: string
+        }
+        Update: {
+          booking_id?: string | null
+          client_email?: string
+          client_name?: string
+          client_phone?: string
+          client_type?: string
+          company_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          invoice_number?: string
+          notes?: string | null
+          num_adults?: number
+          num_children?: number
+          paid_at?: string | null
+          payment_id?: string | null
+          services?: Json | null
+          status?: string
+          total_amount?: number
+          updated_at?: string | null
+          visit_date?: string
+          visit_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_invoices_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_queue: {
         Row: {
           attachments: Json | null

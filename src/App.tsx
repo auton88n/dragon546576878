@@ -32,6 +32,9 @@ const { Component: SupportPage, preload: preloadSupport } = lazyWithPreload(() =
 const { Component: TermsPage, preload: preloadTerms } = lazyWithPreload(() => import('./pages/TermsPage'));
 const { Component: NotFound } = lazyWithPreload(() => import('./pages/NotFound'));
 const { Component: VIPRSVPPage } = lazyWithPreload(() => import('./pages/VIPRSVPPage'));
+const { Component: InvoicePage } = lazyWithPreload(() => import('./pages/InvoicePage'));
+const { Component: InvoiceCallbackPage } = lazyWithPreload(() => import('./pages/InvoiceCallbackPage'));
+const { Component: InvoiceSuccessPage } = lazyWithPreload(() => import('./pages/InvoiceSuccessPage'));
 const { Component: RefundManagementPage } = lazyWithPreload(() => import('./pages/RefundManagementPage'));
 
 // Redirect helper for resume-payment route
@@ -113,6 +116,9 @@ const App = () => (
             <Route path="/support" element={<SupportPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/vip/rsvp/:token" element={<VIPRSVPPage />} />
+            <Route path="/invoice/:invoiceId" element={<InvoicePage />} />
+            <Route path="/invoice-callback" element={<InvoiceCallbackPage />} />
+            <Route path="/invoice-success" element={<InvoiceSuccessPage />} />
             <Route path="/login" element={<LoginPage />} />
             
             {/* Protected Routes - Scanner */}
