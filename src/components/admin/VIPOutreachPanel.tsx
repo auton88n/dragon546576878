@@ -138,6 +138,63 @@ export const VIPOutreachPanel = () => {
   const [includeVideo, setIncludeVideo] = useState(true);
   const [enableRSVP, setEnableRSVP] = useState(true);
 
+  // Custom perks management
+  const [customPerks, setCustomPerks] = useState<VIPPerk[]>(defaultPerks);
+  const [showPerkDialog, setShowPerkDialog] = useState(false);
+  const [editingPerk, setEditingPerk] = useState<VIPPerk | null>(null);
+  const [perkForm, setPerkForm] = useState<Omit<VIPPerk, 'id'>>({ en: '', ar: '', iconKey: 'Gift' });
+  const [showDeletePerkDialog, setShowDeletePerkDialog] = useState(false);
+  const [deletePerkId, setDeletePerkId] = useState<string | null>(null);
+
+  // Perk management handlers
+  const handleAddPerk = () => {
+    setEditingPerk(null);
+    setPerkForm({ en: '', ar: '', iconKey: 'Gift' });
+    setShowPerkDialog(true);
+  };
+
+  const handleEditPerk = (perk: VIPPerk) => {
+    setEditingPerk(perk);
+    setPerkForm({ en: perk.en, ar: perk.ar, iconKey: perk.iconKey });
+    setShowPerkDialog(true);
+  };
+
+  const handleSavePerk = () => {
+    if (!perkForm.en.trim() || !perkForm.ar.trim()) {
+      toast({ title: isArabic ? 'يرجى ملء جميع الحقول' : 'Please fill all fields', variant: 'destructive' });
+      return;
+    }
+    if (editingPerk) {
+      setCustomPerks(prev => prev.map(p => p.id === editingPerk.id ? { ...p, ...perkForm } : p));
+      toast({ title: isArabic ? 'تم تحديث الامتياز' : 'Perk updated' });
+    } else {
+      const newPerk: VIPPerk = { id: `custom_${Date.now()}`, ...perkForm };
+      setCustomPerks(prev => [...prev, newPerk]);
+      setSelectedPerks(prev => new Set([...prev, newPerk.id]));
+      toast({ title: isArabic ? 'تمت إضافة الامتياز' : 'Perk added' });
+    }
+    setShowPerkDialog(false);
+  };
+
+  const handleDeletePerk = (perkId: string) => {
+    setDeletePerkId(perkId);
+    setShowDeletePerkDialog(true);
+  };
+
+  const confirmDeletePerk = () => {
+    if (deletePerkId) {
+      setCustomPerks(prev => prev.filter(p => p.id !== deletePerkId));
+      setSelectedPerks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(deletePerkId);
+        return newSet;
+      });
+      toast({ title: isArabic ? 'تم حذف الامتياز' : 'Perk deleted' });
+    }
+    setShowDeletePerkDialog(false);
+    setDeletePerkId(null);
+  };
+
   // Filtered contacts
   const filteredContacts = useMemo(() => {
     return contacts.filter(c => {
@@ -563,17 +620,23 @@ export const VIPOutreachPanel = () => {
 
               {/* NEW: Perks Selection */}
               <div className="p-4 rounded-lg bg-white border space-y-3">
-                <Label className="font-medium flex items-center gap-2">
-                  <Gift className="h-4 w-4 text-amber-600" />
-                  {isArabic ? 'الامتيازات الحصرية' : 'Exclusive Perks'}
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label className="font-medium flex items-center gap-2">
+                    <Gift className="h-4 w-4 text-amber-600" />
+                    {isArabic ? 'الامتيازات الحصرية' : 'Exclusive Perks'}
+                  </Label>
+                  <Button variant="outline" size="sm" onClick={handleAddPerk}>
+                    <Plus className="h-3.5 w-3.5 me-1" />
+                    {isArabic ? 'إضافة' : 'Add'}
+                  </Button>
+                </div>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {defaultPerks.map(perk => {
+                  {customPerks.map(perk => {
                     const Icon = perkIcons[perk.iconKey];
                     return (
-                      <label 
+                      <div 
                         key={perk.id} 
-                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
                           selectedPerks.has(perk.id) 
                             ? 'bg-amber-50 border-amber-300' 
                             : 'hover:bg-gray-50'
@@ -584,8 +647,16 @@ export const VIPOutreachPanel = () => {
                           onCheckedChange={() => togglePerkSelection(perk.id)}
                         />
                         <Icon className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                        <span className="text-sm">{isArabic ? perk.ar : perk.en}</span>
-                      </label>
+                        <span className="text-sm flex-1 truncate">{isArabic ? perk.ar : perk.en}</span>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditPerk(perk)}>
+                            <Edit className="h-3 w-3 text-gray-500" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeletePerk(perk.id)}>
+                            <Trash2 className="h-3 w-3 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -1010,7 +1081,7 @@ export const VIPOutreachPanel = () => {
                       {isArabic ? '✨ تجربتكم المميزة تتضمن' : '✨ Your VIP Experience Includes'}
                     </p>
                     <div className="space-y-2">
-                      {defaultPerks.filter(p => selectedPerks.has(p.id)).map(perk => (
+                      {customPerks.filter(p => selectedPerks.has(p.id)).map(perk => (
                         <div key={perk.id} className="flex items-center gap-2 text-white text-sm">
                           <CheckCircle className="h-4 w-4 text-amber-400" />
                           <span>{isArabic ? perk.ar : perk.en}</span>
@@ -1051,6 +1122,55 @@ export const VIPOutreachPanel = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Perk Add/Edit Dialog */}
+      <Dialog open={showPerkDialog} onOpenChange={setShowPerkDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingPerk ? (isArabic ? 'تعديل الامتياز' : 'Edit Perk') : (isArabic ? 'إضافة امتياز' : 'Add Perk')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{isArabic ? 'الاسم بالإنجليزية' : 'English Name'}</Label>
+              <Input value={perkForm.en} onChange={e => setPerkForm(prev => ({ ...prev, en: e.target.value }))} placeholder="e.g., Private tour" />
+            </div>
+            <div className="space-y-2">
+              <Label>{isArabic ? 'الاسم بالعربية' : 'Arabic Name'}</Label>
+              <Input value={perkForm.ar} onChange={e => setPerkForm(prev => ({ ...prev, ar: e.target.value }))} placeholder="مثال: جولة خاصة" dir="rtl" />
+            </div>
+            <div className="space-y-2">
+              <Label>{isArabic ? 'الأيقونة' : 'Icon'}</Label>
+              <Select value={perkForm.iconKey} onValueChange={(v: PerkIconKey) => setPerkForm(prev => ({ ...prev, iconKey: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.keys(perkIcons).map(key => {
+                    const Icon = perkIcons[key as PerkIconKey];
+                    return <SelectItem key={key} value={key}><div className="flex items-center gap-2"><Icon className="h-4 w-4" />{key}</div></SelectItem>;
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPerkDialog(false)}>{isArabic ? 'إلغاء' : 'Cancel'}</Button>
+            <Button onClick={handleSavePerk}>{editingPerk ? (isArabic ? 'حفظ' : 'Save') : (isArabic ? 'إضافة' : 'Add')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Perk Confirmation */}
+      <AlertDialog open={showDeletePerkDialog} onOpenChange={setShowDeletePerkDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isArabic ? 'حذف الامتياز؟' : 'Delete Perk?'}</AlertDialogTitle>
+            <AlertDialogDescription>{isArabic ? 'هل أنت متأكد من حذف هذا الامتياز؟' : 'Are you sure you want to delete this perk?'}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isArabic ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeletePerk} className="bg-red-600 hover:bg-red-700">{isArabic ? 'حذف' : 'Delete'}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
