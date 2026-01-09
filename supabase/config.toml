@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.link-orphan-payment]
 verify_jwt = false
+
+[functions.refund-orphan-payment]
+verify_jwt = false
