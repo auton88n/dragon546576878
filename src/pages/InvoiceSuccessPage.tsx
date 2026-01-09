@@ -56,7 +56,7 @@ export default function InvoiceSuccessPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container max-w-2xl mx-auto py-8 px-4" dir={isArabic ? 'rtl' : 'ltr'}>
+      <main className="container max-w-2xl mx-auto pt-24 pb-8 px-4" dir={isArabic ? 'rtl' : 'ltr'}>
         {/* Success Message */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 dark:bg-green-900 mb-4">
