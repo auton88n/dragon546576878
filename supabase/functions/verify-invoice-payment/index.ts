@@ -85,7 +85,7 @@ serve(async (req) => {
     // Generate booking reference
     const bookingReference = `INV-${Date.now().toString(36).toUpperCase()}`;
 
-    // Create booking from invoice
+    // Create booking from invoice with proper language
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
       .insert({
@@ -97,7 +97,7 @@ serve(async (req) => {
         visit_time: invoice.visit_time,
         adult_count: invoice.num_adults,
         child_count: invoice.num_children,
-        adult_price: invoice.total_amount / (invoice.num_adults + invoice.num_children), // Simplified
+        adult_price: invoice.total_amount / (invoice.num_adults + invoice.num_children),
         child_price: 0,
         total_amount: invoice.total_amount,
         payment_status: "completed",
@@ -106,6 +106,7 @@ serve(async (req) => {
         payment_method: payment.source?.type || "creditcard",
         paid_at: new Date().toISOString(),
         special_requests: invoice.services ? `Services: ${invoice.services.join(", ")}` : null,
+        language: invoice.language || 'ar', // Use invoice language or default to Arabic
       })
       .select()
       .single();
@@ -129,22 +130,35 @@ serve(async (req) => {
       })
       .eq("id", invoiceId);
 
-    // Generate tickets
+    // Generate tickets - MUST succeed before sending confirmation email
+    let ticketsGenerated = false;
     try {
-      await supabase.functions.invoke("generate-tickets", {
+      const { data: ticketResult, error: ticketError } = await supabase.functions.invoke("generate-tickets", {
         body: { bookingId: booking.id },
       });
+      
+      if (ticketError) {
+        console.error("Error generating tickets:", ticketError);
+      } else {
+        ticketsGenerated = true;
+        console.log("Tickets generated successfully for invoice booking:", booking.id);
+      }
     } catch (ticketError) {
-      console.error("Error generating tickets:", ticketError);
+      console.error("Exception generating tickets:", ticketError);
     }
 
-    // Send confirmation email
-    try {
-      await supabase.functions.invoke("send-booking-confirmation", {
-        body: { bookingId: booking.id },
-      });
-    } catch (emailError) {
-      console.error("Error sending confirmation:", emailError);
+    // Only send confirmation email if tickets were generated successfully
+    if (ticketsGenerated) {
+      try {
+        await supabase.functions.invoke("send-booking-confirmation", {
+          body: { bookingId: booking.id },
+        });
+        console.log("Confirmation email with QR sent for invoice booking:", booking.id);
+      } catch (emailError) {
+        console.error("Error sending confirmation email:", emailError);
+      }
+    } else {
+      console.error("Tickets not generated - skipping confirmation email to avoid sending without QR code");
     }
 
     return new Response(

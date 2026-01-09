@@ -219,6 +219,7 @@ export type Database = {
           expires_at: string
           id: string
           invoice_number: string
+          language: string | null
           notes: string | null
           num_adults: number
           num_children: number
@@ -243,6 +244,7 @@ export type Database = {
           expires_at: string
           id?: string
           invoice_number: string
+          language?: string | null
           notes?: string | null
           num_adults?: number
           num_children?: number
@@ -267,6 +269,7 @@ export type Database = {
           expires_at?: string
           id?: string
           invoice_number?: string
+          language?: string | null
           notes?: string | null
           num_adults?: number
           num_children?: number

@@ -252,6 +252,7 @@ export function CustomInvoicesPanel() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [expiresIn, setExpiresIn] = useState('7');
   const [notes, setNotes] = useState('');
+  const [invoiceLanguage, setInvoiceLanguage] = useState<'ar' | 'en'>('ar');
 
   const { data: invoices, isLoading } = useQuery({
     queryKey: ['custom-invoices'],
@@ -296,6 +297,7 @@ export function CustomInvoicesPanel() {
           notes: notes || null,
           expires_at: expiresAt.toISOString(),
           created_by: user?.id,
+          language: invoiceLanguage,
         })
         .select()
         .single();
@@ -384,6 +386,7 @@ export function CustomInvoicesPanel() {
     setSelectedServices([]);
     setExpiresIn('7');
     setNotes('');
+    setInvoiceLanguage('ar');
   };
 
   const copyLink = (invoiceId: string) => {
