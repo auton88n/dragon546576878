@@ -108,8 +108,8 @@ const ContactPage = () => {
     icon: Clock,
     titleEn: 'Operating Hours',
     titleAr: 'ساعات العمل',
-    contentEn: 'Saturday - Thursday: 9:00 AM - 6:00 PM\nFriday: Closed',
-    contentAr: 'السبت - الخميس: ٩:٠٠ ص - ٦:٠٠ م\nالجمعة: مغلق',
+    contentEn: 'Daily (Including Friday)\n3:00 PM - 12:00 AM',
+    contentAr: 'يومياً (بما في ذلك الجمعة)\n٣:٠٠ م - ١٢:٠٠ ص',
     dirType: 'auto' as const
   }];
   return <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
