@@ -2,7 +2,7 @@ import { useState, useRef, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users, CheckCircle, Ban, Bell, Loader2, Pencil, XCircle, Clock } from 'lucide-react';
+import { Eye, Mail, MailCheck, MoreHorizontal, RefreshCw, Ticket, Calendar, Users, CheckCircle, Ban, Bell, Loader2, Pencil, XCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { resendConfirmationEmail, sendPaymentReminder } from '@/lib/emailService';
 import { supabase } from '@/integrations/supabase/client';
@@ -185,10 +185,27 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     }
   };
 
-  const getStatusBadge = (status: string, paymentStatus?: string) => {
-    // Determine icon and styling based on status
-    const isCancelled = status === 'cancelled';
-    const isPending = status === 'pending_payment' || paymentStatus === 'pending';
+  const getStatusBadge = (booking: Booking) => {
+    const { booking_status, payment_status, qr_codes_generated } = booking;
+    
+    // PRIORITY: Show warning for paid but missing tickets
+    if (payment_status === 'completed' && !qr_codes_generated) {
+      return (
+        <Badge 
+          variant="outline" 
+          className={cn(
+            'bg-red-500/20 text-red-700 border-red-500/30 dark:text-red-400 flex items-center gap-1.5 animate-pulse',
+            isRTL && 'flex-row-reverse'
+          )}
+        >
+          <AlertTriangle className="h-3.5 w-3.5" />
+          <span>{isArabic ? 'تذاكر مفقودة!' : 'Missing Tickets!'}</span>
+        </Badge>
+      );
+    }
+    
+    const isCancelled = booking_status === 'cancelled';
+    const isPending = booking_status === 'pending_payment' || payment_status === 'pending';
     
     const config: Record<string, { className: string; icon: React.ElementType; labelAr: string; labelEn: string }> = {
       confirmed: { 
@@ -211,8 +228,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
       },
     };
     
-    // Override to pending if payment is pending
-    const effectiveStatus = isCancelled ? 'cancelled' : (isPending ? 'pending' : status);
+    const effectiveStatus = isCancelled ? 'cancelled' : (isPending ? 'pending' : booking_status);
     const { className, icon: Icon, labelAr, labelEn } = config[effectiveStatus] || config.pending;
     
     return (
@@ -224,6 +240,32 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
         <span>{isArabic ? labelAr : labelEn}</span>
       </Badge>
     );
+  };
+
+  // Get journey stage for tracking where customer is
+  const getJourneyStage = (booking: Booking) => {
+    const { payment_status, payment_id, qr_codes_generated, booking_status } = booking;
+    
+    if (booking_status === 'cancelled') {
+      return { label: isArabic ? 'ملغي' : 'Cancelled', icon: XCircle, color: 'text-red-500' };
+    }
+    
+    if (payment_status === 'completed') {
+      if (qr_codes_generated) {
+        return { label: isArabic ? 'مكتمل' : 'Complete', icon: CheckCircle, color: 'text-emerald-500' };
+      }
+      return { label: isArabic ? 'تذاكر مفقودة' : 'Missing Tickets', icon: AlertTriangle, color: 'text-red-500 animate-pulse' };
+    }
+    
+    if (payment_status === 'failed') {
+      return { label: isArabic ? 'فشل الدفع' : 'Payment Failed', icon: XCircle, color: 'text-red-500' };
+    }
+    
+    if (payment_id) {
+      return { label: isArabic ? 'في معالجة الدفع' : 'Processing', icon: Clock, color: 'text-amber-500' };
+    }
+    
+    return { label: isArabic ? 'في انتظار الدفع' : 'Awaiting Payment', icon: Clock, color: 'text-muted-foreground' };
   };
 
   const formatDate = (date: string) => {
@@ -261,7 +303,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
             {booking.booking_reference}
           </span>
         </div>
-        {getStatusBadge(booking.booking_status, booking.payment_status)}
+        {getStatusBadge(booking)}
       </div>
 
       {/* Customer Info */}
@@ -407,7 +449,19 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
       <TableCell className="font-semibold text-accent text-start text-sm p-2">
         {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
       </TableCell>
-      <TableCell className="p-2">{getStatusBadge(booking.booking_status, booking.payment_status)}</TableCell>
+      <TableCell className="p-2">{getStatusBadge(booking)}</TableCell>
+      <TableCell className="p-2">
+        {(() => {
+          const stage = getJourneyStage(booking);
+          const Icon = stage.icon;
+          return (
+            <div className={cn("flex items-center gap-1.5", stage.color, isRTL && 'flex-row-reverse')}>
+              <Icon className="h-4 w-4" />
+              <span className="text-xs">{stage.label}</span>
+            </div>
+          );
+        })()}
+      </TableCell>
       <TableCell className="w-10 p-2 text-center">
         {booking.confirmation_email_sent ? (
           <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto">
@@ -559,7 +613,9 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                   <TableHead className="w-[12%] text-accent font-semibold text-start">{isArabic ? 'وقت الشراء' : 'Purchased'}</TableHead>
                   <TableHead className="w-[5%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
                   <TableHead className="w-[9%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-                  <TableHead className="w-[13%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                    <TableHead className="w-[13%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                    <TableHead className="w-[10%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
+                  <TableHead className="w-[10%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
                   <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'البريد' : 'Email'}><Mail className="h-4 w-4 mx-auto" /></TableHead>
                   <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'التذكير' : 'Reminder'}><Bell className="h-4 w-4 mx-auto" /></TableHead>
                   <TableHead className="w-10 text-end text-accent font-semibold">{isArabic ? '' : ''}</TableHead>
