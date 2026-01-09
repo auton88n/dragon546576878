@@ -4,7 +4,7 @@ import { QrCode, Camera, CheckCircle, XCircle, AlertTriangle, History, Volume2, 
 import { toast } from 'sonner';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAuthStore } from '@/stores/authStore';
-import { validateTicket, markTicketAsUsed, logScanAttempt, lookupTicket, detectQRKind, validateEmployeeQR, logEmployeeScan, type TicketValidationResult, type EmployeeValidationResult } from '@/lib/ticketService';
+import { validateTicket, markTicketAsUsed, logScanAttempt, lookupTicket, detectQRKind, validateEmployeeQR, logEmployeeScan, validateGroupTicket, markBookingAsArrived, type TicketValidationResult, type EmployeeValidationResult, type GroupTicketValidationResult } from '@/lib/ticketService';
 import { useOfflineScanQueue } from '@/hooks/useOfflineScanQueue';
 import StaffHeader from '@/components/shared/StaffHeader';
 import PoweredByAYN from '@/components/shared/PoweredByAYN';
@@ -18,7 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface ScanResult {
   timestamp: Date;
-  status: TicketValidationResult['status'] | 'employee_valid' | 'employee_inactive';
+  status: TicketValidationResult['status'] | 'employee_valid' | 'employee_inactive' | 'arrived';
   ticketCode?: string;
   customerName?: string;
   ticketType?: string;
@@ -39,6 +39,10 @@ interface ScanResult {
   lastEmailSentAt?: string | null;
   // Employee detail lookup
   employeeId?: string;
+  // Group ticket fields
+  isGroupTicket?: boolean;
+  totalGuests?: number;
+  arrivalStatus?: string;
 }
 
 interface FullBookingDetails {

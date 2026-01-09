@@ -3,11 +3,15 @@
  * 
  * Note: Ticket GENERATION is now handled server-side in the create-booking edge function.
  * This file contains only validation and lookup functions used by the scanner.
+ * 
+ * Supports both:
+ * - NEW GROUP FORMAT: Single QR per reservation with guest counts
+ * - LEGACY FORMAT: Individual ticket QR codes (backward compatible)
  */
 
 import { supabase } from '@/integrations/supabase/client';
 
-// Validate a scanned QR code
+// Validate a scanned QR code (individual ticket)
 export interface TicketValidationResult {
   isValid: boolean;
   status: 'valid' | 'invalid' | 'used' | 'expired' | 'wrong_date' | 'not_found';
@@ -31,6 +35,31 @@ export interface TicketValidationResult {
   };
 }
 
+// NEW: Group ticket validation result
+export interface GroupTicketValidationResult {
+  isValid: boolean;
+  status: 'valid' | 'invalid' | 'arrived' | 'expired' | 'wrong_date' | 'not_found';
+  message: string;
+  isGroupTicket: true;
+  booking?: {
+    id: string;
+    bookingReference: string;
+    customerName: string;
+    customerPhone: string;
+    customerEmail: string;
+    visitDate: string;
+    visitTime: string;
+    adultCount: number;
+    childCount: number;
+    seniorCount: number;
+    totalGuests: number;
+    paymentStatus: string;
+    totalAmount: number;
+    arrivalStatus: string;
+    arrivedAt?: string;
+  };
+}
+
 // Employee validation result - separate from ticket
 export interface EmployeeValidationResult {
   isValid: boolean;
@@ -43,8 +72,8 @@ export interface EmployeeValidationResult {
   };
 }
 
-// Detect QR code type - handles both new and legacy formats
-export type QRCodeKind = 'employee' | 'ticket' | 'unknown';
+// Detect QR code type - handles group, individual ticket, and employee formats
+export type QRCodeKind = 'employee' | 'ticket' | 'group' | 'unknown';
 
 // Normalize QR data by removing invisible/garbage characters
 const normalizeQRData = (data: string): string => {
@@ -89,6 +118,11 @@ export const detectQRKind = (qrData: string): { kind: QRCodeKind; parsed: any } 
     return { kind: 'employee', parsed };
   }
   
+  // NEW: Group ticket format: { type: "group", code, ref, date, adults, children, total, cs }
+  if (parsed.type === 'group') {
+    return { kind: 'group', parsed };
+  }
+  
   // Legacy employee format: has id/employeeId + department/dept, but NO code
   const employeeId = parsed.id || parsed.employeeId || parsed.employee_id;
   const hasDept = parsed.dept || parsed.department;
@@ -98,7 +132,7 @@ export const detectQRKind = (qrData: string): { kind: QRCodeKind; parsed: any } 
     return { kind: 'employee', parsed };
   }
   
-  // Ticket format: must have code
+  // Individual ticket format: must have code but no type:"group"
   if (hasTicketCode) {
     return { kind: 'ticket', parsed };
   }
@@ -109,6 +143,11 @@ export const detectQRKind = (qrData: string): { kind: QRCodeKind; parsed: any } 
 // Check if QR data is for an employee badge (legacy function for compatibility)
 export const isEmployeeQR = (qrData: string): boolean => {
   return detectQRKind(qrData).kind === 'employee';
+};
+
+// Check if QR data is for a group ticket
+export const isGroupQR = (qrData: string): boolean => {
+  return detectQRKind(qrData).kind === 'group';
 };
 
 // Extract employee ID from various possible fields
@@ -220,6 +259,192 @@ export const logEmployeeScan = async (
   }
 };
 
+// Get Saudi Arabia date helper
+const getSaudiDate = () => {
+  const now = new Date();
+  const saudiTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Riyadh' }));
+  return saudiTime.toISOString().split('T')[0];
+};
+
+// NEW: Validate a GROUP ticket QR code
+export const validateGroupTicket = async (qrData: string): Promise<GroupTicketValidationResult> => {
+  try {
+    console.log('Validating GROUP QR:', qrData);
+    
+    const { kind, parsed } = detectQRKind(qrData);
+    
+    if (kind !== 'group' || !parsed) {
+      return {
+        isValid: false,
+        status: 'invalid',
+        message: 'Invalid group ticket format',
+        isGroupTicket: true,
+      };
+    }
+
+    const { ref: bookingRef, date: visitDate, code: ticketCode } = parsed;
+    
+    if (!bookingRef || !visitDate) {
+      return {
+        isValid: false,
+        status: 'invalid',
+        message: 'Missing booking reference or date',
+        isGroupTicket: true,
+      };
+    }
+
+    // Find booking by reference
+    const { data: booking, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('booking_reference', bookingRef)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Database error looking up booking:', error);
+      return {
+        isValid: false,
+        status: 'invalid',
+        message: 'Error validating ticket',
+        isGroupTicket: true,
+      };
+    }
+
+    if (!booking) {
+      console.log('Booking not found for reference:', bookingRef);
+      return {
+        isValid: false,
+        status: 'not_found',
+        message: 'Booking not found',
+        isGroupTicket: true,
+      };
+    }
+
+    const adultCount = booking.adult_count || 0;
+    const childCount = booking.child_count || 0;
+    const seniorCount = booking.senior_count || 0;
+    const totalGuests = adultCount + childCount + seniorCount;
+
+    const bookingData = {
+      id: booking.id,
+      bookingReference: booking.booking_reference,
+      customerName: booking.customer_name,
+      customerPhone: booking.customer_phone,
+      customerEmail: booking.customer_email,
+      visitDate: booking.visit_date,
+      visitTime: booking.visit_time,
+      adultCount,
+      childCount,
+      seniorCount,
+      totalGuests,
+      paymentStatus: booking.payment_status,
+      totalAmount: booking.total_amount,
+      arrivalStatus: booking.arrival_status || 'not_arrived',
+      arrivedAt: booking.arrived_at || undefined,
+    };
+
+    // Check if already arrived
+    if (booking.arrival_status === 'arrived') {
+      const arrivedTime = booking.arrived_at 
+        ? new Date(booking.arrived_at).toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Asia/Riyadh'
+          })
+        : '';
+      return {
+        isValid: false,
+        status: 'arrived',
+        message: `Group already admitted${arrivedTime ? ` at ${arrivedTime}` : ''}`,
+        isGroupTicket: true,
+        booking: bookingData,
+      };
+    }
+
+    // Check date validity
+    const today = getSaudiDate();
+    if (booking.visit_date !== today) {
+      const isExpired = new Date(booking.visit_date) < new Date(today);
+      return {
+        isValid: false,
+        status: isExpired ? 'expired' : 'wrong_date',
+        message: isExpired 
+          ? 'Ticket has expired' 
+          : `Ticket valid for ${booking.visit_date}`,
+        isGroupTicket: true,
+        booking: bookingData,
+      };
+    }
+
+    // Check payment status
+    if (booking.payment_status !== 'completed') {
+      return {
+        isValid: false,
+        status: 'invalid',
+        message: 'Payment not completed',
+        isGroupTicket: true,
+        booking: bookingData,
+      };
+    }
+
+    // Group ticket is valid!
+    return {
+      isValid: true,
+      status: 'valid',
+      message: `Admit ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`,
+      isGroupTicket: true,
+      booking: bookingData,
+    };
+  } catch (err) {
+    console.error('Error validating group ticket:', err);
+    return {
+      isValid: false,
+      status: 'invalid',
+      message: 'Invalid group ticket',
+      isGroupTicket: true,
+    };
+  }
+};
+
+// NEW: Mark entire booking as arrived
+export const markBookingAsArrived = async (
+  bookingId: string,
+  scannerId?: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        arrival_status: 'arrived',
+        arrived_at: new Date().toISOString(),
+        arrived_scanned_by: scannerId,
+      })
+      .eq('id', bookingId);
+
+    if (error) {
+      console.error('Error marking booking as arrived:', error);
+      return false;
+    }
+
+    // Also mark all individual tickets as used (for backward compatibility)
+    await supabase
+      .from('tickets')
+      .update({
+        is_used: true,
+        scanned_at: new Date().toISOString(),
+        scanned_by: scannerId,
+        scan_location: 'main_entrance',
+      })
+      .eq('booking_id', bookingId);
+
+    return true;
+  } catch (err) {
+    console.error('Error marking booking as arrived:', err);
+    return false;
+  }
+};
+
+// Legacy: Validate individual ticket QR
 export const validateTicket = async (qrData: string): Promise<TicketValidationResult> => {
   try {
     console.log('Validating QR data:', qrData);
@@ -360,11 +585,6 @@ const validateTicketRecord = (ticket: any): TicketValidationResult => {
   }
 
   // Check date validity - use Saudi Arabia timezone
-  const getSaudiDate = () => {
-    const now = new Date();
-    const saudiTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Riyadh' }));
-    return saudiTime.toISOString().split('T')[0];
-  };
   const today = getSaudiDate();
   if (ticket.valid_from !== today) {
     const isExpired = new Date(ticket.valid_from) < new Date(today);
@@ -387,7 +607,7 @@ const validateTicketRecord = (ticket: any): TicketValidationResult => {
   };
 };
 
-// Mark ticket as used
+// Mark individual ticket as used (legacy)
 export const markTicketAsUsed = async (
   ticketId: string,
   scannerId?: string,
@@ -414,7 +634,7 @@ export const markTicketAsUsed = async (
 // Log a scan attempt
 export const logScanAttempt = async (
   ticketId: string | null,
-  result: 'valid' | 'invalid' | 'used' | 'expired' | 'wrong_date' | 'not_found',
+  result: 'valid' | 'invalid' | 'used' | 'expired' | 'wrong_date' | 'not_found' | 'arrived',
   scannerId?: string,
   deviceInfo?: string
 ): Promise<void> => {
@@ -493,5 +713,86 @@ export const lookupTicket = async (searchQuery: string): Promise<TicketValidatio
   } catch (err) {
     console.error('Error looking up ticket:', err);
     return [];
+  }
+};
+
+// NEW: Lookup booking for group admission
+export const lookupBookingByReference = async (searchQuery: string): Promise<GroupTicketValidationResult | null> => {
+  const query = searchQuery.trim().toUpperCase();
+  
+  if (!query) {
+    return null;
+  }
+
+  try {
+    const { data: booking, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .ilike('booking_reference', `%${query}%`)
+      .maybeSingle();
+
+    if (error || !booking) {
+      return null;
+    }
+
+    const adultCount = booking.adult_count || 0;
+    const childCount = booking.child_count || 0;
+    const seniorCount = booking.senior_count || 0;
+    const totalGuests = adultCount + childCount + seniorCount;
+
+    const bookingData = {
+      id: booking.id,
+      bookingReference: booking.booking_reference,
+      customerName: booking.customer_name,
+      customerPhone: booking.customer_phone,
+      customerEmail: booking.customer_email,
+      visitDate: booking.visit_date,
+      visitTime: booking.visit_time,
+      adultCount,
+      childCount,
+      seniorCount,
+      totalGuests,
+      paymentStatus: booking.payment_status,
+      totalAmount: booking.total_amount,
+      arrivalStatus: booking.arrival_status || 'not_arrived',
+      arrivedAt: booking.arrived_at || undefined,
+    };
+
+    // Check if already arrived
+    if (booking.arrival_status === 'arrived') {
+      return {
+        isValid: false,
+        status: 'arrived',
+        message: 'Group already admitted',
+        isGroupTicket: true,
+        booking: bookingData,
+      };
+    }
+
+    // Check date validity
+    const today = getSaudiDate();
+    if (booking.visit_date !== today) {
+      const isExpired = new Date(booking.visit_date) < new Date(today);
+      return {
+        isValid: false,
+        status: isExpired ? 'expired' : 'wrong_date',
+        message: isExpired ? 'Ticket has expired' : `Ticket valid for ${booking.visit_date}`,
+        isGroupTicket: true,
+        booking: bookingData,
+      };
+    }
+
+    return {
+      isValid: booking.payment_status === 'completed',
+      status: booking.payment_status === 'completed' ? 'valid' : 'invalid',
+      message: booking.payment_status === 'completed' 
+        ? `Admit ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`
+        : 'Payment not completed',
+      isGroupTicket: true,
+      booking: bookingData,
+    };
+  } catch (err) {
+    console.error('Error looking up booking:', err);
+    return null;
   }
 };
