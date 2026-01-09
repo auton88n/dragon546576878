@@ -628,6 +628,62 @@ export const VIPOutreachPanel = () => {
                 </div>
               ) : (
                 <>
+                  {/* Engagement Funnel */}
+                  {(() => {
+                    const invitedCount = contacts.filter(c => c.status === 'invited' || c.status === 'confirmed' || c.status === 'attended').length;
+                    const openedCount = emailLogs.filter(l => l.opened_at).length;
+                    const confirmedCount = contacts.filter(c => c.status === 'confirmed' || c.status === 'attended').length;
+                    const attendedCount = contacts.filter(c => c.status === 'attended').length;
+                    const maxCount = Math.max(invitedCount, 1);
+                    
+                    const stages = [
+                      { key: 'invited', label: isArabic ? 'تمت الدعوة' : 'Invited', count: invitedCount, color: 'bg-blue-500', bgColor: 'bg-blue-100', textColor: 'text-blue-700', icon: Send },
+                      { key: 'opened', label: isArabic ? 'فتح البريد' : 'Opened', count: openedCount, color: 'bg-amber-500', bgColor: 'bg-amber-100', textColor: 'text-amber-700', icon: MailOpen },
+                      { key: 'confirmed', label: isArabic ? 'أكد الحضور' : 'Confirmed', count: confirmedCount, color: 'bg-green-500', bgColor: 'bg-green-100', textColor: 'text-green-700', icon: CheckCircle },
+                      { key: 'attended', label: isArabic ? 'حضر' : 'Attended', count: attendedCount, color: 'bg-purple-500', bgColor: 'bg-purple-100', textColor: 'text-purple-700', icon: Crown },
+                    ];
+                    
+                    return (
+                      <div className="p-4 rounded-lg border bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+                        <h4 className="text-sm font-semibold text-amber-800 mb-4 flex items-center gap-2">
+                          <Crown className="h-4 w-4" />
+                          {isArabic ? 'مسار التفاعل' : 'Engagement Funnel'}
+                        </h4>
+                        <div className="space-y-3">
+                          {stages.map((stage, index) => {
+                            const percentage = maxCount > 0 ? Math.round((stage.count / maxCount) * 100) : 0;
+                            const StageIcon = stage.icon;
+                            return (
+                              <div key={stage.key} className="relative">
+                                <div className="flex items-center gap-3">
+                                  <div className={`flex items-center justify-center w-8 h-8 rounded-full ${stage.bgColor} ${stage.textColor}`}>
+                                    <StageIcon className="h-4 w-4" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className={`text-sm font-medium ${stage.textColor}`}>{stage.label}</span>
+                                      <span className={`text-sm font-bold ${stage.textColor}`}>{stage.count}</span>
+                                    </div>
+                                    <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                                      <div 
+                                        className={`h-full ${stage.color} rounded-full transition-all duration-500`}
+                                        style={{ width: `${percentage}%` }}
+                                      />
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 mt-0.5 text-end">{percentage}%</p>
+                                  </div>
+                                </div>
+                                {index < stages.length - 1 && (
+                                  <div className="absolute start-4 top-8 w-px h-3 bg-gray-300" />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Email Tracking Summary */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="p-4 rounded-lg bg-blue-50 border border-blue-200 text-center">
