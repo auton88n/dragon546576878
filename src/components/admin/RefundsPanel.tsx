@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { 
   AlertTriangle, Search, Undo2, RefreshCw, 
-  Users, DollarSign, CheckCircle, XCircle, Mail 
+  Users, DollarSign, CheckCircle, XCircle, Mail, Link, CreditCard 
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useToast } from '@/hooks/use-toast';
@@ -52,6 +52,18 @@ interface RefundLog {
   metadata: Record<string, unknown>;
 }
 
+interface OrphanPayment {
+  id: string;
+  status: string;
+  amount: number;
+  amountFormat: string;
+  description: string;
+  createdAt: string;
+  source: { type: string; company?: string; number?: string } | null;
+  isLinked: boolean;
+  linkedBookingRef: string | null;
+}
+
 const RefundsPanel = () => {
   const { currentLanguage } = useLanguage();
   const { toast } = useToast();
@@ -73,6 +85,16 @@ const RefundsPanel = () => {
   } | null>(null);
   const [refundAmount, setRefundAmount] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  // Orphan payments state
+  const [orphanPayments, setOrphanPayments] = useState<OrphanPayment[]>([]);
+  const [loadingOrphans, setLoadingOrphans] = useState(false);
+  const [orphanDateFrom, setOrphanDateFrom] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d.toISOString().split('T')[0];
+  });
+  const [orphanDateTo, setOrphanDateTo] = useState(() => new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     fetchDuplicates();
@@ -254,6 +276,32 @@ const RefundsPanel = () => {
     return format(new Date(date), 'PP p', { locale: isArabic ? ar : enUS });
   };
 
+  // Fetch orphan payments from Moyasar
+  const fetchOrphanPayments = async () => {
+    setLoadingOrphans(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('search-moyasar-payments', {
+        body: { 
+          dateFrom: orphanDateFrom,
+          dateTo: orphanDateTo,
+        }
+      });
+      if (error) throw error;
+      // Filter to only show paid but unlinked payments
+      const orphans = (data.payments || []).filter((p: OrphanPayment) => p.status === 'paid' && !p.isLinked);
+      setOrphanPayments(orphans);
+    } catch (err) {
+      console.error('Error fetching orphan payments:', err);
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل في جلب المدفوعات' : 'Failed to fetch payments',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingOrphans(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -356,17 +404,21 @@ const RefundsPanel = () => {
 
       {/* Inner Tabs */}
       <Tabs defaultValue="duplicates">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="duplicates" className="gap-2">
             <Users className="h-4 w-4" />
-            {isArabic ? 'مكررة' : 'Duplicates'}
+            <span className="hidden sm:inline">{isArabic ? 'مكررة' : 'Duplicates'}</span>
             {duplicates.length > 0 && (
               <Badge variant="destructive" className="ms-1 text-xs">{duplicates.length}</Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger value="orphans" className="gap-2">
+            <CreditCard className="h-4 w-4" />
+            <span className="hidden sm:inline">{isArabic ? 'مفقودة' : 'Orphans'}</span>
+          </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <Undo2 className="h-4 w-4" />
-            {isArabic ? 'السجل' : 'History'}
+            <span className="hidden sm:inline">{isArabic ? 'السجل' : 'History'}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -429,6 +481,89 @@ const RefundsPanel = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Orphan Payments Tab */}
+        <TabsContent value="orphans" className="mt-4">
+          <Card className="glass-card-gold border-0">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CreditCard className="h-4 w-4 text-amber-500" />
+                {isArabic ? 'مدفوعات غير مرتبطة' : 'Orphan Payments'}
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {isArabic 
+                  ? 'مدفوعات ناجحة في Moyasar لم يتم ربطها بحجز' 
+                  : 'Paid payments in Moyasar not linked to any booking'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Input
+                  type="date"
+                  value={orphanDateFrom}
+                  onChange={(e) => setOrphanDateFrom(e.target.value)}
+                  className="w-auto"
+                />
+                <Input
+                  type="date"
+                  value={orphanDateTo}
+                  onChange={(e) => setOrphanDateTo(e.target.value)}
+                  className="w-auto"
+                />
+                <Button onClick={fetchOrphanPayments} disabled={loadingOrphans} className="gap-2">
+                  {loadingOrphans ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  {isArabic ? 'بحث' : 'Search'}
+                </Button>
+              </div>
+
+              {loadingOrphans ? (
+                <div className="flex justify-center py-8">
+                  <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : orphanPayments.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CheckCircle className="h-12 w-12 mx-auto mb-2 text-emerald-500" />
+                  <p>{isArabic ? 'لا توجد مدفوعات غير مرتبطة' : 'No orphan payments found'}</p>
+                  <p className="text-xs mt-1">{isArabic ? 'اضغط على بحث لفحص Moyasar' : 'Click Search to check Moyasar'}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-amber-600 font-medium">
+                    {orphanPayments.length} {isArabic ? 'مدفوعات غير مرتبطة' : 'unlinked payments found'}
+                  </p>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{isArabic ? 'معرف الدفع' : 'Payment ID'}</TableHead>
+                        <TableHead>{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                        <TableHead>{isArabic ? 'الوصف' : 'Description'}</TableHead>
+                        <TableHead>{isArabic ? 'التاريخ' : 'Date'}</TableHead>
+                        <TableHead>{isArabic ? 'الطريقة' : 'Method'}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {orphanPayments.map((payment) => (
+                        <TableRow key={payment.id}>
+                          <TableCell className="font-mono text-xs">{payment.id.slice(0, 12)}...</TableCell>
+                          <TableCell className="font-medium">{payment.amount} SAR</TableCell>
+                          <TableCell className="text-sm max-w-[200px] truncate">{payment.description || '-'}</TableCell>
+                          <TableCell className="text-sm">{formatDateTime(payment.createdAt)}</TableCell>
+                          <TableCell>
+                            {payment.source && (
+                              <span className="text-xs">
+                                {payment.source.type} {payment.source.company && `(${payment.source.company})`}
+                              </span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               )}
             </CardContent>
