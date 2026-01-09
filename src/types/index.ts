@@ -9,7 +9,7 @@ export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
 export type BookingStatus = 'confirmed' | 'cancelled' | 'completed' | 'no_show';
 
-export type TicketType = 'adult' | 'child' | 'senior';
+export type TicketType = 'adult' | 'child' | 'group';
 
 export type ScanResult = 'success' | 'already_used' | 'invalid' | 'expired' | 'wrong_date';
 
