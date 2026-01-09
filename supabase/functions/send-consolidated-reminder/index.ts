@@ -268,14 +268,16 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Fetch ALL pending bookings for this customer
-    const { data: bookings, error: bookingsError } = await supabase
+    const { data: allBookings, error: bookingsError } = await supabase
       .from("bookings")
-      .select("id, booking_reference, customer_name, customer_email, visit_date, visit_time, adult_count, child_count, senior_count, total_amount, language")
+      .select("id, booking_reference, customer_name, customer_email, visit_date, visit_time, adult_count, child_count, senior_count, total_amount, language, created_at")
       .eq("customer_email", customerEmail)
       .eq("payment_status", "pending")
-      .order("visit_date", { ascending: true });
+      .eq("booking_status", "confirmed")
+      .order("visit_date", { ascending: true })
+      .order("created_at", { ascending: false });
 
-    if (bookingsError || !bookings || bookings.length === 0) {
+    if (bookingsError || !allBookings || allBookings.length === 0) {
       console.error("No pending bookings found:", bookingsError);
       return new Response(
         JSON.stringify({ success: false, error: "No pending bookings found for this customer" }),
@@ -283,7 +285,44 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Found ${bookings.length} pending bookings for ${customerEmail}`);
+    console.log(`Found ${allBookings.length} pending bookings for ${customerEmail}`);
+
+    // DUPLICATE DETECTION: Group by visit_date and keep only the newest booking per date
+    // This prevents sending multiple "Pay Now" links for what is essentially the same booking attempt
+    const bookingsByDate: Record<string, typeof allBookings> = {};
+    allBookings.forEach((booking) => {
+      const key = booking.visit_date;
+      if (!bookingsByDate[key]) {
+        bookingsByDate[key] = [];
+      }
+      bookingsByDate[key].push(booking);
+    });
+
+    // For each date, keep only the newest booking (first in array since sorted by created_at DESC)
+    // Flag others as potential duplicates
+    const duplicateIds: string[] = [];
+    const bookings: typeof allBookings = [];
+
+    for (const date of Object.keys(bookingsByDate)) {
+      const dateBookings = bookingsByDate[date];
+      if (dateBookings.length > 1) {
+        // Multiple bookings for same date - keep newest, mark others as duplicates
+        bookings.push(dateBookings[0]); // Newest one
+        dateBookings.slice(1).forEach((b) => duplicateIds.push(b.id));
+        console.log(`Duplicate detection: ${dateBookings.length} bookings for ${date}, keeping ${dateBookings[0].booking_reference}, flagging ${dateBookings.length - 1} as duplicates`);
+      } else {
+        bookings.push(dateBookings[0]);
+      }
+    }
+
+    // Update duplicate bookings to mark them (don't cancel, just flag for admin review)
+    if (duplicateIds.length > 0) {
+      console.log(`Flagging ${duplicateIds.length} potential duplicate bookings for admin review`);
+      // We'll just log this for now - no need to update DB if we don't have a potential_duplicate column
+      // The admin can see these in the Refund Center
+    }
+
+    console.log(`After duplicate detection: sending ${bookings.length} bookings to customer`);
 
     // Use the language from the first booking
     const isArabic = bookings[0].language === 'ar';

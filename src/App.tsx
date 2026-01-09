@@ -32,6 +32,7 @@ const { Component: SupportPage, preload: preloadSupport } = lazyWithPreload(() =
 const { Component: TermsPage, preload: preloadTerms } = lazyWithPreload(() => import('./pages/TermsPage'));
 const { Component: NotFound } = lazyWithPreload(() => import('./pages/NotFound'));
 const { Component: VIPRSVPPage } = lazyWithPreload(() => import('./pages/VIPRSVPPage'));
+const { Component: RefundManagementPage } = lazyWithPreload(() => import('./pages/RefundManagementPage'));
 
 // Redirect helper for resume-payment route
 const ResumePaymentRedirect = () => {
@@ -130,6 +131,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['admin', 'manager']}>
                   <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/refunds"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <RefundManagementPage />
                 </ProtectedRoute>
               }
             />
