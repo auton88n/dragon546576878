@@ -10,6 +10,7 @@ export interface BookingFilters {
   paymentStatus: string;
   dateFrom: string;
   dateTo: string;
+  hideAbandoned: boolean;
 }
 
 const THROTTLE_MS = 2000;
