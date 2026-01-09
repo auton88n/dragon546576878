@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { logPaymentEvent } from '@/hooks/usePaymentLogs';
+import { markBookingAsPaid } from '@/lib/manualPaymentService';
 import type { Tables } from '@/integrations/supabase/types';
 import {
   Dialog,
@@ -96,49 +97,74 @@ const EditBookingDialog = ({ booking, open, onOpenChange, onBookingUpdated }: Ed
 
     setSaving(true);
     try {
-      // Check if payment status is changing
-      const paymentStatusChanged = paymentStatus !== booking.payment_status;
+      // Check if payment status is changing to completed
+      const changingToCompleted = paymentStatus === 'completed' && booking.payment_status !== 'completed';
       
-      // Determine paid_at based on payment status change
-      let paidAt = booking.paid_at;
-      if (paymentStatus === 'completed' && booking.payment_status !== 'completed') {
-        paidAt = new Date().toISOString();
-      } else if (paymentStatus === 'pending' && booking.payment_status === 'completed') {
-        paidAt = null;
-      }
+      if (changingToCompleted) {
+        // Use the helper that generates tickets and sends email
+        const result = await markBookingAsPaid(booking.id, user?.id);
+        if (!result.success) throw new Error(result.error);
+        
+        // Also update any other changed fields
+        const { error } = await supabase
+          .from('bookings')
+          .update({
+            visit_date: format(visitDate, 'yyyy-MM-dd'),
+            visit_time: visitTime,
+            customer_name: customerName.trim(),
+            customer_email: customerEmail.trim(),
+            customer_phone: customerPhone.trim(),
+            special_requests: specialRequests.trim() || null,
+            booking_status: bookingStatus,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', booking.id);
 
-      const { error } = await supabase
-        .from('bookings')
-        .update({
-          visit_date: format(visitDate, 'yyyy-MM-dd'),
-          visit_time: visitTime,
-          customer_name: customerName.trim(),
-          customer_email: customerEmail.trim(),
-          customer_phone: customerPhone.trim(),
-          special_requests: specialRequests.trim() || null,
-          payment_status: paymentStatus,
-          booking_status: bookingStatus,
-          paid_at: paidAt,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', booking.id);
+        if (error) throw error;
+      } else {
+        // Normal update for other changes
+        const paymentStatusChanged = paymentStatus !== booking.payment_status;
+        
+        let paidAt = booking.paid_at;
+        if (paymentStatus === 'pending' && booking.payment_status === 'completed') {
+          paidAt = null;
+        }
 
-      if (error) throw error;
+        const { error } = await supabase
+          .from('bookings')
+          .update({
+            visit_date: format(visitDate, 'yyyy-MM-dd'),
+            visit_time: visitTime,
+            customer_name: customerName.trim(),
+            customer_email: customerEmail.trim(),
+            customer_phone: customerPhone.trim(),
+            special_requests: specialRequests.trim() || null,
+            payment_status: paymentStatus,
+            booking_status: bookingStatus,
+            paid_at: paidAt,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', booking.id);
 
-      // Log payment status change if it changed
-      if (paymentStatusChanged) {
-        await logPaymentEvent(booking.id, 'manual_update', {
-          statusBefore: booking.payment_status,
-          statusAfter: paymentStatus,
-          changedBy: user?.id,
-          amount: Number(booking.total_amount),
-          paymentMethod: 'manual',
-        });
+        if (error) throw error;
+
+        // Log payment status change if it changed
+        if (paymentStatusChanged) {
+          await logPaymentEvent(booking.id, 'manual_update', {
+            statusBefore: booking.payment_status,
+            statusAfter: paymentStatus,
+            changedBy: user?.id,
+            amount: Number(booking.total_amount),
+            paymentMethod: 'manual',
+          });
+        }
       }
 
       toast({
         title: isArabic ? 'تم الحفظ' : 'Saved',
-        description: isArabic ? 'تم تحديث الحجز بنجاح' : 'Booking updated successfully',
+        description: changingToCompleted 
+          ? (isArabic ? 'تم تحديث الحجز وإنشاء التذاكر' : 'Booking updated and tickets generated')
+          : (isArabic ? 'تم تحديث الحجز بنجاح' : 'Booking updated successfully'),
       });
 
       onBookingUpdated?.();

@@ -5,6 +5,7 @@ import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck,
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { resendConfirmationEmail } from '@/lib/emailService';
+import { markBookingAsPaid, regenerateTickets } from '@/lib/manualPaymentService';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 import {
@@ -95,18 +96,38 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     if (!booking) return;
     setMarkingPaid(true);
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ payment_status: 'completed', paid_at: new Date().toISOString(), booking_status: 'confirmed' })
-        .eq('id', booking.id);
-      if (error) throw error;
-      toast({ title: isArabic ? 'تم التحديث' : 'Updated', description: isArabic ? 'تم تحديث حالة الدفع' : 'Payment marked as paid' });
+      const result = await markBookingAsPaid(booking.id);
+      if (!result.success) throw new Error(result.error);
+      toast({ 
+        title: isArabic ? 'تم التحديث' : 'Updated', 
+        description: isArabic ? 'تم تحديث حالة الدفع وإنشاء التذاكر' : 'Payment marked as paid and tickets generated' 
+      });
       onBookingUpdated?.();
       onOpenChange(false);
     } catch {
       toast({ title: isArabic ? 'خطأ' : 'Error', description: isArabic ? 'فشل التحديث' : 'Failed to update', variant: 'destructive' });
     } finally {
       setMarkingPaid(false);
+    }
+  };
+
+  const [regenerating, setRegenerating] = useState(false);
+  
+  const handleRegenerateTickets = async () => {
+    if (!booking) return;
+    setRegenerating(true);
+    try {
+      const result = await regenerateTickets(booking.id);
+      if (!result.success) throw new Error(result.error);
+      toast({ 
+        title: isArabic ? 'تم الإنشاء' : 'Generated', 
+        description: isArabic ? 'تم إنشاء التذاكر وإرسال البريد' : 'Tickets generated and email sent' 
+      });
+      fetchTickets();
+    } catch {
+      toast({ title: isArabic ? 'خطأ' : 'Error', description: isArabic ? 'فشل إنشاء التذاكر' : 'Failed to generate tickets', variant: 'destructive' });
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -323,9 +344,23 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
 
           {/* Generated Tickets / QR Codes */}
           <div className="glass-card rounded-xl p-5 border border-accent/10">
-            <h3 className="font-semibold mb-4 text-foreground text-start rtl:text-end">
-              {isArabic ? 'رموز QR' : 'QR Codes'} ({tickets.length})
-            </h3>
+            <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
+              <h3 className="font-semibold text-foreground text-start rtl:text-end">
+                {isArabic ? 'رموز QR' : 'QR Codes'} ({tickets.length})
+              </h3>
+              {booking.payment_status === 'completed' && tickets.length === 0 && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={handleRegenerateTickets}
+                  disabled={regenerating}
+                  className="gap-2 text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
+                >
+                  {regenerating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Ticket className="h-3.5 w-3.5" />}
+                  {isArabic ? 'إنشاء التذاكر' : 'Generate Tickets'}
+                </Button>
+              )}
+            </div>
             {loadingTickets ? (
               <div className="grid grid-cols-3 gap-4">
                 {[1, 2, 3].map((i) => (
