@@ -380,7 +380,7 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
     if (booking.payment_status !== 'completed') {
       return {
         isValid: false,
-        status: 'invalid',
+        status: 'not_paid',
         message: 'Payment not completed',
         isGroupTicket: true,
         booking: bookingData,
