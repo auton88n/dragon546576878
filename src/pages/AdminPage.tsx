@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
-import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send, Eye } from 'lucide-react';
+import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send, Eye, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
@@ -9,6 +9,7 @@ import { exportToCSV, exportToExcel } from '@/lib/exportBookings';
 import { sendConsolidatedReminder } from '@/lib/emailService';
 import { supabase } from '@/integrations/supabase/client';
 import StaffHeader from '@/components/shared/StaffHeader';
+import { cn } from '@/lib/utils';
 import PoweredByAYN from '@/components/shared/PoweredByAYN';
 import StatsCard from '@/components/admin/StatsCard';
 import BookingTable from '@/components/admin/BookingTable';
@@ -320,13 +321,25 @@ const AdminPage = () => {
             <TabsContent value="bookings">
               <Card className="glass-card-gold border-0">
                 <CardHeader className="border-b border-border/50 p-3 sm:p-4 md:p-6">
-                  <CardTitle className="flex items-center gap-2 text-base md:text-lg rtl:flex-row-reverse rtl:justify-end">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl gradient-gold flex items-center justify-center">
-                      <Ticket className="h-4 w-4 md:h-5 md:w-5 text-foreground" />
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-base md:text-lg rtl:flex-row-reverse">
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl gradient-gold flex items-center justify-center">
+                        <Ticket className="h-4 w-4 md:h-5 md:w-5 text-foreground" />
+                      </div>
+                      <span className="text-foreground">
+                        {isArabic ? 'إدارة الحجوزات' : 'Booking Management'}
+                      </span>
                     </div>
-                    <span className="text-foreground">
-                      {isArabic ? 'إدارة الحجوزات' : 'Booking Management'}
-                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => refetch()}
+                      disabled={bookingsLoading}
+                      className="gap-2 border-accent/30 hover:bg-accent/10"
+                    >
+                      <RefreshCw className={cn("h-4 w-4", bookingsLoading && "animate-spin")} />
+                      <span className="hidden sm:inline">{isArabic ? 'تحديث' : 'Refresh'}</span>
+                    </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 p-3 sm:p-4 md:p-6 pt-4 sm:pt-6">

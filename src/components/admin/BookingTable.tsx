@@ -167,6 +167,38 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     }
   };
 
+  const handleGenerateTickets = async (booking: Booking) => {
+    setActionLoadingId(booking.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-tickets', {
+        body: { bookingId: booking.id }
+      });
+      if (error) throw error;
+      
+      // Send confirmation email after tickets generated
+      await supabase.functions.invoke('send-booking-confirmation', {
+        body: { bookingId: booking.id }
+      });
+      
+      toast({
+        title: isArabic ? 'تم إنشاء التذاكر' : 'Tickets Generated',
+        description: isArabic 
+          ? 'تم إنشاء التذاكر وإرسال البريد الإلكتروني' 
+          : 'Tickets created and confirmation email sent',
+      });
+      onBookingUpdated?.();
+    } catch (err) {
+      console.error('Generate tickets error:', err);
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل إنشاء التذاكر' : 'Failed to generate tickets',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const handleSelectAll = () => {
     if (!onSelectionChange) return;
     if (selectedIds.length === bookings.length) {
@@ -398,8 +430,17 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                   {isArabic ? 'إلغاء الحجز' : 'Cancel Booking'}
                 </DropdownMenuItem>
               )}
+              {booking.payment_status === 'completed' && !booking.qr_codes_generated && (
+                <DropdownMenuItem 
+                  onClick={() => handleGenerateTickets(booking)}
+                  className="cursor-pointer text-amber-600 hover:bg-amber-500/10"
+                >
+                  <Ticket className="h-4 w-4 me-2" />
+                  {isArabic ? 'إنشاء التذاكر' : 'Generate Tickets'}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleResendEmail(booking)}
                 disabled={resendingId === booking.id}
                 className="cursor-pointer hover:bg-accent/10"
@@ -531,6 +572,15 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                 </DropdownMenuItem>
               </>
             )}
+            {booking.payment_status === 'completed' && !booking.qr_codes_generated && (
+              <DropdownMenuItem 
+                onClick={() => handleGenerateTickets(booking)}
+                className="cursor-pointer text-amber-600 hover:bg-amber-500/10"
+              >
+                <Ticket className="h-4 w-4 me-2" />
+                {isArabic ? 'إنشاء التذاكر' : 'Generate Tickets'}
+              </DropdownMenuItem>
+            )}
             {booking.booking_status !== 'cancelled' && (
               <DropdownMenuItem 
                 onClick={() => handleCancelBooking(booking)}
@@ -541,7 +591,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={() => handleResendEmail(booking)}
               disabled={resendingId === booking.id}
               className="cursor-pointer hover:bg-accent/10"
