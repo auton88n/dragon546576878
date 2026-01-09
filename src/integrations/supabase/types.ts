@@ -750,6 +750,7 @@ export type Database = {
       vip_contacts: {
         Row: {
           category: string
+          confirmed_guests: number | null
           created_at: string | null
           email: string
           id: string
@@ -766,6 +767,7 @@ export type Database = {
         }
         Insert: {
           category?: string
+          confirmed_guests?: number | null
           created_at?: string | null
           email: string
           id?: string
@@ -782,6 +784,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          confirmed_guests?: number | null
           created_at?: string | null
           email?: string
           id?: string
@@ -850,6 +853,71 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "vip_email_logs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "vip_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vip_invitations: {
+        Row: {
+          confirmed_at: string | null
+          confirmed_guests: number | null
+          contact_id: string | null
+          created_at: string | null
+          decline_reason: string | null
+          declined_at: string | null
+          event_date: string | null
+          event_time: string | null
+          expires_at: string | null
+          guest_allowance: number | null
+          id: string
+          include_video: boolean | null
+          offer_details_ar: string | null
+          offer_details_en: string | null
+          perks: Json | null
+          rsvp_token: string
+        }
+        Insert: {
+          confirmed_at?: string | null
+          confirmed_guests?: number | null
+          contact_id?: string | null
+          created_at?: string | null
+          decline_reason?: string | null
+          declined_at?: string | null
+          event_date?: string | null
+          event_time?: string | null
+          expires_at?: string | null
+          guest_allowance?: number | null
+          id?: string
+          include_video?: boolean | null
+          offer_details_ar?: string | null
+          offer_details_en?: string | null
+          perks?: Json | null
+          rsvp_token?: string
+        }
+        Update: {
+          confirmed_at?: string | null
+          confirmed_guests?: number | null
+          contact_id?: string | null
+          created_at?: string | null
+          decline_reason?: string | null
+          declined_at?: string | null
+          event_date?: string | null
+          event_time?: string | null
+          expires_at?: string | null
+          guest_allowance?: number | null
+          id?: string
+          include_video?: boolean | null
+          offer_details_ar?: string | null
+          offer_details_en?: string | null
+          perks?: Json | null
+          rsvp_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vip_invitations_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "vip_contacts"

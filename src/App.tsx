@@ -31,6 +31,7 @@ const { Component: GroupBookingsPage, preload: preloadGroupBookings } = lazyWith
 const { Component: SupportPage, preload: preloadSupport } = lazyWithPreload(() => import('./pages/SupportPage'));
 const { Component: TermsPage, preload: preloadTerms } = lazyWithPreload(() => import('./pages/TermsPage'));
 const { Component: NotFound } = lazyWithPreload(() => import('./pages/NotFound'));
+const { Component: VIPRSVPPage } = lazyWithPreload(() => import('./pages/VIPRSVPPage'));
 
 // Redirect helper for resume-payment route
 const ResumePaymentRedirect = () => {
@@ -110,6 +111,7 @@ const App = () => (
             <Route path="/group-bookings" element={<GroupBookingsPage />} />
             <Route path="/support" element={<SupportPage />} />
             <Route path="/terms" element={<TermsPage />} />
+            <Route path="/vip/rsvp/:token" element={<VIPRSVPPage />} />
             <Route path="/login" element={<LoginPage />} />
             
             {/* Protected Routes - Scanner */}
