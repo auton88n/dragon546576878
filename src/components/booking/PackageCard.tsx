@@ -43,7 +43,7 @@ const PackageCard = ({ package_, quantity, onQuantityChange }: PackageCardProps)
 
   const handleIncrease = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (quantity < 10) {
+    if (quantity < 25) {
       onQuantityChange(quantity + 1);
     }
   };
@@ -137,10 +137,10 @@ const PackageCard = ({ package_, quantity, onQuantityChange }: PackageCardProps)
             size="icon"
             className={cn(
               'h-9 w-9 rounded-full transition-all hover:bg-accent hover:text-accent-foreground',
-              quantity >= 10 && 'opacity-50'
+              quantity >= 25 && 'opacity-50'
             )}
             onClick={handleIncrease}
-            disabled={quantity >= 10}
+            disabled={quantity >= 25}
           >
             <Plus className="h-4 w-4" />
           </Button>
