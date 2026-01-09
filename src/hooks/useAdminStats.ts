@@ -40,6 +40,10 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
   const startOfDay = `${today}T00:00:00+03:00`;
   const endOfDay = `${today}T23:59:59+03:00`;
 
+  // Test email patterns to exclude from all stats
+  const testEmailPatterns = ['%test%', '%example%'];
+  const specificTestEmails = ['crossmint7@gmail.com'];
+
   const [
     { data: allBookings, count: totalBookingsCount },
     { data: todayBookingsData },
@@ -55,6 +59,9 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
       .select('total_amount', { count: 'exact' })
       .eq('booking_status', 'confirmed')
       .eq('payment_status', 'completed')
+      .not('customer_email', 'ilike', testEmailPatterns[0])
+      .not('customer_email', 'ilike', testEmailPatterns[1])
+      .not('customer_email', 'in', `(${specificTestEmails.join(',')})`)
       .limit(10000),
     // Today's bookings
     supabase
@@ -62,7 +69,10 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
       .select('adult_count, child_count, senior_count')
       .eq('visit_date', today)
       .eq('booking_status', 'confirmed')
-      .eq('payment_status', 'completed'),
+      .eq('payment_status', 'completed')
+      .not('customer_email', 'ilike', testEmailPatterns[0])
+      .not('customer_email', 'ilike', testEmailPatterns[1])
+      .not('customer_email', 'in', `(${specificTestEmails.join(',')})`),
     // Scanned tickets - use count for efficiency
     supabase
       .from('tickets')
@@ -79,16 +89,22 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
       .select('*', { count: 'exact', head: true })
       .gte('scan_timestamp', startOfDay)
       .lte('scan_timestamp', endOfDay),
-    // Pending payments
+    // Pending payments (excluding test emails)
     supabase
       .from('bookings')
       .select('total_amount', { count: 'exact' })
-      .eq('payment_status', 'pending'),
-    // Pending bookings for duplicate detection
+      .eq('payment_status', 'pending')
+      .not('customer_email', 'ilike', testEmailPatterns[0])
+      .not('customer_email', 'ilike', testEmailPatterns[1])
+      .not('customer_email', 'in', `(${specificTestEmails.join(',')})`),
+    // Pending bookings for duplicate detection (excluding test emails)
     supabase
       .from('bookings')
       .select('customer_email, visit_date')
-      .eq('payment_status', 'pending'),
+      .eq('payment_status', 'pending')
+      .not('customer_email', 'ilike', testEmailPatterns[0])
+      .not('customer_email', 'ilike', testEmailPatterns[1])
+      .not('customer_email', 'in', `(${specificTestEmails.join(',')})`),
   ]);
 
   // Calculate duplicate bookings count

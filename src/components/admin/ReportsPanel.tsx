@@ -1,12 +1,14 @@
 import { useState, useMemo, memo } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { TrendingUp, Users, DollarSign, Calendar, BarChart3, CreditCard, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Calendar, BarChart3, CreditCard, CheckCircle, XCircle, Clock, AlertTriangle, RefreshCw, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useReportData } from '@/hooks/useReportData';
+import { useMoyasarVerification } from '@/hooks/useMoyasarVerification';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import {
   AreaChart,
   Area,
@@ -51,6 +53,7 @@ const ReportsPanel = () => {
   const isArabic = currentLanguage === 'ar';
   const [period, setPeriod] = useState<'7' | '30' | '90'>('30');
   const { data, loading } = useReportData(Number(period));
+  const { verify, loading: verifyLoading, error: verifyError, result: verifyResult } = useMoyasarVerification();
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -195,6 +198,92 @@ const ReportsPanel = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-6 md:space-y-8 p-4 md:p-6 pt-4 md:pt-6">
+        {/* Revenue Verification Card */}
+        <div className="glass-card rounded-xl p-4 md:p-6 border border-accent/10">
+          <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
+            <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse text-sm md:text-base">
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <ShieldCheck className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-600" />
+              </div>
+              {isArabic ? 'التحقق من الإيرادات' : 'Revenue Verification'}
+            </h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={verify}
+              disabled={verifyLoading}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${verifyLoading ? 'animate-spin' : ''}`} />
+              {isArabic ? 'تحقق الآن' : 'Verify Now'}
+            </Button>
+          </div>
+
+          {verifyError && (
+            <div className="flex items-center gap-2 text-destructive bg-destructive/10 p-3 rounded-lg mb-4 rtl:flex-row-reverse">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm">{verifyError}</span>
+            </div>
+          )}
+
+          {verifyResult && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <p className="text-xs text-muted-foreground mb-1">{isArabic ? 'بوابة الدفع (Moyasar)' : 'Payment Gateway (Moyasar)'}</p>
+                <p className="text-lg font-bold text-foreground">
+                  {verifyResult.moyasar.totalPaid.toLocaleString()} {isArabic ? 'ر.س' : 'SAR'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {verifyResult.moyasar.paymentCount} {isArabic ? 'عملية دفع' : 'payments'}
+                </p>
+              </div>
+              <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                <p className="text-xs text-muted-foreground mb-1">{isArabic ? 'قاعدة البيانات' : 'Database'}</p>
+                <p className="text-lg font-bold text-foreground">
+                  {verifyResult.database.totalRevenue.toLocaleString()} {isArabic ? 'ر.س' : 'SAR'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {verifyResult.database.bookingCount} {isArabic ? 'حجز' : 'bookings'}
+                </p>
+              </div>
+              <div className={`p-4 rounded-lg border ${verifyResult.match ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                <p className="text-xs text-muted-foreground mb-1">{isArabic ? 'الحالة' : 'Status'}</p>
+                <div className="flex items-center gap-2 rtl:flex-row-reverse">
+                  {verifyResult.match ? (
+                    <>
+                      <CheckCircle className="h-5 w-5 text-emerald-600" />
+                      <span className="font-bold text-emerald-600">{isArabic ? 'متطابق' : 'Match'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="h-5 w-5 text-red-600" />
+                      <span className="font-bold text-red-600">
+                        {isArabic ? 'فرق' : 'Discrepancy'}: {verifyResult.discrepancy.toLocaleString()} SAR
+                      </span>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isArabic ? 'آخر تحقق:' : 'Verified:'} {format(new Date(verifyResult.verifiedAt), 'MMM d, h:mm a')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!verifyResult && !verifyLoading && !verifyError && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              {isArabic ? 'انقر على "تحقق الآن" لمقارنة الإيرادات مع بوابة الدفع' : 'Click "Verify Now" to compare revenue with payment gateway'}
+            </p>
+          )}
+
+          {verifyLoading && (
+            <div className="flex items-center justify-center py-6 gap-2">
+              <RefreshCw className="h-5 w-5 animate-spin text-accent" />
+              <span className="text-sm text-muted-foreground">{isArabic ? 'جاري التحقق...' : 'Verifying...'}</span>
+            </div>
+          )}
+        </div>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 rtl:[direction:rtl]">
           {summaryCards.map((card, index) => (
