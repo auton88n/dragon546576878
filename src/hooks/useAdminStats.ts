@@ -12,6 +12,7 @@ export interface AdminStats {
   todayScans: number;
   pendingPaymentsCount: number;
   pendingPaymentsAmount: number;
+  duplicateBookingsCount: number;
 }
 
 const DEFAULT_STATS: AdminStats = {
@@ -24,6 +25,7 @@ const DEFAULT_STATS: AdminStats = {
   todayScans: 0,
   pendingPaymentsCount: 0,
   pendingPaymentsAmount: 0,
+  duplicateBookingsCount: 0,
 };
 
 const fetchAdminStats = async (): Promise<AdminStats> => {
@@ -45,6 +47,7 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
     { count: pendingEmailsCount },
     { count: todayScansCount },
     { data: pendingPaymentsData, count: pendingPaymentsCount },
+    { data: pendingForDuplicates },
   ] = await Promise.all([
     // Total revenue with explicit limit to avoid 1000 row cap
     supabase
@@ -81,7 +84,20 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
       .from('bookings')
       .select('total_amount', { count: 'exact' })
       .eq('payment_status', 'pending'),
+    // Pending bookings for duplicate detection
+    supabase
+      .from('bookings')
+      .select('customer_email, visit_date')
+      .eq('payment_status', 'pending'),
   ]);
+
+  // Calculate duplicate bookings count
+  const duplicateGroups: Record<string, number> = {};
+  (pendingForDuplicates || []).forEach((b) => {
+    const key = `${b.customer_email}|${b.visit_date}`;
+    duplicateGroups[key] = (duplicateGroups[key] || 0) + 1;
+  });
+  const duplicateBookingsCount = Object.values(duplicateGroups).filter(count => count >= 2).length;
 
   const totalRevenue = allBookings?.reduce((sum, b) => sum + Number(b.total_amount ?? 0), 0) || 0;
   const todayVisitors = todayBookingsData?.reduce(
@@ -101,6 +117,7 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
     todayScans: todayScansCount || 0,
     pendingPaymentsCount: pendingPaymentsCount || 0,
     pendingPaymentsAmount,
+    duplicateBookingsCount,
   };
 };
 
