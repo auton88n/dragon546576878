@@ -48,13 +48,33 @@ const templateTypes = [
   { id: 'thank_you', en: 'Thank You', ar: 'شكر وتقدير' },
 ];
 
-// VIP Perks
-const vipPerks = [
-  { id: 'private_tour', en: 'Private guided tour', ar: 'جولة خاصة مع مرشد', icon: MapPin },
-  { id: 'photography', en: 'Professional photography session', ar: 'جلسة تصوير احترافية', icon: Camera },
-  { id: 'dinner', en: 'Traditional Saudi hospitality dinner', ar: 'عشاء ضيافة سعودية تقليدية', icon: Utensils },
-  { id: 'vip_seating', en: 'VIP seating at cultural performances', ar: 'مقاعد VIP في العروض الثقافية', icon: Users },
-  { id: 'special_gift', en: 'Special gift from Souq Almufaijer', ar: 'هدية خاصة من سوق المفيجر', icon: Gift },
+// VIP Perks - Available icons
+const perkIcons = {
+  MapPin: MapPin,
+  Camera: Camera,
+  Utensils: Utensils,
+  Users: Users,
+  Gift: Gift,
+  Crown: Crown,
+  CheckCircle: CheckCircle,
+};
+
+type PerkIconKey = keyof typeof perkIcons;
+
+interface VIPPerk {
+  id: string;
+  en: string;
+  ar: string;
+  iconKey: PerkIconKey;
+}
+
+// Default perks
+const defaultPerks: VIPPerk[] = [
+  { id: 'private_tour', en: 'Private guided tour', ar: 'جولة خاصة مع مرشد', iconKey: 'MapPin' },
+  { id: 'photography', en: 'Professional photography session', ar: 'جلسة تصوير احترافية', iconKey: 'Camera' },
+  { id: 'dinner', en: 'Traditional Saudi hospitality dinner', ar: 'عشاء ضيافة سعودية تقليدية', iconKey: 'Utensils' },
+  { id: 'vip_seating', en: 'VIP seating at cultural performances', ar: 'مقاعد VIP في العروض الثقافية', iconKey: 'Users' },
+  { id: 'special_gift', en: 'Special gift from Souq Almufaijer', ar: 'هدية خاصة من سوق المفيجر', iconKey: 'Gift' },
 ];
 
 // Empty contact form
