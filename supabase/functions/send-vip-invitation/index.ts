@@ -20,7 +20,21 @@ interface VIPEmailRequest {
   offerDetails?: string;
   eventDate?: string;
   eventTime?: string;
+  // NEW: Enhanced fields
+  guestAllowance?: number;
+  perks?: string[];
+  includeVideo?: boolean;
+  enableRSVP?: boolean;
 }
+
+// Perk labels
+const perkLabels: Record<string, { en: string; ar: string }> = {
+  private_tour: { en: 'Private guided tour', ar: 'جولة خاصة مع مرشد' },
+  photography: { en: 'Professional photography session', ar: 'جلسة تصوير احترافية' },
+  dinner: { en: 'Traditional Saudi hospitality dinner', ar: 'عشاء ضيافة سعودية تقليدية' },
+  vip_seating: { en: 'VIP seating at cultural performances', ar: 'مقاعد VIP في العروض الثقافية' },
+  special_gift: { en: 'Special gift from Souq Almufaijer', ar: 'هدية خاصة من سوق المفيجر' },
+};
 
 // Generate tracking pixel URL
 const getTrackingPixelUrl = (trackingId: string): string => {
@@ -28,18 +42,31 @@ const getTrackingPixelUrl = (trackingId: string): string => {
   return `${supabaseUrl}/functions/v1/track-email-open/${trackingId}.gif`;
 };
 
-// Professional VIP email template
+// Generate RSVP URL
+const getRSVPUrl = (rsvpToken: string): string => {
+  return `https://tickets.almufaijer.com/vip/rsvp/${rsvpToken}`;
+};
+
+// Professional VIP email template with video, perks, and RSVP
 const generateVIPEmailHTML = (
   language: 'ar' | 'en',
   name: string,
   subject: string,
   messageBody: string,
-  offerDetails?: string,
-  eventDate?: string,
-  eventTime?: string
+  options: {
+    offerDetails?: string;
+    eventDate?: string;
+    eventTime?: string;
+    guestAllowance?: number;
+    perks?: string[];
+    includeVideo?: boolean;
+    enableRSVP?: boolean;
+    rsvpToken?: string;
+  }
 ): string => {
   const isArabic = language === 'ar';
   const dir = isArabic ? 'rtl' : 'ltr';
+  const { offerDetails, eventDate, eventTime, guestAllowance = 2, perks = [], includeVideo = true, enableRSVP = true, rsvpToken } = options;
   
   const greeting = isArabic ? `حضرة ${name} المحترم/ة،` : `Dear ${name},`;
   const regardsText = isArabic ? 'مع أطيب التحيات،' : 'With warm regards,';
@@ -48,6 +75,32 @@ const generateVIPEmailHTML = (
   const contactText = isArabic ? 'للتنسيق والاستفسارات:' : 'For coordination and inquiries:';
   const dateLabel = isArabic ? 'التاريخ:' : 'Date:';
   const timeLabel = isArabic ? 'الوقت:' : 'Time:';
+  
+  const videoUrl = "https://hekgkfdunwpxqbrotfpn.supabase.co/storage/v1/object/public/videos/souq-almufaijer-video.mp4";
+  const rsvpUrl = rsvpToken ? getRSVPUrl(rsvpToken) : '#';
+
+  // Generate perks HTML
+  const perksHtml = perks.length > 0 ? `
+    <table role="presentation" style="width: 100%; margin-bottom: 24px;" bgcolor="#4A3625">
+      <tr>
+        <td bgcolor="#4A3625" style="background-color: #4A3625; padding: 24px; border-radius: 12px;">
+          <p style="color: #C9A962; font-size: 14px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
+            ${isArabic ? '✨ تجربتكم المميزة تتضمن' : '✨ YOUR VIP EXPERIENCE INCLUDES'}
+          </p>
+          ${perks.map(perkId => {
+            const label = perkLabels[perkId];
+            if (!label) return '';
+            return `
+              <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <span style="color: #C9A962; margin-${isArabic ? 'left' : 'right'}: 10px;">✓</span>
+                <span style="color: #FFFFFF; font-size: 15px;">${isArabic ? label.ar : label.en}</span>
+              </div>
+            `;
+          }).join('')}
+        </td>
+      </tr>
+    </table>
+  ` : '';
 
   return `
 <!DOCTYPE html>
@@ -59,7 +112,7 @@ const generateVIPEmailHTML = (
   <meta name="supported-color-schemes" content="light only">
   <title>${subject}</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F5F1E8; direction: ${dir};">
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F5F1E8; direction: ${dir}; -webkit-text-fill-color: inherit;">
   <table role="presentation" style="width: 100%; border-collapse: collapse;">
     <tr>
       <td style="padding: 40px 20px;">
@@ -75,7 +128,7 @@ const generateVIPEmailHTML = (
                   ${isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
                 </h1>
                 <p style="color: #C9A962; margin: 12px 0 0 0; font-size: 16px; font-weight: 500; letter-spacing: 2px;">
-                  ${isArabic ? '~ دعوة خاصة ~' : '~ Special Invitation ~'}
+                  ${isArabic ? '~ دعوة حصرية للشخصيات المميزة ~' : '~ Exclusive VIP Invitation ~'}
                 </p>
               </div>
             </td>
@@ -94,13 +147,53 @@ const generateVIPEmailHTML = (
                 ${messageBody.split('\n').map(p => `<p style="margin: 0 0 16px 0;">${p}</p>`).join('')}
               </div>
               
-              ${offerDetails || eventDate ? `
-              <!-- Exclusive Offer Box -->
+              ${includeVideo ? `
+              <!-- Video Section -->
+              <table role="presentation" style="width: 100%; margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <a href="${videoUrl}" target="_blank" style="text-decoration: none; display: block;">
+                      <table role="presentation" style="width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #C9A962;">
+                        <tr>
+                          <td style="background: linear-gradient(135deg, #5C4A32, #8B6F47); padding: 40px; text-align: center;">
+                            <div style="width: 70px; height: 70px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                              <span style="font-size: 32px;">▶️</span>
+                            </div>
+                            <p style="color: #C9A962; font-size: 18px; font-weight: 600; margin: 0 0 8px 0;">
+                              ${isArabic ? '🎬 اكتشف سحر المفيجر' : '🎬 Discover the Magic of Almufaijer'}
+                            </p>
+                            <p style="color: #D4C5B0; font-size: 14px; margin: 0;">
+                              ${isArabic ? 'اضغط لمشاهدة الفيديو' : 'Click to watch video'}
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+              
+              <!-- Guest Allowance Box -->
+              <table role="presentation" style="width: 100%; margin-bottom: 24px;" bgcolor="#F5F1E8">
+                <tr>
+                  <td bgcolor="#F5F1E8" style="background-color: #F5F1E8; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #C9A962;">
+                    <p style="color: #4A3625; font-size: 18px; margin: 0; font-weight: 600;">
+                      👥 ${isArabic ? `يمكنكم اصطحاب حتى ${guestAllowance} ضيوف مميزين` : `You may bring up to ${guestAllowance} honored guests`}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              ${perksHtml}
+              
+              ${(eventDate || eventTime || offerDetails) ? `
+              <!-- Event Details Box -->
               <table role="presentation" style="width: 100%; margin-bottom: 32px;" bgcolor="#4A3625">
                 <tr>
                   <td bgcolor="#4A3625" style="background-color: #4A3625; padding: 28px; border-radius: 12px; border: 1px solid #C9A962;">
                     <p style="color: #C9A962; font-size: 14px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
-                      ${isArabic ? '✨ تفاصيل العرض الخاص' : '✨ Exclusive Offer Details'}
+                      ${isArabic ? '📅 تفاصيل الفعالية' : '📅 EVENT DETAILS'}
                     </p>
                     
                     ${eventDate ? `
@@ -120,6 +213,22 @@ const generateVIPEmailHTML = (
                       ${offerDetails}
                     </p>
                     ` : ''}
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+              
+              ${enableRSVP && rsvpToken ? `
+              <!-- RSVP Button -->
+              <table role="presentation" style="width: 100%; margin-bottom: 32px;">
+                <tr>
+                  <td style="text-align: center;">
+                    <a href="${rsvpUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #8B6F47, #5C4A32); color: #ffffff; text-decoration: none; padding: 18px 48px; border-radius: 12px; font-size: 18px; font-weight: 700; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(139, 111, 71, 0.4);">
+                      ✅ ${isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
+                    </a>
+                    <p style="color: #8B6F47; font-size: 13px; margin: 12px 0 0 0;">
+                      ${isArabic ? 'اضغط للتأكيد واختيار عدد المرافقين' : 'Click to confirm and select number of guests'}
+                    </p>
                   </td>
                 </tr>
               </table>
@@ -207,23 +316,55 @@ const handler = async (req: Request): Promise<Response> => {
       messageBody,
       offerDetails,
       eventDate,
-      eventTime
+      eventTime,
+      // NEW: Enhanced fields
+      guestAllowance = 2,
+      perks = [],
+      includeVideo = true,
+      enableRSVP = true,
     } = body as VIPEmailRequest;
 
     console.log(`Sending VIP invitation to: ${contactEmail}`);
 
-    // Generate tracking ID for this email
+    // Generate tracking ID and RSVP token
     const trackingId = crypto.randomUUID();
+    const rsvpToken = crypto.randomUUID();
 
-    // Generate email HTML with tracking pixel
+    // Create invitation record in database if RSVP is enabled
+    if (enableRSVP && contactId) {
+      const { error: invError } = await supabase.from("vip_invitations").insert({
+        contact_id: contactId,
+        rsvp_token: rsvpToken,
+        guest_allowance: guestAllowance,
+        perks: perks,
+        include_video: includeVideo,
+        event_date: eventDate || null,
+        event_time: eventTime || null,
+        offer_details_en: offerDetails || null,
+        offer_details_ar: offerDetails || null,
+      });
+      
+      if (invError) {
+        console.error("Failed to create invitation record:", invError);
+      }
+    }
+
+    // Generate email HTML with all enhancements
     let emailHtml = generateVIPEmailHTML(
       preferredLanguage,
       contactName,
       subject,
       messageBody,
-      offerDetails,
-      eventDate,
-      eventTime
+      {
+        offerDetails,
+        eventDate,
+        eventTime,
+        guestAllowance,
+        perks,
+        includeVideo,
+        enableRSVP,
+        rsvpToken: enableRSVP ? rsvpToken : undefined,
+      }
     );
     emailHtml = addTrackingPixel(emailHtml, trackingId);
 
@@ -283,7 +424,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, messageId: emailData?.id }),
+      JSON.stringify({ success: true, messageId: emailData?.id, rsvpToken }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
 
