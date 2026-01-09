@@ -592,6 +592,68 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
             <EmailStatusTracker bookingId={booking.id} />
           </div>
 
+          {/* Moyasar Verification Panel */}
+          {booking.payment_id && (
+            <div className="glass-card rounded-xl p-5 border border-accent/10">
+              <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
+                <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                    <Search className="h-4 w-4 text-indigo-600" />
+                  </div>
+                  {isArabic ? 'التحقق من Moyasar' : 'Moyasar Verification'}
+                </h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleVerifyPayment}
+                  disabled={verifying}
+                  className="gap-2"
+                >
+                  {verifying ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+                  {isArabic ? 'تحقق' : 'Verify'}
+                </Button>
+              </div>
+              
+              {verification && (
+                <div className="space-y-3 text-sm">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-start rtl:text-end">
+                      <p className="text-muted-foreground">{isArabic ? 'الحالة في Moyasar' : 'Moyasar Status'}</p>
+                      <Badge className={verification.moyasar.status === 'paid' ? 'bg-emerald-500/20 text-emerald-700' : 'bg-amber-500/20 text-amber-700'}>
+                        {verification.moyasar.status}
+                      </Badge>
+                    </div>
+                    <div className="text-start rtl:text-end">
+                      <p className="text-muted-foreground">{isArabic ? 'المبلغ' : 'Amount'}</p>
+                      <p className="font-medium">{verification.moyasar.amount_format}</p>
+                    </div>
+                  </div>
+                  {verification.moyasar.refunded && verification.moyasar.refunded > 0 && (
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <p className="text-amber-700 font-medium">
+                        {isArabic ? 'المبلغ المسترد:' : 'Refunded:'} {verification.moyasar.refunded_format}
+                      </p>
+                    </div>
+                  )}
+                  {verification.comparison?.discrepancy && (
+                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2 rtl:flex-row-reverse">
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                      <p className="text-red-700">{verification.comparison.discrepancy}</p>
+                    </div>
+                  )}
+                  {verification.moyasar.source && (
+                    <div className="text-start rtl:text-end">
+                      <p className="text-muted-foreground">{isArabic ? 'طريقة الدفع' : 'Payment Method'}</p>
+                      <p className="font-medium">
+                        {verification.moyasar.source.type} - {verification.moyasar.source.company} ****{verification.moyasar.source.number}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Admin Actions for pending payments */}
           {booking.payment_status === 'pending' && booking.booking_status !== 'cancelled' && (
             <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
@@ -614,8 +676,89 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
               </Button>
             </div>
           )}
+
+          {/* Refund Actions for completed payments */}
+          {booking.payment_status === 'completed' && booking.payment_id && (
+            <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <Button 
+                onClick={handleVerifyPayment} 
+                disabled={verifying}
+                variant="outline"
+                className="flex-1 gap-2"
+              >
+                {verifying ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                {isArabic ? 'التحقق من الدفع' : 'Verify Payment'}
+              </Button>
+              <Button 
+                onClick={() => {
+                  setRefundAmount(String(booking.total_amount));
+                  setShowRefundDialog(true);
+                }}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white gap-2"
+              >
+                <Undo2 className="h-4 w-4" />
+                {isArabic ? 'معالجة الاسترداد' : 'Process Refund'}
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
+
+      {/* Refund Confirmation Dialog */}
+      <AlertDialog open={showRefundDialog} onOpenChange={setShowRefundDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 rtl:flex-row-reverse">
+              <Undo2 className="h-5 w-5 text-amber-600" />
+              {isArabic ? 'تأكيد الاسترداد' : 'Confirm Refund'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isArabic 
+                ? 'سيتم استرداد المبلغ للعميل عبر Moyasar. هذا الإجراء لا يمكن التراجع عنه.'
+                : 'The amount will be refunded to the customer via Moyasar. This action cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium text-foreground">
+                {isArabic ? 'مبلغ الاسترداد (ريال)' : 'Refund Amount (SAR)'}
+              </label>
+              <Input
+                type="number"
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+                max={booking.total_amount}
+                min={1}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {isArabic ? 'المبلغ الكامل:' : 'Full amount:'} {booking.total_amount} SAR
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <p className="text-sm text-amber-700 flex items-center gap-2 rtl:flex-row-reverse">
+                <AlertTriangle className="h-4 w-4" />
+                {isArabic 
+                  ? 'سيتم إرسال إشعار بالاسترداد للعميل عبر البريد الإلكتروني'
+                  : 'A refund notification will be sent to the customer via email'}
+              </p>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={refunding}>
+              {isArabic ? 'إلغاء' : 'Cancel'}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleProcessRefund}
+              disabled={refunding || !refundAmount || parseFloat(refundAmount) <= 0}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {refunding ? <RefreshCw className="h-4 w-4 animate-spin me-2" /> : null}
+              {isArabic ? 'تأكيد الاسترداد' : 'Process Refund'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
