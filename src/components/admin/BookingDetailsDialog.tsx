@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
-import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe, CheckCircle, Ban, History, Wallet } from 'lucide-react';
+import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe, CheckCircle, Ban, History, Wallet, Search, Undo2, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { resendConfirmationEmail } from '@/lib/emailService';
@@ -14,16 +14,59 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Input } from '@/components/ui/input';
 import EmailStatusTracker from './EmailStatusTracker';
 import PaymentHistoryPanel from './PaymentHistoryPanel';
 
 type Booking = Tables<'bookings'>;
 type TicketType = Tables<'tickets'>;
+
+interface MoyasarVerification {
+  moyasar: {
+    id: string;
+    status: string;
+    amount: number;
+    amount_format: string;
+    fee?: number;
+    fee_format?: string;
+    refunded?: number;
+    refunded_format?: string;
+    currency: string;
+    created_at: string;
+    source?: {
+      type: string;
+      company?: string;
+      name?: string;
+      number?: string;
+    };
+  };
+  database: {
+    payment_status: string;
+    payment_id: string;
+    total_amount: number;
+    paid_at: string | null;
+  } | null;
+  comparison: {
+    status_match: boolean;
+    amount_match: boolean;
+    discrepancy: string | null;
+  } | null;
+}
 
 interface BookingDetailsDialogProps {
   booking: Booking | null;
@@ -41,12 +84,66 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const [resending, setResending] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  
+  // Moyasar verification state
+  const [verifying, setVerifying] = useState(false);
+  const [verification, setVerification] = useState<MoyasarVerification | null>(null);
+  
+  // Refund state
+  const [refunding, setRefunding] = useState(false);
+  const [showRefundDialog, setShowRefundDialog] = useState(false);
+  const [refundAmount, setRefundAmount] = useState('');
 
   useEffect(() => {
     if (booking && open) {
       fetchTickets();
+      setVerification(null); // Reset verification when booking changes
     }
   }, [booking, open]);
+
+  // Verify Moyasar payment status
+  const handleVerifyPayment = async () => {
+    if (!booking?.payment_id) {
+      toast({ title: isArabic ? 'خطأ' : 'Error', description: isArabic ? 'لا يوجد معرف دفع' : 'No payment ID available', variant: 'destructive' });
+      return;
+    }
+    setVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-moyasar-status', {
+        body: { paymentId: booking.payment_id, bookingId: booking.id }
+      });
+      if (error) throw error;
+      setVerification(data);
+      toast({ title: isArabic ? 'تم التحقق' : 'Verified', description: isArabic ? 'تم جلب حالة الدفع من Moyasar' : 'Payment status fetched from Moyasar' });
+    } catch (err) {
+      console.error('Verification error:', err);
+      toast({ title: isArabic ? 'خطأ' : 'Error', description: isArabic ? 'فشل التحقق من الدفع' : 'Failed to verify payment', variant: 'destructive' });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  // Process refund
+  const handleProcessRefund = async () => {
+    if (!booking?.payment_id) return;
+    setRefunding(true);
+    try {
+      const amountInHalalas = refundAmount ? Math.round(parseFloat(refundAmount) * 100) : undefined;
+      const { data, error } = await supabase.functions.invoke('process-refund', {
+        body: { bookingId: booking.id, amount: amountInHalalas, reason: 'Admin initiated refund' }
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      toast({ title: isArabic ? 'تم الاسترداد' : 'Refunded', description: isArabic ? 'تم استرداد المبلغ بنجاح' : 'Refund processed successfully' });
+      setShowRefundDialog(false);
+      onBookingUpdated?.();
+    } catch (err) {
+      console.error('Refund error:', err);
+      toast({ title: isArabic ? 'خطأ' : 'Error', description: isArabic ? 'فشل في معالجة الاسترداد' : 'Failed to process refund', variant: 'destructive' });
+    } finally {
+      setRefunding(false);
+    }
+  };
 
   const fetchTickets = async () => {
     if (!booking) return;
