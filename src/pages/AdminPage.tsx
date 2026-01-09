@@ -47,6 +47,7 @@ const AdminPage = () => {
     paymentStatus: 'all',
     dateFrom: '',
     dateTo: '',
+    hideAbandoned: true,
   });
   const [page, setPage] = useState(1);
   const { bookings, loading: bookingsLoading, totalPages, refetch } = useBookings(filters, page);
@@ -71,7 +72,7 @@ const AdminPage = () => {
   };
 
   const handleResetFilters = () => {
-    setFilters({ search: '', status: 'all', paymentStatus: 'all', dateFrom: '', dateTo: '' });
+    setFilters({ search: '', status: 'all', paymentStatus: 'all', dateFrom: '', dateTo: '', hideAbandoned: true });
     setPage(1);
   };
 
