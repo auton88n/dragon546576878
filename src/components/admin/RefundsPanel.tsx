@@ -96,6 +96,16 @@ const RefundsPanel = () => {
   });
   const [orphanDateTo, setOrphanDateTo] = useState(() => new Date().toISOString().split('T')[0]);
 
+  // Link orphan payment state
+  const [linkDialog, setLinkDialog] = useState<{
+    open: boolean;
+    payment: OrphanPayment;
+  } | null>(null);
+  const [pendingBookings, setPendingBookings] = useState<any[]>([]);
+  const [loadingPending, setLoadingPending] = useState(false);
+  const [linkingPayment, setLinkingPayment] = useState<string | null>(null);
+  const [bookingSearch, setBookingSearch] = useState('');
+
   useEffect(() => {
     fetchDuplicates();
     fetchRefundLogs();
@@ -301,6 +311,87 @@ const RefundsPanel = () => {
       setLoadingOrphans(false);
     }
   };
+
+  // Fetch pending bookings for linking
+  const fetchPendingBookings = async (payment: OrphanPayment) => {
+    setLoadingPending(true);
+    setPendingBookings([]);
+    try {
+      // Fetch pending bookings with matching amount
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('id, booking_reference, customer_name, customer_email, visit_date, total_amount, created_at')
+        .eq('payment_status', 'pending')
+        .is('payment_id', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      
+      // Sort by amount match first, then by date
+      const sorted = (data || []).sort((a, b) => {
+        const aMatch = a.total_amount === payment.amount ? 1 : 0;
+        const bMatch = b.total_amount === payment.amount ? 1 : 0;
+        if (aMatch !== bMatch) return bMatch - aMatch;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      
+      setPendingBookings(sorted);
+    } catch (err) {
+      console.error('Error fetching pending bookings:', err);
+    } finally {
+      setLoadingPending(false);
+    }
+  };
+
+  // Open link dialog
+  const handleOpenLinkDialog = (payment: OrphanPayment) => {
+    setLinkDialog({ open: true, payment });
+    setBookingSearch('');
+    fetchPendingBookings(payment);
+  };
+
+  // Link payment to booking
+  const handleLinkToBooking = async (bookingId: string) => {
+    if (!linkDialog) return;
+    setLinkingPayment(bookingId);
+    try {
+      const { data, error } = await supabase.functions.invoke('link-orphan-payment', {
+        body: { bookingId, paymentId: linkDialog.payment.id }
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      
+      toast({
+        title: isArabic ? 'تم الربط' : 'Linked Successfully',
+        description: isArabic ? 'تم ربط الدفع وإنشاء التذاكر' : 'Payment linked and tickets generated!',
+      });
+      
+      setLinkDialog(null);
+      // Remove from orphans list
+      setOrphanPayments(prev => prev.filter(p => p.id !== linkDialog.payment.id));
+      fetchDuplicates();
+    } catch (err: any) {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: err.message || (isArabic ? 'فشل الربط' : 'Failed to link payment'),
+        variant: 'destructive',
+      });
+    } finally {
+      setLinkingPayment(null);
+    }
+  };
+
+  // Filter pending bookings by search
+  const filteredPendingBookings = pendingBookings.filter(b => {
+    if (!bookingSearch) return true;
+    const search = bookingSearch.toLowerCase();
+    return (
+      b.booking_reference.toLowerCase().includes(search) ||
+      b.customer_name.toLowerCase().includes(search) ||
+      b.customer_email.toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="space-y-6">
@@ -543,7 +634,7 @@ const RefundsPanel = () => {
                         <TableHead>{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
                         <TableHead>{isArabic ? 'الوصف' : 'Description'}</TableHead>
                         <TableHead>{isArabic ? 'التاريخ' : 'Date'}</TableHead>
-                        <TableHead>{isArabic ? 'الطريقة' : 'Method'}</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -551,14 +642,13 @@ const RefundsPanel = () => {
                         <TableRow key={payment.id}>
                           <TableCell className="font-mono text-xs">{payment.id.slice(0, 12)}...</TableCell>
                           <TableCell className="font-medium">{payment.amount} SAR</TableCell>
-                          <TableCell className="text-sm max-w-[200px] truncate">{payment.description || '-'}</TableCell>
+                          <TableCell className="text-sm max-w-[150px] truncate">{payment.description || '-'}</TableCell>
                           <TableCell className="text-sm">{formatDateTime(payment.createdAt)}</TableCell>
                           <TableCell>
-                            {payment.source && (
-                              <span className="text-xs">
-                                {payment.source.type} {payment.source.company && `(${payment.source.company})`}
-                              </span>
-                            )}
+                            <Button size="sm" variant="outline" onClick={() => handleOpenLinkDialog(payment)} className="gap-1">
+                              <Link className="h-3 w-3" />
+                              {isArabic ? 'ربط' : 'Link'}
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
