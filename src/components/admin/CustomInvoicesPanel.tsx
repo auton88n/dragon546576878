@@ -755,6 +755,15 @@ export function CustomInvoicesPanel() {
                           size="sm"
                           variant="outline"
                           className="gap-1"
+                          onClick={() => setPreviewInvoice(invoice)}
+                        >
+                          <FileSearch className="h-3 w-3" />
+                          {isArabic ? 'معاينة' : 'Preview'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1"
                           onClick={() => sendEmailMutation.mutate(invoice)}
                           disabled={sendEmailMutation.isPending}
                         >
@@ -881,6 +890,68 @@ export function CustomInvoicesPanel() {
                   </p>
                 </div>
               )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Preview Dialog */}
+      <Dialog open={!!previewInvoice} onOpenChange={() => setPreviewInvoice(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              {isArabic ? 'معاينة البريد الإلكتروني' : 'Email Preview'}
+              {previewInvoice && (
+                <span className="text-sm font-normal text-muted-foreground">
+                  — {previewInvoice.invoice_number}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {previewInvoice && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg text-sm">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <span className="text-muted-foreground">{isArabic ? 'إلى:' : 'To:'}</span>{' '}
+                    <span className="font-medium">{previewInvoice.client_email}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">{isArabic ? 'الموضوع:' : 'Subject:'}</span>{' '}
+                    <span className="font-medium">
+                      {isArabic 
+                        ? `فاتورة من سوق المفيجر - ${previewInvoice.invoice_number}` 
+                        : `Invoice from Souq Almufaijer - ${previewInvoice.invoice_number}`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <ScrollArea className="h-[60vh] border rounded-lg bg-white">
+                <iframe
+                  srcDoc={generateInvoiceEmailPreview(previewInvoice)}
+                  className="w-full h-[800px] border-0"
+                  title="Email Preview"
+                />
+              </ScrollArea>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setPreviewInvoice(null)}>
+                  {isArabic ? 'إغلاق' : 'Close'}
+                </Button>
+                <Button 
+                  onClick={() => {
+                    sendEmailMutation.mutate(previewInvoice);
+                    setPreviewInvoice(null);
+                  }}
+                  disabled={sendEmailMutation.isPending}
+                  className="gap-2"
+                >
+                  <Mail className="h-4 w-4" />
+                  {isArabic ? 'إرسال البريد الإلكتروني' : 'Send Email'}
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
