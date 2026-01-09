@@ -213,9 +213,14 @@ const AdminPage = () => {
           {/* Quick Actions */}
           <div className="flex justify-end rtl:justify-start gap-2 mb-4">
             <Link to="/admin/refunds">
-              <Button variant="outline" className="border-amber-500/50 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-2 text-sm text-amber-700 dark:text-amber-400">
+              <Button variant="outline" className="border-amber-500/50 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-2 text-sm text-amber-700 dark:text-amber-400 relative">
                 <Undo2 className="h-4 w-4" />
                 <span className="hidden sm:inline">{isArabic ? 'مركز الاسترداد' : 'Refund Center'}</span>
+                {stats.duplicateBookingsCount > 0 && (
+                  <span className="absolute -top-2 -end-2 min-w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold px-1">
+                    {stats.duplicateBookingsCount}
+                  </span>
+                )}
               </Button>
             </Link>
             <Link to="/scan">
