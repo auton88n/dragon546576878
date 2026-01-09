@@ -190,6 +190,10 @@ export const useVIPContacts = () => {
     offerDetails?: string;
     eventDate?: string;
     eventTime?: string;
+    guestAllowance?: number;
+    perks?: string[];
+    includeVideo?: boolean;
+    enableRSVP?: boolean;
   }): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke('send-vip-invitation', {
