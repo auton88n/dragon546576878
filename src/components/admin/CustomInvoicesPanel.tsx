@@ -574,7 +574,12 @@ export function CustomInvoicesPanel() {
                         mode="single"
                         selected={visitDate}
                         onSelect={setVisitDate}
-                        disabled={(date) => date < new Date()}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          return date < today;
+                        }}
+                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
