@@ -568,8 +568,8 @@ export const VIPOutreachPanel = () => {
                   {isArabic ? 'الامتيازات الحصرية' : 'Exclusive Perks'}
                 </Label>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {vipPerks.map(perk => {
-                    const Icon = perk.icon;
+                  {defaultPerks.map(perk => {
+                    const Icon = perkIcons[perk.iconKey];
                     return (
                       <label 
                         key={perk.id} 
@@ -1010,7 +1010,7 @@ export const VIPOutreachPanel = () => {
                       {isArabic ? '✨ تجربتكم المميزة تتضمن' : '✨ Your VIP Experience Includes'}
                     </p>
                     <div className="space-y-2">
-                      {vipPerks.filter(p => selectedPerks.has(p.id)).map(perk => (
+                      {defaultPerks.filter(p => selectedPerks.has(p.id)).map(perk => (
                         <div key={perk.id} className="flex items-center gap-2 text-white text-sm">
                           <CheckCircle className="h-4 w-4 text-amber-400" />
                           <span>{isArabic ? perk.ar : perk.en}</span>
