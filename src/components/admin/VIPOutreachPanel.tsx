@@ -627,64 +627,117 @@ export const VIPOutreachPanel = () => {
                   <p>{isArabic ? 'لا يوجد سجل إرسال' : 'No send history'}</p>
                 </div>
               ) : (
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-2">
-                    {emailLogs.map(log => (
-                      <div key={log.id} className="flex items-center gap-4 p-4 rounded-lg border bg-white">
-                        {log.status === 'sent' && <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />}
-                        {log.status === 'failed' && <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />}
-                        {log.status === 'pending' && <Clock className="h-5 w-5 text-amber-600 flex-shrink-0" />}
-                        
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{log.contact_name}</p>
-                          <p className="text-sm text-muted-foreground truncate">{log.contact_email}</p>
-                        </div>
-
-                        {/* Email Open Status */}
-                        <div className="flex items-center gap-2">
-                          {log.opened_at ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
-                                  <MailOpen className="h-3.5 w-3.5" />
-                                  <span>{isArabic ? 'مفتوح' : 'Opened'}</span>
-                                  {(log.open_count || 0) > 1 && (
-                                    <span className="bg-green-600 text-white px-1.5 rounded-full text-[10px]">
-                                      ×{log.open_count}
-                                    </span>
-                                  )}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-xs">
-                                <p className="text-xs">
-                                  {isArabic ? 'تم الفتح: ' : 'Opened: '}
-                                  {format(new Date(log.opened_at), 'PPp', { locale: isArabic ? ar : enUS })}
-                                </p>
-                                {(log.open_count || 0) > 1 && (
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {isArabic ? `عدد مرات الفتح: ${log.open_count}` : `Opened ${log.open_count} times`}
-                                  </p>
-                                )}
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : log.status === 'sent' ? (
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 text-xs">
-                              <Mail className="h-3.5 w-3.5" />
-                              <span>{isArabic ? 'لم يُفتح' : 'Not opened'}</span>
-                            </div>
-                          ) : null}
-                        </div>
-                        
-                        <div className="text-end min-w-[120px]">
-                          <Badge variant="outline">{templateTypes.find(t => t.id === log.template_type)?.[isArabic ? 'ar' : 'en'] || log.template_type}</Badge>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {log.sent_at ? format(new Date(log.sent_at), 'PPp', { locale: isArabic ? ar : enUS }) : '-'}
-                          </p>
-                        </div>
+                <>
+                  {/* Email Tracking Summary */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="p-4 rounded-lg bg-blue-50 border border-blue-200 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Send className="h-4 w-4 text-blue-600" />
+                        <span className="text-2xl font-bold text-blue-700">
+                          {emailLogs.filter(l => l.status === 'sent').length}
+                        </span>
                       </div>
-                    ))}
+                      <p className="text-xs text-blue-600">{isArabic ? 'تم الإرسال' : 'Sent'}</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-green-50 border border-green-200 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <MailOpen className="h-4 w-4 text-green-600" />
+                        <span className="text-2xl font-bold text-green-700">
+                          {emailLogs.filter(l => l.opened_at).length}
+                        </span>
+                      </div>
+                      <p className="text-xs text-green-600">{isArabic ? 'تم الفتح' : 'Opened'}</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Eye className="h-4 w-4 text-amber-600" />
+                        <span className="text-2xl font-bold text-amber-700">
+                          {emailLogs.filter(l => l.status === 'sent').length > 0 
+                            ? Math.round((emailLogs.filter(l => l.opened_at).length / emailLogs.filter(l => l.status === 'sent').length) * 100)
+                            : 0}%
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-600">{isArabic ? 'نسبة الفتح' : 'Open Rate'}</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-purple-50 border border-purple-200 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Crown className="h-4 w-4 text-purple-600" />
+                        <span className="text-2xl font-bold text-purple-700">
+                          {emailLogs.reduce((sum, l) => sum + (l.open_count || 0), 0)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-purple-600">{isArabic ? 'إجمالي الفتحات' : 'Total Opens'}</p>
+                    </div>
                   </div>
-                </ScrollArea>
+
+                  <ScrollArea className="h-[350px]">
+                    <div className="space-y-2">
+                      {emailLogs.map(log => (
+                        <div key={log.id} className={`flex items-center gap-4 p-4 rounded-lg border transition-all ${
+                          log.opened_at 
+                            ? 'bg-green-50 border-green-200 hover:border-green-300' 
+                            : 'bg-white hover:bg-gray-50'
+                        }`}>
+                          {log.status === 'sent' && !log.opened_at && <Mail className="h-5 w-5 text-blue-500 flex-shrink-0" />}
+                          {log.status === 'sent' && log.opened_at && <MailOpen className="h-5 w-5 text-green-600 flex-shrink-0" />}
+                          {log.status === 'failed' && <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />}
+                          {log.status === 'pending' && <Clock className="h-5 w-5 text-amber-600 flex-shrink-0" />}
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{log.contact_name}</p>
+                            <p className="text-sm text-muted-foreground truncate">{log.contact_email}</p>
+                          </div>
+
+                          {/* Email Open Status */}
+                          <div className="flex items-center gap-2">
+                            {log.opened_at ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200 shadow-sm">
+                                    <MailOpen className="h-3.5 w-3.5" />
+                                    <span>{isArabic ? 'مفتوح' : 'Opened'}</span>
+                                    {(log.open_count || 0) > 1 && (
+                                      <span className="bg-green-600 text-white px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                                        ×{log.open_count}
+                                      </span>
+                                    )}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs">
+                                  <div className="space-y-1">
+                                    <p className="text-xs font-medium">
+                                      {isArabic ? '📬 تم الفتح أول مرة:' : '📬 First opened:'}
+                                    </p>
+                                    <p className="text-xs">
+                                      {format(new Date(log.opened_at), 'PPp', { locale: isArabic ? ar : enUS })}
+                                    </p>
+                                    {(log.open_count || 0) > 1 && (
+                                      <p className="text-xs text-green-300 mt-1">
+                                        🔄 {isArabic ? `مجموع الفتحات: ${log.open_count}` : `Total opens: ${log.open_count}`}
+                                      </p>
+                                    )}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : log.status === 'sent' ? (
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-500 text-xs border border-gray-200">
+                                <Mail className="h-3.5 w-3.5" />
+                                <span>{isArabic ? 'لم يُفتح بعد' : 'Not opened yet'}</span>
+                              </div>
+                            ) : null}
+                          </div>
+                          
+                          <div className="text-end min-w-[120px]">
+                            <Badge variant="outline" className="text-xs">{templateTypes.find(t => t.id === log.template_type)?.[isArabic ? 'ar' : 'en'] || log.template_type}</Badge>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {log.sent_at ? format(new Date(log.sent_at), 'PP', { locale: isArabic ? ar : enUS }) : '-'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </>
               )}
             </TabsContent>
           </Tabs>
