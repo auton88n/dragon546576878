@@ -54,6 +54,15 @@ export const useBookings = (filters: BookingFilters, page: number = 1, pageSize:
         query = query.lte('visit_date', filters.dateTo);
       }
 
+      // Hide abandoned bookings (older than 7 days, still pending payment)
+      if (filters.hideAbandoned) {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const cutoffDate = sevenDaysAgo.toISOString();
+        // Show bookings that are: paid, OR created within last 7 days
+        query = query.or(`payment_status.eq.completed,created_at.gte.${cutoffDate}`);
+      }
+
       // Apply pagination
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;

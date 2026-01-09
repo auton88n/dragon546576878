@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
-import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send, Eye, RefreshCw } from 'lucide-react';
+import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send, Eye, RefreshCw, Undo2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
@@ -211,7 +211,13 @@ const AdminPage = () => {
       <main className="flex-1 pt-20 pb-4 px-3 sm:px-4 md:px-6">
         <div className="container px-0">
           {/* Quick Actions */}
-          <div className="flex justify-end rtl:justify-start mb-4">
+          <div className="flex justify-end rtl:justify-start gap-2 mb-4">
+            <Link to="/admin/refunds">
+              <Button variant="outline" className="border-amber-500/50 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-2 text-sm text-amber-700 dark:text-amber-400">
+                <Undo2 className="h-4 w-4" />
+                <span className="hidden sm:inline">{isArabic ? 'مركز الاسترداد' : 'Refund Center'}</span>
+              </Button>
+            </Link>
             <Link to="/scan">
               <Button className="btn-gold gap-2 text-sm">
                 <QrCode className="h-4 w-4" />
