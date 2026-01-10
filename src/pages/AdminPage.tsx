@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send, Eye, RefreshCw, Undo2, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -20,16 +20,16 @@ import BulkActionsBar from '@/components/admin/BulkActionsBar';
 import StatusLegend from '@/components/admin/StatusLegend';
 import EmailPreviewDialog from '@/components/admin/EmailPreviewDialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { lazyWithPreload } from '@/lib/lazyWithPreload';
 
-// Lazy load non-critical components
-
-const SettingsPanel = lazy(() => import('@/components/admin/SettingsPanel'));
-const ReportsPanel = lazy(() => import('@/components/admin/ReportsPanel'));
-const GroupBookingsPanel = lazy(() => import('@/components/admin/GroupBookingsPanel'));
-const CustomInvoicesPanel = lazy(() => import('@/components/admin/CustomInvoicesPanel'));
-const ContactSubmissionsPanel = lazy(() => import('@/components/admin/ContactSubmissionsPanel'));
-const AYNSupportPanel = lazy(() => import('@/components/admin/AYNSupportPanel'));
-const RefundsPanel = lazy(() => import('@/components/admin/RefundsPanel'));
+// Lazy load non-critical components with retry support
+const { Component: SettingsPanel } = lazyWithPreload(() => import('@/components/admin/SettingsPanel'));
+const { Component: ReportsPanel } = lazyWithPreload(() => import('@/components/admin/ReportsPanel'));
+const { Component: GroupBookingsPanel } = lazyWithPreload(() => import('@/components/admin/GroupBookingsPanel'));
+const { Component: CustomInvoicesPanel } = lazyWithPreload(() => import('@/components/admin/CustomInvoicesPanel'));
+const { Component: ContactSubmissionsPanel } = lazyWithPreload(() => import('@/components/admin/ContactSubmissionsPanel'));
+const { Component: AYNSupportPanel } = lazyWithPreload(() => import('@/components/admin/AYNSupportPanel'));
+const { Component: RefundsPanel } = lazyWithPreload(() => import('@/components/admin/RefundsPanel'));
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
