@@ -70,30 +70,62 @@ const VIPRSVPPage = () => {
       if (!token) return;
       
       try {
-        const { data: invData, error: invError } = await supabase
-          .from('vip_invitations')
-          .select('*')
-          .eq('rsvp_token', token)
-          .single();
+        // Use secure RPC function to fetch invitation by token
+        const { data: rawResult, error: rpcError } = await supabase
+          .rpc('get_vip_invitation_by_token', { token });
         
-        if (invError || !invData) {
-          setError(isArabic ? 'الدعوة غير موجودة' : 'Invitation not found');
+        if (rpcError || !rawResult) {
+          setError('Invitation not found');
           setLoading(false);
           return;
         }
 
-        setInvitation(invData as VIPInvitation);
+        // Cast the result to the expected shape
+        const result = rawResult as unknown as {
+          id: string;
+          contact_id: string;
+          guest_allowance: number;
+          perks: string[];
+          include_video: boolean;
+          event_date: string | null;
+          event_time: string | null;
+          offer_details_en: string | null;
+          offer_details_ar: string | null;
+          confirmed_at: string | null;
+          confirmed_guests: number | null;
+          declined_at: string | null;
+          decline_reason: string | null;
+          contact: { name_en: string; name_ar: string; preferred_language: string } | null;
+        };
 
-        if (invData.contact_id) {
-          const { data: contactData } = await supabase
-            .from('vip_contacts')
-            .select('id, name_en, name_ar, preferred_language')
-            .eq('id', invData.contact_id)
-            .single();
-          
-          if (contactData) {
-            setContact(contactData as VIPContact);
-          }
+        // Parse the invitation data from RPC result
+        const invData: VIPInvitation = {
+          id: result.id,
+          contact_id: result.contact_id,
+          rsvp_token: token,
+          guest_allowance: result.guest_allowance || 2,
+          perks: result.perks || [],
+          include_video: result.include_video ?? true,
+          event_date: result.event_date,
+          event_time: result.event_time,
+          offer_details_en: result.offer_details_en,
+          offer_details_ar: result.offer_details_ar,
+          confirmed_at: result.confirmed_at,
+          confirmed_guests: result.confirmed_guests,
+          declined_at: result.declined_at,
+          decline_reason: result.decline_reason,
+        };
+
+        setInvitation(invData);
+
+        // Contact data is included in the RPC response
+        if (result.contact) {
+          setContact({
+            id: result.contact_id,
+            name_en: result.contact.name_en,
+            name_ar: result.contact.name_ar,
+            preferred_language: (result.contact.preferred_language || 'ar') as 'ar' | 'en',
+          });
         }
 
         if (invData.confirmed_at) setSubmitted('accepted');
@@ -114,22 +146,16 @@ const VIPRSVPPage = () => {
     setSubmitting(true);
 
     try {
-      await supabase
-        .from('vip_invitations')
-        .update({
-          confirmed_at: new Date().toISOString(),
-          confirmed_guests: guestCount,
-        })
-        .eq('id', invitation.id);
+      // Use secure RPC function to update RSVP
+      const { data, error } = await supabase.rpc('update_vip_rsvp', {
+        p_token: token,
+        p_status: 'confirmed',
+        p_guests: guestCount || 1,
+      });
 
-      if (invitation.contact_id) {
-        await supabase
-          .from('vip_contacts')
-          .update({ 
-            status: 'confirmed',
-            confirmed_guests: guestCount 
-          })
-          .eq('id', invitation.contact_id);
+      if (error) {
+        console.error('RSVP update error:', error);
+        return;
       }
 
       setSubmitted('accepted');
@@ -145,19 +171,16 @@ const VIPRSVPPage = () => {
     setSubmitting(true);
 
     try {
-      await supabase
-        .from('vip_invitations')
-        .update({
-          declined_at: new Date().toISOString(),
-          decline_reason: declineReason || null,
-        })
-        .eq('id', invitation.id);
+      // Use secure RPC function to update RSVP
+      const { data, error } = await supabase.rpc('update_vip_rsvp', {
+        p_token: token,
+        p_status: 'declined',
+        p_decline_reason: declineReason || null,
+      });
 
-      if (invitation.contact_id) {
-        await supabase
-          .from('vip_contacts')
-          .update({ status: 'declined' })
-          .eq('id', invitation.contact_id);
+      if (error) {
+        console.error('RSVP decline error:', error);
+        return;
       }
 
       setSubmitted('declined');

@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 // Version stamp for deployment verification
-const CREATE_BOOKING_VERSION = "2026-01-08-v6-enhanced-logging";
+const CREATE_BOOKING_VERSION = "2026-01-10-v7-rate-limited";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,6 +35,15 @@ const validatePhone = (phone: string): boolean => {
 
 const validateName = (name: string): boolean => 
   name.trim().length >= 2 && name.trim().length <= 100;
+
+// Sanitize input to prevent XSS/injection
+const sanitizeInput = (input: string, maxLength: number = 500): string => {
+  return input
+    .trim()
+    .slice(0, maxLength)
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/[<>]/g, ''); // Remove angle brackets
+};
 
 // Generate a unique booking reference
 const generateBookingReference = (): string => {
@@ -70,51 +79,78 @@ serve(async (req) => {
     // Quick validation (fail fast)
     if (!body.customerName || !body.customerEmail || !body.customerPhone || !body.visitDate) {
       return new Response(
-        JSON.stringify({ success: false, error: "Missing required fields" }),
+        JSON.stringify({ success: false, error: "Missing required fields", error_ar: "حقول مطلوبة مفقودة" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (!validateEmail(body.customerEmail)) {
       return new Response(
-        JSON.stringify({ success: false, error: "Invalid email format" }),
+        JSON.stringify({ success: false, error: "Invalid email format", error_ar: "صيغة البريد الإلكتروني غير صحيحة" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (!validatePhone(body.customerPhone)) {
       return new Response(
-        JSON.stringify({ success: false, error: "Invalid phone format. Use +966XXXXXXXXX or 05XXXXXXXX" }),
+        JSON.stringify({ success: false, error: "Invalid phone format. Use +966XXXXXXXXX or 05XXXXXXXX", error_ar: "صيغة الهاتف غير صحيحة" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (!validateName(body.customerName)) {
       return new Response(
-        JSON.stringify({ success: false, error: "Name must be 2-100 characters" }),
+        JSON.stringify({ success: false, error: "Name must be 2-100 characters", error_ar: "الاسم يجب أن يكون بين 2-100 حرف" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Generate reference and calculate total in parallel with rate limit check
+    // SERVER-SIDE RATE LIMITING: Check rate limit using database function
+    const normalizedEmail = body.customerEmail.toLowerCase().trim();
+    const { data: rateLimitOk, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_identifier: normalizedEmail,
+      p_action_type: 'booking',
+      p_max_attempts: 5,
+      p_window_minutes: 60
+    });
+
+    if (rateLimitError) {
+      console.error("Rate limit check error:", rateLimitError);
+      // Continue on error - don't block legitimate users
+    } else if (rateLimitOk === false) {
+      console.warn(`Rate limit exceeded for email: ${normalizedEmail.slice(0, 5)}...`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Too many booking attempts. Please try again in 1 hour.",
+          error_ar: "محاولات حجز كثيرة. يرجى المحاولة بعد ساعة."
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Sanitize user inputs
+    const sanitizedName = sanitizeInput(body.customerName, 100);
+    const sanitizedSpecialRequests = body.specialRequests ? sanitizeInput(body.specialRequests, 500) : null;
+
+    // Generate reference and calculate total
     const bookingReference = generateBookingReference();
-    const adultCount = body.adultCount || 0;
-    const childCount = body.childCount || 0;
+    const adultCount = Math.max(0, Math.min(body.adultCount || 0, 20)); // Cap at 20
+    const childCount = Math.max(0, Math.min(body.childCount || 0, 20)); // Cap at 20
     const adultPrice = body.adultPrice || 0;
     const childPrice = body.childPrice || 0;
     const calculatedTotal = (adultCount * adultPrice) + (childCount * childPrice);
     const finalTotal = calculatedTotal > 0 ? calculatedTotal : body.totalAmount;
 
-    // Rate limit check + insert in single transaction attempt
-    // Try insert first - if rate limited, the check will fail after
+    // Insert booking
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
       .insert({
         booking_reference: bookingReference,
-        customer_name: body.customerName,
-        customer_email: body.customerEmail.toLowerCase(),
+        customer_name: sanitizedName,
+        customer_email: normalizedEmail,
         customer_phone: body.customerPhone,
-        special_requests: body.specialRequests || null,
+        special_requests: sanitizedSpecialRequests,
         visit_date: body.visitDate,
         visit_time: body.visitTime || "15:00",
         adult_count: adultCount,
@@ -140,7 +176,7 @@ serve(async (req) => {
         details: bookingError.details,
       });
       return new Response(
-        JSON.stringify({ success: false, error: "Failed to create booking", details: bookingError.message }),
+        JSON.stringify({ success: false, error: "Failed to create booking", error_ar: "فشل إنشاء الحجز" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
