@@ -39,7 +39,7 @@ const StatsCard = memo(({
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
       <CardContent className={cn("p-4 md:p-6 relative", featured && "py-6")}>
-        <div className="flex items-start justify-between rtl:flex-row-reverse">
+        <div className="flex items-start justify-between gap-4 md:gap-6 rtl:flex-row-reverse">
           <div className="text-left rtl:text-right flex-1">
             <p className="text-xs md:text-sm text-muted-foreground mb-1 md:mb-2 font-medium tracking-wide uppercase">
               {title}
