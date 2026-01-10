@@ -1,4 +1,4 @@
-import { useState, Suspense } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send, Eye, RefreshCw, Undo2, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -20,16 +20,16 @@ import BulkActionsBar from '@/components/admin/BulkActionsBar';
 import StatusLegend from '@/components/admin/StatusLegend';
 import EmailPreviewDialog from '@/components/admin/EmailPreviewDialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { lazyWithPreload } from '@/lib/lazyWithPreload';
 
-// Lazy load non-critical components with retry support
-const { Component: SettingsPanel } = lazyWithPreload(() => import('@/components/admin/SettingsPanel'));
-const { Component: ReportsPanel } = lazyWithPreload(() => import('@/components/admin/ReportsPanel'));
-const { Component: GroupBookingsPanel } = lazyWithPreload(() => import('@/components/admin/GroupBookingsPanel'));
-const { Component: CustomInvoicesPanel } = lazyWithPreload(() => import('@/components/admin/CustomInvoicesPanel'));
-const { Component: ContactSubmissionsPanel } = lazyWithPreload(() => import('@/components/admin/ContactSubmissionsPanel'));
-const { Component: AYNSupportPanel } = lazyWithPreload(() => import('@/components/admin/AYNSupportPanel'));
-const { Component: RefundsPanel } = lazyWithPreload(() => import('@/components/admin/RefundsPanel'));
+// Lazy load non-critical components
+
+const SettingsPanel = lazy(() => import('@/components/admin/SettingsPanel'));
+const ReportsPanel = lazy(() => import('@/components/admin/ReportsPanel'));
+const GroupBookingsPanel = lazy(() => import('@/components/admin/GroupBookingsPanel'));
+const CustomInvoicesPanel = lazy(() => import('@/components/admin/CustomInvoicesPanel'));
+const ContactSubmissionsPanel = lazy(() => import('@/components/admin/ContactSubmissionsPanel'));
+const AYNSupportPanel = lazy(() => import('@/components/admin/AYNSupportPanel'));
+const RefundsPanel = lazy(() => import('@/components/admin/RefundsPanel'));
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -248,9 +248,7 @@ const AdminPage = () => {
                 <TabsTrigger value="refunds" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm px-4 py-2 rounded-lg text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10 relative">
                   <CreditCard className="h-4 w-4" />
                   {isArabic ? 'الاسترداد' : 'Refunds'}
-                  {stats.duplicateBookingsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  )}
+                  {stats.duplicateBookingsCount > 0}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -276,8 +274,7 @@ const AdminPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4 p-3 sm:p-4 md:p-6 pt-4 sm:pt-6">
                   {/* Pending Payments Alert - Compact version */}
-                  {stats.pendingPaymentsCount > 0 && (
-                    <div className="relative overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 p-3 md:p-4">
+                  {stats.pendingPaymentsCount > 0 && <div className="relative overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 p-3 md:p-4">
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-400/10 via-transparent to-transparent" />
                       
                       <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -305,8 +302,7 @@ const AdminPage = () => {
                           </Button>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    </div>}
 
                   <BookingFilters filters={filters} onFiltersChange={setFilters} onReset={handleResetFilters} onExport={handleExport} exporting={exporting} />
                   
