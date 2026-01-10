@@ -46,8 +46,20 @@ const AdminPage = () => {
   const isArabic = currentLanguage === 'ar';
   const {
     stats,
-    loading: statsLoading
+    loading: statsLoading,
+    refetch: refetchStats
   } = useAdminStats();
+  const [refreshingStats, setRefreshingStats] = useState(false);
+
+  const handleRefreshStats = async () => {
+    setRefreshingStats(true);
+    await refetchStats();
+    setRefreshingStats(false);
+    toast({
+      title: isArabic ? 'تم التحديث' : 'Updated',
+      description: isArabic ? 'تم تحديث الإحصائيات' : 'Statistics refreshed',
+    });
+  };
   const [filters, setFilters] = useState({
     search: '',
     status: 'all',
@@ -210,9 +222,26 @@ const AdminPage = () => {
             </Link>
           </div>
 
-          {/* Stats Grid - Revenue spans 2 columns on large screens */}
+          {/* Stats Header with Refresh */}
+          <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
+            <h2 className="text-lg font-semibold text-foreground">
+              {isArabic ? 'نظرة عامة' : 'Overview'}
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefreshStats}
+              disabled={statsLoading || refreshingStats}
+              className="gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <RefreshCw className={cn("h-4 w-4", (statsLoading || refreshingStats) && "animate-spin")} />
+              <span className="hidden sm:inline">{isArabic ? 'تحديث' : 'Refresh'}</span>
+            </Button>
+          </div>
+
+          {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 rtl:[direction:rtl]">
-            {statsCards.map((stat, index) => <StatsCard key={index} {...stat} loading={statsLoading} />)}
+            {statsCards.map((stat, index) => <StatsCard key={index} {...stat} loading={statsLoading || refreshingStats} />)}
           </div>
 
 
