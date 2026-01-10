@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'images/*.png'],
+      devOptions: { enabled: false },
       manifest: {
         name: 'Souq Almufaijer Tickets',
         short_name: 'Almufaijer',
