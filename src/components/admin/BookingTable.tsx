@@ -226,11 +226,11 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
         <Badge 
           variant="outline" 
           className={cn(
-            'bg-red-500/20 text-red-700 border-red-500/30 dark:text-red-400 flex items-center gap-1.5 animate-pulse px-3 py-1.5 h-auto whitespace-nowrap',
+            'bg-red-500/20 text-red-700 border-red-500/30 dark:text-red-400 flex items-center gap-1 animate-pulse px-2.5 py-1 h-auto whitespace-nowrap text-[11px]',
             isRTL && 'flex-row-reverse'
           )}
         >
-          <AlertTriangle className="h-3.5 w-3.5" />
+          <AlertTriangle className="h-3 w-3" />
           <span>{isArabic ? 'تذاكر مفقودة!' : 'Missing Tickets!'}</span>
         </Badge>
       );
@@ -266,9 +266,9 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     return (
       <Badge 
         variant="outline" 
-        className={cn(className, 'flex items-center gap-1.5 px-3 py-1.5 h-auto whitespace-nowrap', isRTL && 'flex-row-reverse')}
+        className={cn(className, 'flex items-center gap-1 px-2.5 py-1 h-auto whitespace-nowrap text-[11px]', isRTL && 'flex-row-reverse')}
       >
-        <Icon className="h-3.5 w-3.5" />
+        <Icon className="h-3 w-3" />
         <span>{isArabic ? labelAr : labelEn}</span>
       </Badge>
     );
