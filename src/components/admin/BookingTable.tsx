@@ -537,10 +537,10 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
           </div>
         ) : null}
       </TableCell>
-      <TableCell className="w-10 text-end">
+      <TableCell className="w-12 p-0 text-center">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="hover:bg-accent/10">
+            <Button variant="ghost" size="icon" className="h-9 w-9 mx-auto hover:bg-accent/10">
               {actionLoadingId === booking.id ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -679,7 +679,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                   <TableHead className="w-[8%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
                   <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'البريد' : 'Email'}><Mail className="h-4 w-4 mx-auto" /></TableHead>
                   <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'التذكير' : 'Reminder'}><Bell className="h-4 w-4 mx-auto" /></TableHead>
-                  <TableHead className="w-10 text-end text-accent font-semibold">{isArabic ? '' : ''}</TableHead>
+                  <TableHead className="w-12 text-center text-accent font-semibold p-0"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -726,7 +726,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                     <TableHead className="w-[8%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
                     <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'البريد' : 'Email'}><Mail className="h-4 w-4 mx-auto" /></TableHead>
                     <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'التذكير' : 'Reminder'}><Bell className="h-4 w-4 mx-auto" /></TableHead>
-                    <TableHead className="w-10 text-end text-accent font-semibold">{isArabic ? '' : ''}</TableHead>
+                    <TableHead className="w-12 text-center text-accent font-semibold p-0"></TableHead>
                   </TableRow>
                 </TableHeader>
               </Table>
@@ -736,43 +736,39 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
               ref={parentRef}
               className="overflow-auto max-h-[600px]"
             >
-              <div
-                style={{
-                  height: `${virtualizer.getTotalSize()}px`,
-                  width: '100%',
-                  position: 'relative',
-                }}
-              >
-                <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full min-w-[900px]">
-                  <TableBody>
-                    {virtualizer.getVirtualItems().map((virtualRow) => {
-                      const booking = bookings[virtualRow.index];
-                      const isCancelled = booking.booking_status === 'cancelled';
-                      return (
-                        <TableRow
-                          key={booking.id}
-                          data-index={virtualRow.index}
-                          ref={virtualizer.measureElement}
-                          className={cn(
-                            'border-b border-accent/10 hover:bg-accent/5 transition-colors',
-                            isCancelled && 'bg-red-50/50 dark:bg-red-950/20'
-                          )}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: `${virtualRow.size}px`,
-                            transform: `translateY(${virtualRow.start}px)`,
-                          }}
-                        >
-                          {renderRow(booking)}
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+              <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full min-w-[900px]">
+                <TableBody>
+                  {/* Top spacer row */}
+                  {virtualizer.getVirtualItems().length > 0 && (
+                    <tr style={{ height: virtualizer.getVirtualItems()[0]?.start ?? 0 }} />
+                  )}
+                  {virtualizer.getVirtualItems().map((virtualRow) => {
+                    const booking = bookings[virtualRow.index];
+                    const isCancelled = booking.booking_status === 'cancelled';
+                    return (
+                      <TableRow
+                        key={booking.id}
+                        data-index={virtualRow.index}
+                        className={cn(
+                          'border-b border-accent/10 hover:bg-accent/5 transition-colors',
+                          isCancelled && 'bg-red-50/50 dark:bg-red-950/20'
+                        )}
+                        style={{ height: ROW_HEIGHT }}
+                      >
+                        {renderRow(booking)}
+                      </TableRow>
+                    );
+                  })}
+                  {/* Bottom spacer row */}
+                  {virtualizer.getVirtualItems().length > 0 && (
+                    <tr style={{ 
+                      height: virtualizer.getTotalSize() - 
+                        (virtualizer.getVirtualItems()[virtualizer.getVirtualItems().length - 1]?.start ?? 0) - 
+                        ROW_HEIGHT 
+                    }} />
+                  )}
+                </TableBody>
+              </Table>
             </div>
           </div>
         )}
