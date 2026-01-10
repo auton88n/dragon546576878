@@ -18,7 +18,11 @@ export function lazyWithPreload<T extends ComponentType<any>>(
 
   const preload = () => {
     if (!modulePromise) {
-      modulePromise = factory();
+      modulePromise = factory().catch((err) => {
+        // If the import fails (e.g., transient SW/cache/network issue), allow retry.
+        modulePromise = null;
+        throw err;
+      });
     }
     return modulePromise;
   };
