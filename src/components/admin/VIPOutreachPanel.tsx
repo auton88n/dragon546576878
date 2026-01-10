@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useVIPContacts, VIPContact, VIPCategory, VIPStatus, CreateVIPContact } from '@/hooks/useVIPContacts';
 import { useToast } from '@/hooks/use-toast';
@@ -17,8 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Crown, Users, Mail, History, Plus, Trash2, Edit, Send, Eye, Loader2, User, Phone, Building, Globe, CheckCircle, XCircle, Clock, MailOpen, Video, Gift, Camera, Utensils, MapPin, Sparkles, X, Download } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
+import { Crown, Users, Mail, History, Plus, Trash2, Edit, Send, Eye, Loader2, User, Phone, Building, Globe, CheckCircle, XCircle, Clock, MailOpen, Video, Gift, Camera, Utensils, MapPin, Sparkles, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -151,85 +150,6 @@ export const VIPOutreachPanel = () => {
   
   // AI Assist state
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
-  
-  // Preview download ref
-  const previewRef = useRef<HTMLDivElement>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  // Download preview handler
-  const handleDownloadPreview = async () => {
-    if (!previewRef.current) return;
-    
-    setIsDownloading(true);
-    try {
-      const emailContent = previewRef.current.querySelector('.email-preview-content') as HTMLElement;
-      if (!emailContent) {
-        throw new Error('Email content not found');
-      }
-      
-      // Wait for fonts to be fully loaded (fixes Arabic text shaping)
-      if (document.fonts?.ready) {
-        await document.fonts.ready;
-      }
-      // Allow layout to settle
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-      
-      const contactName = selectedContacts.size > 0 
-        ? contacts?.find(c => selectedContacts.has(c.id))?.name_en?.replace(/\s+/g, '-') || 'vip'
-        : 'vip';
-      const timestamp = format(new Date(), 'yyyyMMdd-HHmm');
-      const filename = `vip-invitation-${contactName}-${timestamp}.pdf`;
-      
-      // Generate PDF as blob for better Safari/iOS compatibility
-      const pdfBlob = await html2pdf()
-        .from(emailContent)
-        .set({
-          margin: [10, 10, 10, 10],
-          filename,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { 
-            scale: 2, 
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff',
-            windowWidth: 600
-          },
-          jsPDF: { 
-            unit: 'mm', 
-            format: 'a4',
-            orientation: 'portrait' 
-          },
-          pagebreak: { mode: ['css', 'legacy'] }
-        })
-        .outputPdf('blob');
-      
-      // Create download link from blob
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      
-      // For iOS Safari, open in new tab instead of download
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIOS) {
-        window.open(url, '_blank');
-      } else {
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-      
-      // Cleanup
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      
-      toast({ title: isArabic ? 'تم تحميل الدعوة' : 'Invitation downloaded' });
-    } catch (error) {
-      console.error('Failed to download PDF:', error);
-      toast({ title: isArabic ? 'فشل التحميل' : 'Download failed', variant: 'destructive' });
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   // Perk management handlers
   const handleAddPerk = () => {
@@ -1248,7 +1168,7 @@ export const VIPOutreachPanel = () => {
               </Button>
             </div>
           </div>
-          <div className="p-4" ref={previewRef}>
+          <div className="p-4">
             <div className="border rounded-lg bg-gray-100 p-4">
               <div 
                 className="email-preview-content bg-white rounded shadow-lg mx-auto"
