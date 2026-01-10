@@ -59,8 +59,10 @@ export const useBookings = (filters: BookingFilters, page: number = 1, pageSize:
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         const cutoffDate = sevenDaysAgo.toISOString();
-        // Show bookings that are: paid, OR created within last 7 days
-        query = query.or(`payment_status.eq.completed,created_at.gte.${cutoffDate}`);
+        // Abandoned = pending payment AND older than 7 days
+        // Show bookings that are: paid OR created within last 7 days
+        // Using filter to properly negate the condition
+        query = query.or(`payment_status.neq.pending,created_at.gte.${cutoffDate}`);
       }
 
       // Apply pagination
