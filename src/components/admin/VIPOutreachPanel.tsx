@@ -1263,7 +1263,12 @@ export const VIPOutreachPanel = () => {
               <div 
                 className="email-preview-content bg-white rounded shadow-lg mx-auto"
                 dir={isArabic ? 'rtl' : 'ltr'}
-                style={{ width: '600px', minWidth: '600px', boxSizing: 'border-box' }}
+                style={{ 
+                  width: '600px', 
+                  minWidth: '600px', 
+                  boxSizing: 'border-box',
+                  fontFamily: isArabic ? 'Tajawal, Arial, sans-serif' : 'inherit'
+                }}
               >
                 {/* Header */}
                 <div className="text-center p-8" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
@@ -1281,7 +1286,7 @@ export const VIPOutreachPanel = () => {
                   {/* Video Preview - Match actual email with hero image background */}
                   {includeVideo && (
                     <div 
-                      className="avoid-break rounded-lg overflow-hidden border-2"
+                      className="avoid-break page-break-before rounded-lg overflow-hidden border-2"
                       style={{ 
                         borderColor: '#C9A962',
                         backgroundImage: "url('/images/hero-heritage-new.webp')",
@@ -1309,7 +1314,7 @@ export const VIPOutreachPanel = () => {
                   {/* Perks Preview - Match actual email style */}
                   {selectedPerks.size > 0 && (
                     <div className="avoid-break p-6 rounded-lg" style={{ backgroundColor: '#4A3625' }}>
-                      <p className="text-sm mb-4 font-semibold uppercase tracking-wider" style={{ color: '#E8D5A3' }}>
+                      <p className={`text-sm mb-4 font-semibold ${!isArabic ? 'uppercase tracking-wider' : ''}`} style={{ color: '#E8D5A3' }}>
                         {isArabic ? 'تجربتكم المميزة تتضمن' : 'YOUR VIP EXPERIENCE INCLUDES'}
                       </p>
                       <div className="space-y-3">
@@ -1326,7 +1331,7 @@ export const VIPOutreachPanel = () => {
                   {/* Event Details */}
                   {(eventDate || eventTime) && (
                     <div className="avoid-break p-5 rounded-lg border-2" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
-                      <p className="text-sm mb-3 font-semibold uppercase tracking-wider" style={{ color: '#5C4A32' }}>
+                      <p className={`text-sm mb-3 font-semibold ${!isArabic ? 'uppercase tracking-wider' : ''}`} style={{ color: '#5C4A32' }}>
                         {isArabic ? 'تفاصيل الفعالية' : 'EVENT DETAILS'}
                       </p>
                       {eventDate && <p className="font-semibold" style={{ color: '#3D2E1F' }}>{isArabic ? 'التاريخ:' : 'Date:'} {eventDate}</p>}
