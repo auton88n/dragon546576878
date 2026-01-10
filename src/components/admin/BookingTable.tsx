@@ -226,11 +226,16 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
         <Badge 
           variant="outline" 
           className={cn(
-            'bg-red-500/20 text-red-700 border-red-500/30 dark:text-red-400 flex items-center gap-1.5 animate-pulse px-2.5 py-1 h-auto whitespace-nowrap text-xs font-medium',
+            'bg-gradient-to-r from-red-500/20 to-rose-400/15 text-red-600 border-red-400/40',
+            'shadow-sm shadow-red-500/20 animate-pulse backdrop-blur-sm',
+            'flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide uppercase',
+            'dark:from-red-500/25 dark:to-rose-400/20 dark:text-red-400',
             isRTL && 'flex-row-reverse'
           )}
         >
-          <AlertTriangle className="h-3.5 w-3.5" />
+          <span className="flex items-center justify-center w-4 h-4 rounded-full bg-current/10">
+            <AlertTriangle className="h-2.5 w-2.5" />
+          </span>
           <span>{isArabic ? 'تذاكر مفقودة!' : 'Missing Tickets!'}</span>
         </Badge>
       );
@@ -241,19 +246,19 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     
     const config: Record<string, { className: string; icon: React.ElementType; labelAr: string; labelEn: string }> = {
       confirmed: { 
-        className: 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30 dark:text-emerald-400',
+        className: 'bg-gradient-to-r from-emerald-500/15 to-emerald-400/10 text-emerald-600 border-emerald-400/40 shadow-sm shadow-emerald-500/10 dark:from-emerald-500/25 dark:to-emerald-400/15 dark:text-emerald-400',
         icon: CheckCircle,
         labelAr: 'مؤكد',
         labelEn: 'Confirmed'
       },
       pending: { 
-        className: 'bg-amber-500/20 text-amber-700 border-amber-500/30 dark:text-amber-400',
+        className: 'bg-gradient-to-r from-amber-500/15 to-amber-400/10 text-amber-600 border-amber-400/40 shadow-sm shadow-amber-500/10 dark:from-amber-500/25 dark:to-amber-400/15 dark:text-amber-400',
         icon: Clock,
         labelAr: 'معلق',
         labelEn: 'Pending'
       },
       cancelled: { 
-        className: 'bg-red-500/20 text-red-700 border-red-500/30 dark:text-red-400',
+        className: 'bg-gradient-to-r from-red-500/15 to-red-400/10 text-red-600 border-red-400/40 shadow-sm shadow-red-500/10 dark:from-red-500/25 dark:to-red-400/15 dark:text-red-400',
         icon: XCircle,
         labelAr: 'ملغي',
         labelEn: 'Cancelled'
@@ -266,9 +271,15 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     return (
       <Badge 
         variant="outline" 
-        className={cn(className, 'flex items-center gap-1.5 px-2.5 py-1 h-auto whitespace-nowrap text-xs font-medium', isRTL && 'flex-row-reverse')}
+        className={cn(
+          className, 
+          'flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide uppercase backdrop-blur-sm transition-all duration-200 hover:scale-[1.02]',
+          isRTL && 'flex-row-reverse'
+        )}
       >
-        <Icon className="h-3.5 w-3.5" />
+        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-current/10">
+          <Icon className="h-2.5 w-2.5" />
+        </span>
         <span>{isArabic ? labelAr : labelEn}</span>
       </Badge>
     );
