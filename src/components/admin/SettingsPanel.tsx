@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Settings, Clock, Calendar, Save, RefreshCw, CalendarRange, RotateCcw, Settings2, Users, Package, Megaphone, Wrench, Crown } from 'lucide-react';
+import { Settings, Clock, Calendar, Save, RefreshCw, CalendarRange, RotateCcw, Settings2, Users, Package, Megaphone, Wrench, Crown, Trash2, Database } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -24,6 +25,91 @@ import StaffManager from './StaffManager';
 import EmployeesManager from './EmployeesManager';
 import { HoursAnnouncementPanel } from './HoursAnnouncementPanel';
 import VIPOutreachPanel from './VIPOutreachPanel';
+
+// Database Maintenance Card Component
+const DatabaseMaintenanceCard = ({ isArabic }: { isArabic: boolean }) => {
+  const [cleaning, setCleaning] = useState(false);
+  const [result, setResult] = useState<{ deleted_count: number; cutoff_date: string } | null>(null);
+  const { toast } = useToast();
+
+  const handleCleanup = async () => {
+    setCleaning(true);
+    setResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('cleanup-abandoned-bookings', {
+        body: { daysOld: 3 }
+      });
+
+      if (error) throw error;
+
+      setResult(data);
+      toast({
+        title: isArabic ? 'تم التنظيف' : 'Cleanup Complete',
+        description: isArabic 
+          ? `تم حذف ${data.deleted_count} حجز مهجور`
+          : `Deleted ${data.deleted_count} abandoned booking(s)`,
+      });
+    } catch (err) {
+      console.error('Cleanup error:', err);
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل في تنظيف قاعدة البيانات' : 'Failed to cleanup database',
+        variant: 'destructive',
+      });
+    } finally {
+      setCleaning(false);
+    }
+  };
+
+  return (
+    <Card className="glass-card border-accent/20">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-3 text-base rtl:flex-row-reverse rtl:justify-end">
+          <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+            <Database className="h-4 w-4 text-red-600" />
+          </div>
+          {isArabic ? 'صيانة قاعدة البيانات' : 'Database Maintenance'}
+        </CardTitle>
+        <CardDescription className="text-start rtl:text-right">
+          {isArabic 
+            ? 'إزالة الحجوزات المعلقة القديمة التي لم تكتمل' 
+            : 'Remove old pending bookings that were never completed'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rtl:sm:flex-row-reverse">
+          <Button
+            variant="destructive"
+            onClick={handleCleanup}
+            disabled={cleaning}
+            className="gap-2"
+          >
+            {cleaning ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+            {isArabic ? 'تنظيف الحجوزات المهجورة (٣+ أيام)' : 'Cleanup Abandoned Bookings (3+ days)'}
+          </Button>
+          
+          {result && (
+            <div className="text-sm text-muted-foreground">
+              {isArabic 
+                ? `تم حذف ${result.deleted_count} حجز`
+                : `${result.deleted_count} booking(s) deleted`}
+            </div>
+          )}
+        </div>
+        
+        <p className="text-xs text-muted-foreground text-start rtl:text-right">
+          {isArabic 
+            ? 'هذا الإجراء يحذف الحجوزات المعلقة الأقدم من ٣ أيام وسجلات الدفع والتذاكر المرتبطة بها.'
+            : 'This action deletes pending bookings older than 3 days along with their payment logs and tickets.'}
+        </p>
+      </CardContent>
+    </Card>
+  );
+};
 
 const SettingsPanel = (): JSX.Element => {
   const { currentLanguage } = useLanguage();
@@ -417,6 +503,10 @@ const SettingsPanel = (): JSX.Element => {
                 {isArabic ? 'هذه الأدوات للاختبار فقط - لا تستخدمها في بيئة الإنتاج' : 'These tools are for testing only - do not use in production'}
               </p>
             </div>
+            
+            {/* Database Maintenance */}
+            <DatabaseMaintenanceCard isArabic={isArabic} />
+            
             <TestQRGenerator />
             <TestEmployeeBadgeGenerator />
           </TabsContent>
