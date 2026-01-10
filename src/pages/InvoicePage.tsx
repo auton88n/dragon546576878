@@ -203,7 +203,7 @@ export default function InvoicePage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container max-w-2xl mx-auto py-12 px-4">
+        <main className="container max-w-2xl mx-auto pt-24 pb-12 px-4">
           <Card className="text-center py-12">
             <CardContent>
               <XCircle className="h-16 w-16 mx-auto text-destructive mb-4" />
@@ -226,7 +226,7 @@ export default function InvoicePage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container max-w-2xl mx-auto py-12 px-4">
+        <main className="container max-w-2xl mx-auto pt-24 pb-12 px-4">
           <Card className="text-center py-12">
             <CardContent>
               <CheckCircle className="h-16 w-16 mx-auto text-green-500 mb-4" />
@@ -251,7 +251,7 @@ export default function InvoicePage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container max-w-2xl mx-auto py-12 px-4">
+        <main className="container max-w-2xl mx-auto pt-24 pb-12 px-4">
           <Card className="text-center py-12">
             <CardContent>
               <XCircle className="h-16 w-16 mx-auto text-destructive mb-4" />
@@ -273,7 +273,7 @@ export default function InvoicePage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container max-w-2xl mx-auto py-12 px-4">
+        <main className="container max-w-2xl mx-auto pt-24 pb-12 px-4">
           <Card className="text-center py-12">
             <CardContent>
               <AlertCircle className="h-16 w-16 mx-auto text-yellow-500 mb-4" />
@@ -296,7 +296,7 @@ export default function InvoicePage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container max-w-2xl mx-auto py-12 px-4">
+        <main className="container max-w-2xl mx-auto pt-24 pb-12 px-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -326,7 +326,7 @@ export default function InvoicePage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container max-w-2xl mx-auto py-8 px-4" dir={isArabic ? 'rtl' : 'ltr'}>
+      <main className="container max-w-2xl mx-auto pt-24 pb-8 px-4" dir={isArabic ? 'rtl' : 'ltr'}>
         <Card className="overflow-hidden">
           {/* Header */}
           <CardHeader className="bg-primary/5 border-b">
