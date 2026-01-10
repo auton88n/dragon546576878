@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { 
@@ -65,10 +65,11 @@ interface OrphanPayment {
   linkedBookingRef: string | null;
 }
 
-const RefundsPanel = () => {
+const RefundsPanel = forwardRef<HTMLDivElement>((_, ref) => {
   const { currentLanguage } = useLanguage();
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
+  const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([]);
@@ -272,6 +273,7 @@ const RefundsPanel = () => {
   };
 
   const handleCancelDuplicate = async (bookingId: string) => {
+    setCancellingBookingId(bookingId);
     try {
       const { error } = await supabase
         .from('bookings')
@@ -287,6 +289,13 @@ const RefundsPanel = () => {
       fetchDuplicates();
     } catch (err) {
       console.error('Cancel error:', err);
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل في إلغاء الحجز' : 'Failed to cancel booking',
+        variant: 'destructive',
+      });
+    } finally {
+      setCancellingBookingId(null);
     }
   };
 
@@ -450,7 +459,7 @@ const RefundsPanel = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={ref} className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center">
@@ -619,8 +628,13 @@ const RefundsPanel = () => {
                               variant="ghost"
                               className="h-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                               onClick={() => handleCancelDuplicate(booking.id)}
+                              disabled={cancellingBookingId === booking.id}
                             >
-                              <XCircle className="h-3 w-3 me-1" />
+                              {cancellingBookingId === booking.id ? (
+                                <RefreshCw className="h-3 w-3 me-1 animate-spin" />
+                              ) : (
+                                <XCircle className="h-3 w-3 me-1" />
+                              )}
                               {isArabic ? 'إلغاء' : 'Cancel'}
                             </Button>
                           </div>
@@ -1039,6 +1053,8 @@ const RefundsPanel = () => {
       </AlertDialog>
     </div>
   );
-};
+});
+
+RefundsPanel.displayName = 'RefundsPanel';
 
 export default RefundsPanel;
