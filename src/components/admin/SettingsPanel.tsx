@@ -28,7 +28,7 @@ import { HoursAnnouncementPanel } from './HoursAnnouncementPanel';
 import VIPOutreachPanel from './VIPOutreachPanel';
 
 // Database Maintenance Card Component
-const DatabaseMaintenanceCard = ({ isArabic }: { isArabic: boolean }) => {
+const DatabaseMaintenanceCard = ({ isArabic, onCleanupComplete }: { isArabic: boolean; onCleanupComplete?: () => void }) => {
   const [cleaning, setCleaning] = useState(false);
   const [daysToClean, setDaysToClean] = useState(1);
   const [result, setResult] = useState<{ deleted_count: number; cutoff_date: string } | null>(null);
@@ -51,6 +51,11 @@ const DatabaseMaintenanceCard = ({ isArabic }: { isArabic: boolean }) => {
           ? `تم حذف ${data.deleted_count} حجز مهجور`
           : `Deleted ${data.deleted_count} abandoned booking(s)`,
       });
+
+      // Refresh stats after successful cleanup
+      if (data.deleted_count > 0 && onCleanupComplete) {
+        onCleanupComplete();
+      }
     } catch (err) {
       console.error('Cleanup error:', err);
       toast({
@@ -151,7 +156,11 @@ const DatabaseMaintenanceCard = ({ isArabic }: { isArabic: boolean }) => {
   );
 };
 
-const SettingsPanel = (): JSX.Element => {
+interface SettingsPanelProps {
+  onStatsRefresh?: () => void;
+}
+
+const SettingsPanel = ({ onStatsRefresh }: SettingsPanelProps): JSX.Element => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { toast } = useToast();
@@ -545,7 +554,7 @@ const SettingsPanel = (): JSX.Element => {
             </div>
             
             {/* Database Maintenance */}
-            <DatabaseMaintenanceCard isArabic={isArabic} />
+            <DatabaseMaintenanceCard isArabic={isArabic} onCleanupComplete={onStatsRefresh} />
             
             <TestQRGenerator />
             <TestEmployeeBadgeGenerator />

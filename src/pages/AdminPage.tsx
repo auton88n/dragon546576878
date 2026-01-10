@@ -368,7 +368,7 @@ const AdminPage = () => {
             {/* Settings Tab */}
             <TabsContent value="settings">
               <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <SettingsPanel />
+                <SettingsPanel onStatsRefresh={refetchStats} />
               </Suspense>
             </TabsContent>
 
