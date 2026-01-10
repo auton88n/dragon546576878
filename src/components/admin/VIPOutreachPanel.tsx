@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useVIPContacts, VIPContact, VIPCategory, VIPStatus, CreateVIPContact } from '@/hooks/useVIPContacts';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +17,8 @@ import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Crown, Users, Mail, History, Plus, Trash2, Edit, Send, Eye, Loader2, User, Phone, Building, Globe, CheckCircle, XCircle, Clock, MailOpen, Video, Gift, Camera, Utensils, MapPin, Sparkles, X } from 'lucide-react';
+import { Crown, Users, Mail, History, Plus, Trash2, Edit, Send, Eye, Loader2, User, Phone, Building, Globe, CheckCircle, XCircle, Clock, MailOpen, Video, Gift, Camera, Utensils, MapPin, Sparkles, X, Download } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -150,6 +151,45 @@ export const VIPOutreachPanel = () => {
   
   // AI Assist state
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  
+  // Preview download ref
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  // Download preview handler
+  const handleDownloadPreview = async () => {
+    if (!previewRef.current) return;
+    
+    setIsDownloading(true);
+    try {
+      const emailContent = previewRef.current.querySelector('.email-preview-content') as HTMLElement;
+      if (!emailContent) {
+        throw new Error('Email content not found');
+      }
+      
+      const dataUrl = await toPng(emailContent, {
+        quality: 1,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff'
+      });
+      
+      const link = document.createElement('a');
+      const contactName = selectedContacts.size > 0 
+        ? contacts?.find(c => selectedContacts.has(c.id))?.name_en?.replace(/\s+/g, '-') || 'vip'
+        : 'vip';
+      const timestamp = format(new Date(), 'yyyyMMdd-HHmm');
+      link.download = `vip-invitation-${contactName}-${timestamp}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      toast({ title: isArabic ? 'تم تحميل المعاينة' : 'Preview downloaded' });
+    } catch (error) {
+      console.error('Failed to download preview:', error);
+      toast({ title: isArabic ? 'فشل التحميل' : 'Download failed', variant: 'destructive' });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   // Perk management handlers
   const handleAddPerk = () => {
@@ -1157,18 +1197,30 @@ export const VIPOutreachPanel = () => {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0" aria-describedby={undefined}>
           <div className="sticky top-0 z-10 flex items-center justify-between bg-white border-b px-6 py-4">
             <DialogTitle>{isArabic ? 'معاينة الرسالة' : 'Email Preview'}</DialogTitle>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setShowPreview(false)}
-              className="h-9 w-9 rounded-full hover:bg-gray-100"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleDownloadPreview}
+                disabled={isDownloading}
+                className="h-9 w-9 rounded-full hover:bg-gray-100"
+                title={isArabic ? 'تحميل المعاينة' : 'Download Preview'}
+              >
+                {isDownloading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowPreview(false)}
+                className="h-9 w-9 rounded-full hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-          <div className="p-4">
+          <div className="p-4" ref={previewRef}>
             <div className="border rounded-lg overflow-hidden bg-gray-100 p-4">
-              <div className="bg-white rounded shadow-lg max-w-[600px] mx-auto overflow-hidden">
+              <div className="email-preview-content bg-white rounded shadow-lg max-w-[600px] mx-auto overflow-hidden">
                 {/* Header */}
                 <div className="text-center p-8" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
                   <div className="h-1 w-32 mx-auto mb-4 rounded" style={{ background: 'linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962)' }} />
