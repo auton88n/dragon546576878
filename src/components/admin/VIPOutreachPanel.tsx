@@ -1281,7 +1281,7 @@ export const VIPOutreachPanel = () => {
                   {/* Video Preview - Match actual email with hero image background */}
                   {includeVideo && (
                     <div 
-                      className="rounded-lg overflow-hidden border-2"
+                      className="avoid-break rounded-lg overflow-hidden border-2"
                       style={{ 
                         borderColor: '#C9A962',
                         backgroundImage: "url('/images/hero-heritage-new.webp')",
@@ -1300,7 +1300,7 @@ export const VIPOutreachPanel = () => {
                   )}
 
                   {/* Guest Allowance */}
-                  <div className="p-5 rounded-lg text-center border" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
+                  <div className="avoid-break p-5 rounded-lg text-center border" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
                     <p className="font-semibold" style={{ color: '#3D2E1F' }}>
                       {isArabic ? `يمكنكم اصطحاب حتى ${guestAllowance} ضيوف مميزين` : `You may bring up to ${guestAllowance} honored guests`}
                     </p>
@@ -1308,7 +1308,7 @@ export const VIPOutreachPanel = () => {
 
                   {/* Perks Preview - Match actual email style */}
                   {selectedPerks.size > 0 && (
-                    <div className="p-6 rounded-lg" style={{ backgroundColor: '#4A3625' }}>
+                    <div className="avoid-break p-6 rounded-lg" style={{ backgroundColor: '#4A3625' }}>
                       <p className="text-sm mb-4 font-semibold uppercase tracking-wider" style={{ color: '#E8D5A3' }}>
                         {isArabic ? 'تجربتكم المميزة تتضمن' : 'YOUR VIP EXPERIENCE INCLUDES'}
                       </p>
@@ -1325,7 +1325,7 @@ export const VIPOutreachPanel = () => {
 
                   {/* Event Details */}
                   {(eventDate || eventTime) && (
-                    <div className="p-5 rounded-lg border-2" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
+                    <div className="avoid-break p-5 rounded-lg border-2" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
                       <p className="text-sm mb-3 font-semibold uppercase tracking-wider" style={{ color: '#5C4A32' }}>
                         {isArabic ? 'تفاصيل الفعالية' : 'EVENT DETAILS'}
                       </p>
@@ -1336,7 +1336,7 @@ export const VIPOutreachPanel = () => {
 
                   {/* RSVP Button */}
                   {enableRSVP && (
-                    <div className="text-center">
+                    <div className="avoid-break text-center">
                       <div className="inline-block px-14 py-5 rounded-xl text-white font-bold text-lg border-2" style={{ background: 'linear-gradient(135deg, #5C4A32, #4A3625)', borderColor: '#C9A962' }}>
                         {isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
                       </div>
