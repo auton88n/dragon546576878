@@ -191,7 +191,7 @@ export const useVIPContacts = () => {
     eventDate?: string;
     eventTime?: string;
     guestAllowance?: number;
-    perks?: string[];
+    perks?: Array<string | { id: string; en: string; ar: string }>;
     includeVideo?: boolean;
     enableRSVP?: boolean;
   }): Promise<boolean> => {
