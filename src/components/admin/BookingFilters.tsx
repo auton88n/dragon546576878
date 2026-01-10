@@ -391,7 +391,7 @@ const BookingFilters = ({ filters, onFiltersChange, onReset, onExport, exporting
             <Badge
               key={chip.key}
               variant="secondary"
-              className="h-auto py-1 px-2.5 gap-1.5 text-xs bg-accent/10 text-accent-foreground hover:bg-accent/20 transition-colors cursor-default whitespace-nowrap shrink-0"
+              className="inline-flex items-center h-auto py-1.5 px-3 gap-2 text-xs bg-accent/10 text-accent-foreground hover:bg-accent/20 transition-colors cursor-default whitespace-nowrap shrink-0 rounded-md"
             >
               {chip.label}
               <button
