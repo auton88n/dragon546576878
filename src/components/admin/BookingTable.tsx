@@ -675,8 +675,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                   <TableHead className="w-[12%] text-accent font-semibold text-start">{isArabic ? 'وقت الشراء' : 'Purchased'}</TableHead>
                   <TableHead className="w-[5%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
                   <TableHead className="w-[9%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-                    <TableHead className="w-[13%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
-                    <TableHead className="w-[10%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
+                  <TableHead className="w-[13%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
                   <TableHead className="w-[10%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
                   <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'البريد' : 'Email'}><Mail className="h-4 w-4 mx-auto" /></TableHead>
                   <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'التذكير' : 'Reminder'}><Bell className="h-4 w-4 mx-auto" /></TableHead>
