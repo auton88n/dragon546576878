@@ -1241,16 +1241,6 @@ export const VIPOutreachPanel = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={handleDownloadPreview}
-                disabled={isDownloading}
-                className="h-9 w-9 rounded-full hover:bg-gray-100"
-                title={isArabic ? 'تحميل PDF' : 'Download PDF'}
-              >
-                {isDownloading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
                 onClick={() => setShowPreview(false)}
                 className="h-9 w-9 rounded-full hover:bg-gray-100"
               >
