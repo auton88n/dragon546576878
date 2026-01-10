@@ -131,6 +131,7 @@ const RefundsPanel = () => {
         .from('bookings')
         .select('id, booking_reference, customer_email, customer_name, visit_date, total_amount, payment_status, payment_id, created_at')
         .eq('payment_status', 'pending')
+        .not('booking_status', 'eq', 'cancelled')
         .order('customer_email')
         .order('visit_date');
 
