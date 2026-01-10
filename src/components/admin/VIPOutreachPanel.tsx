@@ -43,6 +43,7 @@ const statusLabels: Record<VIPStatus, { en: string; ar: string; color: string }>
 // Template types
 const templateTypes = [
   { id: 'exclusive_invitation', en: 'Exclusive Invitation', ar: 'دعوة حصرية' },
+  { id: 'vip_invitation', en: 'VIP Invitation', ar: 'دعوة خاصة' },
   { id: 'media_tour', en: 'Media Tour', ar: 'جولة إعلامية' },
   { id: 'partnership', en: 'Partnership Proposal', ar: 'عرض شراكة' },
   { id: 'vip_experience', en: 'VIP Experience', ar: 'تجربة استثنائية' },
