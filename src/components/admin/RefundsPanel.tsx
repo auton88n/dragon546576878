@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { 
@@ -65,7 +65,7 @@ interface OrphanPayment {
   linkedBookingRef: string | null;
 }
 
-const RefundsPanel = React.forwardRef<HTMLDivElement>((_, ref) => {
+const RefundsPanel = () => {
   const { currentLanguage } = useLanguage();
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
@@ -459,7 +459,7 @@ const RefundsPanel = React.forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   return (
-    <div ref={ref} className="space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center">
@@ -1053,8 +1053,6 @@ const RefundsPanel = React.forwardRef<HTMLDivElement>((_, ref) => {
       </AlertDialog>
     </div>
   );
-});
-
-RefundsPanel.displayName = 'RefundsPanel';
+};
 
 export default RefundsPanel;
