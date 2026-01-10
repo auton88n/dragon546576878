@@ -170,7 +170,13 @@ export const VIPOutreachPanel = () => {
       const dataUrl = await toPng(emailContent, {
         quality: 1,
         pixelRatio: 2,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 600,
+        style: {
+          overflow: 'visible',
+          width: '600px',
+          minWidth: '600px',
+        }
       });
       
       const link = document.createElement('a');
@@ -1219,8 +1225,12 @@ export const VIPOutreachPanel = () => {
             </div>
           </div>
           <div className="p-4" ref={previewRef}>
-            <div className="border rounded-lg overflow-hidden bg-gray-100 p-4">
-              <div className="email-preview-content bg-white rounded shadow-lg max-w-[600px] mx-auto overflow-hidden">
+            <div className="border rounded-lg bg-gray-100 p-4">
+              <div 
+                className="email-preview-content bg-white rounded shadow-lg mx-auto"
+                dir={isArabic ? 'rtl' : 'ltr'}
+                style={{ width: '600px', minWidth: '600px', boxSizing: 'border-box' }}
+              >
                 {/* Header */}
                 <div className="text-center p-8" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
                   <div className="h-1 w-32 mx-auto mb-4 rounded" style={{ background: 'linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962)' }} />
@@ -1228,7 +1238,7 @@ export const VIPOutreachPanel = () => {
                   <p className="mt-2" style={{ color: '#F5F1E8' }}>{isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}</p>
                 </div>
                 
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-6" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                   <p className="text-lg">{isArabic ? 'حضرة [الاسم] المحترم/ة،' : 'Dear [Name],'}</p>
                   <div className="whitespace-pre-wrap text-gray-700">
                     {isArabic ? messageAr : messageEn}
