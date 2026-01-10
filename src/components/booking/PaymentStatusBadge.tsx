@@ -36,9 +36,9 @@ const PaymentStatusBadge = ({ status, size = 'md', showIcon = true }: PaymentSta
   const { label, shortLabel, className, icon: Icon } = config[status];
   
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-sm px-3 py-1',
-    lg: 'text-base px-4 py-1.5',
+    sm: 'text-xs px-2.5 py-1 h-auto whitespace-nowrap',
+    md: 'text-sm px-3.5 py-1.5 h-auto whitespace-nowrap',
+    lg: 'text-base px-5 py-2 h-auto whitespace-nowrap',
   };
 
   const iconSizes = {
