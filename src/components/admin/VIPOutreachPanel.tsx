@@ -17,7 +17,8 @@ import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Crown, Users, Mail, History, Plus, Trash2, Edit, Send, Eye, Loader2, User, Phone, Building, Globe, CheckCircle, XCircle, Clock, MailOpen, Video, Gift, Camera, Utensils, MapPin } from 'lucide-react';
+import { Crown, Users, Mail, History, Plus, Trash2, Edit, Send, Eye, Loader2, User, Phone, Building, Globe, CheckCircle, XCircle, Clock, MailOpen, Video, Gift, Camera, Utensils, MapPin, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 
@@ -145,6 +146,9 @@ export const VIPOutreachPanel = () => {
   const [perkForm, setPerkForm] = useState<Omit<VIPPerk, 'id'>>({ en: '', ar: '', iconKey: 'Gift' });
   const [showDeletePerkDialog, setShowDeletePerkDialog] = useState(false);
   const [deletePerkId, setDeletePerkId] = useState<string | null>(null);
+  
+  // AI Assist state
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   // Perk management handlers
   const handleAddPerk = () => {
@@ -193,6 +197,85 @@ export const VIPOutreachPanel = () => {
     }
     setShowDeletePerkDialog(false);
     setDeletePerkId(null);
+  };
+
+  // AI Assist handler
+  const handleAIAssist = async () => {
+    if (selectedContacts.size === 0) {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'يرجى اختيار جهة اتصال أولاً' : 'Please select a contact first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Get first selected contact
+    const firstContactId = Array.from(selectedContacts)[0];
+    const contact = contacts.find(c => c.id === firstContactId);
+    if (!contact) return;
+
+    setIsGeneratingAI(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-vip-invitation', {
+        body: {
+          contact: {
+            name: contact.preferred_language === 'ar' ? contact.name_ar : contact.name_en,
+            category: contact.category,
+            title: contact.preferred_language === 'ar' ? contact.title_ar : contact.title_en,
+          },
+          templateType,
+        },
+      });
+
+      if (error) throw error;
+
+      // Check for monthly limit error
+      if (data?.error === 'monthly_limit_exceeded') {
+        toast({
+          title: isArabic ? 'تجاوز الحد الشهري' : 'Monthly Limit Exceeded',
+          description: isArabic ? data.message_ar : data.message_en,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (data?.error) {
+        throw new Error(data.message || 'AI generation failed');
+      }
+
+      // Auto-fill the form with AI-generated content
+      setSubjectEn(data.subjectEn || subjectEn);
+      setSubjectAr(data.subjectAr || subjectAr);
+      setMessageEn(data.messageEn || messageEn);
+      setMessageAr(data.messageAr || messageAr);
+
+      // Apply suggested perks
+      if (data.suggestedPerks && Array.isArray(data.suggestedPerks)) {
+        const validPerks = data.suggestedPerks.filter((p: string) => 
+          customPerks.some(cp => cp.id === p)
+        );
+        if (validPerks.length > 0) {
+          setSelectedPerks(new Set(validPerks));
+        }
+      }
+
+      toast({
+        title: isArabic ? 'تم إنشاء المحتوى' : 'Content Generated',
+        description: isArabic ? 'تم إنشاء الدعوة بواسطة الذكاء الاصطناعي' : 'AI-generated invitation ready',
+      });
+
+    } catch (error) {
+      console.error('AI generation error:', error);
+      toast({
+        title: isArabic ? 'خطأ في الاتصال' : 'Connection Error',
+        description: isArabic ? 'خطأ في الاتصال، يرجى المحاولة مرة أخرى' : 'Connection error, please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   // Filtered contacts
@@ -535,6 +618,37 @@ export const VIPOutreachPanel = () => {
                     })}
                   </div>
                 )}
+              </div>
+
+              {/* AI Assist Button */}
+              <div className="p-4 rounded-lg bg-gradient-to-r from-amber-100 via-yellow-50 to-orange-100 border border-amber-300 shadow-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-amber-800 flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      {isArabic ? 'مساعد الذكاء الاصطناعي' : 'AI Assistant'}
+                    </h3>
+                    <p className="text-sm text-amber-700 mt-1">
+                      {isArabic 
+                        ? 'إنشاء دعوة مخصصة تلقائياً بناءً على ملف الضيف'
+                        : 'Auto-generate personalized invitation based on guest profile'}
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={handleAIAssist}
+                    disabled={selectedContacts.size === 0 || isGeneratingAI}
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg transition-all"
+                  >
+                    {isGeneratingAI ? (
+                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 me-2" />
+                    )}
+                    {isGeneratingAI 
+                      ? (isArabic ? 'جاري الإنشاء...' : 'Generating...') 
+                      : (isArabic ? 'إنشاء بالذكاء الاصطناعي' : 'AI Generate')}
+                  </Button>
+                </div>
               </div>
 
               {/* Template */}
