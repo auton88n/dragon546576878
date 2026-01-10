@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Calendar, RotateCcw, Download, CalendarDays, CalendarClock, AlertCircle, EyeOff, ChevronDown, X, SlidersHorizontal } from 'lucide-react';
+import { Search, Calendar, RotateCcw, Download, CalendarDays, CalendarClock, AlertCircle, EyeOff, ChevronDown, X, Filter } from 'lucide-react';
 import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Input } from '@/components/ui/input';
@@ -228,7 +228,7 @@ const BookingFilters = ({ filters, onFiltersChange, onReset, onExport, exporting
                   isAdvancedOpen && "bg-accent/10 border-accent"
                 )}
               >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
+                <Filter className="h-4 w-4" />
                 <span className="hidden sm:inline">{isArabic ? 'فلاتر' : 'Filters'}</span>
                 {activeFilterCount > 0 && (
                   <Badge variant="secondary" className="h-4 w-4 p-0 text-[10px] bg-primary text-primary-foreground">
