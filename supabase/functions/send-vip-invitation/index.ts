@@ -44,7 +44,7 @@ const getTrackingPixelUrl = (trackingId: string): string => {
 
 // Generate RSVP URL
 const getRSVPUrl = (rsvpToken: string): string => {
-  return `https://tickets.almufaijer.com/vip/rsvp/${rsvpToken}`;
+  return `https://almufaijer.com/vip/rsvp/${rsvpToken}`;
 };
 
 // Professional VIP email template with video, perks, and RSVP
@@ -84,17 +84,23 @@ const generateVIPEmailHTML = (
     <table role="presentation" style="width: 100%; margin-bottom: 24px;" bgcolor="#4A3625">
       <tr>
         <td bgcolor="#4A3625" style="background-color: #4A3625; padding: 24px; border-radius: 12px;">
-          <p style="color: #C9A962; font-size: 14px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
-            ${isArabic ? '✨ تجربتكم المميزة تتضمن' : '✨ YOUR VIP EXPERIENCE INCLUDES'}
+          <p style="color: #E8D5A3; font-size: 14px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
+            ${isArabic ? 'تجربتكم المميزة تتضمن' : 'YOUR VIP EXPERIENCE INCLUDES'}
           </p>
           ${perks.map(perkId => {
             const label = perkLabels[perkId];
             if (!label) return '';
             return `
-              <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <span style="color: #C9A962; margin-${isArabic ? 'left' : 'right'}: 10px;">✓</span>
-                <span style="color: #FFFFFF; font-size: 15px;">${isArabic ? label.ar : label.en}</span>
-              </div>
+              <table role="presentation" style="width: 100%; margin-bottom: 10px;">
+                <tr>
+                  <td style="width: 24px; vertical-align: top;">
+                    <span style="color: #C9A962; font-size: 18px;">•</span>
+                  </td>
+                  <td>
+                    <span style="color: #FFFFFF; font-size: 15px;">${isArabic ? label.ar : label.en}</span>
+                  </td>
+                </tr>
+              </table>
             `;
           }).join('')}
         </td>
@@ -153,16 +159,20 @@ const generateVIPEmailHTML = (
                 <tr>
                   <td>
                     <a href="${videoUrl}" target="_blank" style="text-decoration: none; display: block;">
-                      <table role="presentation" style="width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #C9A962;">
+                      <table role="presentation" style="width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #C9A962; box-shadow: 0 4px 12px rgba(92, 74, 50, 0.3);">
                         <tr>
-                          <td style="background: linear-gradient(135deg, #5C4A32, #8B6F47); padding: 40px; text-align: center;">
-                            <div style="width: 70px; height: 70px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-                              <span style="font-size: 32px;">▶️</span>
-                            </div>
-                            <p style="color: #C9A962; font-size: 18px; font-weight: 600; margin: 0 0 8px 0;">
-                              ${isArabic ? '🎬 اكتشف سحر المفيجر' : '🎬 Discover the Magic of Almufaijer'}
+                          <td style="background: linear-gradient(135deg, #5C4A32, #8B6F47); padding: 48px; text-align: center;">
+                            <table role="presentation" style="margin: 0 auto 20px;">
+                              <tr>
+                                <td style="width: 80px; height: 80px; background: rgba(255,255,255,0.25); border-radius: 40px; text-align: center; vertical-align: middle; border: 3px solid rgba(255,255,255,0.4);">
+                                  <span style="font-size: 36px; color: #FFFFFF;">&#9654;</span>
+                                </td>
+                              </tr>
+                            </table>
+                            <p style="color: #FFFFFF; font-size: 20px; font-weight: 600; margin: 0 0 8px 0;">
+                              ${isArabic ? 'اكتشف سحر المفيجر' : 'Discover the Magic of Almufaijer'}
                             </p>
-                            <p style="color: #D4C5B0; font-size: 14px; margin: 0;">
+                            <p style="color: #E8D5A3; font-size: 14px; margin: 0;">
                               ${isArabic ? 'اضغط لمشاهدة الفيديو' : 'Click to watch video'}
                             </p>
                           </td>
@@ -178,8 +188,8 @@ const generateVIPEmailHTML = (
               <table role="presentation" style="width: 100%; margin-bottom: 24px;" bgcolor="#F5F1E8">
                 <tr>
                   <td bgcolor="#F5F1E8" style="background-color: #F5F1E8; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #C9A962;">
-                    <p style="color: #4A3625; font-size: 18px; margin: 0; font-weight: 600;">
-                      👥 ${isArabic ? `يمكنكم اصطحاب حتى ${guestAllowance} ضيوف مميزين` : `You may bring up to ${guestAllowance} honored guests`}
+                    <p style="color: #3D2E1F; font-size: 18px; margin: 0; font-weight: 600;">
+                      ${isArabic ? `يمكنكم اصطحاب حتى ${guestAllowance} ضيوف مميزين` : `You may bring up to ${guestAllowance} honored guests`}
                     </p>
                   </td>
                 </tr>
@@ -189,27 +199,27 @@ const generateVIPEmailHTML = (
               
               ${(eventDate || eventTime || offerDetails) ? `
               <!-- Event Details Box -->
-              <table role="presentation" style="width: 100%; margin-bottom: 32px;" bgcolor="#4A3625">
+              <table role="presentation" style="width: 100%; margin-bottom: 32px;">
                 <tr>
-                  <td bgcolor="#4A3625" style="background-color: #4A3625; padding: 28px; border-radius: 12px; border: 1px solid #C9A962;">
-                    <p style="color: #C9A962; font-size: 14px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
-                      ${isArabic ? '📅 تفاصيل الفعالية' : '📅 EVENT DETAILS'}
+                  <td style="background-color: #F5F1E8; padding: 24px; border-radius: 12px; border: 2px solid #C9A962;">
+                    <p style="color: #5C4A32; font-size: 14px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
+                      ${isArabic ? 'تفاصيل الفعالية' : 'EVENT DETAILS'}
                     </p>
                     
                     ${eventDate ? `
-                    <p style="color: #FFFFFF; font-size: 16px; margin: 0 0 8px 0;">
+                    <p style="color: #3D2E1F; font-size: 18px; margin: 0 0 10px 0; font-weight: 600;">
                       <strong>${dateLabel}</strong> ${eventDate}
                     </p>
                     ` : ''}
                     
                     ${eventTime ? `
-                    <p style="color: #FFFFFF; font-size: 16px; margin: 0 0 12px 0;">
+                    <p style="color: #3D2E1F; font-size: 18px; margin: 0; font-weight: 600;">
                       <strong>${timeLabel}</strong> ${eventTime}
                     </p>
                     ` : ''}
                     
                     ${offerDetails ? `
-                    <p style="color: #D4C5B0; font-size: 15px; margin: ${eventDate || eventTime ? '16px' : '0'} 0 0 0; line-height: 1.7; border-top: ${eventDate || eventTime ? '1px solid rgba(255,255,255,0.2)' : 'none'}; padding-top: ${eventDate || eventTime ? '16px' : '0'};">
+                    <p style="color: #5C4A32; font-size: 15px; margin: ${eventDate || eventTime ? '16px' : '0'} 0 0 0; line-height: 1.7; border-top: ${eventDate || eventTime ? '1px solid #C9A962' : 'none'}; padding-top: ${eventDate || eventTime ? '16px' : '0'};">
                       ${offerDetails}
                     </p>
                     ` : ''}
@@ -223,10 +233,10 @@ const generateVIPEmailHTML = (
               <table role="presentation" style="width: 100%; margin-bottom: 32px;">
                 <tr>
                   <td style="text-align: center;">
-                    <a href="${rsvpUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #8B6F47, #5C4A32); color: #ffffff; text-decoration: none; padding: 18px 48px; border-radius: 12px; font-size: 18px; font-weight: 700; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(139, 111, 71, 0.4);">
-                      ✅ ${isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
+                    <a href="${rsvpUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #5C4A32, #4A3625); color: #ffffff; text-decoration: none; padding: 20px 56px; border-radius: 12px; font-size: 20px; font-weight: 700; letter-spacing: 1px; box-shadow: 0 6px 20px rgba(92, 74, 50, 0.4); border: 2px solid #C9A962;">
+                      ${isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
                     </a>
-                    <p style="color: #8B6F47; font-size: 13px; margin: 12px 0 0 0;">
+                    <p style="color: #5C4A32; font-size: 14px; margin: 16px 0 0 0;">
                       ${isArabic ? 'اضغط للتأكيد واختيار عدد المرافقين' : 'Click to confirm and select number of guests'}
                     </p>
                   </td>
@@ -235,13 +245,13 @@ const generateVIPEmailHTML = (
               ` : ''}
               
               <!-- Contact Info -->
-              <p style="color: #5C4A32; font-size: 15px; margin: 0 0 8px 0;">
+              <p style="color: #3D2E1F; font-size: 15px; margin: 0 0 8px 0;">
                 ${contactText}
               </p>
               <p style="margin: 0 0 32px 0;">
-                <a href="tel:+966501018811" style="color: #8B6F47; font-weight: 600; text-decoration: none;">+966 50 101 8811</a>
+                <a href="tel:+966501018811" style="color: #5C4A32; font-weight: 600; text-decoration: none;">+966 50 101 8811</a>
                 <span style="color: #999; margin: 0 8px;">|</span>
-                <a href="mailto:vip@almufaijer.com" style="color: #8B6F47; font-weight: 600; text-decoration: none;">vip@almufaijer.com</a>
+                <a href="mailto:info@almufaijer.com" style="color: #5C4A32; font-weight: 600; text-decoration: none;">info@almufaijer.com</a>
               </p>
               
               <!-- Signature -->
@@ -370,7 +380,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email via Resend
     const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "Souq Almufaijer VIP <vip@almufaijer.com>",
+      from: "Souq Almufaijer VIP <info@almufaijer.com>",
       to: [contactEmail],
       subject: subject,
       html: emailHtml,
