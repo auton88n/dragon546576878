@@ -50,7 +50,7 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
     { count: scannedTicketsCount },
     { count: pendingEmailsCount },
     { count: todayScansCount },
-    { data: pendingPaymentsData, count: pendingPaymentsCount },
+    { data: truePendingData },
     { data: pendingForDuplicates },
   ] = await Promise.all([
     // Total revenue with explicit limit to avoid 1000 row cap
@@ -89,14 +89,8 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
       .select('*', { count: 'exact', head: true })
       .gte('scan_timestamp', startOfDay)
       .lte('scan_timestamp', endOfDay),
-    // Pending payments (excluding test emails)
-    supabase
-      .from('bookings')
-      .select('total_amount', { count: 'exact' })
-      .eq('payment_status', 'pending')
-      .not('customer_email', 'ilike', testEmailPatterns[0])
-      .not('customer_email', 'ilike', testEmailPatterns[1])
-      .not('customer_email', 'in', `(${specificTestEmails.join(',')})`),
+    // TRUE Pending payments (excludes customers who already completed another booking)
+    supabase.rpc('get_true_pending_payments'),
     // Pending bookings for duplicate detection (excluding test emails)
     supabase
       .from('bookings')
@@ -121,7 +115,11 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
       sum + Number(b.adult_count ?? 0) + Number(b.child_count ?? 0) + Number(b.senior_count ?? 0),
     0
   ) || 0;
-  const pendingPaymentsAmount = pendingPaymentsData?.reduce((sum, b) => sum + Number(b.total_amount ?? 0), 0) || 0;
+  
+  // Extract true pending payments from RPC result
+  const truePendingResult = truePendingData?.[0] || { total_amount: 0, booking_count: 0 };
+  const pendingPaymentsAmount = Number(truePendingResult.total_amount ?? 0);
+  const pendingPaymentsCount = Number(truePendingResult.booking_count ?? 0);
 
   return {
     totalRevenue,
@@ -131,7 +129,7 @@ const fetchAdminStats = async (): Promise<AdminStats> => {
     totalBookings: totalBookingsCount || 0,
     pendingEmails: pendingEmailsCount || 0,
     todayScans: todayScansCount || 0,
-    pendingPaymentsCount: pendingPaymentsCount || 0,
+    pendingPaymentsCount,
     pendingPaymentsAmount,
     duplicateBookingsCount,
   };
