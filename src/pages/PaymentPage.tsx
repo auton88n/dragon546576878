@@ -542,6 +542,12 @@ const PaymentPage = () => {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   {isArabic ? 'إعادة المحاولة' : 'Retry Payment'}
                 </Button>
+                <Link to="/book" className="w-full">
+                  <Button variant="ghost" className="w-full">
+                    <ArrowLeft className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                    {isArabic ? 'بدء حجز جديد' : 'Start New Booking'}
+                  </Button>
+                </Link>
                 <Button 
                   variant="ghost" 
                   onClick={() => window.open('https://wa.me/966500000000', '_blank')}
