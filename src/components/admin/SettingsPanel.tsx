@@ -17,6 +17,16 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import TestQRGenerator from './TestQRGenerator';
 import TestEmployeeBadgeGenerator from './TestEmployeeBadgeGenerator';
@@ -30,11 +40,44 @@ import VIPOutreachPanel from './VIPOutreachPanel';
 // Database Maintenance Card Component
 const DatabaseMaintenanceCard = ({ isArabic, onCleanupComplete }: { isArabic: boolean; onCleanupComplete?: () => void }) => {
   const [cleaning, setCleaning] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewCount, setPreviewCount] = useState<number | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [daysToClean, setDaysToClean] = useState(1);
   const [result, setResult] = useState<{ deleted_count: number; cutoff_date: string } | null>(null);
   const { toast } = useToast();
 
+  const handlePreview = async () => {
+    setPreviewing(true);
+    setPreviewCount(null);
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysToClean);
+      
+      const { count, error } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('payment_status', 'pending')
+        .neq('booking_status', 'cancelled')
+        .lt('created_at', cutoffDate.toISOString());
+      
+      if (error) throw error;
+      setPreviewCount(count ?? 0);
+      setShowConfirmDialog(true);
+    } catch (err) {
+      console.error('Preview error:', err);
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل في معاينة البيانات' : 'Failed to preview data',
+        variant: 'destructive',
+      });
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
   const handleCleanup = async () => {
+    setShowConfirmDialog(false);
     setCleaning(true);
     setResult(null);
     try {
@@ -76,86 +119,120 @@ const DatabaseMaintenanceCard = ({ isArabic, onCleanupComplete }: { isArabic: bo
   };
 
   return (
-    <Card className="glass-card border-accent/20">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-3 text-base rtl:flex-row-reverse rtl:justify-end">
-          <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
-            <Database className="h-4 w-4 text-red-600" />
-          </div>
-          {isArabic ? 'صيانة قاعدة البيانات' : 'Database Maintenance'}
-        </CardTitle>
-        <CardDescription className="text-start rtl:text-right">
-          {isArabic 
-            ? 'إزالة الحجوزات المعلقة القديمة التي لم تكتمل' 
-            : 'Remove old pending bookings that were never completed'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col gap-4">
-          {/* Days Selector */}
-          <div className="flex items-center gap-3 rtl:flex-row-reverse">
-            <Label className="text-muted-foreground whitespace-nowrap">
-              {isArabic ? 'حذف الحجوزات الأقدم من:' : 'Delete bookings older than:'}
-            </Label>
-            <Select value={daysToClean.toString()} onValueChange={(v) => setDaysToClean(Number(v))}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">{isArabic ? '١ يوم' : '1 day'}</SelectItem>
-                <SelectItem value="2">{isArabic ? '٢ يوم' : '2 days'}</SelectItem>
-                <SelectItem value="3">{isArabic ? '٣ أيام' : '3 days'}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <>
+      <Card className="glass-card border-accent/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-3 text-base rtl:flex-row-reverse rtl:justify-end">
+            <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+              <Database className="h-4 w-4 text-red-600" />
+            </div>
+            {isArabic ? 'صيانة قاعدة البيانات' : 'Database Maintenance'}
+          </CardTitle>
+          <CardDescription className="text-start rtl:text-right">
+            {isArabic 
+              ? 'إزالة الحجوزات المعلقة القديمة التي لم تكتمل' 
+              : 'Remove old pending bookings that were never completed'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-4">
+            {/* Days Selector */}
+            <div className="flex items-center gap-3 rtl:flex-row-reverse">
+              <Label className="text-muted-foreground whitespace-nowrap">
+                {isArabic ? 'حذف الحجوزات الأقدم من:' : 'Delete bookings older than:'}
+              </Label>
+              <Select value={daysToClean.toString()} onValueChange={(v) => setDaysToClean(Number(v))}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">{isArabic ? '١ يوم' : '1 day'}</SelectItem>
+                  <SelectItem value="2">{isArabic ? '٢ يوم' : '2 days'}</SelectItem>
+                  <SelectItem value="3">{isArabic ? '٣ أيام' : '3 days'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Warning for 1 day */}
-          {daysToClean === 1 && (
-            <p className="text-xs text-amber-600 bg-amber-500/10 p-2 rounded-lg text-start rtl:text-right">
-              {isArabic 
-                ? '⚠️ تحذير: سيؤدي هذا إلى حذف معظم الحجوزات المعلقة'
-                : '⚠️ Warning: This will delete most pending bookings'}
-            </p>
-          )}
-
-          {/* Action Row */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rtl:sm:flex-row-reverse">
-            <Button
-              variant="destructive"
-              onClick={handleCleanup}
-              disabled={cleaning}
-              className="gap-2"
-            >
-              {cleaning ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
-              {isArabic 
-                ? `تنظيف الحجوزات المهجورة (${getDaysLabel(daysToClean)}+)` 
-                : `Cleanup Abandoned Bookings (${daysToClean}+ day${daysToClean > 1 ? 's' : ''})`}
-            </Button>
-            
-            {result && (
-              <div className="text-sm text-muted-foreground">
+            {/* Warning for 1 day */}
+            {daysToClean === 1 && (
+              <p className="text-xs text-amber-600 bg-amber-500/10 p-2 rounded-lg text-start rtl:text-right">
                 {isArabic 
-                  ? `تم حذف ${result.deleted_count} حجز`
-                  : `${result.deleted_count} booking(s) deleted`}
-              </div>
+                  ? '⚠️ تحذير: سيؤدي هذا إلى حذف معظم الحجوزات المعلقة'
+                  : '⚠️ Warning: This will delete most pending bookings'}
+              </p>
             )}
+
+            {/* Action Row */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rtl:sm:flex-row-reverse">
+              <Button
+                variant="destructive"
+                onClick={handlePreview}
+                disabled={cleaning || previewing}
+                className="gap-2"
+              >
+                {(cleaning || previewing) ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                {isArabic 
+                  ? `تنظيف الحجوزات المهجورة (${getDaysLabel(daysToClean)}+)` 
+                  : `Cleanup Abandoned Bookings (${daysToClean}+ day${daysToClean > 1 ? 's' : ''})`}
+              </Button>
+              
+              {result && (
+                <div className="text-sm text-muted-foreground">
+                  {isArabic 
+                    ? `تم حذف ${result.deleted_count} حجز`
+                    : `${result.deleted_count} booking(s) deleted`}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        
-        <p className="text-xs text-muted-foreground text-start rtl:text-right">
-          {isArabic 
-            ? `هذا الإجراء يحذف الحجوزات المعلقة الأقدم من ${getDaysLabel(daysToClean)} وسجلات الدفع والتذاكر المرتبطة بها.`
-            : `This action deletes pending bookings older than ${daysToClean} day${daysToClean > 1 ? 's' : ''} along with their payment logs and tickets.`}
-        </p>
-      </CardContent>
-    </Card>
+          
+          <p className="text-xs text-muted-foreground text-start rtl:text-right">
+            {isArabic 
+              ? `هذا الإجراء يحذف الحجوزات المعلقة الأقدم من ${getDaysLabel(daysToClean)} وسجلات الدفع والتذاكر المرتبطة بها.`
+              : `This action deletes pending bookings older than ${daysToClean} day${daysToClean > 1 ? 's' : ''} along with their payment logs and tickets.`}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className={isArabic ? 'text-right' : ''}>
+              {isArabic ? 'تأكيد الحذف' : 'Confirm Deletion'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className={isArabic ? 'text-right' : ''}>
+              {previewCount === 0
+                ? (isArabic 
+                    ? 'لا توجد حجوزات معلقة للحذف.'
+                    : 'No pending bookings to delete.')
+                : (isArabic 
+                    ? `سيتم حذف ${previewCount} حجز معلق نهائياً. هذا الإجراء لا يمكن التراجع عنه.`
+                    : `This will permanently delete ${previewCount} pending booking(s). This action cannot be undone.`)}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className={isArabic ? 'flex-row-reverse gap-2' : ''}>
+            <AlertDialogCancel>
+              {isArabic ? 'إلغاء' : 'Cancel'}
+            </AlertDialogCancel>
+            {previewCount !== 0 && (
+              <AlertDialogAction
+                onClick={handleCleanup}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isArabic ? 'حذف' : 'Delete'}
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
-
 interface SettingsPanelProps {
   onStatsRefresh?: () => void;
 }
