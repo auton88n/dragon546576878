@@ -681,3 +681,9 @@ svg.lucide {
   break-inside: avoid;
   page-break-inside: avoid;
 }
+
+/* Force new page before element (for PDF export) */
+.page-break-before {
+  page-break-before: always;
+  break-before: page;
+}
