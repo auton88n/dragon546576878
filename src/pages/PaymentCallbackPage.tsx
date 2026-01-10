@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
-import { CheckCircle, XCircle, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, AlertTriangle, RefreshCw, CreditCard } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
@@ -104,7 +104,13 @@ const PaymentCallbackPage = () => {
     setRetryCount(prev => prev + 1);
   };
 
-  const handleTryAgain = () => {
+  const handleRetryPayment = () => {
+    if (bookingId) {
+      navigate(`/pay/${bookingId}`);
+    }
+  };
+
+  const handleNewBooking = () => {
     navigate('/book');
   };
 
@@ -182,20 +188,32 @@ const PaymentCallbackPage = () => {
                 )}
 
                 <div className="space-y-3 pt-4">
+                  {/* Primary: Retry payment on same booking */}
+                  <Button
+                    onClick={handleRetryPayment}
+                    className="w-full btn-gold"
+                  >
+                    <CreditCard className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                    {isArabic ? 'إعادة محاولة الدفع' : 'Retry Payment'}
+                  </Button>
+
+                  {/* Secondary: Re-verify if payment might have gone through */}
                   <Button
                     onClick={handleRetry}
                     variant="outline"
                     className="w-full"
                   >
                     <RefreshCw className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                    {isArabic ? 'إعادة المحاولة' : 'Retry Verification'}
+                    {isArabic ? 'إعادة التحقق' : 'Retry Verification'}
                   </Button>
                   
+                  {/* Tertiary: Start fresh booking */}
                   <Button
-                    onClick={handleTryAgain}
-                    className="w-full btn-gold"
+                    onClick={handleNewBooking}
+                    variant="ghost"
+                    className="w-full text-muted-foreground"
                   >
-                    {isArabic ? 'العودة للحجز' : 'Back to Booking'}
+                    {isArabic ? 'بدء حجز جديد' : 'Start New Booking'}
                   </Button>
                   
                   <Button
