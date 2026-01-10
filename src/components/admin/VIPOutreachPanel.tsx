@@ -1218,7 +1218,7 @@ export const VIPOutreachPanel = () => {
                 {enableRSVP && (
                   <div className="text-center">
                     <div className="inline-block px-8 py-4 rounded-lg text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
-                      ✅ {isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
+                      {isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
                     </div>
                   </div>
                 )}
