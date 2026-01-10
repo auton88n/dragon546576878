@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { 
@@ -65,7 +65,7 @@ interface OrphanPayment {
   linkedBookingRef: string | null;
 }
 
-const RefundsPanel = forwardRef<HTMLDivElement>((_, ref) => {
+const RefundsPanel = React.forwardRef<HTMLDivElement>((_, ref) => {
   const { currentLanguage } = useLanguage();
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
