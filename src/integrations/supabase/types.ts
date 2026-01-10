@@ -1074,6 +1074,13 @@ export type Database = {
         Returns: Json
       }
       get_invoice_by_id: { Args: { invoice_uuid: string }; Returns: Json }
+      get_true_pending_payments: {
+        Args: never
+        Returns: {
+          booking_count: number
+          total_amount: number
+        }[]
+      }
       get_vip_invitation_by_token: { Args: { token: string }; Returns: Json }
       has_role: {
         Args: {
