@@ -174,25 +174,26 @@ const AdminPage = () => {
     suffix: isArabic ? 'ر.س' : 'SAR',
     icon: DollarSign,
     color: 'text-foreground',
-    bgColor: 'gradient-gold'
+    bgColor: 'gradient-gold',
+    featured: true
   }, {
     title: isArabic ? 'الحجوزات اليوم' : "Today's Bookings",
     value: stats.todayBookings,
     icon: Ticket,
     color: 'text-primary',
-    bgColor: 'bg-primary/10'
+    bgColor: 'bg-primary/15'
   }, {
     title: isArabic ? 'الزوار اليوم' : "Today's Visitors",
     value: stats.todayVisitors,
     icon: Users,
     color: 'text-accent',
-    bgColor: 'bg-accent/10'
+    bgColor: 'bg-accent/15'
   }, {
     title: isArabic ? 'التذاكر الممسوحة' : 'Tickets Scanned',
     value: stats.ticketsScanned,
     icon: QrCode,
-    color: 'text-primary',
-    bgColor: 'bg-primary/10'
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-500/15'
   }];
   return <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <StaffHeader title="Dashboard" titleAr="لوحة التحكم" showNotifications />
@@ -209,74 +210,94 @@ const AdminPage = () => {
             </Link>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-4 rtl:[direction:rtl]">
+          {/* Stats Grid - Revenue spans 2 columns on large screens */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 rtl:[direction:rtl]">
             {statsCards.map((stat, index) => <StatsCard key={index} {...stat} loading={statsLoading} />)}
           </div>
 
-          {/* Pending Payments Card with Bulk Reminder */}
-          {stats.pendingPaymentsCount > 0 && <Card className="mb-6 border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20">
-              <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4">
-                <div className="flex items-center gap-3 rtl:flex-row-reverse">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                    <Bell className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          {/* Pending Payments Alert Banner */}
+          {stats.pendingPaymentsCount > 0 && (
+            <div className="mb-6 relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 p-4 md:p-5">
+              {/* Decorative background */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-400/10 via-transparent to-transparent" />
+              
+              <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4 rtl:flex-row-reverse">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center animate-pulse">
+                    <Bell className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-                    <p className="font-semibold text-foreground">
+                    <p className="font-bold text-foreground text-lg">
                       {isArabic ? 'مدفوعات معلقة' : 'Pending Payments'}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {stats.pendingPaymentsCount} {isArabic ? 'حجز' : 'booking(s)'} · {stats.pendingPaymentsAmount.toLocaleString()} {isArabic ? 'ر.س' : 'SAR'}
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      <span className="font-semibold text-amber-700 dark:text-amber-400">{stats.pendingPaymentsCount}</span> {isArabic ? 'حجز بقيمة' : 'booking(s) worth'} <span className="font-semibold text-amber-700 dark:text-amber-400">{stats.pendingPaymentsAmount.toLocaleString()}</span> {isArabic ? 'ر.س' : 'SAR'}
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <Button variant="outline" onClick={() => setPreviewOpen(true)} className="border-amber-500/50 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-2">
+                  <Button variant="outline" onClick={() => setPreviewOpen(true)} className="border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-950/50 gap-2 rounded-xl">
                     <Eye className="h-4 w-4" />
                     {isArabic ? 'معاينة' : 'Preview'}
                   </Button>
-                  <Button onClick={handleSendAllReminders} disabled={sendingReminders} className="bg-amber-600 hover:bg-amber-700 text-white gap-2 flex-1 sm:flex-none">
+                  <Button onClick={handleSendAllReminders} disabled={sendingReminders} className="bg-amber-600 hover:bg-amber-700 text-white gap-2 flex-1 sm:flex-none rounded-xl shadow-lg shadow-amber-500/20">
                     {sendingReminders ? <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" /> : <Send className="h-4 w-4" />}
-                    {isArabic ? 'إرسال تذكيرات للجميع' : 'Send All Reminders'}
+                    {isArabic ? 'إرسال تذكيرات' : 'Send Reminders'}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>}
+              </div>
+            </div>
+          )}
 
 
-          {/* Tabs Navigation */}
-          <Tabs defaultValue="bookings" className="space-y-4" activationMode="manual">
-            <TabsList className="glass-card-gold p-1 h-auto flex-wrap rtl:[direction:rtl]">
-              <TabsTrigger value="bookings" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse">
-                <Ticket className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                {isArabic ? 'الحجوزات' : 'Bookings'}
-              </TabsTrigger>
-              <TabsTrigger value="reports" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse">
-                <BarChart3 className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                {isArabic ? 'التقارير' : 'Reports'}
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse">
-                <Settings className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                {isArabic ? 'الإعدادات' : 'Settings'}
-              </TabsTrigger>
-              <TabsTrigger value="groups" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse">
-                <Building2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                {isArabic ? 'الشركات' : 'Corporate'}
-              </TabsTrigger>
-              <TabsTrigger value="messages" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse">
-                <Mail className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                {isArabic ? 'الرسائل' : 'Messages'}
-              </TabsTrigger>
-              <TabsTrigger value="ayn-support" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse">
-                <Headset className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                {isArabic ? 'دعم AYN' : 'AYN Support'}
-              </TabsTrigger>
-              <TabsTrigger value="refunds" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 md:px-6 py-2 rounded-xl transition-all text-xs md:text-sm rtl:flex-row-reverse relative">
-                <CreditCard className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                {isArabic ? 'الاسترداد' : 'Refunds'}
-                {stats.duplicateBookingsCount > 0}
-              </TabsTrigger>
-            </TabsList>
+          {/* Tabs Navigation - Modern pill-style with grouping */}
+          <Tabs defaultValue="bookings" className="space-y-6" activationMode="manual">
+            <div className="glass-card-gold rounded-2xl p-2 border border-accent/20">
+              <TabsList className="bg-transparent p-0 h-auto flex flex-wrap gap-1 rtl:[direction:rtl] w-full justify-start">
+                {/* Core Operations */}
+                <TabsTrigger value="bookings" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md px-4 md:px-5 py-2.5 rounded-xl transition-all text-xs md:text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                  <Ticket className="h-4 w-4" />
+                  {isArabic ? 'الحجوزات' : 'Bookings'}
+                </TabsTrigger>
+                <TabsTrigger value="reports" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md px-4 md:px-5 py-2.5 rounded-xl transition-all text-xs md:text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                  <BarChart3 className="h-4 w-4" />
+                  {isArabic ? 'التقارير' : 'Reports'}
+                </TabsTrigger>
+                
+                {/* Divider */}
+                <div className="hidden md:block w-px h-8 bg-border/50 mx-1 self-center" />
+                
+                {/* Management */}
+                <TabsTrigger value="settings" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md px-4 md:px-5 py-2.5 rounded-xl transition-all text-xs md:text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                  <Settings className="h-4 w-4" />
+                  {isArabic ? 'الإعدادات' : 'Settings'}
+                </TabsTrigger>
+                <TabsTrigger value="groups" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md px-4 md:px-5 py-2.5 rounded-xl transition-all text-xs md:text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                  <Building2 className="h-4 w-4" />
+                  {isArabic ? 'الشركات' : 'Corporate'}
+                </TabsTrigger>
+                
+                {/* Divider */}
+                <div className="hidden md:block w-px h-8 bg-border/50 mx-1 self-center" />
+                
+                {/* Communication & Finance */}
+                <TabsTrigger value="messages" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md px-4 md:px-5 py-2.5 rounded-xl transition-all text-xs md:text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                  <Mail className="h-4 w-4" />
+                  {isArabic ? 'الرسائل' : 'Messages'}
+                </TabsTrigger>
+                <TabsTrigger value="ayn-support" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md px-4 md:px-5 py-2.5 rounded-xl transition-all text-xs md:text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                  <Headset className="h-4 w-4" />
+                  {isArabic ? 'دعم AYN' : 'Support'}
+                </TabsTrigger>
+                <TabsTrigger value="refunds" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md px-4 md:px-5 py-2.5 rounded-xl transition-all text-xs md:text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10 relative">
+                  <CreditCard className="h-4 w-4" />
+                  {isArabic ? 'الاسترداد' : 'Refunds'}
+                  {stats.duplicateBookingsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Bookings Tab */}
             <TabsContent value="bookings">
