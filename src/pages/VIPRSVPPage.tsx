@@ -11,12 +11,15 @@ import { CheckCircle, XCircle, Calendar, Clock, MapPin, Gift, Camera, Utensils, 
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 
+// Perk can be a string ID or a full object with translations
+type PerkData = string | { id: string; en: string; ar: string };
+
 interface VIPInvitation {
   id: string;
   contact_id: string;
   rsvp_token: string;
   guest_allowance: number;
-  perks: string[];
+  perks: PerkData[];
   include_video: boolean;
   event_date: string | null;
   event_time: string | null;
@@ -222,7 +225,7 @@ const VIPRSVPPage = () => {
         <div className="text-center bg-gradient-to-br from-[#8B6F47] to-[#5C4A32] rounded-2xl p-8 text-white shadow-xl">
           <div className="h-1 w-32 mx-auto bg-gradient-to-r from-[#C9A962] via-[#E8D5A3] to-[#C9A962] rounded mb-6" />
           <h1 className="text-3xl font-bold mb-2">{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</h1>
-          <p className="text-[#C9A962] text-lg">{isArabic ? '~ دعوة حصرية ~' : '~ Exclusive Invitation ~'}</p>
+          <p className="text-[#F5F1E8] text-lg">{isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}</p>
           {name && <p className="mt-4 text-xl">{isArabic ? `أهلاً ${name}` : `Welcome, ${name}`}</p>}
         </div>
 
@@ -314,14 +317,20 @@ const VIPRSVPPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {perks.map((perk) => (
-                      <div key={perk} className="flex items-center gap-3 p-3 bg-[#F5F1E8] rounded-lg">
-                        <div className="text-[#C9A962]">{perkIcons[perk] || <CheckCircle className="h-5 w-5" />}</div>
-                        <span className="text-[#5C4A32]">
-                          {perkLabels[perk]?.[isArabic ? 'ar' : 'en'] || perk}
-                        </span>
-                      </div>
-                    ))}
+                    {perks.map((perk) => {
+                      // Handle both string IDs (old format) and objects (new format)
+                      const perkId = typeof perk === 'object' ? perk.id : perk;
+                      const perkLabel = typeof perk === 'object' 
+                        ? (isArabic ? perk.ar : perk.en)
+                        : (perkLabels[perk]?.[isArabic ? 'ar' : 'en'] || perk);
+                      
+                      return (
+                        <div key={perkId} className="flex items-center gap-3 p-3 bg-[#F5F1E8] rounded-lg">
+                          <div className="text-[#C9A962]">{perkIcons[perkId] || <Gift className="h-5 w-5" />}</div>
+                          <span className="text-[#5C4A32]">{perkLabel}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>

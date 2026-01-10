@@ -27,13 +27,25 @@ interface VIPEmailRequest {
   enableRSVP?: boolean;
 }
 
-// Perk labels
+// Perk labels for static perks (fallback)
 const perkLabels: Record<string, { en: string; ar: string }> = {
   private_tour: { en: 'Private guided tour', ar: 'جولة خاصة مع مرشد' },
   photography: { en: 'Professional photography session', ar: 'جلسة تصوير احترافية' },
   dinner: { en: 'Traditional Saudi hospitality dinner', ar: 'عشاء ضيافة سعودية تقليدية' },
   vip_seating: { en: 'VIP seating at cultural performances', ar: 'مقاعد VIP في العروض الثقافية' },
   special_gift: { en: 'Special gift from Souq Almufaijer', ar: 'هدية خاصة من سوق المفيجر' },
+};
+
+// Type for perk objects (can be string ID or full object)
+type PerkInput = string | { id: string; en: string; ar: string };
+
+// Helper to get perk label
+const getPerkLabel = (perk: PerkInput, isArabic: boolean): string | null => {
+  if (typeof perk === 'object') {
+    return isArabic ? perk.ar : perk.en;
+  }
+  const label = perkLabels[perk];
+  return label ? (isArabic ? label.ar : label.en) : null;
 };
 
 // Generate tracking pixel URL
@@ -79,7 +91,7 @@ const generateVIPEmailHTML = (
   const videoUrl = "https://hekgkfdunwpxqbrotfpn.supabase.co/storage/v1/object/public/videos/souq-almufaijer-video.mp4";
   const rsvpUrl = rsvpToken ? getRSVPUrl(rsvpToken) : '#';
 
-  // Generate perks HTML
+  // Generate perks HTML - supports both string IDs and full perk objects
   const perksHtml = perks.length > 0 ? `
     <table role="presentation" style="width: 100%; margin-bottom: 24px;" bgcolor="#4A3625">
       <tr>
@@ -87,8 +99,8 @@ const generateVIPEmailHTML = (
           <p style="color: #E8D5A3; font-size: 14px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
             ${isArabic ? 'تجربتكم المميزة تتضمن' : 'YOUR VIP EXPERIENCE INCLUDES'}
           </p>
-          ${perks.map(perkId => {
-            const label = perkLabels[perkId];
+          ${perks.map(perk => {
+            const label = getPerkLabel(perk as PerkInput, isArabic);
             if (!label) return '';
             return `
               <table role="presentation" style="width: 100%; margin-bottom: 10px;">
@@ -97,7 +109,7 @@ const generateVIPEmailHTML = (
                     <span style="color: #C9A962; font-size: 18px;">•</span>
                   </td>
                   <td>
-                    <span style="color: #FFFFFF; font-size: 15px;">${isArabic ? label.ar : label.en}</span>
+                    <span style="color: #FFFFFF; font-size: 15px;">${label}</span>
                   </td>
                 </tr>
               </table>
