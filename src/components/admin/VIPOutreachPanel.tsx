@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Crown, Users, Mail, History, Plus, Trash2, Edit, Send, Eye, Loader2, User, Phone, Building, Globe, CheckCircle, XCircle, Clock, MailOpen, Video, Gift, Camera, Utensils, MapPin, Sparkles, X, Download } from 'lucide-react';
-import { toPng } from 'html-to-image';
+import html2pdf from 'html2pdf.js';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -167,30 +167,33 @@ export const VIPOutreachPanel = () => {
         throw new Error('Email content not found');
       }
       
-      const dataUrl = await toPng(emailContent, {
-        quality: 1,
-        pixelRatio: 2,
-        backgroundColor: '#ffffff',
-        width: 600,
-        style: {
-          overflow: 'visible',
-          width: '600px',
-          minWidth: '600px',
-        }
-      });
-      
-      const link = document.createElement('a');
       const contactName = selectedContacts.size > 0 
         ? contacts?.find(c => selectedContacts.has(c.id))?.name_en?.replace(/\s+/g, '-') || 'vip'
         : 'vip';
       const timestamp = format(new Date(), 'yyyyMMdd-HHmm');
-      link.download = `vip-invitation-${contactName}-${timestamp}.png`;
-      link.href = dataUrl;
-      link.click();
       
-      toast({ title: isArabic ? 'تم تحميل المعاينة' : 'Preview downloaded' });
+      await html2pdf()
+        .from(emailContent)
+        .set({
+          margin: 10,
+          filename: `vip-invitation-${contactName}-${timestamp}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true,
+            logging: false
+          },
+          jsPDF: { 
+            unit: 'px', 
+            format: [620, 1200],
+            orientation: 'portrait' 
+          }
+        })
+        .save();
+      
+      toast({ title: isArabic ? 'تم تحميل الدعوة' : 'Invitation downloaded' });
     } catch (error) {
-      console.error('Failed to download preview:', error);
+      console.error('Failed to download PDF:', error);
       toast({ title: isArabic ? 'فشل التحميل' : 'Download failed', variant: 'destructive' });
     } finally {
       setIsDownloading(false);
@@ -1210,7 +1213,7 @@ export const VIPOutreachPanel = () => {
                 onClick={handleDownloadPreview}
                 disabled={isDownloading}
                 className="h-9 w-9 rounded-full hover:bg-gray-100"
-                title={isArabic ? 'تحميل المعاينة' : 'Download Preview'}
+                title={isArabic ? 'تحميل PDF' : 'Download PDF'}
               >
                 {isDownloading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
               </Button>
