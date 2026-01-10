@@ -1270,23 +1270,24 @@ export const VIPOutreachPanel = () => {
                   fontFamily: isArabic ? 'Tajawal, Arial, sans-serif' : 'inherit'
                 }}
               >
-                {/* Header */}
-                <div className="text-center p-8" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
-                  <div className="h-1 w-32 mx-auto mb-4 rounded" style={{ background: 'linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962)' }} />
-                  <h2 className="text-white text-2xl font-bold">{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</h2>
-                  <p className="mt-2" style={{ color: '#F5F1E8' }}>{isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}</p>
+                {/* Compact Header */}
+                <div className="text-center py-3 px-4" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
+                  <div className="h-0.5 w-20 mx-auto mb-2 rounded" style={{ background: 'linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962)' }} />
+                  <h2 className="text-white text-lg font-bold">{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</h2>
+                  <p className="text-xs mt-1" style={{ color: '#F5F1E8' }}>{isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}</p>
                 </div>
                 
-                <div className="p-6 space-y-6" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                  <p className="text-lg">{isArabic ? 'حضرة [الاسم] المحترم/ة،' : 'Dear [Name],'}</p>
-                  <div className="whitespace-pre-wrap text-gray-700">
+                {/* Compact Content Area */}
+                <div className="p-4 space-y-3" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                  <p className="text-base font-medium">{isArabic ? 'حضرة [الاسم] المحترم/ة،' : 'Dear [Name],'}</p>
+                  <div className="whitespace-pre-wrap text-gray-700 text-sm leading-snug">
                     {isArabic ? messageAr : messageEn}
                   </div>
                   
-                  {/* Video Preview - Match actual email with hero image background */}
+                  {/* Compact Video Preview */}
                   {includeVideo && (
                     <div 
-                      className="avoid-break page-break-before rounded-lg overflow-hidden border-2"
+                      className="avoid-break rounded overflow-hidden border"
                       style={{ 
                         borderColor: '#C9A962',
                         backgroundImage: "url('/images/hero-heritage-new.webp')",
@@ -1294,68 +1295,72 @@ export const VIPOutreachPanel = () => {
                         backgroundPosition: 'center'
                       }}
                     >
-                      <div className="p-12 text-center" style={{ background: 'rgba(74, 54, 37, 0.75)' }}>
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.25)', border: '3px solid rgba(255,255,255,0.4)' }}>
-                          <span className="text-white text-2xl">▶</span>
+                      <div className="py-4 px-3 text-center" style={{ background: 'rgba(74, 54, 37, 0.8)' }}>
+                        <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.25)', border: '2px solid rgba(255,255,255,0.4)' }}>
+                          <span className="text-white text-lg">▶</span>
                         </div>
-                        <p className="font-semibold text-white text-lg">{isArabic ? 'اكتشف سحر المفيجر' : 'Discover the Magic of Almufaijer'}</p>
-                        <p className="text-sm" style={{ color: '#E8D5A3' }}>{isArabic ? 'اضغط لمشاهدة الفيديو' : 'Click to watch video'}</p>
+                        <p className="font-medium text-white text-sm">{isArabic ? 'اكتشف سحر المفيجر' : 'Discover the Magic'}</p>
                       </div>
                     </div>
                   )}
 
-                  {/* Guest Allowance */}
-                  <div className="avoid-break p-5 rounded-lg text-center border" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
-                    <p className="font-semibold" style={{ color: '#3D2E1F' }}>
-                      {isArabic ? `يمكنكم اصطحاب حتى ${guestAllowance} ضيوف مميزين` : `You may bring up to ${guestAllowance} honored guests`}
-                    </p>
+                  {/* 2-Column: Guest Allowance + Event Details */}
+                  <div className={`flex gap-2 ${isArabic ? 'flex-row-reverse' : ''}`}>
+                    {/* Guest Allowance - Compact */}
+                    <div className="flex-1 avoid-break py-2 px-3 rounded text-center border" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
+                      <p className="text-xs font-medium" style={{ color: '#3D2E1F' }}>
+                        {isArabic ? `حتى ${guestAllowance} ضيوف` : `Up to ${guestAllowance} guests`}
+                      </p>
+                    </div>
+                    
+                    {/* Event Details - Compact */}
+                    {(eventDate || eventTime) && (
+                      <div className="flex-1 avoid-break py-2 px-3 rounded border" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
+                        <p className="text-xs font-medium" style={{ color: '#5C4A32' }}>
+                          {eventDate}{eventDate && eventTime ? ' • ' : ''}{eventTime}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Perks Preview - Match actual email style */}
+                  {/* Perks - 2-Column Grid */}
                   {selectedPerks.size > 0 && (
-                    <div className="avoid-break p-6 rounded-lg" style={{ backgroundColor: '#4A3625' }}>
-                      <p className={`text-sm mb-4 font-semibold ${!isArabic ? 'uppercase tracking-wider' : ''}`} style={{ color: '#E8D5A3' }}>
-                        {isArabic ? 'تجربتكم المميزة تتضمن' : 'YOUR VIP EXPERIENCE INCLUDES'}
+                    <div className="avoid-break p-3 rounded" style={{ backgroundColor: '#4A3625' }}>
+                      <p className={`text-xs mb-2 font-semibold ${!isArabic ? 'uppercase tracking-wider' : ''}`} style={{ color: '#E8D5A3' }}>
+                        {isArabic ? 'تجربتكم المميزة تتضمن' : 'VIP EXPERIENCE INCLUDES'}
                       </p>
-                      <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
                         {customPerks.filter(p => selectedPerks.has(p.id)).map(perk => (
-                          <div key={perk.id} className="flex items-center gap-3 text-white">
-                            <span style={{ color: '#C9A962', fontSize: '18px' }}>•</span>
-                            <span>{isArabic ? perk.ar : perk.en}</span>
+                          <div key={perk.id} className="flex items-center gap-1.5 text-white">
+                            <span style={{ color: '#C9A962' }}>•</span>
+                            <span className="text-xs">{isArabic ? perk.ar : perk.en}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Event Details */}
-                  {(eventDate || eventTime) && (
-                    <div className="avoid-break p-5 rounded-lg border-2" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
-                      <p className={`text-sm mb-3 font-semibold ${!isArabic ? 'uppercase tracking-wider' : ''}`} style={{ color: '#5C4A32' }}>
-                        {isArabic ? 'تفاصيل الفعالية' : 'EVENT DETAILS'}
-                      </p>
-                      {eventDate && <p className="font-semibold" style={{ color: '#3D2E1F' }}>{isArabic ? 'التاريخ:' : 'Date:'} {eventDate}</p>}
-                      {eventTime && <p className="font-semibold" style={{ color: '#3D2E1F' }}>{isArabic ? 'الوقت:' : 'Time:'} {eventTime}</p>}
-                    </div>
-                  )}
-
-                  {/* RSVP Button */}
+                  {/* Compact RSVP Button */}
                   {enableRSVP && (
                     <div className="avoid-break text-center">
-                      <div className="inline-block px-14 py-5 rounded-xl text-white font-bold text-lg border-2" style={{ background: 'linear-gradient(135deg, #5C4A32, #4A3625)', borderColor: '#C9A962' }}>
+                      <div className="inline-block px-8 py-2.5 rounded-lg text-white font-semibold text-sm border" style={{ background: 'linear-gradient(135deg, #5C4A32, #4A3625)', borderColor: '#C9A962' }}>
                         {isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
                       </div>
                     </div>
                   )}
 
-                  <p className="text-gray-600">{isArabic ? 'مع أطيب التحيات،' : 'With warm regards,'}</p>
-                  <p className="font-semibold">{isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team'}</p>
+                  {/* Compact Signature */}
+                  <div className={`flex items-end pt-2 border-t ${isArabic ? 'flex-row-reverse justify-between' : 'justify-between'}`} style={{ borderColor: '#E8D5A3' }}>
+                    <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                      <p className="text-xs text-gray-500">{isArabic ? 'مع أطيب التحيات،' : 'Warm regards,'}</p>
+                      <p className="text-sm font-medium">{isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team'}</p>
+                    </div>
+                  </div>
                 </div>
                 
-                {/* Footer */}
-                <div className="text-center p-4" style={{ backgroundColor: '#4A3625' }}>
-                  <p className="text-sm font-medium" style={{ color: '#C9A962' }}>{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</p>
-                  <p className="text-xs" style={{ color: '#A89880' }}>{isArabic ? 'قرية المفيجر التراثية | الرياض' : 'Almufaijer Heritage Village | Riyadh'}</p>
+                {/* Compact Footer */}
+                <div className="text-center py-2 px-3" style={{ backgroundColor: '#4A3625' }}>
+                  <p className="text-xs font-medium" style={{ color: '#C9A962' }}>{isArabic ? 'سوق المفيجر | قرية المفيجر التراثية' : 'Souq Almufaijer | Heritage Village'}</p>
                 </div>
               </div>
             </div>
