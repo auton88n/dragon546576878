@@ -215,39 +215,6 @@ const AdminPage = () => {
             {statsCards.map((stat, index) => <StatsCard key={index} {...stat} loading={statsLoading} />)}
           </div>
 
-          {/* Pending Payments Alert Banner */}
-          {stats.pendingPaymentsCount > 0 && (
-            <div className="mb-6 relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 p-4 md:p-5">
-              {/* Decorative background */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-400/10 via-transparent to-transparent" />
-              
-              <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-4 rtl:flex-row-reverse">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center animate-pulse">
-                    <Bell className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-                    <p className="font-bold text-foreground text-lg">
-                      {isArabic ? 'مدفوعات معلقة' : 'Pending Payments'}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      <span className="font-semibold text-amber-700 dark:text-amber-400">{stats.pendingPaymentsCount}</span> {isArabic ? 'حجز بقيمة' : 'booking(s) worth'} <span className="font-semibold text-amber-700 dark:text-amber-400">{stats.pendingPaymentsAmount.toLocaleString()}</span> {isArabic ? 'ر.س' : 'SAR'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button variant="outline" onClick={() => setPreviewOpen(true)} className="border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-950/50 gap-2 rounded-xl">
-                    <Eye className="h-4 w-4" />
-                    {isArabic ? 'معاينة' : 'Preview'}
-                  </Button>
-                  <Button onClick={handleSendAllReminders} disabled={sendingReminders} className="bg-amber-600 hover:bg-amber-700 text-white gap-2 flex-1 sm:flex-none rounded-xl shadow-lg shadow-amber-500/20">
-                    {sendingReminders ? <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" /> : <Send className="h-4 w-4" />}
-                    {isArabic ? 'إرسال تذكيرات' : 'Send Reminders'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
 
 
           {/* Tabs Navigation - Modern pill-style with grouping */}
@@ -308,6 +275,39 @@ const AdminPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 p-3 sm:p-4 md:p-6 pt-4 sm:pt-6">
+                  {/* Pending Payments Alert - Compact version */}
+                  {stats.pendingPaymentsCount > 0 && (
+                    <div className="relative overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 p-3 md:p-4">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-400/10 via-transparent to-transparent" />
+                      
+                      <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 rtl:flex-row-reverse">
+                          <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center animate-pulse">
+                            <Bell className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                          </div>
+                          <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
+                            <p className="font-bold text-foreground text-base">
+                              {isArabic ? 'مدفوعات معلقة' : 'Pending Payments'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              <span className="font-semibold text-amber-700 dark:text-amber-400">{stats.pendingPaymentsCount}</span> {isArabic ? 'حجز بقيمة' : 'booking(s) worth'} <span className="font-semibold text-amber-700 dark:text-amber-400">{stats.pendingPaymentsAmount.toLocaleString()}</span> {isArabic ? 'ر.س' : 'SAR'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 w-full sm:w-auto">
+                          <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)} className="border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-950/50 gap-1.5 rounded-lg text-xs">
+                            <Eye className="h-3.5 w-3.5" />
+                            {isArabic ? 'معاينة' : 'Preview'}
+                          </Button>
+                          <Button size="sm" onClick={handleSendAllReminders} disabled={sendingReminders} className="bg-amber-600 hover:bg-amber-700 text-white gap-1.5 flex-1 sm:flex-none rounded-lg shadow-md shadow-amber-500/20 text-xs">
+                            {sendingReminders ? <span className="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full" /> : <Send className="h-3.5 w-3.5" />}
+                            {isArabic ? 'إرسال تذكيرات' : 'Send Reminders'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <BookingFilters filters={filters} onFiltersChange={setFilters} onReset={handleResetFilters} onExport={handleExport} exporting={exporting} />
                   
                   {/* Status Legend - positioned below filters, aligned to end */}
