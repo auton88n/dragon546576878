@@ -1064,6 +1064,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_abandoned_bookings: { Args: { days_old?: number }; Returns: Json }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       get_booking_with_tickets: {
         Args: { booking_uuid: string }
