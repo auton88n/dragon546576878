@@ -133,8 +133,8 @@ const generateVIPEmailHTML = (
                 <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 1px;">
                   ${isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
                 </h1>
-                <p style="color: #C9A962; margin: 12px 0 0 0; font-size: 16px; font-weight: 500; letter-spacing: 2px;">
-                  ${isArabic ? '~ دعوة حصرية للشخصيات المميزة ~' : '~ Exclusive VIP Invitation ~'}
+                <p style="color: #F5F1E8; margin: 12px 0 0 0; font-size: 16px; font-weight: 500; letter-spacing: 2px;">
+                  ${isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}
                 </p>
               </div>
             </td>
@@ -161,20 +161,22 @@ const generateVIPEmailHTML = (
                     <a href="${videoUrl}" target="_blank" style="text-decoration: none; display: block;">
                       <table role="presentation" style="width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #C9A962; box-shadow: 0 4px 12px rgba(92, 74, 50, 0.3);">
                         <tr>
-                          <td style="background: linear-gradient(135deg, #5C4A32, #8B6F47); padding: 48px; text-align: center;">
-                            <table role="presentation" style="margin: 0 auto 20px;">
-                              <tr>
-                                <td style="width: 80px; height: 80px; background: rgba(255,255,255,0.25); border-radius: 40px; text-align: center; vertical-align: middle; border: 3px solid rgba(255,255,255,0.4);">
-                                  <span style="font-size: 36px; color: #FFFFFF;">&#9654;</span>
-                                </td>
-                              </tr>
-                            </table>
-                            <p style="color: #FFFFFF; font-size: 20px; font-weight: 600; margin: 0 0 8px 0;">
-                              ${isArabic ? 'اكتشف سحر المفيجر' : 'Discover the Magic of Almufaijer'}
-                            </p>
-                            <p style="color: #E8D5A3; font-size: 14px; margin: 0;">
-                              ${isArabic ? 'اضغط لمشاهدة الفيديو' : 'Click to watch video'}
-                            </p>
+                          <td style="background-image: url('https://almufaijer.com/images/hero-heritage-new.webp'); background-size: cover; background-position: center;">
+                            <div style="background: rgba(74, 54, 37, 0.75); padding: 48px; text-align: center;">
+                              <table role="presentation" style="margin: 0 auto 20px;">
+                                <tr>
+                                  <td style="width: 80px; height: 80px; background: rgba(255,255,255,0.25); border-radius: 40px; text-align: center; vertical-align: middle; border: 3px solid rgba(255,255,255,0.4);">
+                                    <span style="font-size: 36px; color: #FFFFFF;">&#9654;</span>
+                                  </td>
+                                </tr>
+                              </table>
+                              <p style="color: #FFFFFF; font-size: 20px; font-weight: 600; margin: 0 0 8px 0;">
+                                ${isArabic ? 'اكتشف سحر المفيجر' : 'Discover the Magic of Almufaijer'}
+                              </p>
+                              <p style="color: #E8D5A3; font-size: 14px; margin: 0;">
+                                ${isArabic ? 'اضغط لمشاهدة الفيديو' : 'Click to watch video'}
+                              </p>
+                            </div>
                           </td>
                         </tr>
                       </table>
@@ -249,9 +251,9 @@ const generateVIPEmailHTML = (
                 ${contactText}
               </p>
               <p style="margin: 0 0 32px 0;">
-                <a href="tel:+966501018811" style="color: #5C4A32; font-weight: 600; text-decoration: none;">+966 50 101 8811</a>
+                <a href="tel:+966501018811" dir="ltr" style="color: #5C4A32; font-weight: 600; text-decoration: none; unicode-bidi: embed; display: inline-block;">+966 50 101 8811</a>
                 <span style="color: #999; margin: 0 8px;">|</span>
-                <a href="mailto:info@almufaijer.com" style="color: #5C4A32; font-weight: 600; text-decoration: none;">info@almufaijer.com</a>
+                <a href="mailto:info@almufaijer.com" dir="ltr" style="color: #5C4A32; font-weight: 600; text-decoration: none; unicode-bidi: embed; display: inline-block;">info@almufaijer.com</a>
               </p>
               
               <!-- Signature -->
