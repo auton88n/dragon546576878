@@ -43,6 +43,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Validate UUID format to prevent database errors
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(bookingId)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid booking ID format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const { data, error } = await supabase
       .from("bookings")
       .select(
