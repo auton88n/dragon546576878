@@ -417,9 +417,11 @@ export const VIPOutreachPanel = () => {
           offerDetails: offerDetails || undefined,
           eventDate: eventDate || undefined,
           eventTime: eventTime || undefined,
-          // NEW: Enhanced fields
+          // NEW: Enhanced fields - send full perk objects for custom perks
           guestAllowance,
-          perks: Array.from(selectedPerks),
+          perks: customPerks
+            .filter(p => selectedPerks.has(p.id))
+            .map(p => ({ id: p.id, en: p.en, ar: p.ar })),
           includeVideo,
           enableRSVP,
         });
@@ -1152,86 +1154,100 @@ export const VIPOutreachPanel = () => {
 
       {/* Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+          <div className="sticky top-0 z-10 flex items-center justify-between bg-white border-b px-6 py-4">
             <DialogTitle>{isArabic ? 'معاينة الرسالة' : 'Email Preview'}</DialogTitle>
-          </DialogHeader>
-          <div className="border rounded-lg overflow-hidden bg-gray-100 p-4">
-            <div className="bg-white rounded shadow-lg max-w-[600px] mx-auto overflow-hidden">
-              {/* Header */}
-              <div className="text-center p-8" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
-                <div className="h-1 w-32 mx-auto mb-4 rounded" style={{ background: 'linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962)' }} />
-                <h2 className="text-white text-2xl font-bold">{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</h2>
-                <p className="text-amber-200 mt-2">{isArabic ? '~ دعوة حصرية ~' : '~ Exclusive VIP Invitation ~'}</p>
-              </div>
-              
-              <div className="p-6 space-y-6">
-                <p className="text-lg">{isArabic ? 'حضرة [الاسم] المحترم/ة،' : 'Dear [Name],'}</p>
-                <div className="whitespace-pre-wrap text-gray-700">
-                  {isArabic ? messageAr : messageEn}
+          </div>
+          <div className="p-4">
+            <div className="border rounded-lg overflow-hidden bg-gray-100 p-4">
+              <div className="bg-white rounded shadow-lg max-w-[600px] mx-auto overflow-hidden">
+                {/* Header */}
+                <div className="text-center p-8" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
+                  <div className="h-1 w-32 mx-auto mb-4 rounded" style={{ background: 'linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962)' }} />
+                  <h2 className="text-white text-2xl font-bold">{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</h2>
+                  <p className="mt-2" style={{ color: '#F5F1E8' }}>{isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}</p>
                 </div>
                 
-                {/* Video Preview */}
-                {includeVideo && (
-                  <div className="rounded-lg overflow-hidden border-2 border-amber-200">
-                    <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-8 text-center">
-                      <Video className="h-12 w-12 mx-auto text-amber-600 mb-2" />
-                      <p className="font-medium text-amber-800">{isArabic ? '🎬 اكتشف سحر المفيجر' : '🎬 Discover the Magic'}</p>
-                      <p className="text-sm text-amber-600">{isArabic ? 'اضغط لمشاهدة الفيديو' : 'Click to watch video'}</p>
-                    </div>
+                <div className="p-6 space-y-6">
+                  <p className="text-lg">{isArabic ? 'حضرة [الاسم] المحترم/ة،' : 'Dear [Name],'}</p>
+                  <div className="whitespace-pre-wrap text-gray-700">
+                    {isArabic ? messageAr : messageEn}
                   </div>
-                )}
-
-                {/* Guest Allowance */}
-                <div className="p-4 rounded-lg text-center" style={{ backgroundColor: '#F5F1E8' }}>
-                  <p className="text-amber-800 font-medium">
-                    👥 {isArabic ? `يمكنكم اصطحاب حتى ${guestAllowance} ضيوف مميزين` : `You may bring up to ${guestAllowance} honored guests`}
-                  </p>
-                </div>
-
-                {/* Perks Preview */}
-                {selectedPerks.size > 0 && (
-                  <div className="p-4 rounded-lg" style={{ backgroundColor: '#4A3625' }}>
-                    <p className="text-amber-300 text-sm mb-3 font-medium">
-                      {isArabic ? '✨ تجربتكم المميزة تتضمن' : '✨ Your VIP Experience Includes'}
-                    </p>
-                    <div className="space-y-2">
-                      {customPerks.filter(p => selectedPerks.has(p.id)).map(perk => (
-                        <div key={perk.id} className="flex items-center gap-2 text-white text-sm">
-                          <CheckCircle className="h-4 w-4 text-amber-400" />
-                          <span>{isArabic ? perk.ar : perk.en}</span>
+                  
+                  {/* Video Preview - Match actual email with hero image background */}
+                  {includeVideo && (
+                    <div 
+                      className="rounded-lg overflow-hidden border-2"
+                      style={{ 
+                        borderColor: '#C9A962',
+                        backgroundImage: "url('/images/hero-heritage-new.webp')",
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    >
+                      <div className="p-12 text-center" style={{ background: 'rgba(74, 54, 37, 0.75)' }}>
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.25)', border: '3px solid rgba(255,255,255,0.4)' }}>
+                          <span className="text-white text-2xl">▶</span>
                         </div>
-                      ))}
+                        <p className="font-semibold text-white text-lg">{isArabic ? 'اكتشف سحر المفيجر' : 'Discover the Magic of Almufaijer'}</p>
+                        <p className="text-sm" style={{ color: '#E8D5A3' }}>{isArabic ? 'اضغط لمشاهدة الفيديو' : 'Click to watch video'}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Event Details */}
-                {(eventDate || eventTime) && (
-                  <div className="p-4 rounded-lg border border-amber-200 bg-amber-50">
-                    <p className="text-amber-800 font-medium mb-2">📅 {isArabic ? 'تفاصيل الفعالية' : 'Event Details'}</p>
-                    {eventDate && <p className="text-gray-700">{isArabic ? 'التاريخ:' : 'Date:'} {eventDate}</p>}
-                    {eventTime && <p className="text-gray-700">{isArabic ? 'الوقت:' : 'Time:'} {eventTime}</p>}
+                  {/* Guest Allowance */}
+                  <div className="p-5 rounded-lg text-center border" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
+                    <p className="font-semibold" style={{ color: '#3D2E1F' }}>
+                      {isArabic ? `يمكنكم اصطحاب حتى ${guestAllowance} ضيوف مميزين` : `You may bring up to ${guestAllowance} honored guests`}
+                    </p>
                   </div>
-                )}
 
-                {/* RSVP Button */}
-                {enableRSVP && (
-                  <div className="text-center">
-                    <div className="inline-block px-8 py-4 rounded-lg text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #8B6F47, #5C4A32)' }}>
-                      {isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
+                  {/* Perks Preview - Match actual email style */}
+                  {selectedPerks.size > 0 && (
+                    <div className="p-6 rounded-lg" style={{ backgroundColor: '#4A3625' }}>
+                      <p className="text-sm mb-4 font-semibold uppercase tracking-wider" style={{ color: '#E8D5A3' }}>
+                        {isArabic ? 'تجربتكم المميزة تتضمن' : 'YOUR VIP EXPERIENCE INCLUDES'}
+                      </p>
+                      <div className="space-y-3">
+                        {customPerks.filter(p => selectedPerks.has(p.id)).map(perk => (
+                          <div key={perk.id} className="flex items-center gap-3 text-white">
+                            <span style={{ color: '#C9A962', fontSize: '18px' }}>•</span>
+                            <span>{isArabic ? perk.ar : perk.en}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <p className="text-gray-600">{isArabic ? 'مع أطيب التحيات،' : 'With warm regards,'}</p>
-                <p className="font-semibold">{isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team'}</p>
-              </div>
-              
-              {/* Footer */}
-              <div className="text-center p-4" style={{ backgroundColor: '#4A3625' }}>
-                <p className="text-amber-300 text-sm">{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</p>
-                <p className="text-gray-400 text-xs">{isArabic ? 'قرية المفيجر التراثية | الرياض' : 'Almufaijer Heritage Village | Riyadh'}</p>
+                  {/* Event Details */}
+                  {(eventDate || eventTime) && (
+                    <div className="p-5 rounded-lg border-2" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
+                      <p className="text-sm mb-3 font-semibold uppercase tracking-wider" style={{ color: '#5C4A32' }}>
+                        {isArabic ? 'تفاصيل الفعالية' : 'EVENT DETAILS'}
+                      </p>
+                      {eventDate && <p className="font-semibold" style={{ color: '#3D2E1F' }}>{isArabic ? 'التاريخ:' : 'Date:'} {eventDate}</p>}
+                      {eventTime && <p className="font-semibold" style={{ color: '#3D2E1F' }}>{isArabic ? 'الوقت:' : 'Time:'} {eventTime}</p>}
+                    </div>
+                  )}
+
+                  {/* RSVP Button */}
+                  {enableRSVP && (
+                    <div className="text-center">
+                      <div className="inline-block px-14 py-5 rounded-xl text-white font-bold text-lg border-2" style={{ background: 'linear-gradient(135deg, #5C4A32, #4A3625)', borderColor: '#C9A962' }}>
+                        {isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-gray-600">{isArabic ? 'مع أطيب التحيات،' : 'With warm regards,'}</p>
+                  <p className="font-semibold">{isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team'}</p>
+                </div>
+                
+                {/* Footer */}
+                <div className="text-center p-4" style={{ backgroundColor: '#4A3625' }}>
+                  <p className="text-sm font-medium" style={{ color: '#C9A962' }}>{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</p>
+                  <p className="text-xs" style={{ color: '#A89880' }}>{isArabic ? 'قرية المفيجر التراثية | الرياض' : 'Almufaijer Heritage Village | Riyadh'}</p>
+                </div>
               </div>
             </div>
           </div>
