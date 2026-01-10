@@ -167,29 +167,60 @@ export const VIPOutreachPanel = () => {
         throw new Error('Email content not found');
       }
       
+      // Wait for fonts to be fully loaded (fixes Arabic text shaping)
+      if (document.fonts?.ready) {
+        await document.fonts.ready;
+      }
+      // Allow layout to settle
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      
       const contactName = selectedContacts.size > 0 
         ? contacts?.find(c => selectedContacts.has(c.id))?.name_en?.replace(/\s+/g, '-') || 'vip'
         : 'vip';
       const timestamp = format(new Date(), 'yyyyMMdd-HHmm');
+      const filename = `vip-invitation-${contactName}-${timestamp}.pdf`;
       
-      await html2pdf()
+      // Generate PDF as blob for better Safari/iOS compatibility
+      const pdfBlob = await html2pdf()
         .from(emailContent)
         .set({
-          margin: 10,
-          filename: `vip-invitation-${contactName}-${timestamp}.pdf`,
+          margin: [10, 10, 10, 10],
+          filename,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { 
             scale: 2, 
             useCORS: true,
-            logging: false
+            logging: false,
+            backgroundColor: '#ffffff',
+            windowWidth: 600
           },
           jsPDF: { 
-            unit: 'px', 
-            format: [620, 1200],
+            unit: 'mm', 
+            format: 'a4',
             orientation: 'portrait' 
-          }
+          },
+          pagebreak: { mode: ['css', 'legacy'] }
         })
-        .save();
+        .outputPdf('blob');
+      
+      // Create download link from blob
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      
+      // For iOS Safari, open in new tab instead of download
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        window.open(url, '_blank');
+      } else {
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      
+      // Cleanup
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       
       toast({ title: isArabic ? 'تم تحميل الدعوة' : 'Invitation downloaded' });
     } catch (error) {
