@@ -483,27 +483,27 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
           />
         </TableCell>
       )}
-      <TableCell className="font-mono text-xs font-semibold text-accent text-start truncate p-2">
+      <TableCell className="w-[9%] font-mono text-xs font-semibold text-accent text-start truncate p-2">
         {booking.booking_reference}
       </TableCell>
-      <TableCell className="text-start p-2">
+      <TableCell className="w-[14%] text-start p-2">
         <div className="truncate">
           <p className="font-medium text-foreground truncate text-sm">{booking.customer_name}</p>
           <p className="text-xs text-muted-foreground truncate">{booking.customer_email}</p>
         </div>
       </TableCell>
-      <TableCell className="text-foreground text-start text-sm p-2 truncate">{formatDate(booking.visit_date)}</TableCell>
-      <TableCell className="text-foreground text-start text-sm p-2">{formatDateTime(booking.created_at)}</TableCell>
-      <TableCell className="text-center p-2">
+      <TableCell className="w-[8%] text-foreground text-start text-sm p-2 truncate">{formatDate(booking.visit_date)}</TableCell>
+      <TableCell className="w-[10%] text-foreground text-start text-sm p-2">{formatDateTime(booking.created_at)}</TableCell>
+      <TableCell className="w-[4%] text-center p-2">
         <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-accent font-semibold text-sm">
           {booking.adult_count + booking.child_count + (booking.senior_count || 0)}
         </span>
       </TableCell>
-      <TableCell className="font-semibold text-accent text-start text-sm p-2">
+      <TableCell className="w-[8%] font-semibold text-accent text-start text-sm p-2">
         {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
       </TableCell>
-      <TableCell className="p-2">{getStatusBadge(booking)}</TableCell>
-      <TableCell className="p-2">
+      <TableCell className="w-[10%] p-2">{getStatusBadge(booking)}</TableCell>
+      <TableCell className="w-[8%] p-2">
         {(() => {
           const stage = getJourneyStage(booking);
           const Icon = stage.icon;
@@ -537,7 +537,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
           </div>
         ) : null}
       </TableCell>
-      <TableCell className="text-end">
+      <TableCell className="w-10 text-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="hover:bg-accent/10">
@@ -656,8 +656,8 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
       {/* Desktop Table - hidden on small screens */}
       <div className="hidden md:block">
         {!useVirtual ? (
-          <div className="overflow-hidden glass-card rounded-xl border border-accent/20">
-            <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full">
+          <div className="overflow-x-auto glass-card rounded-xl border border-accent/20">
+            <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full min-w-[900px]">
               <TableHeader>
                 <TableRow className="border-b border-accent/20 hover:bg-transparent">
                   {onSelectionChange && (
@@ -669,14 +669,14 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                       />
                     </TableHead>
                   )}
-                  <TableHead className="w-[11%] text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Ref'}</TableHead>
-                  <TableHead className="w-[17%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-                  <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'الزيارة' : 'Visit'}</TableHead>
-                  <TableHead className="w-[12%] text-accent font-semibold text-start">{isArabic ? 'وقت الشراء' : 'Purchased'}</TableHead>
-                  <TableHead className="w-[5%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
-                  <TableHead className="w-[9%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-                  <TableHead className="w-[13%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
-                  <TableHead className="w-[10%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
+                  <TableHead className="w-[9%] text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Ref'}</TableHead>
+                  <TableHead className="w-[14%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+                  <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'الزيارة' : 'Visit'}</TableHead>
+                  <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'وقت الشراء' : 'Purchased'}</TableHead>
+                  <TableHead className="w-[4%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
+                  <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                  <TableHead className="w-[10%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead className="w-[8%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
                   <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'البريد' : 'Email'}><Mail className="h-4 w-4 mx-auto" /></TableHead>
                   <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'التذكير' : 'Reminder'}><Bell className="h-4 w-4 mx-auto" /></TableHead>
                   <TableHead className="w-10 text-end text-accent font-semibold">{isArabic ? '' : ''}</TableHead>
@@ -702,9 +702,9 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
           </div>
         ) : (
           // Virtual scrolling table for large datasets
-          <div className="glass-card rounded-xl border border-accent/20 overflow-hidden">
+          <div className="glass-card rounded-xl border border-accent/20 overflow-x-auto">
             <div className="overflow-hidden">
-              <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full">
+              <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full min-w-[900px]">
                 <TableHeader>
                   <TableRow className="border-b border-accent/20 hover:bg-transparent">
                     {onSelectionChange && (
@@ -716,14 +716,14 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                         />
                       </TableHead>
                     )}
-                    <TableHead className="w-[11%] text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Ref'}</TableHead>
-                    <TableHead className="w-[17%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
-                    <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'الزيارة' : 'Visit'}</TableHead>
-                    <TableHead className="w-[12%] text-accent font-semibold text-start">{isArabic ? 'وقت الشراء' : 'Purchased'}</TableHead>
-                    <TableHead className="w-[5%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
-                    <TableHead className="w-[9%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-                    <TableHead className="w-[13%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
-                    <TableHead className="w-[10%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
+                    <TableHead className="w-[9%] text-accent font-semibold text-start">{isArabic ? 'رقم الحجز' : 'Ref'}</TableHead>
+                    <TableHead className="w-[14%] text-accent font-semibold text-start">{isArabic ? 'العميل' : 'Customer'}</TableHead>
+                    <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'الزيارة' : 'Visit'}</TableHead>
+                    <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'وقت الشراء' : 'Purchased'}</TableHead>
+                    <TableHead className="w-[4%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
+                    <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                    <TableHead className="w-[10%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                    <TableHead className="w-[8%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
                     <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'البريد' : 'Email'}><Mail className="h-4 w-4 mx-auto" /></TableHead>
                     <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'التذكير' : 'Reminder'}><Bell className="h-4 w-4 mx-auto" /></TableHead>
                     <TableHead className="w-10 text-end text-accent font-semibold">{isArabic ? '' : ''}</TableHead>
@@ -743,7 +743,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                   position: 'relative',
                 }}
               >
-                <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full">
+                <Table dir={isRTL ? 'rtl' : 'ltr'} className="table-fixed w-full min-w-[900px]">
                   <TableBody>
                     {virtualizer.getVirtualItems().map((virtualRow) => {
                       const booking = bookings[virtualRow.index];
