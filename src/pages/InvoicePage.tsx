@@ -69,14 +69,13 @@ export default function InvoicePage() {
   const { data: invoice, isLoading, error } = useQuery({
     queryKey: ['invoice', invoiceId],
     queryFn: async () => {
+      // Use secure RPC function to fetch invoice by ID
       const { data, error } = await supabase
-        .from('custom_invoices')
-        .select('*')
-        .eq('id', invoiceId)
-        .single();
+        .rpc('get_invoice_by_id', { invoice_uuid: invoiceId });
 
       if (error) throw error;
-      return data as CustomInvoice;
+      if (!data) throw new Error('Invoice not found');
+      return data as unknown as CustomInvoice;
     },
     enabled: !!invoiceId,
   });

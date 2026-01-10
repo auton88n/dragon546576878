@@ -610,6 +610,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          identifier: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          identifier: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          identifier?: string
+        }
+        Relationships: []
+      }
       scan_logs: {
         Row: {
           device_info: string | null
@@ -1034,6 +1055,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_action_type: string
+          p_identifier: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       get_booking_with_tickets: {
         Args: { booking_uuid: string }
         Returns: Json
@@ -1042,6 +1073,8 @@ export type Database = {
         Args: { customer_email_input: string }
         Returns: Json
       }
+      get_invoice_by_id: { Args: { invoice_uuid: string }; Returns: Json }
+      get_vip_invitation_by_token: { Args: { token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1050,6 +1083,15 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      update_vip_rsvp: {
+        Args: {
+          p_decline_reason?: string
+          p_guests?: number
+          p_status: string
+          p_token: string
+        }
+        Returns: Json
+      }
       validate_employee_badge: { Args: { employee_id: string }; Returns: Json }
     }
     Enums: {
