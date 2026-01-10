@@ -33,15 +33,15 @@ const StatsCard = memo(({
     <Card className={cn(
       "group relative overflow-hidden border-0 transition-all duration-200",
       "hover:shadow-lg hover:-translate-y-0.5",
-      featured ? "lg:col-span-2 glass-card-gold" : "glass-card"
+      featured ? "glass-card-gold" : "glass-card"
     )}>
       {/* Subtle gradient overlay on hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
       
-      <CardContent className={cn("p-3 md:p-4 relative", featured && "py-4")}>
+      <CardContent className={cn("p-3 md:p-5 relative", featured && "py-5")}>
         <div className="flex items-center justify-between gap-3 rtl:flex-row-reverse">
           <div className="text-left rtl:text-right flex-1 min-w-0">
-            <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 font-medium tracking-wide uppercase truncate">
+            <p className="text-xs md:text-sm text-muted-foreground mb-1 font-medium tracking-wide uppercase truncate">
               {title}
             </p>
             {loading ? (
@@ -50,11 +50,11 @@ const StatsCard = memo(({
               <div className="space-y-0.5">
                 <p className={cn(
                   "font-bold text-foreground",
-                  featured ? "text-xl md:text-2xl" : "text-lg md:text-xl"
+                  featured ? "text-2xl md:text-3xl" : "text-xl md:text-2xl"
                 )}>
                   {typeof value === 'number' ? value.toLocaleString() : value}
                   {suffix && (
-                    <span className="text-xs md:text-sm text-muted-foreground ms-1 font-normal">
+                    <span className="text-sm md:text-base text-muted-foreground ms-1 font-normal">
                       {suffix}
                     </span>
                   )}
@@ -80,12 +80,12 @@ const StatsCard = memo(({
           </div>
           
           <div className={cn(
-            "w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+            "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0",
             "transition-transform duration-200 group-hover:scale-105",
             bgColor,
             featured && "glow-gold"
           )}>
-            <Icon className={cn("h-4 w-4 md:h-5 md:w-5", color)} />
+            <Icon className={cn("h-5 w-5 md:h-6 md:w-6", color)} />
           </div>
         </div>
       </CardContent>
