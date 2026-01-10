@@ -675,3 +675,9 @@ svg.lucide {
   font-size: 0.875rem !important;
   margin-top: 8px !important;
 }
+
+/* PDF page-break avoidance for html2pdf.js */
+.avoid-break {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
