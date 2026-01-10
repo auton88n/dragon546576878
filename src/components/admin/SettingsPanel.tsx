@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import TestQRGenerator from './TestQRGenerator';
 import TestEmployeeBadgeGenerator from './TestEmployeeBadgeGenerator';
@@ -29,6 +30,7 @@ import VIPOutreachPanel from './VIPOutreachPanel';
 // Database Maintenance Card Component
 const DatabaseMaintenanceCard = ({ isArabic }: { isArabic: boolean }) => {
   const [cleaning, setCleaning] = useState(false);
+  const [daysToClean, setDaysToClean] = useState(1);
   const [result, setResult] = useState<{ deleted_count: number; cutoff_date: string } | null>(null);
   const { toast } = useToast();
 
@@ -37,7 +39,7 @@ const DatabaseMaintenanceCard = ({ isArabic }: { isArabic: boolean }) => {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke('cleanup-abandoned-bookings', {
-        body: { daysOld: 3 }
+        body: { daysOld: daysToClean }
       });
 
       if (error) throw error;
@@ -61,6 +63,13 @@ const DatabaseMaintenanceCard = ({ isArabic }: { isArabic: boolean }) => {
     }
   };
 
+  const getDaysLabel = (days: number) => {
+    if (isArabic) {
+      return days === 1 ? '١ يوم' : days === 2 ? '٢ يوم' : '٣ أيام';
+    }
+    return `${days} day${days > 1 ? 's' : ''}`;
+  };
+
   return (
     <Card className="glass-card border-accent/20">
       <CardHeader className="pb-3">
@@ -77,34 +86,65 @@ const DatabaseMaintenanceCard = ({ isArabic }: { isArabic: boolean }) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rtl:sm:flex-row-reverse">
-          <Button
-            variant="destructive"
-            onClick={handleCleanup}
-            disabled={cleaning}
-            className="gap-2"
-          >
-            {cleaning ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
-            {isArabic ? 'تنظيف الحجوزات المهجورة (٣+ أيام)' : 'Cleanup Abandoned Bookings (3+ days)'}
-          </Button>
-          
-          {result && (
-            <div className="text-sm text-muted-foreground">
+        <div className="flex flex-col gap-4">
+          {/* Days Selector */}
+          <div className="flex items-center gap-3 rtl:flex-row-reverse">
+            <Label className="text-muted-foreground whitespace-nowrap">
+              {isArabic ? 'حذف الحجوزات الأقدم من:' : 'Delete bookings older than:'}
+            </Label>
+            <Select value={daysToClean.toString()} onValueChange={(v) => setDaysToClean(Number(v))}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">{isArabic ? '١ يوم' : '1 day'}</SelectItem>
+                <SelectItem value="2">{isArabic ? '٢ يوم' : '2 days'}</SelectItem>
+                <SelectItem value="3">{isArabic ? '٣ أيام' : '3 days'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Warning for 1 day */}
+          {daysToClean === 1 && (
+            <p className="text-xs text-amber-600 bg-amber-500/10 p-2 rounded-lg text-start rtl:text-right">
               {isArabic 
-                ? `تم حذف ${result.deleted_count} حجز`
-                : `${result.deleted_count} booking(s) deleted`}
-            </div>
+                ? '⚠️ تحذير: سيؤدي هذا إلى حذف معظم الحجوزات المعلقة'
+                : '⚠️ Warning: This will delete most pending bookings'}
+            </p>
           )}
+
+          {/* Action Row */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rtl:sm:flex-row-reverse">
+            <Button
+              variant="destructive"
+              onClick={handleCleanup}
+              disabled={cleaning}
+              className="gap-2"
+            >
+              {cleaning ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {isArabic 
+                ? `تنظيف الحجوزات المهجورة (${getDaysLabel(daysToClean)}+)` 
+                : `Cleanup Abandoned Bookings (${daysToClean}+ day${daysToClean > 1 ? 's' : ''})`}
+            </Button>
+            
+            {result && (
+              <div className="text-sm text-muted-foreground">
+                {isArabic 
+                  ? `تم حذف ${result.deleted_count} حجز`
+                  : `${result.deleted_count} booking(s) deleted`}
+              </div>
+            )}
+          </div>
         </div>
         
         <p className="text-xs text-muted-foreground text-start rtl:text-right">
           {isArabic 
-            ? 'هذا الإجراء يحذف الحجوزات المعلقة الأقدم من ٣ أيام وسجلات الدفع والتذاكر المرتبطة بها.'
-            : 'This action deletes pending bookings older than 3 days along with their payment logs and tickets.'}
+            ? `هذا الإجراء يحذف الحجوزات المعلقة الأقدم من ${getDaysLabel(daysToClean)} وسجلات الدفع والتذاكر المرتبطة بها.`
+            : `This action deletes pending bookings older than ${daysToClean} day${daysToClean > 1 ? 's' : ''} along with their payment logs and tickets.`}
         </p>
       </CardContent>
     </Card>
