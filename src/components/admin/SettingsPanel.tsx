@@ -25,7 +25,7 @@ import EmployeesManager from './EmployeesManager';
 import { HoursAnnouncementPanel } from './HoursAnnouncementPanel';
 import VIPOutreachPanel from './VIPOutreachPanel';
 
-const SettingsPanel = () => {
+const SettingsPanel = (): JSX.Element => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const { toast } = useToast();
