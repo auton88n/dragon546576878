@@ -151,15 +151,14 @@ serve(async (req) => {
                 </tr>
               </table>
               
-              <!-- Reply Box -->
+              <!-- Reply Box - DARK THEME for better contrast in all modes -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 30px;">
                 <tr>
-                  <td style="background: linear-gradient(135deg, #faf8f5 0%, #f5f1eb 100%) !important; background-color: #f8f6f3 !important; border: 2px solid #C9A86C; border-radius: 12px; padding: 25px;">
-                    <div style="color: #5C4A3A !important; font-weight: 600; font-size: 14px; margin-bottom: 15px;">
-                      <span style="color: #C9A86C !important;">◆</span>
-                      Our Response / ردنا
+                  <td style="background-color: #4A3625 !important; border: 2px solid #C9A86C; border-radius: 12px; padding: 25px;">
+                    <div style="color: #C9A86C !important; font-weight: 600; font-size: 14px; margin-bottom: 15px;">
+                      ◆ Our Response / ردنا
                     </div>
-                    <div style="color: #3D2E1F !important; font-size: 15px; line-height: 1.8; white-space: pre-wrap;">${replyMessage}</div>
+                    <div style="color: #F5F1E8 !important; font-size: 15px; line-height: 1.8; white-space: pre-wrap;">${replyMessage}</div>
                   </td>
                 </tr>
               </table>
