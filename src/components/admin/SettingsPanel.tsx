@@ -334,9 +334,9 @@ const SettingsPanel = ({ onStatsRefresh }: SettingsPanelProps): JSX.Element => {
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="flex items-center gap-2 px-3.5 md:px-4 py-2.5 whitespace-nowrap text-muted-foreground text-xs md:text-sm hover:bg-white/80 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-white dark:data-[state=active]:bg-accent/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-accent/20 transition-all duration-150 rounded-lg shrink-0"
+                className="flex items-center gap-1.5 px-2.5 md:px-3 py-2 whitespace-nowrap text-muted-foreground text-[11px] md:text-xs hover:bg-white/80 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-white dark:data-[state=active]:bg-accent/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-accent/20 transition-all duration-150 rounded-lg shrink-0"
               >
-                <tab.icon className="h-4 w-4" />
+                <tab.icon className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{isArabic ? tab.labelAr : tab.labelEn}</span>
               </TabsTrigger>
             ))}
