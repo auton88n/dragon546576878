@@ -33,8 +33,6 @@ const { Component: CustomInvoicesPanel } = lazyWithPreload(() => import('@/compo
 const { Component: ContactSubmissionsPanel } = lazyWithPreload(() => import('@/components/admin/ContactSubmissionsPanel'));
 const { Component: AYNSupportPanel } = lazyWithPreload(() => import('@/components/admin/AYNSupportPanel'));
 const { Component: RefundsPanel } = lazyWithPreload(() => import('@/components/admin/RefundsPanel'));
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Tables } from '@/integrations/supabase/types';
 type Booking = Tables<'bookings'>;
 const AdminPage = () => {
