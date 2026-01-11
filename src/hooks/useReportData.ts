@@ -57,7 +57,6 @@ export const useReportData = (days: number = 30) => {
 
       // Test email patterns to exclude from all stats
       const testEmailPatterns = ['%test%', '%example%'];
-      const specificTestEmails = ['crossmint7@gmail.com'];
 
       // Fetch completed bookings for revenue stats (excluding test emails)
       const { data: completedBookings, error: completedError } = await supabase
@@ -68,7 +67,6 @@ export const useReportData = (days: number = 30) => {
         .eq('payment_status', 'completed')
         .not('customer_email', 'ilike', testEmailPatterns[0])
         .not('customer_email', 'ilike', testEmailPatterns[1])
-        .not('customer_email', 'in', `(${specificTestEmails.join(',')})`)
         .order('visit_date', { ascending: true });
 
       if (completedError) throw completedError;
@@ -79,8 +77,7 @@ export const useReportData = (days: number = 30) => {
         .select('payment_status, payment_method, total_amount')
         .gte('created_at', startDate)
         .not('customer_email', 'ilike', testEmailPatterns[0])
-        .not('customer_email', 'ilike', testEmailPatterns[1])
-        .not('customer_email', 'in', `(${specificTestEmails.join(',')})`);
+        .not('customer_email', 'ilike', testEmailPatterns[1]);
 
       if (allError) throw allError;
 
