@@ -473,6 +473,39 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_qr_scans: {
+        Row: {
+          campaign_id: string
+          campaign_name: string
+          destination: string
+          id: string
+          ip_country: string | null
+          referrer: string | null
+          scanned_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          campaign_id: string
+          campaign_name: string
+          destination: string
+          id?: string
+          ip_country?: string | null
+          referrer?: string | null
+          scanned_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          campaign_name?: string
+          destination?: string
+          id?: string
+          ip_country?: string | null
+          referrer?: string | null
+          scanned_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       packages: {
         Row: {
           adult_count: number
