@@ -12,6 +12,40 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify staff authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - No authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check if user is staff (admin or manager can issue compensation)
+    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+    const { data: isManager } = await supabase.rpc("has_role", { _user_id: user.id, _role: "manager" });
+    
+    if (!isAdmin && !isManager) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden - Admin or Manager access required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const {
       customerEmail,
       customerName,
@@ -31,10 +65,6 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Generate booking reference
     const bookingReference = `COMP-${Date.now().toString(36).toUpperCase()}`;
@@ -70,7 +100,7 @@ serve(async (req) => {
       throw new Error(`Failed to create booking: ${bookingError.message}`);
     }
 
-    console.log("Compensation booking created:", booking.id);
+    console.log("Compensation booking created:", booking.id, "by user:", user.email);
 
     // Log the compensation in payment_logs for audit trail
     await supabase.from("payment_logs").insert({
@@ -80,10 +110,12 @@ serve(async (req) => {
       amount: 0,
       status_before: null,
       status_after: "completed",
+      changed_by: user.id,
       metadata: {
         reason,
         submission_id: submissionId,
         issued_at: new Date().toISOString(),
+        issued_by: user.email,
       },
     });
 
@@ -132,7 +164,7 @@ serve(async (req) => {
         .from("contact_submissions")
         .update({
           status: "resolved",
-          admin_notes: `Compensation tickets issued: ${bookingReference}`,
+          admin_notes: `Compensation tickets issued: ${bookingReference} by ${user.email}`,
         })
         .eq("id", submissionId);
     }
