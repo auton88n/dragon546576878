@@ -681,3 +681,12 @@ svg.lucide {
   break-inside: avoid;
   page-break-inside: avoid;
 }
+
+/* Hide scrollbar for cleaner horizontal scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
