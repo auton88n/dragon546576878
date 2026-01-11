@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Settings, Clock, Calendar, Save, RefreshCw, CalendarRange, RotateCcw, Settings2, Users, Package, Megaphone, Wrench, Crown, Trash2, Database, QrCode } from 'lucide-react';
+import { Settings, Clock, Calendar, Save, RefreshCw, CalendarRange, RotateCcw, Settings2, Users, Package, Megaphone, Wrench, Crown, Trash2, Database, QrCode, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -296,6 +296,7 @@ const SettingsPanel = ({ onStatsRefresh }: SettingsPanelProps): JSX.Element => {
     { id: 'announcements', labelAr: 'الإعلانات', labelEn: 'Announcements', icon: Megaphone },
     { id: 'vip', labelAr: 'الدعوات الخاصة', labelEn: 'VIP Outreach', icon: Crown },
     { id: 'developer', labelAr: 'أدوات المطور', labelEn: 'Developer', icon: Wrench },
+    { id: 'system', labelAr: 'النظام', labelEn: 'System', icon: Info },
   ];
 
   // Show loading skeleton until settings are loaded AND formData is initialized
@@ -642,6 +643,62 @@ const SettingsPanel = ({ onStatsRefresh }: SettingsPanelProps): JSX.Element => {
             
             <TestQRGenerator />
             <TestEmployeeBadgeGenerator />
+          </TabsContent>
+
+          {/* System Tab */}
+          <TabsContent value="system" className="space-y-6 mt-0">
+            <div className="glass-card rounded-xl p-6 md:p-8 border border-accent/10 text-center">
+              {/* System Icon */}
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-6">
+                <Info className="h-8 w-8 md:h-10 md:w-10 text-accent" />
+              </div>
+              
+              {/* System Title */}
+              <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+                {isArabic ? 'نظام سوق المفيجر' : 'Souq Almufaijer System'}
+              </h3>
+              
+              {/* Version Badge */}
+              <Badge 
+                variant="outline" 
+                className="text-lg px-4 py-2 mb-6 bg-accent/10 border-accent/30 text-accent"
+              >
+                V 1.0
+              </Badge>
+              
+              {/* Description */}
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                {isArabic 
+                  ? 'نظام إدارة التذاكر والحجوزات لسوق المفيجر التراثي'
+                  : 'Ticketing and booking management system for Souq Almufaijer Heritage Site'}
+              </p>
+              
+              {/* Upgrade Notice Card */}
+              <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 border border-amber-500/20 rounded-xl p-6 max-w-lg mx-auto">
+                <h4 className="font-semibold text-foreground mb-3 flex items-center justify-center gap-2">
+                  <Crown className="h-5 w-5 text-amber-600" />
+                  {isArabic ? 'ترقية النظام' : 'System Upgrade'}
+                </h4>
+                <p className="text-muted-foreground mb-4">
+                  {isArabic 
+                    ? 'للترقية إلى إصدار أحدث أو الحصول على ميزات إضافية، يرجى التواصل مع AYN'
+                    : 'To upgrade to a newer version or get additional features, please contact AYN'}
+                </p>
+                <Button 
+                  asChild
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+                >
+                  <a href="https://aynn.io" target="_blank" rel="noopener noreferrer">
+                    {isArabic ? 'تواصل مع AYN' : 'Contact AYN'}
+                  </a>
+                </Button>
+              </div>
+              
+              {/* Footer */}
+              <p className="text-xs text-muted-foreground/60 mt-8">
+                Powered by AYN • aynn.io
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>
