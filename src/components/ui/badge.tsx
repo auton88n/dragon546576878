@@ -15,12 +15,16 @@ const badgeVariants = cva("inline-flex items-center justify-center rounded-full 
   }
 });
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
-const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(({
-  className,
-  variant,
-  ...props
-}, ref) => {
-  return;
-});
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+  ({ className, variant, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(badgeVariants({ variant }), className)}
+        {...props}
+      />
+    );
+  }
+);
 Badge.displayName = "Badge";
 export { Badge, badgeVariants };
