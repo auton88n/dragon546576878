@@ -201,6 +201,88 @@ const ContactSubmissionsPanel = () => {
     }
   };
 
+  const handleAISuggestReply = async () => {
+    if (!selectedSubmission) return;
+    
+    setIsGeneratingReply(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-contact-reply', {
+        body: {
+          customerName: selectedSubmission.name,
+          customerMessage: selectedSubmission.message,
+          subject: selectedSubmission.subject,
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data.error) {
+        toast.error(isArabic ? data.message_ar || data.error : data.message_en || data.error);
+        return;
+      }
+
+      setReplyMessage(data.suggestedReply);
+      toast.success(t('admin.messages.replySuggested'));
+    } catch (error) {
+      console.error('AI suggestion error:', error);
+      toast.error(t('admin.messages.aiGenerateFailed'));
+    } finally {
+      setIsGeneratingReply(false);
+    }
+  };
+
+  const handleSendCompensation = async () => {
+    if (!selectedSubmission || !compensationData.visitDate) {
+      toast.error(isArabic ? 'يرجى اختيار تاريخ الزيارة' : 'Please select a visit date');
+      return;
+    }
+    
+    setIsSendingCompensation(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-compensation-booking', {
+        body: {
+          customerEmail: selectedSubmission.email,
+          customerName: selectedSubmission.name,
+          customerPhone: selectedSubmission.phone || '',
+          adultCount: compensationData.adultCount,
+          childCount: compensationData.childCount,
+          visitDate: compensationData.visitDate,
+          visitTime: compensationData.visitTime,
+          reason: compensationData.reason || `Compensation for: ${selectedSubmission.subject}`,
+          submissionId: selectedSubmission.id,
+          language: isArabic ? 'ar' : 'en',
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success(t('admin.messages.ticketsSent'));
+      setShowCompensationDialog(false);
+      setCompensationData({ adultCount: 1, childCount: 0, visitDate: '', visitTime: '10:00', reason: '' });
+      queryClient.invalidateQueries({ queryKey: ['contact-submissions'] });
+      setSelectedSubmission(null);
+    } catch (error) {
+      console.error('Compensation error:', error);
+      toast.error(t('admin.messages.ticketsFailed'));
+    } finally {
+      setIsSendingCompensation(false);
+    }
+  };
+
+  const openCompensationDialog = () => {
+    if (selectedSubmission) {
+      setCompensationData(prev => ({
+        ...prev,
+        reason: `Compensation for: ${selectedSubmission.subject}`,
+      }));
+      setShowCompensationDialog(true);
+    }
+  };
+
   const getStatusBadge = (status: string, replySent?: boolean) => {
     if (replySent) {
       return (
@@ -385,6 +467,27 @@ const ContactSubmissionsPanel = () => {
                   </div>
                 ) : (
                   <>
+                    {/* AI Suggest Reply Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAISuggestReply}
+                      disabled={isGeneratingReply}
+                      className="mt-2 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-amber-500/30 hover:border-amber-500/50 text-amber-700 dark:text-amber-400"
+                    >
+                      {isGeneratingReply ? (
+                        <>
+                          <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                          {t('admin.messages.generatingReply')}
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 me-2" />
+                          {t('admin.messages.aiSuggestReply')}
+                        </>
+                      )}
+                    </Button>
+
                     <Textarea
                       value={replyMessage}
                       onChange={(e) => setReplyMessage(e.target.value)}
@@ -428,9 +531,17 @@ const ContactSubmissionsPanel = () => {
             </div>
           )}
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="flex-wrap gap-2">
             <Button variant="outline" onClick={() => setSelectedSubmission(null)}>
               {t('common.close')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={openCompensationDialog}
+              className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/30 hover:border-green-500/50 text-green-700 dark:text-green-400"
+            >
+              <Gift className="h-4 w-4 me-2" />
+              {t('admin.messages.sendFreeTickets')}
             </Button>
             <Button variant="secondary" onClick={handleSaveNotes}>
               {t('admin.messages.saveNotes')}
@@ -464,6 +575,117 @@ const ContactSubmissionsPanel = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Compensation Tickets Dialog */}
+      <Dialog open={showCompensationDialog} onOpenChange={setShowCompensationDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-green-600" />
+              {t('admin.messages.compensationTitle')}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedSubmission && (
+            <div className="space-y-4">
+              <div className="p-3 bg-muted rounded-lg text-sm">
+                <p className="font-medium">{selectedSubmission.name}</p>
+                <p className="text-muted-foreground">{selectedSubmission.email}</p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="visitDate" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {t('admin.messages.visitDate')} *
+                  </Label>
+                  <Input
+                    id="visitDate"
+                    type="date"
+                    value={compensationData.visitDate}
+                    onChange={(e) => setCompensationData(prev => ({ ...prev, visitDate: e.target.value }))}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="visitTime">{t('admin.messages.visitTime')}</Label>
+                  <Input
+                    id="visitTime"
+                    type="time"
+                    value={compensationData.visitTime}
+                    onChange={(e) => setCompensationData(prev => ({ ...prev, visitTime: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="adultCount">{t('admin.messages.adults')}</Label>
+                    <Input
+                      id="adultCount"
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={compensationData.adultCount}
+                      onChange={(e) => setCompensationData(prev => ({ ...prev, adultCount: parseInt(e.target.value) || 1 }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="childCount">{t('admin.messages.children')}</Label>
+                    <Input
+                      id="childCount"
+                      type="number"
+                      min={0}
+                      max={10}
+                      value={compensationData.childCount}
+                      onChange={(e) => setCompensationData(prev => ({ ...prev, childCount: parseInt(e.target.value) || 0 }))}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="reason">{t('admin.messages.reason')}</Label>
+                  <Textarea
+                    id="reason"
+                    value={compensationData.reason}
+                    onChange={(e) => setCompensationData(prev => ({ ...prev, reason: e.target.value }))}
+                    placeholder={isArabic ? 'سبب التعويض...' : 'Reason for compensation...'}
+                    className="mt-1"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowCompensationDialog(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={handleSendCompensation}
+              disabled={!compensationData.visitDate || isSendingCompensation}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isSendingCompensation ? (
+                <>
+                  <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                  {t('admin.messages.sendingTickets')}
+                </>
+              ) : (
+                <>
+                  <Gift className="h-4 w-4 me-2" />
+                  {t('admin.messages.sendFreeTickets')}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
