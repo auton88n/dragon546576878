@@ -613,6 +613,11 @@ const SettingsPanel = ({ onStatsRefresh }: SettingsPanelProps): JSX.Element => {
             <AttractionsManager />
           </TabsContent>
 
+          {/* Marketing Tab */}
+          <TabsContent value="marketing" className="space-y-6 mt-0">
+            <MarketingQRGenerator />
+          </TabsContent>
+
           {/* Announcements Tab */}
           <TabsContent value="announcements" className="space-y-6 mt-0">
             <HoursAnnouncementPanel />
