@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { QrCode, Download, Palette, Languages, Target, Megaphone, TrendingUp, BarChart3, RefreshCw } from 'lucide-react';
+import { QrCode, Download, Palette, Languages, Target, Megaphone, TrendingUp, BarChart3, RefreshCw, Calendar, Clock, Smartphone, Copy, Check } from 'lucide-react';
 import QRCode from 'qrcode';
 import { toPng } from 'html-to-image';
+import { format, formatDistanceToNow, subDays, startOfMonth, subMonths } from 'date-fns';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useMarketingAnalytics } from '@/hooks/useMarketingAnalytics';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,6 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
 import logoWhite from '@/assets/logo-white.png';
 import logoBlack from '@/assets/logo-black.png';
 
@@ -47,10 +50,49 @@ const THEMES = [
   { id: 'light', labelEn: 'Light Clean', labelAr: 'فاتح نظيف', bg: 'bg-white', accent: '#8B6F47', text: '#2C2416', useDarkLogo: true },
 ];
 
+const DATE_RANGE_PRESETS = [
+  { id: 'all', labelEn: 'All Time', labelAr: 'كل الوقت' },
+  { id: '7d', labelEn: 'Last 7 Days', labelAr: 'آخر 7 أيام' },
+  { id: '30d', labelEn: 'Last 30 Days', labelAr: 'آخر 30 يوم' },
+  { id: 'month', labelEn: 'This Month', labelAr: 'هذا الشهر' },
+  { id: 'lastMonth', labelEn: 'Last Month', labelAr: 'الشهر الماضي' },
+];
+
 const MarketingQRGenerator = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { data: analytics, isLoading: analyticsLoading, refetch: refetchAnalytics } = useMarketingAnalytics();
+  
+  const [dateRangePreset, setDateRangePreset] = useState('all');
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | undefined>(undefined);
+  const [copied, setCopied] = useState(false);
+  
+  // Calculate date range based on preset
+  useEffect(() => {
+    const now = new Date();
+    let range: { start: Date; end: Date } | undefined;
+    
+    switch (dateRangePreset) {
+      case '7d':
+        range = { start: subDays(now, 7), end: now };
+        break;
+      case '30d':
+        range = { start: subDays(now, 30), end: now };
+        break;
+      case 'month':
+        range = { start: startOfMonth(now), end: now };
+        break;
+      case 'lastMonth':
+        const lastMonth = subMonths(now, 1);
+        range = { start: startOfMonth(lastMonth), end: startOfMonth(now) };
+        break;
+      default:
+        range = undefined;
+    }
+    
+    setDateRange(range);
+  }, [dateRangePreset]);
+  
+  const { data: analytics, isLoading: analyticsLoading, refetch: refetchAnalytics } = useMarketingAnalytics(dateRange);
   
   const [config, setConfig] = useState<QRConfig>({
     destination: 'book',
@@ -71,12 +113,16 @@ const MarketingQRGenerator = () => {
     generateQR();
   }, [config.destination, config.campaignName]);
 
-  const generateQR = async () => {
+  const getTrackingUrl = () => {
     const campaignId = config.campaignName.trim() 
       ? config.campaignName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
       : `campaign-${Date.now()}`;
     
-    const trackingUrl = `https://qr.almufaijer.com/${campaignId}?to=${config.destination}&name=${encodeURIComponent(config.campaignName || campaignId)}`;
+    return `https://qr.almufaijer.com/${campaignId}?to=${config.destination}&name=${encodeURIComponent(config.campaignName || campaignId)}`;
+  };
+
+  const generateQR = async () => {
+    const trackingUrl = getTrackingUrl();
     
     try {
       const dataUrl = await QRCode.toDataURL(trackingUrl, {
@@ -92,6 +138,14 @@ const MarketingQRGenerator = () => {
     } catch (err) {
       console.error('QR generation error:', err);
     }
+  };
+
+  const handleCopyUrl = async () => {
+    const url = getTrackingUrl();
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    toast.success(isArabic ? 'تم نسخ الرابط' : 'URL copied to clipboard');
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const getCurrentCTA = () => {
@@ -378,36 +432,74 @@ const MarketingQRGenerator = () => {
                 </CardContent>
               </Card>
 
-              {/* Download Button */}
-              <Button 
-                onClick={handleDownload} 
-                disabled={generating}
-                className="w-full gap-2"
-                size="lg"
-              >
-                {generating ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-                {isArabic ? 'تحميل PNG (جاهز للطباعة)' : 'Download PNG (Print Ready)'}
-              </Button>
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleDownload} 
+                  disabled={generating}
+                  className="flex-1 gap-2"
+                  size="lg"
+                >
+                  {generating ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  {isArabic ? 'تحميل PNG' : 'Download PNG'}
+                </Button>
+                <Button 
+                  onClick={handleCopyUrl} 
+                  variant="outline"
+                  size="lg"
+                  className="gap-2"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                  {isArabic ? 'نسخ الرابط' : 'Copy URL'}
+                </Button>
+              </div>
             </div>
           </div>
         </TabsContent>
 
         {/* Analytics Tab */}
         <TabsContent value="analytics" className="space-y-6 mt-0">
+          {/* Date Range Filter */}
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <Select value={dateRangePreset} onValueChange={setDateRangePreset}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DATE_RANGE_PRESETS.map((preset) => (
+                    <SelectItem key={preset.id} value={preset.id}>
+                      {isArabic ? preset.labelAr : preset.labelEn}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => refetchAnalytics()} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              {isArabic ? 'تحديث' : 'Refresh'}
+            </Button>
+          </div>
+
           {analyticsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
                 <Skeleton key={i} className="h-32 bg-accent/10" />
               ))}
             </div>
           ) : analytics ? (
             <>
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="glass-card border-accent/20">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between rtl:flex-row-reverse">
@@ -419,6 +511,22 @@ const MarketingQRGenerator = () => {
                       </div>
                       <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
                         <QrCode className="h-6 w-6 text-accent" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="glass-card border-accent/20">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between rtl:flex-row-reverse">
+                      <div className="text-start rtl:text-right">
+                        <p className="text-sm text-muted-foreground">
+                          {isArabic ? 'اليوم' : 'Today'}
+                        </p>
+                        <p className="text-3xl font-bold text-foreground">{analytics.todayScans}</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                        <Clock className="h-6 w-6 text-green-600" />
                       </div>
                     </div>
                   </CardContent>
@@ -458,44 +566,98 @@ const MarketingQRGenerator = () => {
                 </Card>
               </div>
 
-              {/* Campaign Performance */}
-              <Card className="glass-card border-accent/20">
-                <CardHeader>
-                  <div className="flex items-center justify-between rtl:flex-row-reverse">
-                    <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
+              {/* Campaign Performance & Recent Scans */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Campaign Performance */}
+                <Card className="glass-card border-accent/20">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse rtl:justify-end">
                       <Megaphone className="h-5 w-5 text-accent" />
                       {isArabic ? 'أداء الحملات' : 'Campaign Performance'}
                     </CardTitle>
-                    <Button variant="ghost" size="sm" onClick={() => refetchAnalytics()}>
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {analytics.campaignStats.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      {isArabic ? 'لا توجد بيانات بعد' : 'No data yet'}
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {analytics.campaignStats.map((campaign, idx) => (
-                        <div key={campaign.campaign_id} className="flex items-center gap-4 rtl:flex-row-reverse">
-                          <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-sm font-bold text-accent">
-                            {idx + 1}
+                  </CardHeader>
+                  <CardContent>
+                    {analytics.campaignStats.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-8">
+                        {isArabic ? 'لا توجد بيانات بعد' : 'No data yet'}
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {analytics.campaignStats.map((campaign, idx) => (
+                          <div key={campaign.campaign_id} className="flex items-center gap-4 rtl:flex-row-reverse">
+                            <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-sm font-bold text-accent">
+                              {idx + 1}
+                            </div>
+                            <div className="flex-1 text-start rtl:text-right min-w-0">
+                              <p className="font-medium truncate">{campaign.campaign_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{campaign.campaign_id}</p>
+                            </div>
+                            <Badge variant="secondary" className="text-base shrink-0">
+                              {campaign.scan_count.toLocaleString()}
+                            </Badge>
                           </div>
-                          <div className="flex-1 text-start rtl:text-right">
-                            <p className="font-medium">{campaign.campaign_name}</p>
-                            <p className="text-sm text-muted-foreground">{campaign.campaign_id}</p>
-                          </div>
-                          <Badge variant="secondary" className="text-base">
-                            {campaign.scan_count.toLocaleString()}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Recent Scans */}
+                <Card className="glass-card border-accent/20">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse rtl:justify-end">
+                      <Clock className="h-5 w-5 text-accent" />
+                      {isArabic ? 'المسحات الأخيرة' : 'Recent Scans'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {analytics.recentScans.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-8">
+                        {isArabic ? 'لا توجد بيانات بعد' : 'No scans yet'}
+                      </p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="text-start rtl:text-right">{isArabic ? 'الحملة' : 'Campaign'}</TableHead>
+                              <TableHead className="text-start rtl:text-right">{isArabic ? 'الوجهة' : 'Destination'}</TableHead>
+                              <TableHead className="text-start rtl:text-right">{isArabic ? 'الوقت' : 'Time'}</TableHead>
+                              <TableHead className="text-start rtl:text-right">{isArabic ? 'الجهاز' : 'Device'}</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {analytics.recentScans.slice(0, 10).map((scan) => {
+                              const destInfo = DESTINATIONS.find(d => d.id === scan.destination);
+                              return (
+                                <TableRow key={scan.id}>
+                                  <TableCell className="font-medium max-w-[120px] truncate">
+                                    {scan.campaign_name}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="text-xs">
+                                      {isArabic ? destInfo?.labelAr : destInfo?.labelEn || scan.destination}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-muted-foreground text-sm">
+                                    {formatDistanceToNow(new Date(scan.scanned_at), { addSuffix: true })}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-1">
+                                      <Smartphone className="h-3 w-3 text-muted-foreground" />
+                                      <span className="text-xs">{scan.device_type}</span>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Destination Breakdown */}
               <Card className="glass-card border-accent/20">
@@ -506,22 +668,28 @@ const MarketingQRGenerator = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {analytics.destinationStats.map((dest) => {
-                    const destInfo = DESTINATIONS.find(d => d.id === dest.destination);
-                    return (
-                      <div key={dest.destination} className="space-y-2">
-                        <div className="flex items-center justify-between rtl:flex-row-reverse">
-                          <span className="text-sm font-medium">
-                            {isArabic ? destInfo?.labelAr : destInfo?.labelEn || dest.destination}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {dest.percentage}% ({dest.count})
-                          </span>
+                  {analytics.destinationStats.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-4">
+                      {isArabic ? 'لا توجد بيانات' : 'No data'}
+                    </p>
+                  ) : (
+                    analytics.destinationStats.map((dest) => {
+                      const destInfo = DESTINATIONS.find(d => d.id === dest.destination);
+                      return (
+                        <div key={dest.destination} className="space-y-2">
+                          <div className="flex items-center justify-between rtl:flex-row-reverse">
+                            <span className="text-sm font-medium">
+                              {isArabic ? destInfo?.labelAr : destInfo?.labelEn || dest.destination}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {dest.percentage}% ({dest.count})
+                            </span>
+                          </div>
+                          <Progress value={dest.percentage} className="h-2" />
                         </div>
-                        <Progress value={dest.percentage} className="h-2" />
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </CardContent>
               </Card>
             </>
