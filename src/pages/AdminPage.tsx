@@ -279,11 +279,6 @@ const AdminPage = () => {
                 <TabsTrigger value="refunds" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
                   <CreditCard className="h-4 w-4" />
                   {isArabic ? 'الاسترداد' : 'Refunds'}
-                  {stats.duplicateBookingsCount > 0 && (
-                    <Badge variant="destructive" className="ms-1 min-w-[20px] h-5 text-[11px] font-semibold shadow-sm shadow-destructive/20">
-                      {stats.duplicateBookingsCount}
-                    </Badge>
-                  )}
                 </TabsTrigger>
               </TabsList>
             </div>
