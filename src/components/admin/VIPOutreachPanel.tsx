@@ -1187,14 +1187,51 @@ export const VIPOutreachPanel = () => {
                   <p className="text-xs mt-1" style={{ color: '#F5F1E8' }}>{isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}</p>
                 </div>
                 
-                {/* Compact Content Area */}
-                <div className="p-4 space-y-3" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                  <p className="text-base font-medium">{isArabic ? 'حضرة [الاسم] المحترم/ة،' : 'Dear [Name],'}</p>
-                  <div className="whitespace-pre-wrap text-gray-700 text-sm leading-snug">
+                {/* Content Area - Matching Email Order */}
+                <div className="p-5 space-y-3" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                  <p className="text-base font-medium" style={{ color: '#3D2E1F' }}>{isArabic ? 'حضرة [الاسم] المحترم/ة،' : 'Dear [Name],'}</p>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: '#5C4A3A' }}>
                     {isArabic ? messageAr : messageEn}
                   </div>
                   
-                  {/* Compact Video Preview */}
+                  {/* 1. Guest + Event Side-by-Side (First) */}
+                  <div className={`flex gap-2 ${isArabic ? 'flex-row-reverse' : ''}`}>
+                    <div className="flex-1 avoid-break py-2 px-3 rounded text-center border" style={{ backgroundColor: '#FAF7F2', borderColor: '#C9A962' }}>
+                      <p className="text-[10px] font-semibold mb-1" style={{ color: '#8B6F47' }}>
+                        {isArabic ? 'عدد الضيوف' : 'GUESTS'}
+                      </p>
+                      <p className="text-sm font-semibold" style={{ color: '#3D2E1F' }}>
+                        {isArabic ? `حتى ${guestAllowance} ضيوف` : `Up to ${guestAllowance}`}
+                      </p>
+                    </div>
+                    <div className="flex-1 avoid-break py-2 px-3 rounded text-center border" style={{ backgroundColor: '#FAF7F2', borderColor: '#C9A962' }}>
+                      <p className="text-[10px] font-semibold mb-1" style={{ color: '#8B6F47' }}>
+                        {isArabic ? 'الموعد' : 'DATE & TIME'}
+                      </p>
+                      <p className="text-sm font-semibold" style={{ color: '#3D2E1F' }}>
+                        {eventDate || (isArabic ? 'سيُحدد لاحقاً' : 'TBD')}{eventTime ? ` • ${eventTime}` : ''}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 2. Perks - 2-Column Grid (Second) */}
+                  {selectedPerks.size > 0 && (
+                    <div className="avoid-break p-3 rounded" style={{ backgroundColor: '#4A3625' }}>
+                      <p className={`text-[11px] mb-2 font-semibold ${!isArabic ? 'uppercase tracking-wider' : ''}`} style={{ color: '#E8D5A3' }}>
+                        {isArabic ? 'تجربتكم المميزة تتضمن' : 'VIP EXPERIENCE INCLUDES'}
+                      </p>
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                        {customPerks.filter(p => selectedPerks.has(p.id)).map(perk => (
+                          <div key={perk.id} className="flex items-center gap-1.5 text-white">
+                            <span className="text-[9px]" style={{ color: '#C9A962' }}>●</span>
+                            <span className="text-xs">{isArabic ? perk.ar : perk.en}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. Video Preview (Third - After Perks) */}
                   {includeVideo && (
                     <div 
                       className="avoid-break rounded overflow-hidden border"
@@ -1205,66 +1242,29 @@ export const VIPOutreachPanel = () => {
                         backgroundPosition: 'center'
                       }}
                     >
-                      <div className="py-4 px-3 text-center" style={{ background: 'rgba(74, 54, 37, 0.8)' }}>
-                        <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.25)', border: '2px solid rgba(255,255,255,0.4)' }}>
-                          <span className="text-white text-lg">▶</span>
+                      <div className="py-4 px-3 text-center" style={{ background: 'rgba(74, 54, 37, 0.75)' }}>
+                        <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.35)' }}>
+                          <span className="text-white text-base">▶</span>
                         </div>
-                        <p className="font-medium text-white text-sm">{isArabic ? 'اكتشف سحر المفيجر' : 'Discover the Magic'}</p>
+                        <p className="font-semibold text-white text-sm">{isArabic ? 'اكتشف سحر المفيجر' : 'Discover Almufaijer'}</p>
                       </div>
                     </div>
                   )}
 
-                  {/* 2-Column: Guest Allowance + Event Details */}
-                  <div className={`flex gap-2 ${isArabic ? 'flex-row-reverse' : ''}`}>
-                    {/* Guest Allowance - Compact */}
-                    <div className="flex-1 avoid-break py-2 px-3 rounded text-center border" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
-                      <p className="text-xs font-medium" style={{ color: '#3D2E1F' }}>
-                        {isArabic ? `حتى ${guestAllowance} ضيوف` : `Up to ${guestAllowance} guests`}
-                      </p>
-                    </div>
-                    
-                    {/* Event Details - Compact */}
-                    {(eventDate || eventTime) && (
-                      <div className="flex-1 avoid-break py-2 px-3 rounded border" style={{ backgroundColor: '#F5F1E8', borderColor: '#C9A962' }}>
-                        <p className="text-xs font-medium" style={{ color: '#5C4A32' }}>
-                          {eventDate}{eventDate && eventTime ? ' • ' : ''}{eventTime}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Perks - 2-Column Grid */}
-                  {selectedPerks.size > 0 && (
-                    <div className="avoid-break p-3 rounded" style={{ backgroundColor: '#4A3625' }}>
-                      <p className={`text-xs mb-2 font-semibold ${!isArabic ? 'uppercase tracking-wider' : ''}`} style={{ color: '#E8D5A3' }}>
-                        {isArabic ? 'تجربتكم المميزة تتضمن' : 'VIP EXPERIENCE INCLUDES'}
-                      </p>
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-                        {customPerks.filter(p => selectedPerks.has(p.id)).map(perk => (
-                          <div key={perk.id} className="flex items-center gap-1.5 text-white">
-                            <span style={{ color: '#C9A962' }}>•</span>
-                            <span className="text-xs">{isArabic ? perk.ar : perk.en}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Compact RSVP Button */}
+                  {/* 4. RSVP Button (Fourth) */}
                   {enableRSVP && (
-                    <div className="avoid-break text-center">
-                      <div className="inline-block px-8 py-2.5 rounded-lg text-white font-semibold text-sm border" style={{ background: 'linear-gradient(135deg, #5C4A32, #4A3625)', borderColor: '#C9A962' }}>
-                        {isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
+                    <div className="avoid-break text-center py-1">
+                      <div className="inline-block px-7 py-2.5 rounded-md text-white font-semibold text-sm border" style={{ background: 'linear-gradient(135deg, #5C4A32, #4A3625)', borderColor: '#C9A962' }}>
+                        {isArabic ? 'تأكيد الحضور' : 'Confirm Attendance'}
                       </div>
                     </div>
                   )}
 
-                  {/* Compact Signature */}
-                  <div className={`flex items-end pt-2 border-t ${isArabic ? 'flex-row-reverse justify-between' : 'justify-between'}`} style={{ borderColor: '#E8D5A3' }}>
-                    <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                      <p className="text-xs text-gray-500">{isArabic ? 'مع أطيب التحيات،' : 'Warm regards,'}</p>
-                      <p className="text-sm font-medium">{isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team'}</p>
-                    </div>
+                  {/* 5. Signature (Last) */}
+                  <div className="text-center pt-2">
+                    <div className="h-px w-12 mx-auto mb-2" style={{ background: 'linear-gradient(90deg, transparent, #C9A962, transparent)' }} />
+                    <p className="text-xs" style={{ color: '#5C4A3A' }}>{isArabic ? 'مع أطيب التحيات،' : 'With warm regards,'}</p>
+                    <p className="text-sm font-semibold mt-1" style={{ color: '#3D2E1F' }}>{isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team'}</p>
                   </div>
                 </div>
                 
