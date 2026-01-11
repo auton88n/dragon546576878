@@ -203,7 +203,7 @@ const generateVIPEmailHTML = (
                     <a href="${videoUrl}" target="_blank" style="text-decoration: none; display: block;">
                       <table role="presentation" style="width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #C9A962;">
                         <tr>
-                          <td style="background-image: url('https://almufaijer.com/images/hero-heritage-new.webp'); background-size: cover; background-position: center;">
+                          <td style="background-image: url('https://317f2d24-1b4e-49d4-90fb-37dde9a3046d.lovableproject.com/images/hero-heritage-new.webp'); background-size: cover; background-position: center;">
                             <div style="background: rgba(74, 54, 37, 0.75); padding: 20px; text-align: center;">
                               <table role="presentation" style="margin: 0 auto 8px;">
                                 <tr>
