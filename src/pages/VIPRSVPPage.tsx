@@ -226,7 +226,7 @@ const VIPRSVPPage = () => {
           <div className="h-1 w-32 mx-auto bg-gradient-to-r from-[#C9A962] via-[#E8D5A3] to-[#C9A962] rounded mb-6" />
           <h1 className="text-3xl font-bold mb-2">{isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}</h1>
           <p className="text-[#F5F1E8] text-lg">{isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}</p>
-          {name && <p className="mt-4 text-xl">{isArabic ? `أهلاً ${name}` : `Welcome, ${name}`}</p>}
+          {name && <p className="mt-4 text-xl text-[#F5F1E8] font-medium">{isArabic ? `أهلاً ${name}` : `Welcome, ${name}`}</p>}
         </div>
 
         {/* Already Responded */}
@@ -267,7 +267,7 @@ const VIPRSVPPage = () => {
                 <div className="relative aspect-video bg-[#4A3625]">
                   <video 
                     controls 
-                    poster="/images/hero-heritage.webp"
+                    poster="/images/hero-heritage-new.webp"
                     className="w-full h-full object-cover"
                   >
                     <source src="https://hekgkfdunwpxqbrotfpn.supabase.co/storage/v1/object/public/videos/souq-almufaijer-video.mp4" type="video/mp4" />
