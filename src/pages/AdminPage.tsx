@@ -20,6 +20,9 @@ import BulkActionsBar from '@/components/admin/BulkActionsBar';
 import StatusLegend from '@/components/admin/StatusLegend';
 import EmailPreviewDialog from '@/components/admin/EmailPreviewDialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { lazyWithPreload } from '@/lib/lazyWithPreload';
 
 // Lazy load non-critical components with retry capability
@@ -30,7 +33,6 @@ const { Component: CustomInvoicesPanel } = lazyWithPreload(() => import('@/compo
 const { Component: ContactSubmissionsPanel } = lazyWithPreload(() => import('@/components/admin/ContactSubmissionsPanel'));
 const { Component: AYNSupportPanel } = lazyWithPreload(() => import('@/components/admin/AYNSupportPanel'));
 const { Component: RefundsPanel } = lazyWithPreload(() => import('@/components/admin/RefundsPanel'));
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Tables } from '@/integrations/supabase/types';
