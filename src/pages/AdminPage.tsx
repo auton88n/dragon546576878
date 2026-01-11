@@ -1,6 +1,7 @@
 import { useState, Suspense } from 'react';
 import { Ticket, Users, DollarSign, QrCode, BarChart3, Settings, Building2, Mail, Headset, Bell, Send, Eye, RefreshCw, Undo2, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import type { Tables } from '@/integrations/supabase/types';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import { useBookings } from '@/hooks/useBookings';
@@ -25,6 +26,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { lazyWithPreload } from '@/lib/lazyWithPreload';
 
+type Booking = Tables<'bookings'>;
+
 // Lazy load non-critical components with retry capability
 const { Component: SettingsPanel } = lazyWithPreload(() => import('@/components/admin/SettingsPanel'));
 const { Component: ReportsPanel } = lazyWithPreload(() => import('@/components/admin/ReportsPanel'));
@@ -33,8 +36,6 @@ const { Component: CustomInvoicesPanel } = lazyWithPreload(() => import('@/compo
 const { Component: ContactSubmissionsPanel } = lazyWithPreload(() => import('@/components/admin/ContactSubmissionsPanel'));
 const { Component: AYNSupportPanel } = lazyWithPreload(() => import('@/components/admin/AYNSupportPanel'));
 const { Component: RefundsPanel } = lazyWithPreload(() => import('@/components/admin/RefundsPanel'));
-import type { Tables } from '@/integrations/supabase/types';
-type Booking = Tables<'bookings'>;
 const AdminPage = () => {
   const {
     currentLanguage,
