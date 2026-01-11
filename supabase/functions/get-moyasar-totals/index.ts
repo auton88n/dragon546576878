@@ -133,7 +133,6 @@ serve(async (req) => {
 
     // Fetch database totals (excluding test emails)
     const testEmailPatterns = ['%test%', '%example%'];
-    const specificTestEmails = ['crossmint7@gmail.com'];
 
     const { data: dbBookings, error: dbError } = await supabase
       .from('bookings')
@@ -142,7 +141,6 @@ serve(async (req) => {
       .eq('payment_status', 'completed')
       .not('customer_email', 'ilike', testEmailPatterns[0])
       .not('customer_email', 'ilike', testEmailPatterns[1])
-      .not('customer_email', 'in', `(${specificTestEmails.join(',')})`)
       .limit(10000);
 
     if (dbError) {
