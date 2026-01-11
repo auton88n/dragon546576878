@@ -76,7 +76,7 @@ const MarketingQRGenerator = () => {
       ? config.campaignName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
       : `campaign-${Date.now()}`;
     
-    const trackingUrl = `https://hekgkfdunwpxqbrotfpn.supabase.co/functions/v1/track-marketing-qr/${campaignId}?to=${config.destination}&name=${encodeURIComponent(config.campaignName || campaignId)}`;
+    const trackingUrl = `https://qr.almufaijer.com/${campaignId}?to=${config.destination}&name=${encodeURIComponent(config.campaignName || campaignId)}`;
     
     try {
       const dataUrl = await QRCode.toDataURL(trackingUrl, {
@@ -330,17 +330,20 @@ const MarketingQRGenerator = () => {
                       </div>
 
                       {/* CTA Text */}
-                      <div className="text-center mb-6 space-y-1">
-                        {(config.language === 'ar' || config.language === 'both') && (
-                          <p className="text-xl font-bold" style={{ fontFamily: 'Cairo, sans-serif' }} dir="rtl">
-                            {cta.ar}
-                          </p>
-                        )}
-                        {(config.language === 'en' || config.language === 'both') && (
-                          <p className="text-lg font-semibold tracking-wide">
-                            {cta.en}
-                          </p>
-                        )}
+                      <div className="text-center mb-6">
+                        <p className="text-sm sm:text-base font-bold whitespace-nowrap">
+                          {config.language === 'both' ? (
+                            <>
+                              <span style={{ fontFamily: 'Cairo, sans-serif' }}>{cta.ar}</span>
+                              <span className="mx-2 opacity-50">|</span>
+                              <span className="tracking-wide">{cta.en}</span>
+                            </>
+                          ) : config.language === 'ar' ? (
+                            <span style={{ fontFamily: 'Cairo, sans-serif' }} dir="rtl">{cta.ar}</span>
+                          ) : (
+                            <span className="tracking-wide">{cta.en}</span>
+                          )}
+                        </p>
                       </div>
 
                       {/* QR Code */}
