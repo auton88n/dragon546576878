@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Mail, MailOpen, Trash2, MessageSquare, Eye, Send, CheckCircle2, Loader2 } from 'lucide-react';
+import { Mail, MailOpen, Trash2, MessageSquare, Eye, Send, CheckCircle2, Loader2, Sparkles, Gift, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -59,6 +61,16 @@ const ContactSubmissionsPanel = () => {
   const [replyMessage, setReplyMessage] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isSendingReply, setIsSendingReply] = useState(false);
+  const [isGeneratingReply, setIsGeneratingReply] = useState(false);
+  const [showCompensationDialog, setShowCompensationDialog] = useState(false);
+  const [isSendingCompensation, setIsSendingCompensation] = useState(false);
+  const [compensationData, setCompensationData] = useState({
+    adultCount: 1,
+    childCount: 0,
+    visitDate: '',
+    visitTime: '10:00',
+    reason: '',
+  });
 
   const { data: submissions, isLoading } = useQuery({
     queryKey: ['contact-submissions'],

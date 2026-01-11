@@ -272,7 +272,21 @@
       "sendingReply": "جاري الإرسال...",
       "replySuccess": "تم إرسال الرد بنجاح",
       "replyFailed": "فشل إرسال الرد",
-      "sentOn": "أُرسل في"
+      "sentOn": "أُرسل في",
+      "aiSuggestReply": "اقتراح رد بالذكاء الاصطناعي",
+      "generatingReply": "جاري إنشاء الرد...",
+      "replySuggested": "تم إنشاء الرد المقترح",
+      "aiGenerateFailed": "فشل إنشاء الرد",
+      "sendFreeTickets": "إرسال تذاكر مجانية",
+      "compensationTitle": "إرسال تذاكر تعويضية",
+      "visitDate": "تاريخ الزيارة",
+      "visitTime": "وقت الزيارة",
+      "adults": "البالغين",
+      "children": "الأطفال",
+      "reason": "السبب",
+      "sendingTickets": "جاري إرسال التذاكر...",
+      "ticketsSent": "تم إرسال التذاكر المجانية بنجاح!",
+      "ticketsFailed": "فشل إرسال التذاكر"
     },
     "corporate": {
       "title": "طلبات الشركات",

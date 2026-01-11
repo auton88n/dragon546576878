@@ -272,7 +272,21 @@
       "sendingReply": "Sending...",
       "replySuccess": "Reply sent successfully",
       "replyFailed": "Failed to send reply",
-      "sentOn": "Sent on"
+      "sentOn": "Sent on",
+      "aiSuggestReply": "AI Suggest Reply",
+      "generatingReply": "Generating...",
+      "replySuggested": "Reply suggestion generated",
+      "aiGenerateFailed": "Failed to generate reply",
+      "sendFreeTickets": "Send Free Tickets",
+      "compensationTitle": "Send Compensation Tickets",
+      "visitDate": "Visit Date",
+      "visitTime": "Visit Time",
+      "adults": "Adults",
+      "children": "Children",
+      "reason": "Reason",
+      "sendingTickets": "Sending tickets...",
+      "ticketsSent": "Free tickets sent successfully!",
+      "ticketsFailed": "Failed to send tickets"
     },
     "corporate": {
       "title": "Corporate Requests",
