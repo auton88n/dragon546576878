@@ -78,8 +78,11 @@ const BookingNotifications = () => {
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        align={isRTL ? 'start' : 'end'} 
-        className="w-80 p-0 bg-card border-border"
+        align="end"
+        side="bottom"
+        sideOffset={8}
+        collisionPadding={16}
+        className="w-80 p-0 bg-card border-border shadow-lg"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
         {/* Header */}
