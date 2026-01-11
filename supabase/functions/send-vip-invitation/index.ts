@@ -59,7 +59,7 @@ const getRSVPUrl = (rsvpToken: string): string => {
   return `https://almufaijer.com/vip/rsvp/${rsvpToken}`;
 };
 
-// Professional VIP email template with video, perks, and RSVP
+// Professional VIP email template matching original design
 const generateVIPEmailHTML = (
   language: 'ar' | 'en',
   name: string,
@@ -83,21 +83,17 @@ const generateVIPEmailHTML = (
   const greeting = isArabic ? `حضرة ${name} المحترم/ة،` : `Dear ${name},`;
   const regardsText = isArabic ? 'مع أطيب التحيات،' : 'With warm regards,';
   const teamText = isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team';
-  const locationText = isArabic ? 'قرية المفيجر التراثية | الرياض، المملكة العربية السعودية' : 'Almufaijer Heritage Village | Riyadh, Saudi Arabia';
-  const contactText = isArabic ? 'للتنسيق والاستفسارات:' : 'For coordination and inquiries:';
-  const dateLabel = isArabic ? 'التاريخ:' : 'Date:';
-  const timeLabel = isArabic ? 'الوقت:' : 'Time:';
   
   const videoUrl = "https://hekgkfdunwpxqbrotfpn.supabase.co/storage/v1/object/public/videos/souq-almufaijer-video.mp4";
   const rsvpUrl = rsvpToken ? getRSVPUrl(rsvpToken) : '#';
 
-  // Generate perks HTML - 2-column grid layout matching original design
+  // Generate perks HTML - 2-column grid layout
   const perkLabelsArray = perks.map(perk => getPerkLabel(perk as PerkInput, isArabic)).filter(Boolean);
   const perksHtml = perkLabelsArray.length > 0 ? `
-    <table role="presentation" style="width: 100%; margin-bottom: 20px;">
+    <table role="presentation" style="width: 100%; margin-bottom: 16px;">
       <tr>
-        <td style="background-color: #4A3625; padding: 16px 20px; border-radius: 8px;">
-          <p style="color: #E8D5A3; font-size: 12px; margin: 0 0 12px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase; letter-spacing: 0.5px;' : ''}">
+        <td style="background-color: #4A3625; padding: 14px 18px; border-radius: 8px;">
+          <p style="color: #E8D5A3; font-size: 11px; margin: 0 0 10px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase; letter-spacing: 0.5px;' : ''}">
             ${isArabic ? 'تجربتكم المميزة تتضمن' : 'VIP EXPERIENCE INCLUDES'}
           </p>
           <table role="presentation" style="width: 100%;">
@@ -108,14 +104,14 @@ const generateVIPEmailHTML = (
                 const perk2 = perkLabelsArray[i + 1];
                 rows.push(`
                   <tr>
-                    <td style="width: 50%; vertical-align: top; padding: 4px 8px 4px 0;">
-                      <span style="color: #C9A962; font-size: 10px;">●</span>
-                      <span style="color: #FFFFFF; font-size: 13px; margin-${isArabic ? 'right' : 'left'}: 6px;">${perk1}</span>
+                    <td style="width: 50%; vertical-align: top; padding: 3px 6px 3px 0;">
+                      <span style="color: #C9A962; font-size: 9px;">●</span>
+                      <span style="color: #FFFFFF; font-size: 12px; margin-${isArabic ? 'right' : 'left'}: 5px;">${perk1}</span>
                     </td>
                     ${perk2 ? `
-                    <td style="width: 50%; vertical-align: top; padding: 4px 0 4px 8px;">
-                      <span style="color: #C9A962; font-size: 10px;">●</span>
-                      <span style="color: #FFFFFF; font-size: 13px; margin-${isArabic ? 'right' : 'left'}: 6px;">${perk2}</span>
+                    <td style="width: 50%; vertical-align: top; padding: 3px 0 3px 6px;">
+                      <span style="color: #C9A962; font-size: 9px;">●</span>
+                      <span style="color: #FFFFFF; font-size: 12px; margin-${isArabic ? 'right' : 'left'}: 5px;">${perk2}</span>
                     </td>
                     ` : '<td></td>'}
                   </tr>
@@ -142,57 +138,82 @@ const generateVIPEmailHTML = (
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F5F1E8; direction: ${dir}; -webkit-text-fill-color: inherit;">
   <table role="presentation" style="width: 100%; border-collapse: collapse;">
     <tr>
-      <td style="padding: 40px 20px;">
-        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 30px rgba(139, 111, 71, 0.15);">
+      <td style="padding: 32px 16px;">
+        <table role="presentation" style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(139, 111, 71, 0.12);">
           
-          <!-- Header - Compact with warmer gradient -->
+          <!-- Header - Compact -->
           <tr>
-            <td style="background: linear-gradient(135deg, #8B6F47 0%, #5C4A32 100%); padding: 24px 20px; text-align: center;">
-              <!-- Gradient gold line -->
-              <div style="width: 80px; height: 2px; background: linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962); margin: 0 auto 16px auto;"></div>
-              <!-- Compact title -->
-              <h1 style="color: #FFFFFF; font-size: 22px; margin: 0 0 8px 0; font-weight: 700; font-family: 'Cairo', Arial, sans-serif;">
+            <td style="background: linear-gradient(135deg, #8B6F47 0%, #5C4A32 100%); padding: 20px 16px; text-align: center;">
+              <div style="width: 60px; height: 2px; background: linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962); margin: 0 auto 12px auto;"></div>
+              <h1 style="color: #FFFFFF; font-size: 20px; margin: 0 0 6px 0; font-weight: 700; font-family: 'Cairo', Arial, sans-serif;">
                 سوق المفيجر
               </h1>
-              <!-- Subtitle with high contrast -->
-              <p style="color: #F5F1E8; font-size: 13px; margin: 0;">
-                ${isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive Invitation for Distinguished Guests'}
+              <p style="color: #F5F1E8; font-size: 12px; margin: 0;">
+                ${isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}
               </p>
             </td>
           </tr>
           
           <!-- Main Content -->
           <tr>
-            <td style="padding: 40px 35px;">
+            <td style="padding: 28px 24px;">
               <!-- Greeting -->
-              <p style="color: #3D2E1F; font-size: 18px; margin: 0 0 24px 0; line-height: 1.6; font-weight: 500;">
+              <p style="color: #3D2E1F; font-size: 16px; margin: 0 0 18px 0; line-height: 1.5; font-weight: 500;">
                 ${greeting}
               </p>
               
               <!-- Message Body -->
-              <div style="color: #5C4A3A; font-size: 15px; margin: 0 0 32px 0; line-height: 1.8;">
-                ${messageBody.split('\n').map(p => `<p style="margin: 0 0 16px 0;">${p}</p>`).join('')}
+              <div style="color: #5C4A3A; font-size: 14px; margin: 0 0 24px 0; line-height: 1.7;">
+                ${messageBody.split('\n').map(p => `<p style="margin: 0 0 12px 0;">${p}</p>`).join('')}
               </div>
               
+              <!-- Guest + Event Details - Side by Side -->
+              <table role="presentation" style="width: 100%; margin-bottom: 16px;">
+                <tr>
+                  <td style="width: 48%; vertical-align: top; padding-${isArabic ? 'left' : 'right'}: 8px;">
+                    <div style="background-color: #FAF7F2; padding: 10px 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962;">
+                      <p style="color: #8B6F47; font-size: 10px; margin: 0 0 4px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
+                        ${isArabic ? 'عدد الضيوف' : 'GUESTS'}
+                      </p>
+                      <p style="color: #3D2E1F; font-size: 14px; margin: 0; font-weight: 600;">
+                        ${isArabic ? `حتى ${guestAllowance} ضيوف` : `Up to ${guestAllowance}`}
+                      </p>
+                    </div>
+                  </td>
+                  <td style="width: 48%; vertical-align: top; padding-${isArabic ? 'right' : 'left'}: 8px;">
+                    <div style="background-color: #FAF7F2; padding: 10px 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962;">
+                      <p style="color: #8B6F47; font-size: 10px; margin: 0 0 4px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
+                        ${isArabic ? 'الموعد' : 'DATE & TIME'}
+                      </p>
+                      <p style="color: #3D2E1F; font-size: 14px; margin: 0; font-weight: 600;">
+                        ${eventDate ? eventDate : (isArabic ? 'سيُحدد لاحقاً' : 'TBD')}${eventTime ? ` • ${eventTime}` : ''}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              
+              ${perksHtml}
+              
               ${includeVideo ? `
-              <!-- Video Section - Compact with gold border -->
-              <table role="presentation" style="width: 100%; margin-bottom: 20px;">
+              <!-- Video Section - After Perks -->
+              <table role="presentation" style="width: 100%; margin-bottom: 16px;">
                 <tr>
                   <td>
                     <a href="${videoUrl}" target="_blank" style="text-decoration: none; display: block;">
                       <table role="presentation" style="width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #C9A962;">
                         <tr>
                           <td style="background-image: url('https://almufaijer.com/images/hero-heritage-new.webp'); background-size: cover; background-position: center;">
-                            <div style="background: rgba(74, 54, 37, 0.8); padding: 24px; text-align: center;">
-                              <table role="presentation" style="margin: 0 auto 12px;">
+                            <div style="background: rgba(74, 54, 37, 0.75); padding: 20px; text-align: center;">
+                              <table role="presentation" style="margin: 0 auto 8px;">
                                 <tr>
-                                  <td style="width: 50px; height: 50px; background: rgba(255,255,255,0.25); border-radius: 25px; text-align: center; vertical-align: middle; border: 2px solid rgba(255,255,255,0.4);">
-                                    <span style="font-size: 22px; color: #FFFFFF;">&#9654;</span>
+                                  <td style="width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 22px; text-align: center; vertical-align: middle; border: 2px solid rgba(255,255,255,0.35);">
+                                    <span style="font-size: 18px; color: #FFFFFF;">&#9654;</span>
                                   </td>
                                 </tr>
                               </table>
-                              <p style="color: #FFFFFF; font-size: 14px; font-weight: 600; margin: 0;">
-                                ${isArabic ? 'اكتشف سحر المفيجر' : 'Discover the Magic of Almufaijer'}
+                              <p style="color: #FFFFFF; font-size: 13px; font-weight: 600; margin: 0;">
+                                ${isArabic ? 'اكتشف سحر المفيجر' : 'Discover Almufaijer'}
                               </p>
                             </div>
                           </td>
@@ -204,53 +225,12 @@ const generateVIPEmailHTML = (
               </table>
               ` : ''}
               
-              <!-- Guest Allowance Box - Compact with gold border -->
-              <table role="presentation" style="width: 100%; margin-bottom: 20px;">
-                <tr>
-                  <td style="background-color: #F5F1E8; padding: 12px 16px; border-radius: 8px; text-align: center; border: 1px solid #C9A962;">
-                    <p style="color: #3D2E1F; font-size: 14px; margin: 0; font-weight: 500;">
-                      ${isArabic ? `حتى ${guestAllowance} ضيوف` : `Up to ${guestAllowance} guests`}
-                    </p>
-                  </td>
-                </tr>
-              </table>
-              
-              ${perksHtml}
-              
-              ${(eventDate || eventTime || offerDetails) ? `
-              <!-- Event Details Box - Compact with gold border -->
-              <table role="presentation" style="width: 100%; margin-bottom: 20px;">
-                <tr>
-                  <td style="background-color: #F5F1E8; padding: 12px 16px; border-radius: 8px; border: 1px solid #C9A962;">
-                    <p style="color: #3D2E1F; font-size: 13px; margin: 0 0 8px 0; font-weight: 600;">
-                      ${isArabic ? 'تفاصيل الفعالية' : 'Event Details'}
-                    </p>
-                    ${eventDate ? `
-                    <p style="color: #5C4A3A; font-size: 13px; margin: 0 0 4px 0;">
-                      ${dateLabel} <span style="color: #3D2E1F; font-weight: 500;">${eventDate}</span>
-                    </p>
-                    ` : ''}
-                    ${eventTime ? `
-                    <p style="color: #5C4A3A; font-size: 13px; margin: 0;">
-                      ${timeLabel} <span style="color: #3D2E1F; font-weight: 500;">${eventTime}</span>
-                    </p>
-                    ` : ''}
-                    ${offerDetails ? `
-                    <p style="color: #5C4A3A; font-size: 12px; margin: ${eventDate || eventTime ? '8px' : '0'} 0 0 0; line-height: 1.5;">
-                      ${offerDetails}
-                    </p>
-                    ` : ''}
-                  </td>
-                </tr>
-              </table>
-              ` : ''}
-              
               ${enableRSVP && rsvpToken ? `
-              <!-- RSVP Button - Gradient with gold border -->
-              <table role="presentation" style="width: 100%; margin-bottom: 20px;">
+              <!-- RSVP Button -->
+              <table role="presentation" style="width: 100%; margin-bottom: 16px;">
                 <tr>
-                  <td style="text-align: center; padding: 8px 0;">
-                    <a href="${rsvpUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #5C4A32, #4A3625); color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; border: 1px solid #C9A962;">
+                  <td style="text-align: center; padding: 4px 0;">
+                    <a href="${rsvpUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #5C4A32, #4A3625); color: #ffffff; text-decoration: none; padding: 11px 28px; border-radius: 6px; font-size: 14px; font-weight: 600; border: 1px solid #C9A962;">
                       ${isArabic ? 'تأكيد الحضور' : 'Confirm Attendance'}
                     </a>
                   </td>
@@ -258,21 +238,30 @@ const generateVIPEmailHTML = (
               </table>
               ` : ''}
               
-              <!-- Signature with gold divider -->
-              <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #C9A962, transparent); margin: 0 auto 12px auto;"></div>
-              <p style="color: #5C4A3A; font-size: 13px; margin: 0; text-align: center;">
+              ${offerDetails ? `
+              <!-- Additional Details -->
+              <div style="background-color: #FAF7F2; padding: 12px 14px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #E8D5A3;">
+                <p style="color: #5C4A3A; font-size: 12px; margin: 0; line-height: 1.5;">
+                  ${offerDetails}
+                </p>
+              </div>
+              ` : ''}
+              
+              <!-- Signature -->
+              <div style="width: 50px; height: 1px; background: linear-gradient(90deg, transparent, #C9A962, transparent); margin: 8px auto 10px auto;"></div>
+              <p style="color: #5C4A3A; font-size: 12px; margin: 0; text-align: center;">
                 ${regardsText}
               </p>
-              <p style="color: #3D2E1F; font-size: 14px; font-weight: 600; margin: 6px 0 0 0; text-align: center;">
+              <p style="color: #3D2E1F; font-size: 13px; font-weight: 600; margin: 4px 0 0 0; text-align: center;">
                 ${teamText}
               </p>
             </td>
           </tr>
           
-          <!-- Footer - Single line compact -->
+          <!-- Footer - Compact -->
           <tr>
-            <td style="background-color: #4A3625; padding: 16px; text-align: center;">
-              <p style="color: #C9A962; font-size: 13px; font-weight: 500; margin: 0;">
+            <td style="background-color: #4A3625; padding: 14px; text-align: center;">
+              <p style="color: #C9A962; font-size: 12px; font-weight: 500; margin: 0;">
                 ${isArabic ? 'سوق المفيجر | قرية المفيجر التراثية' : 'Souq Almufaijer | Heritage Village'}
               </p>
             </td>
