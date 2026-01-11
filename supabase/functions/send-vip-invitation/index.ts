@@ -93,11 +93,11 @@ const generateVIPEmailHTML = (
 
   // Generate perks HTML - supports both string IDs and full perk objects
   const perksHtml = perks.length > 0 ? `
-    <table role="presentation" style="width: 100%; margin-bottom: 24px;" bgcolor="#4A3625">
+    <table role="presentation" style="width: 100%; margin-bottom: 24px;">
       <tr>
-        <td bgcolor="#4A3625" style="background-color: #4A3625; padding: 24px; border-radius: 12px;">
-          <p style="color: #E8D5A3; font-size: 14px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
-            ${isArabic ? 'تجربتكم المميزة تتضمن' : 'YOUR VIP EXPERIENCE INCLUDES'}
+        <td style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%); padding: 25px; border-radius: 12px;">
+          <p style="color: #C9A86C; font-size: 12px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
+            ${isArabic ? 'تجربتكم المميزة' : 'YOUR VIP EXPERIENCE'}
           </p>
           ${perks.map(perk => {
             const label = getPerkLabel(perk as PerkInput, isArabic);
@@ -106,10 +106,10 @@ const generateVIPEmailHTML = (
               <table role="presentation" style="width: 100%; margin-bottom: 10px;">
                 <tr>
                   <td style="width: 24px; vertical-align: top;">
-                    <span style="color: #C9A962; font-size: 18px;">•</span>
+                    <span style="color: #C9A86C; font-size: 18px;">•</span>
                   </td>
                   <td>
-                    <span style="color: #FFFFFF; font-size: 15px;">${label}</span>
+                    <span style="color: #FFFFFF; font-size: 15px; line-height: 1.6;">${label}</span>
                   </td>
                 </tr>
               </table>
@@ -134,21 +134,29 @@ const generateVIPEmailHTML = (
   <table role="presentation" style="width: 100%; border-collapse: collapse;">
     <tr>
       <td style="padding: 40px 20px;">
-        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 30px rgba(139, 111, 71, 0.2);">
+        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 30px rgba(139, 111, 71, 0.15);">
           
-          <!-- Luxury Header with Gold Accent -->
+          <!-- Heritage Header - Matching Standard Design -->
           <tr>
-            <td style="background: linear-gradient(135deg, #8B6F47 0%, #5C4A32 100%); padding: 0;">
-              <!-- Gold Top Accent -->
-              <div style="height: 4px; background: linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962);"></div>
-              <div style="padding: 40px 30px; text-align: center;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 1px;">
-                  ${isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
-                </h1>
-                <p style="color: #F5F1E8; margin: 12px 0 0 0; font-size: 16px; font-weight: 500; letter-spacing: 2px;">
-                  ${isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}
-                </p>
-              </div>
+            <td style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%); padding: 40px 30px; text-align: center;">
+              <!-- Gold brand name -->
+              <p style="color: #C9A86C; font-size: 12px; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 3px; font-weight: 600;">
+                ${isArabic ? 'سوق المفيجر' : 'SOUQ ALMUFAIJER'}
+              </p>
+              <!-- Main title -->
+              <h1 style="color: #FFFFFF; margin: 0 0 12px 0; font-size: 28px; font-weight: 700;">
+                ${isArabic ? 'دعوة حصرية' : 'Exclusive Invitation'}
+              </h1>
+              <!-- English subtitle -->
+              <p style="color: #E8DED0; font-size: 11px; margin: 0 0 16px 0; letter-spacing: 3px; text-transform: uppercase;">
+                ${isArabic ? 'EXCLUSIVE VIP INVITATION' : 'دعوة خاصة للشخصيات المميزة'}
+              </p>
+              <!-- Gold divider line -->
+              <div style="width: 60px; height: 2px; background-color: #C9A86C; margin: 0 auto 16px auto;"></div>
+              <!-- VIP label -->
+              <p style="color: #FFFFFF; font-size: 14px; margin: 0; font-weight: 600; letter-spacing: 1px;">
+                ${isArabic ? 'للشخصيات المميزة' : 'VIP'}
+              </p>
             </td>
           </tr>
           
@@ -156,12 +164,12 @@ const generateVIPEmailHTML = (
           <tr>
             <td style="padding: 40px 35px;">
               <!-- Greeting -->
-              <p style="color: #4A3625; font-size: 20px; margin: 0 0 28px 0; line-height: 1.6; font-weight: 500;">
+              <p style="color: #3D2E1F; font-size: 18px; margin: 0 0 24px 0; line-height: 1.6; font-weight: 500;">
                 ${greeting}
               </p>
               
               <!-- Message Body -->
-              <div style="color: #5C4A32; font-size: 16px; margin: 0 0 32px 0; line-height: 1.8;">
+              <div style="color: #5C4A3A; font-size: 15px; margin: 0 0 32px 0; line-height: 1.8;">
                 ${messageBody.split('\n').map(p => `<p style="margin: 0 0 16px 0;">${p}</p>`).join('')}
               </div>
               
@@ -171,7 +179,7 @@ const generateVIPEmailHTML = (
                 <tr>
                   <td>
                     <a href="${videoUrl}" target="_blank" style="text-decoration: none; display: block;">
-                      <table role="presentation" style="width: 100%; border-radius: 12px; overflow: hidden; border: 2px solid #C9A962; box-shadow: 0 4px 12px rgba(92, 74, 50, 0.3);">
+                      <table role="presentation" style="width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid #E8DED0; box-shadow: 0 4px 12px rgba(92, 74, 50, 0.15);">
                         <tr>
                           <td style="background-image: url('https://almufaijer.com/images/hero-heritage-new.webp'); background-size: cover; background-position: center;">
                             <div style="background: rgba(74, 54, 37, 0.75); padding: 48px; text-align: center;">
@@ -182,10 +190,10 @@ const generateVIPEmailHTML = (
                                   </td>
                                 </tr>
                               </table>
-                              <p style="color: #FFFFFF; font-size: 20px; font-weight: 600; margin: 0 0 8px 0;">
+                              <p style="color: #FFFFFF; font-size: 18px; font-weight: 600; margin: 0 0 8px 0;">
                                 ${isArabic ? 'اكتشف سحر المفيجر' : 'Discover the Magic of Almufaijer'}
                               </p>
-                              <p style="color: #E8D5A3; font-size: 14px; margin: 0;">
+                              <p style="color: #E8DED0; font-size: 13px; margin: 0;">
                                 ${isArabic ? 'اضغط لمشاهدة الفيديو' : 'Click to watch video'}
                               </p>
                             </div>
@@ -198,12 +206,15 @@ const generateVIPEmailHTML = (
               </table>
               ` : ''}
               
-              <!-- Guest Allowance Box -->
-              <table role="presentation" style="width: 100%; margin-bottom: 24px;" bgcolor="#F5F1E8">
+              <!-- Guest Allowance Box - Matching Standard Card Style -->
+              <table role="presentation" style="width: 100%; margin-bottom: 24px;">
                 <tr>
-                  <td bgcolor="#F5F1E8" style="background-color: #F5F1E8; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #C9A962;">
-                    <p style="color: #3D2E1F; font-size: 18px; margin: 0; font-weight: 600;">
-                      ${isArabic ? `يمكنكم اصطحاب حتى ${guestAllowance} ضيوف مميزين` : `You may bring up to ${guestAllowance} honored guests`}
+                  <td style="background-color: #FAF6F1; padding: 25px; border-radius: 12px; text-align: center; border: 1px solid #E8DED0;">
+                    <p style="color: #5C4A3A; font-size: 12px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                      ${isArabic ? 'عدد الضيوف المسموح' : 'GUEST ALLOWANCE'}
+                    </p>
+                    <p style="color: #3D2E1F; font-size: 22px; margin: 0; font-weight: 700;">
+                      ${isArabic ? `حتى ${guestAllowance} ضيوف` : `Up to ${guestAllowance} Guests`}
                     </p>
                   </td>
                 </tr>
@@ -212,28 +223,28 @@ const generateVIPEmailHTML = (
               ${perksHtml}
               
               ${(eventDate || eventTime || offerDetails) ? `
-              <!-- Event Details Box -->
+              <!-- Event Details Box - Matching Standard Card Style -->
               <table role="presentation" style="width: 100%; margin-bottom: 32px;">
                 <tr>
-                  <td style="background-color: #F5F1E8; padding: 24px; border-radius: 12px; border: 2px solid #C9A962;">
-                    <p style="color: #5C4A32; font-size: 14px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">
+                  <td style="background-color: #FAF6F1; padding: 25px; border-radius: 12px; border: 1px solid #E8DED0;">
+                    <p style="color: #5C4A3A; font-size: 12px; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
                       ${isArabic ? 'تفاصيل الفعالية' : 'EVENT DETAILS'}
                     </p>
                     
                     ${eventDate ? `
-                    <p style="color: #3D2E1F; font-size: 18px; margin: 0 0 10px 0; font-weight: 600;">
-                      <strong>${dateLabel}</strong> ${eventDate}
+                    <p style="color: #3D2E1F; font-size: 16px; margin: 0 0 10px 0; font-weight: 600;">
+                      <span style="color: #5C4A3A;">${dateLabel}</span> ${eventDate}
                     </p>
                     ` : ''}
                     
                     ${eventTime ? `
-                    <p style="color: #3D2E1F; font-size: 18px; margin: 0; font-weight: 600;">
-                      <strong>${timeLabel}</strong> ${eventTime}
+                    <p style="color: #3D2E1F; font-size: 16px; margin: 0; font-weight: 600;">
+                      <span style="color: #5C4A3A;">${timeLabel}</span> ${eventTime}
                     </p>
                     ` : ''}
                     
                     ${offerDetails ? `
-                    <p style="color: #5C4A32; font-size: 15px; margin: ${eventDate || eventTime ? '16px' : '0'} 0 0 0; line-height: 1.7; border-top: ${eventDate || eventTime ? '1px solid #C9A962' : 'none'}; padding-top: ${eventDate || eventTime ? '16px' : '0'};">
+                    <p style="color: #5C4A3A; font-size: 14px; margin: ${eventDate || eventTime ? '16px' : '0'} 0 0 0; line-height: 1.7; border-top: ${eventDate || eventTime ? '1px solid #E8DED0' : 'none'}; padding-top: ${eventDate || eventTime ? '16px' : '0'};">
                       ${offerDetails}
                     </p>
                     ` : ''}
@@ -243,14 +254,14 @@ const generateVIPEmailHTML = (
               ` : ''}
               
               ${enableRSVP && rsvpToken ? `
-              <!-- RSVP Button -->
+              <!-- RSVP Button - Heritage Style -->
               <table role="presentation" style="width: 100%; margin-bottom: 32px;">
                 <tr>
                   <td style="text-align: center;">
-                    <a href="${rsvpUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #5C4A32, #4A3625); color: #ffffff; text-decoration: none; padding: 20px 56px; border-radius: 12px; font-size: 20px; font-weight: 700; letter-spacing: 1px; box-shadow: 0 6px 20px rgba(92, 74, 50, 0.4); border: 2px solid #C9A962;">
+                    <a href="${rsvpUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #5C4A3A, #4A3625); color: #ffffff; text-decoration: none; padding: 18px 48px; border-radius: 8px; font-size: 18px; font-weight: 700; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(92, 74, 50, 0.3);">
                       ${isArabic ? 'تأكيد الحضور' : 'Accept Invitation'}
                     </a>
-                    <p style="color: #5C4A32; font-size: 14px; margin: 16px 0 0 0;">
+                    <p style="color: #5C4A3A; font-size: 13px; margin: 16px 0 0 0;">
                       ${isArabic ? 'اضغط للتأكيد واختيار عدد المرافقين' : 'Click to confirm and select number of guests'}
                     </p>
                   </td>
@@ -259,33 +270,42 @@ const generateVIPEmailHTML = (
               ` : ''}
               
               <!-- Contact Info -->
-              <p style="color: #3D2E1F; font-size: 15px; margin: 0 0 8px 0;">
-                ${contactText}
-              </p>
-              <p style="margin: 0 0 32px 0;">
-                <a href="tel:+966501018811" dir="ltr" style="color: #5C4A32; font-weight: 600; text-decoration: none; unicode-bidi: embed; display: inline-block;">+966 50 101 8811</a>
-                <span style="color: #999; margin: 0 8px;">|</span>
-                <a href="mailto:info@almufaijer.com" dir="ltr" style="color: #5C4A32; font-weight: 600; text-decoration: none; unicode-bidi: embed; display: inline-block;">info@almufaijer.com</a>
-              </p>
+              <table role="presentation" style="width: 100%; margin-bottom: 24px;">
+                <tr>
+                  <td style="background-color: #FAF6F1; padding: 20px; border-radius: 12px; border: 1px solid #E8DED0; text-align: center;">
+                    <p style="color: #5C4A3A; font-size: 12px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                      ${isArabic ? 'للتواصل' : 'CONTACT US'}
+                    </p>
+                    <p style="margin: 0;">
+                      <a href="tel:+966501018811" dir="ltr" style="color: #3D2E1F; font-weight: 600; text-decoration: none; unicode-bidi: embed; display: inline-block; font-size: 15px;">+966 50 101 8811</a>
+                      <span style="color: #A89585; margin: 0 10px;">|</span>
+                      <a href="mailto:info@almufaijer.com" dir="ltr" style="color: #3D2E1F; font-weight: 600; text-decoration: none; unicode-bidi: embed; display: inline-block; font-size: 15px;">info@almufaijer.com</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
               
               <!-- Signature -->
-              <p style="color: #5C4A32; font-size: 16px; margin: 0 0 6px 0; line-height: 1.6;">
+              <p style="color: #5C4A3A; font-size: 15px; margin: 0 0 6px 0; line-height: 1.6;">
                 ${regardsText}
               </p>
-              <p style="color: #4A3625; font-size: 18px; font-weight: 600; margin: 0;">
+              <p style="color: #3D2E1F; font-size: 17px; font-weight: 600; margin: 0;">
                 ${teamText}
               </p>
             </td>
           </tr>
           
-          <!-- Footer -->
+          <!-- Footer - Matching Standard Design -->
           <tr>
-            <td style="background-color: #4A3625; padding: 24px 30px; text-align: center;">
-              <p style="color: #C9A962; font-size: 14px; margin: 0 0 4px 0; font-weight: 500;">
-                ${isArabic ? 'سوق المفيجر' : 'Souq Almufaijer'}
+            <td style="background-color: #3D2E1F; padding: 30px; text-align: center;">
+              <p style="color: #C9A86C; font-size: 16px; margin: 0 0 8px 0; font-weight: 600;">
+                ${isArabic ? 'سوق المفيجر - التراث الأصيل' : 'Souq Almufaijer - Authentic Heritage'}
               </p>
-              <p style="color: #A89880; font-size: 12px; margin: 0;">
+              <p style="color: #A89585; font-size: 13px; margin: 0 0 16px 0;">
                 ${locationText}
+              </p>
+              <p style="margin: 0;">
+                <a href="https://aynn.io" style="color: #8B7355; font-size: 11px; text-decoration: none;">Powered by AYN</a>
               </p>
             </td>
           </tr>
