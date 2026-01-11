@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.create-compensation-booking]
 verify_jwt = false
+
+[functions.track-marketing-qr]
+verify_jwt = false
