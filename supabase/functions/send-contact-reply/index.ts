@@ -53,141 +53,155 @@ serve(async (req) => {
 
     const htmlContent = `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light only">
   <meta name="supported-color-schemes" content="light only">
+  <!--[if mso]>
+  <style type="text/css">
+    table, td { font-family: Arial, sans-serif !important; }
+  </style>
+  <![endif]-->
   <style>
-    body { 
-      font-family: 'Cairo', 'Segoe UI', Arial, sans-serif; 
-      margin: 0; 
-      padding: 0; 
-      background-color: #f5f1e8; 
-      color: #3D2E1F;
+    :root { color-scheme: light only; }
+    body, .body-wrapper { 
+      font-family: 'Cairo', 'Segoe UI', Arial, sans-serif !important; 
+      margin: 0 !important; 
+      padding: 0 !important; 
+      background-color: #f5f1e8 !important; 
+      color: #3D2E1F !important;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
     }
-    .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
-    .header { 
-      background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%); 
-      padding: 30px; 
-      text-align: center; 
+    .container { 
+      max-width: 600px !important; 
+      margin: 0 auto !important; 
+      background-color: #ffffff !important; 
     }
-    .header img { height: 50px; }
-    .header h1 { 
-      color: #ffffff; 
-      margin: 15px 0 0; 
-      font-size: 22px; 
-      font-weight: 600;
-    }
-    .content { padding: 35px 30px; }
-    .greeting { font-size: 16px; color: #3D2E1F; margin-bottom: 20px; }
-    .original-message {
-      background: #f8f6f3;
-      border-left: 4px solid #C9A86C;
-      border-radius: 0 8px 8px 0;
-      padding: 15px 20px;
-      margin: 20px 0;
-      font-size: 14px;
-      color: #666;
-    }
-    .original-label {
-      font-size: 12px;
-      color: #888;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-    .reply-box {
-      background: linear-gradient(135deg, #faf8f5 0%, #f5f1eb 100%);
-      border: 2px solid #C9A86C;
-      border-radius: 12px;
-      padding: 25px;
-      margin: 25px 0;
-    }
-    .reply-label {
-      color: #5C4A3A;
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .reply-content {
-      color: #3D2E1F;
-      font-size: 15px;
-      line-height: 1.7;
-      white-space: pre-wrap;
-    }
-    .footer { 
-      background: #4A3625; 
-      color: #D4C5B0; 
-      padding: 25px; 
-      text-align: center; 
-      font-size: 13px; 
-    }
-    .footer a { color: #C9A86C; text-decoration: none; }
-    .divider { 
-      height: 3px; 
-      background: linear-gradient(90deg, #C9A86C, #8B6F47, #C9A86C); 
-      margin: 0;
-    }
+    /* Prevent dark mode overrides */
+    [data-ogsc] .container,
+    [data-ogsb] .container,
+    .container { background-color: #ffffff !important; }
+    [data-ogsc] .content-area,
+    [data-ogsb] .content-area,
+    .content-area { background-color: #ffffff !important; color: #3D2E1F !important; }
+    [data-ogsc] .header-area,
+    [data-ogsb] .header-area,
+    .header-area { background-color: #4A3625 !important; }
+    [data-ogsc] .footer-area,
+    [data-ogsb] .footer-area,
+    .footer-area { background-color: #4A3625 !important; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <img src="https://hekgkfdunwpxqbrotfpn.supabase.co/storage/v1/object/public/tickets/logo-white-email.png" alt="Souq Almufaijer">
-      <h1>Response to Your Inquiry<br>الرد على استفسارك</h1>
-    </div>
-    <div class="divider"></div>
-    
-    <div class="content">
-      <p class="greeting">
-        Dear ${submission.name},<br>
-        عزيزي/عزيزتي ${submission.name}،
-      </p>
-      
-      <p style="color: #555; font-size: 14px;">
-        Thank you for contacting Souq Almufaijer. Below is our response to your inquiry.<br>
-        <span dir="rtl" style="display: block; text-align: right;">شكراً لتواصلك مع سوق المفيجر. فيما يلي ردنا على استفسارك.</span>
-      </p>
-      
-      <div class="original-message">
-        <div class="original-label">Your Original Message / رسالتك الأصلية</div>
-        <div style="color: #555;">${submission.message}</div>
-      </div>
-      
-      <div class="reply-box">
-        <div class="reply-label">
-          <span style="color: #C9A86C;">◆</span>
-          Our Response / ردنا
-        </div>
-        <div class="reply-content">${replyMessage}</div>
-      </div>
-      
-      <p style="color: #666; font-size: 14px; margin-top: 25px;">
-        If you have any further questions, please don't hesitate to reach out.<br>
-        <span dir="rtl" style="display: block; text-align: right;">إذا كانت لديك أي أسئلة أخرى، لا تتردد في التواصل معنا.</span>
-      </p>
-      
-      <p style="color: #5C4A3A; font-weight: 600; margin-top: 30px;">
-        Best regards / مع أطيب التحيات،<br>
-        <span style="color: #C9A86C;">Souq Almufaijer Team | فريق سوق المفيجر</span>
-      </p>
-    </div>
-    
-    <div class="footer">
-      <p style="margin: 0 0 10px; font-size: 14px; color: #ffffff;">
-        Souq Almufaijer - Living Heritage<br>
-        سوق المفيجر - تراث حي
-      </p>
-      <p style="margin: 0;">
-        <a href="mailto:info@almufaijer.com">info@almufaijer.com</a>
-      </p>
-    </div>
-  </div>
+<body class="body-wrapper" style="margin: 0 !important; padding: 0 !important; background-color: #f5f1e8 !important;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f1e8 !important;">
+    <tr>
+      <td align="center" style="padding: 20px 10px;">
+        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff !important; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+          
+          <!-- HEADER -->
+          <tr>
+            <td class="header-area" style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; background-color: #4A3625 !important; padding: 35px 30px; text-align: center;">
+              <div style="font-size: 26px; font-weight: 700; color: #C9A86C !important; letter-spacing: 2px; margin-bottom: 5px;">
+                SOUQ ALMUFAIJER
+              </div>
+              <div style="font-size: 16px; color: #F5F1E8 !important; margin-bottom: 20px;">
+                سوق المفيجر
+              </div>
+              <div style="font-size: 20px; font-weight: 600; color: #ffffff !important; line-height: 1.5;">
+                Thank You for Reaching Out<br>
+                <span style="font-size: 18px; color: #D4C5B0 !important;">شكراً لتواصلك معنا</span>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- GOLD DIVIDER -->
+          <tr>
+            <td style="height: 4px; background: linear-gradient(90deg, #C9A86C, #8B6F47, #C9A86C) !important;"></td>
+          </tr>
+          
+          <!-- CONTENT -->
+          <tr>
+            <td class="content-area" style="background-color: #ffffff !important; padding: 35px 30px;">
+              
+              <!-- Greeting -->
+              <p style="font-size: 16px; color: #3D2E1F !important; margin: 0 0 20px; line-height: 1.6;">
+                Dear ${submission.name},
+              </p>
+              
+              <!-- Intro -->
+              <p style="color: #555555 !important; font-size: 14px; margin: 0 0 25px; line-height: 1.6;">
+                We appreciate you reaching out to us. Here's our response to your inquiry.
+              </p>
+              <p dir="rtl" style="color: #555555 !important; font-size: 14px; margin: 0 0 25px; line-height: 1.6; text-align: right;">
+                نقدر تواصلك معنا. إليك ردنا على استفسارك.
+              </p>
+              
+              <!-- Original Message Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 25px;">
+                <tr>
+                  <td style="background-color: #f8f6f3 !important; border-left: 4px solid #C9A86C; border-radius: 0 8px 8px 0; padding: 15px 20px;">
+                    <div style="font-size: 11px; color: #888888 !important; text-transform: uppercase; margin-bottom: 10px; font-weight: 600; letter-spacing: 0.5px;">
+                      Your Message / رسالتك
+                    </div>
+                    <div style="color: #666666 !important; font-size: 14px; line-height: 1.6;">${submission.message}</div>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Reply Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 30px;">
+                <tr>
+                  <td style="background: linear-gradient(135deg, #faf8f5 0%, #f5f1eb 100%) !important; background-color: #f8f6f3 !important; border: 2px solid #C9A86C; border-radius: 12px; padding: 25px;">
+                    <div style="color: #5C4A3A !important; font-weight: 600; font-size: 14px; margin-bottom: 15px;">
+                      <span style="color: #C9A86C !important;">◆</span>
+                      Our Response / ردنا
+                    </div>
+                    <div style="color: #3D2E1F !important; font-size: 15px; line-height: 1.8; white-space: pre-wrap;">${replyMessage}</div>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Closing -->
+              <p style="color: #666666 !important; font-size: 14px; margin: 0 0 8px; line-height: 1.6;">
+                Need more help? We're here for you.
+              </p>
+              <p dir="rtl" style="color: #666666 !important; font-size: 14px; margin: 0 0 30px; line-height: 1.6; text-align: right;">
+                نحن هنا لخدمتك دائماً.
+              </p>
+              
+              <!-- Signature -->
+              <p style="margin: 0; line-height: 1.6;">
+                <span style="color: #5C4A3A !important; font-weight: 600;">With warm regards,</span><br>
+                <span style="color: #C9A86C !important; font-weight: 600;">The Souq Almufaijer Team</span>
+                <span style="color: #888888 !important;"> | </span>
+                <span style="color: #C9A86C !important; font-weight: 600;">فريق سوق المفيجر</span>
+              </p>
+              
+            </td>
+          </tr>
+          
+          <!-- FOOTER -->
+          <tr>
+            <td class="footer-area" style="background-color: #4A3625 !important; padding: 25px 30px; text-align: center;">
+              <p style="margin: 0 0 10px; font-size: 14px; color: #ffffff !important; font-weight: 600;">
+                Souq Almufaijer - Living Heritage
+              </p>
+              <p style="margin: 0 0 10px; font-size: 13px; color: #D4C5B0 !important;">
+                سوق المفيجر - تراث حي
+              </p>
+              <p style="margin: 0;">
+                <a href="mailto:info@almufaijer.com" style="color: #C9A86C !important; text-decoration: none; font-size: 13px;">info@almufaijer.com</a>
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
     `;
