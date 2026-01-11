@@ -64,10 +64,25 @@ export const checkEmailStatus = async (bookingId: string): Promise<{
 };
 
 /**
- * Resend confirmation email (for admin use)
+ * Resend confirmation email (for admin use - bypasses rate limit)
  */
 export const resendConfirmationEmail = async (bookingId: string): Promise<boolean> => {
-  return sendBookingConfirmation(bookingId);
+  try {
+    const { data, error } = await supabase.functions.invoke('send-booking-confirmation', {
+      body: { bookingId, force: true },
+    });
+
+    if (error) {
+      console.error('Error resending confirmation email:', error);
+      return false;
+    }
+
+    console.log('Confirmation email resent:', data);
+    return data?.success ?? false;
+  } catch (error) {
+    console.error('Error invoking email function:', error);
+    return false;
+  }
 };
 
 /**

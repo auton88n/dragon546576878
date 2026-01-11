@@ -560,6 +560,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const body = await req.json();
     bookingId = body.bookingId;
+    const forceResend = body.force === true; // Allow admin bypass of rate limit
 
     if (!bookingId) {
       throw new Error("Missing bookingId parameter");
@@ -568,6 +569,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("=".repeat(50));
     console.log(`📧 Processing booking confirmation for: ${bookingId}`);
     console.log(`Timestamp: ${new Date().toISOString()}`);
+    if (forceResend) {
+      console.log("🔓 Force resend enabled - bypassing rate limit");
+    }
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
@@ -591,8 +595,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Booking not found: ${bookingId}`);
     }
 
-    // Rate limiting check
-    if (booking.last_email_sent_at) {
+    // Rate limiting check (skip if force resend is enabled)
+    if (!forceResend && booking.last_email_sent_at) {
       const lastSentTime = new Date(booking.last_email_sent_at).getTime();
       const timeSinceLastEmail = Date.now() - lastSentTime;
       
