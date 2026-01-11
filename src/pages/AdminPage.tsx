@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { lazyWithPreload } from '@/lib/lazyWithPreload';
 
 type Booking = Tables<'bookings'>;
@@ -250,35 +251,39 @@ const AdminPage = () => {
           {/* Tabs Navigation - Modern pill-style with grouping */}
           <Tabs defaultValue="bookings" className="space-y-6" activationMode="manual">
             <div className="flex justify-center">
-              <TabsList className="inline-flex bg-accent/5 border border-accent/20 rounded-xl p-1 gap-1 rtl:[direction:rtl]">
-                <TabsTrigger value="bookings" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm px-4 py-2 rounded-lg text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+              <TabsList className="inline-flex bg-gradient-to-r from-background via-card to-background border border-accent/30 rounded-2xl p-1.5 gap-1 shadow-lg shadow-accent/10 rtl:[direction:rtl]">
+                <TabsTrigger value="bookings" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
                   <Ticket className="h-4 w-4" />
                   {isArabic ? 'الحجوزات' : 'Bookings'}
                 </TabsTrigger>
-                <TabsTrigger value="reports" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm px-4 py-2 rounded-lg text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                <TabsTrigger value="reports" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
                   <BarChart3 className="h-4 w-4" />
                   {isArabic ? 'التقارير' : 'Reports'}
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm px-4 py-2 rounded-lg text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                <TabsTrigger value="settings" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
                   <Settings className="h-4 w-4" />
                   {isArabic ? 'الإعدادات' : 'Settings'}
                 </TabsTrigger>
-                <TabsTrigger value="groups" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm px-4 py-2 rounded-lg text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                <TabsTrigger value="groups" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
                   <Building2 className="h-4 w-4" />
                   {isArabic ? 'الشركات' : 'Corporate'}
                 </TabsTrigger>
-                <TabsTrigger value="messages" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm px-4 py-2 rounded-lg text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                <TabsTrigger value="messages" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
                   <Mail className="h-4 w-4" />
                   {isArabic ? 'الرسائل' : 'Messages'}
                 </TabsTrigger>
-                <TabsTrigger value="ayn-support" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm px-4 py-2 rounded-lg text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10">
+                <TabsTrigger value="ayn-support" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
                   <Headset className="h-4 w-4" />
                   {isArabic ? 'دعم AYN' : 'Support'}
                 </TabsTrigger>
-                <TabsTrigger value="refunds" className="gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm px-4 py-2 rounded-lg text-sm font-medium rtl:flex-row-reverse hover:bg-accent/10 relative">
+                <TabsTrigger value="refunds" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
                   <CreditCard className="h-4 w-4" />
                   {isArabic ? 'الاسترداد' : 'Refunds'}
-                  {stats.duplicateBookingsCount > 0}
+                  {stats.duplicateBookingsCount > 0 && (
+                    <Badge variant="destructive" className="ms-1 min-w-[20px] h-5 text-[11px] font-semibold shadow-sm shadow-destructive/20">
+                      {stats.duplicateBookingsCount}
+                    </Badge>
+                  )}
                 </TabsTrigger>
               </TabsList>
             </div>

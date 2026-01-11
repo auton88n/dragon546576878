@@ -329,12 +329,12 @@ const SettingsPanel = ({ onStatsRefresh }: SettingsPanelProps): JSX.Element => {
       </CardHeader>
       <CardContent className="p-4 md:p-6">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="w-full justify-center gap-0.5 bg-accent/5 p-1 rounded-xl overflow-x-auto flex-nowrap h-auto mb-6 scrollbar-hide">
+          <TabsList className="inline-flex mx-auto justify-center gap-1 bg-gradient-to-r from-secondary/50 via-card to-secondary/50 border border-accent/20 p-1.5 rounded-xl overflow-x-auto flex-nowrap h-auto mb-6 scrollbar-hide shadow-sm">
             {tabs.map(tab => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="flex items-center gap-1.5 px-3 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:shadow-sm hover:bg-accent/10 transition-colors rounded-lg text-xs md:text-sm shrink-0"
+                className="flex items-center gap-2 px-3.5 md:px-4 py-2.5 whitespace-nowrap text-muted-foreground text-xs md:text-sm hover:bg-white/80 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-white dark:data-[state=active]:bg-accent/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-accent/20 transition-all duration-150 rounded-lg shrink-0"
               >
                 <tab.icon className="h-4 w-4" />
                 <span className="hidden sm:inline">{isArabic ? tab.labelAr : tab.labelEn}</span>

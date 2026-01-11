@@ -561,19 +561,19 @@ const RefundsPanel = () => {
 
       {/* Inner Tabs */}
       <Tabs defaultValue="duplicates">
-        <TabsList className="grid w-full grid-cols-3 bg-accent/5 p-1 rounded-xl">
-          <TabsTrigger value="duplicates" className="gap-2 text-sm hover:bg-accent/10 transition-colors rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2">
+        <TabsList className="inline-flex w-full justify-center gap-1.5 bg-gradient-to-r from-secondary/50 via-card to-secondary/50 border border-accent/20 p-1.5 rounded-xl shadow-sm">
+          <TabsTrigger value="duplicates" className="flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:bg-white/80 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-white dark:data-[state=active]:bg-accent/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-accent/20 transition-all duration-150 rounded-lg">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">{isArabic ? 'مكررة' : 'Duplicates'}</span>
             {duplicates.length > 0 && (
-              <Badge variant="destructive" className="ms-1 text-xs">{duplicates.length}</Badge>
+              <Badge variant="destructive" className="ms-1.5 min-w-[20px] h-5 text-[11px] font-semibold shadow-sm shadow-destructive/20">{duplicates.length}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="orphans" className="gap-2 text-sm hover:bg-accent/10 transition-colors rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2">
+          <TabsTrigger value="orphans" className="flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:bg-white/80 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-white dark:data-[state=active]:bg-accent/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-accent/20 transition-all duration-150 rounded-lg">
             <CreditCard className="h-4 w-4" />
             <span className="hidden sm:inline">{isArabic ? 'مفقودة' : 'Orphans'}</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="gap-2 text-sm hover:bg-accent/10 transition-colors rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2">
+          <TabsTrigger value="history" className="flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:bg-white/80 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-white dark:data-[state=active]:bg-accent/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-accent/20 transition-all duration-150 rounded-lg">
             <Undo2 className="h-4 w-4" />
             <span className="hidden sm:inline">{isArabic ? 'السجل' : 'History'}</span>
           </TabsTrigger>
