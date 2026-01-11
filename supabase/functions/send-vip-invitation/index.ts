@@ -167,12 +167,12 @@ const generateVIPEmailHTML = (
                 ${messageBody.split('\n').map(p => `<p style="margin: 0 0 12px 0;">${p}</p>`).join('')}
               </div>
               
-              <!-- Guest + Event Details - Side by Side -->
+              <!-- Guest + Event Details - Side by Side with Equal Heights -->
               <table role="presentation" style="width: 100%; margin-bottom: 16px;">
                 <tr>
-                  <td style="width: 48%; vertical-align: top; padding-${isArabic ? 'left' : 'right'}: 8px;">
-                    <div style="background-color: #FAF7F2; padding: 10px 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962;">
-                      <p style="color: #8B6F47; font-size: 10px; margin: 0 0 4px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
+                  <td style="width: 48%; vertical-align: top; padding-${isArabic ? 'left' : 'right'}: 8px; height: 70px;">
+                    <div style="background-color: #FAF7F2; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962; height: 100%; box-sizing: border-box;">
+                      <p style="color: #8B6F47; font-size: 10px; margin: 0 0 6px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
                         ${isArabic ? 'عدد الضيوف' : 'GUESTS'}
                       </p>
                       <p style="color: #3D2E1F; font-size: 14px; margin: 0; font-weight: 600;">
@@ -180,9 +180,9 @@ const generateVIPEmailHTML = (
                       </p>
                     </div>
                   </td>
-                  <td style="width: 48%; vertical-align: top; padding-${isArabic ? 'right' : 'left'}: 8px;">
-                    <div style="background-color: #FAF7F2; padding: 10px 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962;">
-                      <p style="color: #8B6F47; font-size: 10px; margin: 0 0 4px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
+                  <td style="width: 48%; vertical-align: top; padding-${isArabic ? 'right' : 'left'}: 8px; height: 70px;">
+                    <div style="background-color: #FAF7F2; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962; height: 100%; box-sizing: border-box;">
+                      <p style="color: #8B6F47; font-size: 10px; margin: 0 0 6px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
                         ${isArabic ? 'الموعد' : 'DATE & TIME'}
                       </p>
                       <p style="color: #3D2E1F; font-size: 14px; margin: 0; font-weight: 600;">

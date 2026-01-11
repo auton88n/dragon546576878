@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useVIPContacts, VIPContact, VIPCategory, VIPStatus, CreateVIPContact } from '@/hooks/useVIPContacts';
 import { useToast } from '@/hooks/use-toast';
@@ -150,6 +150,20 @@ export const VIPOutreachPanel = () => {
   
   // AI Assist state
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  // Reset compose form when selected contacts change to prevent stale content
+  useEffect(() => {
+    if (selectedContacts.size === 0) {
+      // Reset to default values when no contacts are selected
+      setSubjectEn('Exclusive VIP Invitation to Souq Almufaijer');
+      setSubjectAr('دعوة حصرية لزيارة سوق المفيجر');
+      setMessageEn('We are honored to extend this exclusive invitation to experience the rich heritage of Souq Almufaijer.\n\nAs our distinguished guest, you will enjoy a personalized VIP experience showcasing our traditional crafts, authentic cuisine, and cultural performances.');
+      setMessageAr('يسرنا دعوتكم لتجربة التراث العريق في سوق المفيجر.\n\nكضيف مميز، ستستمتعون بتجربة استثنائية تعرض الحرف التقليدية والمأكولات الأصيلة والعروض الثقافية.');
+      setOfferDetails('');
+      setEventDate('');
+      setEventTime('');
+    }
+  }, [selectedContacts.size]);
 
   // Perk management handlers
   const handleAddPerk = () => {
