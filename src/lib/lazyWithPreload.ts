@@ -16,9 +16,21 @@ export function lazyWithPreload<T extends ComponentType<any>>(
 ): LazyComponentWithPreload<T> {
   let modulePromise: Promise<{ default: T }> | null = null;
 
+  const retryImport = async (retries = 3, delay = 1000): Promise<{ default: T }> => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        return await factory();
+      } catch (err) {
+        if (i === retries - 1) throw err;
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+    throw new Error('Module import failed after retries');
+  };
+
   const preload = () => {
     if (!modulePromise) {
-      modulePromise = factory().catch((err) => {
+      modulePromise = retryImport().catch((err) => {
         // If the import fails (e.g., transient SW/cache/network issue), allow retry.
         modulePromise = null;
         throw err;
