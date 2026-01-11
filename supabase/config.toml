@@ -56,3 +56,9 @@ verify_jwt = false
 
 [functions.ai-vip-invitation]
 verify_jwt = false
+
+[functions.ai-contact-reply]
+verify_jwt = false
+
+[functions.create-compensation-booking]
+verify_jwt = false
