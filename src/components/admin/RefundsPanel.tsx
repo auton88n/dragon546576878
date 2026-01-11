@@ -561,19 +561,19 @@ const RefundsPanel = () => {
 
       {/* Inner Tabs */}
       <Tabs defaultValue="duplicates">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="duplicates" className="gap-2">
+        <TabsList className="grid w-full grid-cols-3 bg-accent/5 p-1 rounded-xl">
+          <TabsTrigger value="duplicates" className="gap-2 text-sm hover:bg-accent/10 transition-colors rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">{isArabic ? 'مكررة' : 'Duplicates'}</span>
             {duplicates.length > 0 && (
               <Badge variant="destructive" className="ms-1 text-xs">{duplicates.length}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="orphans" className="gap-2">
+          <TabsTrigger value="orphans" className="gap-2 text-sm hover:bg-accent/10 transition-colors rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2">
             <CreditCard className="h-4 w-4" />
             <span className="hidden sm:inline">{isArabic ? 'مفقودة' : 'Orphans'}</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="gap-2">
+          <TabsTrigger value="history" className="gap-2 text-sm hover:bg-accent/10 transition-colors rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm py-2">
             <Undo2 className="h-4 w-4" />
             <span className="hidden sm:inline">{isArabic ? 'السجل' : 'History'}</span>
           </TabsTrigger>
