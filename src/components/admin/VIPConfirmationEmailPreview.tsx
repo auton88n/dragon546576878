@@ -177,96 +177,67 @@ const generateVIPConfirmationPreview = (
   <title>${translations.title}</title>
   <style>
     :root { color-scheme: light only; }
-    @media (prefers-color-scheme: dark) {
-      .email-body { background-color: #F5F1EB !important; }
-      .email-content { background-color: #FFFFFF !important; }
-    }
-    [data-ogsc] .email-body { background-color: #F5F1EB !important; }
-    [data-ogsc] .email-content { background-color: #FFFFFF !important; }
   </style>
 </head>
-<body class="email-body" style="margin: 0; padding: 0; background-color: #F5F1EB !important; font-family: Arial, sans-serif; direction: ${direction};">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #F5F1EB !important;">
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F5F1E8; direction: ${direction}; -webkit-text-fill-color: inherit;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
     <tr>
-      <td align="center" style="padding: 24px 16px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px;">
+      <td style="padding: 32px 16px;">
+        <table role="presentation" style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(139, 111, 71, 0.12);">
           
-          <!-- Premium VIP Header -->
+          <!-- Header - Compact matching invitation -->
           <tr>
-            <td align="center" style="background: linear-gradient(135deg, #4A3625 0%, #3D2E1F 50%, #4A3625 100%); padding: 40px 24px; border-radius: 20px 20px 0 0; position: relative;">
-              <table cellpadding="0" cellspacing="0" border="0" width="100%">
-                <tr>
-                  <td align="center" style="padding-bottom: 8px;">
-                    <span style="display: inline-block; background: linear-gradient(135deg, #C9A962 0%, #E8D5A3 50%, #C9A962 100%); color: #4A3625; padding: 6px 24px; border-radius: 20px; font-size: 11px; font-weight: 700; font-family: Arial, sans-serif; letter-spacing: 3px; text-transform: uppercase;">
-                      VIP INVITATION
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center" style="padding: 16px 0 4px 0;">
-                    <h1 style="color: #C9A962; font-size: 32px; margin: 0; font-weight: 700; font-family: 'Times New Roman', serif;">سوق المفيجر</h1>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center" style="padding-bottom: 20px;">
-                    <p style="color: #D4C5B0; font-size: 11px; margin: 0; letter-spacing: 4px; text-transform: uppercase; font-family: Arial, sans-serif;">SOUQ ALMUFAIJER</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center" style="padding-bottom: 20px;">
-                    <div style="width: 80px; height: 2px; background: linear-gradient(90deg, transparent 0%, #C9A962 30%, #E8D5A3 50%, #C9A962 70%, transparent 100%); margin: 0 auto;"></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center">
-                    <p style="color: #F5F1E8; margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 1px; font-family: Arial, sans-serif;">
-                      ✓ ${isArabic ? "تم تأكيد الحضور" : "ATTENDANCE CONFIRMED"}
-                    </p>
-                  </td>
-                </tr>
-              </table>
+            <td style="background: linear-gradient(135deg, #8B6F47 0%, #5C4A32 100%); padding: 20px 16px; text-align: center;">
+              <div style="width: 60px; height: 2px; background: linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962); margin: 0 auto 12px auto;"></div>
+              <h1 style="color: #FFFFFF; font-size: 20px; margin: 0 0 6px 0; font-weight: 700; font-family: 'Cairo', Arial, sans-serif;">
+                سوق المفيجر
+              </h1>
+              <p style="color: #F5F1E8; font-size: 12px; margin: 0;">
+                ${isArabic ? 'تأكيد حضور ضيف مميز' : 'VIP Guest Confirmation'}
+              </p>
             </td>
           </tr>
           
           <!-- Main Content -->
           <tr>
-            <td class="email-content" style="background-color: #FFFFFF !important; padding: 32px 24px; border-radius: 0 0 20px 20px;">
-              
+            <td style="padding: 28px 24px;">
               <!-- Greeting -->
-              <h2 style="color: #3D2E1F; margin: 0 0 12px; font-size: 22px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.greeting}</h2>
-              <p style="color: #5C4A3A; margin: 0 0 24px; line-height: 1.7; font-size: 15px; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.thankYou}</p>
+              <h2 style="color: #3D2E1F; margin: 0 0 12px; font-size: 18px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.greeting}</h2>
+              <p style="color: #5C4A3A; margin: 0 0 24px; line-height: 1.7; font-size: 14px; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.thankYou}</p>
               
-              
-              <!-- Event Details Card -->
-              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
+              <!-- Event Details - Side by Side -->
+              <table role="presentation" style="width: 100%; margin-bottom: 16px;">
                 <tr>
-                  <td style="padding-bottom: 12px;">
-                    <h3 style="color: #3D2E1F; margin: 0; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">
-                      📅 ${translations.eventDetails}
-                    </h3>
+                  <td style="width: 48%; vertical-align: top; padding-${isArabic ? "left" : "right"}: 8px; height: 70px;">
+                    <div style="background-color: #FAF7F2; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962; height: 100%; box-sizing: border-box;">
+                      <p style="color: #8B6F47; font-size: 10px; margin: 0 0 6px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
+                        ${translations.guests}
+                      </p>
+                      <p style="color: #3D2E1F; font-size: 14px; margin: 0; font-weight: 600;">
+                        ${guestCount} ${isArabic ? "شخص" : "person(s)"}
+                      </p>
+                    </div>
+                  </td>
+                  <td style="width: 48%; vertical-align: top; padding-${isArabic ? "right" : "left"}: 8px; height: 70px;">
+                    <div style="background-color: #FAF7F2; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962; height: 100%; box-sizing: border-box;">
+                      <p style="color: #8B6F47; font-size: 10px; margin: 0 0 6px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
+                        ${translations.date}
+                      </p>
+                      <p style="color: #3D2E1F; font-size: 14px; margin: 0; font-weight: 600;">
+                        ${sampleDate}
+                      </p>
+                    </div>
                   </td>
                 </tr>
+              </table>
+              
+              <!-- Valid All Day Bar -->
+              <table role="presentation" style="width: 100%; margin-bottom: 20px;">
                 <tr>
-                  <td>
-                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #FAF8F5; border-radius: 12px; border: 1px solid #E8DED0;">
-                      <tr>
-                        <td width="50%" style="padding: 16px; vertical-align: top; border-${isArabic ? "left" : "right"}: 1px solid #E8DED0;">
-                          <p style="color: #8B6F47; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.date}</p>
-                          <p style="color: #3D2E1F; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${sampleDate}</p>
-                        </td>
-                        <td width="50%" style="padding: 16px; vertical-align: top;">
-                          <p style="color: #8B6F47; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.guests}</p>
-                          <p style="color: #3D2E1F; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${guestCount} ${isArabic ? "شخص" : "person(s)"}</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td colspan="2" style="padding: 12px 16px; background-color: #4A3625; border-radius: 0 0 12px 12px;">
-                          <p style="color: #C9A962; margin: 0; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif; text-align: center;">
-                            ☀️ ${translations.validAllDay} ${translations.operatingHours}
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
+                  <td style="background-color: #4A3625; padding: 10px 16px; border-radius: 8px; text-align: center;">
+                    <p style="color: #C9A962; margin: 0; font-size: 12px; font-weight: 600; font-family: Arial, sans-serif;">
+                      ☀️ ${translations.validAllDay} ${translations.operatingHours}
+                    </p>
                   </td>
                 </tr>
               </table>
@@ -278,33 +249,36 @@ const generateVIPConfirmationPreview = (
               ${qrHtml}
               
               <!-- Closing -->
-              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 24px;">
-                <tr>
-                  <td align="center" style="padding: 20px; background: linear-gradient(135deg, #FAF7F2 0%, #F5F1E8 100%); border-radius: 12px; border: 1px solid #E8DED0;">
-                    <p style="color: #4A3625; margin: 0 0 8px; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif;">
-                      ${translations.seeYouSoon}
-                    </p>
-                    <p style="color: #8B6F47; margin: 0; font-size: 12px; font-family: Arial, sans-serif;">
-                      ${translations.questions} <a href="mailto:info@almufaijer.com" style="color: #C9A962; text-decoration: none; font-weight: 600;">info@almufaijer.com</a>
-                    </p>
-                  </td>
-                </tr>
-              </table>
+              <div style="width: 50px; height: 1px; background: linear-gradient(90deg, transparent, #C9A962, transparent); margin: 20px auto 12px auto;"></div>
+              <p style="color: #5C4A3A; font-size: 12px; margin: 0 0 4px 0; text-align: center;">
+                ${isArabic ? 'مع أطيب التحيات،' : 'With warm regards,'}
+              </p>
+              <p style="color: #3D2E1F; font-size: 13px; font-weight: 600; margin: 0; text-align: center;">
+                ${isArabic ? 'فريق سوق المفيجر' : 'Souq Almufaijer Team'}
+              </p>
               
             </td>
           </tr>
           
-          <!-- Footer -->
+          <!-- Footer - Compact -->
           <tr>
-            <td align="center" style="padding: 24px 16px;">
-              <a href="https://maps.app.goo.gl/g4qJ4mM9ZVqg323t8" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #8B7355 0%, #6B5A45 100%); color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif; margin-bottom: 16px;">
+            <td style="background-color: #4A3625; padding: 14px; text-align: center;">
+              <a href="https://maps.app.goo.gl/g4qJ4mM9ZVqg323t8" target="_blank" style="display: inline-block; color: #C9A962; text-decoration: none; font-size: 12px; font-weight: 500; margin-bottom: 6px;">
                 📍 ${isArabic ? "احصل على الاتجاهات" : "Get Directions"}
               </a>
-              <p style="color: #5C4A3A; margin: 0 0 6px; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif;">${translations.address}</p>
-              <p style="color: #8B7355; margin: 0 0 8px; font-size: 11px; font-family: Arial, sans-serif;">
-                © ${new Date().getFullYear()} Souq Almufaijer. ${isArabic ? "جميع الحقوق محفوظة" : "All rights reserved"}.
+              <p style="color: #D4C5B0; font-size: 11px; margin: 8px 0 0 0;">
+                ${translations.address}
               </p>
-              <a href="https://ayn-ai.com" target="_blank" style="color: #8B7355; margin: 0; font-size: 10px; font-family: Arial, sans-serif; text-decoration: none;">
+            </td>
+          </tr>
+          
+        </table>
+        
+        <!-- Powered by -->
+        <table role="presentation" style="max-width: 580px; margin: 16px auto 0 auto;">
+          <tr>
+            <td style="text-align: center;">
+              <a href="https://ayn-ai.com" target="_blank" style="color: #8B7355; font-size: 10px; font-family: Arial, sans-serif; text-decoration: none;">
                 Powered by <span style="font-weight: 600; color: #3D2E1F;">AYN AI</span>
               </a>
             </td>
