@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
-import { Eye, Globe } from 'lucide-react';
+import { Eye, Globe, Moon, Sun, Monitor } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useLanguage } from '@/hooks/useLanguage';
 
 interface VIPPerk {
