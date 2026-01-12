@@ -175,9 +175,9 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
       });
       if (error) throw error;
       
-      // Send confirmation email after tickets generated
+      // Send confirmation email after tickets generated (force bypasses rate limit for admin)
       await supabase.functions.invoke('send-booking-confirmation', {
-        body: { bookingId: booking.id }
+        body: { bookingId: booking.id, force: true }
       });
       
       toast({

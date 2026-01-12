@@ -480,7 +480,7 @@ const ScannerPage = () => {
     setIsResendingEmail(true);
     try {
       const { error } = await supabase.functions.invoke('send-booking-confirmation', {
-        body: { bookingId }
+        body: { bookingId, force: true }
       });
       
       if (error) throw error;
