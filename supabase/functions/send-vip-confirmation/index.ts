@@ -285,7 +285,7 @@ const generateVIPEmailTemplate = (
         <table role="presentation" style="max-width: 580px; margin: 16px auto 0 auto;">
           <tr>
             <td style="text-align: center;">
-              <a href="https://ayn-ai.com" target="_blank" style="color: #8B7355; font-size: 10px; font-family: Arial, sans-serif; text-decoration: none;">
+              <a href="https://aynn.io" target="_blank" style="color: #8B7355; font-size: 10px; font-family: Arial, sans-serif; text-decoration: none;">
                 Powered by <span style="font-weight: 600; color: #3D2E1F;">AYN AI</span>
               </a>
             </td>
