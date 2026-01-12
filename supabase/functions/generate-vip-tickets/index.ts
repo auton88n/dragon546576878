@@ -261,14 +261,21 @@ serve(async (req) => {
 
     console.log("VIP ticket generated successfully!");
 
-    // Send confirmation email via existing function
+    // Send VIP-specific confirmation email (not standard booking email)
     try {
-      const { error: emailError } = await supabase.functions.invoke("send-booking-confirmation", {
-        body: { bookingId: booking.id },
+      const { error: emailError } = await supabase.functions.invoke("send-vip-confirmation", {
+        body: { 
+          bookingId: booking.id,
+          invitationId: body.invitationId,
+        },
       });
       
       if (emailError) {
         console.error("Failed to send VIP confirmation email:", emailError);
+        // Fallback to standard confirmation if VIP email fails
+        await supabase.functions.invoke("send-booking-confirmation", {
+          body: { bookingId: booking.id },
+        });
       } else {
         console.log("VIP confirmation email sent");
       }
