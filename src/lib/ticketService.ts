@@ -41,6 +41,7 @@ export interface GroupTicketValidationResult {
   status: 'valid' | 'invalid' | 'arrived' | 'expired' | 'wrong_date' | 'not_found' | 'not_paid';
   message: string;
   isGroupTicket: true;
+  isVIP?: boolean;
   booking?: {
     id: string;
     bookingReference: string;
@@ -57,6 +58,7 @@ export interface GroupTicketValidationResult {
     totalAmount: number;
     arrivalStatus: string;
     arrivedAt?: string;
+    isVIP?: boolean;
   };
 }
 
@@ -324,6 +326,9 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
     const childCount = booking.child_count || 0;
     const seniorCount = booking.senior_count || 0;
     const totalGuests = adultCount + childCount + seniorCount;
+    
+    // Detect VIP bookings (VIP- prefix in booking reference)
+    const isVIP = booking.booking_reference?.startsWith('VIP-') || false;
 
     const bookingData = {
       id: booking.id,
@@ -341,6 +346,7 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
       totalAmount: booking.total_amount,
       arrivalStatus: booking.arrival_status || 'not_arrived',
       arrivedAt: booking.arrived_at || undefined,
+      isVIP,
     };
 
     // Check if already arrived
@@ -357,6 +363,7 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
         status: 'arrived',
         message: `Group already admitted${arrivedTime ? ` at ${arrivedTime}` : ''}`,
         isGroupTicket: true,
+        isVIP,
         booking: bookingData,
       };
     }
@@ -372,17 +379,19 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
           ? 'Ticket has expired' 
           : `Ticket valid for ${booking.visit_date}`,
         isGroupTicket: true,
+        isVIP,
         booking: bookingData,
       };
     }
 
-    // Check payment status
+    // Check payment status - VIP tickets are always complimentary (completed)
     if (booking.payment_status !== 'completed') {
       return {
         isValid: false,
         status: 'not_paid',
         message: 'Payment not completed',
         isGroupTicket: true,
+        isVIP,
         booking: bookingData,
       };
     }
@@ -391,8 +400,11 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
     return {
       isValid: true,
       status: 'valid',
-      message: `Admit ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`,
+      message: isVIP 
+        ? `Welcome VIP! Admit ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`
+        : `Admit ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`,
       isGroupTicket: true,
+      isVIP,
       booking: bookingData,
     };
   } catch (err) {
