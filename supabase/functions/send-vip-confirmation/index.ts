@@ -62,7 +62,7 @@ const generateVIPEmailTemplate = (
     scanInstructions: isArabic 
       ? "قم بإظهار هذا الرمز عند البوابة الرئيسية"
       : "Present this code at the main entrance",
-    complimentary: isArabic ? "دعوة مجانية" : "Complimentary",
+    
     seeYouSoon: isArabic ? "نتطلع لاستقبالكم!" : "We look forward to welcoming you!",
     address: isArabic ? "سوق المفيجر، المملكة العربية السعودية" : "Souq Almufaijer, Kingdom of Saudi Arabia",
     questions: isArabic 
@@ -247,16 +247,6 @@ const generateVIPEmailTemplate = (
               <h2 style="color: #3D2E1F; margin: 0 0 12px; font-size: 22px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.greeting}</h2>
               <p style="color: #5C4A3A; margin: 0 0 24px; line-height: 1.7; font-size: 15px; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.thankYou}</p>
               
-              <!-- Complimentary Badge -->
-              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
-                <tr>
-                  <td align="center" style="background: linear-gradient(135deg, #F5F1E8 0%, #FAF7F2 100%); padding: 16px; border-radius: 12px; border: 2px solid #C9A962;">
-                    <span style="color: #4A3625; font-size: 14px; font-weight: 700; font-family: Arial, sans-serif;">
-                      🌟 ${translations.complimentary}
-                    </span>
-                  </td>
-                </tr>
-              </table>
               
               <!-- Event Details Card -->
               <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
