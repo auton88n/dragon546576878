@@ -137,16 +137,18 @@ export const useAdminStats = () => {
   const queryResult = useQuery({
     queryKey: ['admin-stats'],
     queryFn: fetchAdminStats,
-    staleTime: 10000,
+    staleTime: 60000, // 60 seconds - keep data fresh longer
+    gcTime: 300000, // 5 minutes - keep in cache longer
     refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // Don't refetch on every tab switch
   });
 
   const { refetch } = queryResult;
 
   const throttledRefetch = useCallback(() => {
     const now = Date.now();
-    if (now - lastFetchRef.current > 2000) {
+    // Increase throttle to 5 seconds for real-time updates
+    if (now - lastFetchRef.current > 5000) {
       lastFetchRef.current = now;
       refetch();
     }
