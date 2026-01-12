@@ -84,11 +84,23 @@ const VIPRSVPPage = () => {
       if (!token) return;
       
       try {
+        console.log('Fetching VIP invitation for token:', token);
+        
         // Use secure RPC function to fetch invitation by token
         const { data: rawResult, error: rpcError } = await supabase
           .rpc('get_vip_invitation_by_token', { token });
         
-        if (rpcError || !rawResult) {
+        console.log('RPC result:', { rawResult, rpcError });
+        
+        if (rpcError) {
+          console.error('RPC Error fetching invitation:', rpcError);
+          setError(rpcError.message || 'Invitation not found');
+          setLoading(false);
+          return;
+        }
+        
+        if (!rawResult) {
+          console.error('No invitation found for token:', token);
           setError('Invitation not found');
           setLoading(false);
           return;
