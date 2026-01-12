@@ -444,6 +444,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
 
     try {
       // Create booking first (with pending payment status)
+      const hasPackages = packageQuantities.some(p => p.quantity > 0);
       const { data, error } = await supabase.functions.invoke('create-booking', {
         body: {
           customerName: customerInfo.name,
@@ -458,6 +459,7 @@ const DetailsAndPayment = ({ onPaymentComplete, isProcessing }: DetailsAndPaymen
           childPrice: pricing.child,
           totalAmount: totalAmount,
           language: currentLanguage,
+          isPackageBooking: hasPackages, // Trust frontend total for package pricing
         }
       });
 
