@@ -22,6 +22,7 @@ interface BookingRequest {
   childPrice: number;
   totalAmount: number;
   language: string;
+  isPackageBooking?: boolean; // When true, trust frontend totalAmount (package pricing)
 }
 
 // Input validation functions (inline for speed)
@@ -139,8 +140,21 @@ serve(async (req) => {
     const childCount = Math.max(0, Math.min(body.childCount || 0, 20)); // Cap at 20
     const adultPrice = body.adultPrice || 0;
     const childPrice = body.childPrice || 0;
+    const isPackageBooking = body.isPackageBooking || false;
+    
+    // For package bookings, trust frontend totalAmount (packages have special pricing)
+    // For individual tickets, recalculate for safety
     const calculatedTotal = (adultCount * adultPrice) + (childCount * childPrice);
-    const finalTotal = calculatedTotal > 0 ? calculatedTotal : body.totalAmount;
+    const finalTotal = isPackageBooking 
+      ? body.totalAmount 
+      : (calculatedTotal > 0 ? calculatedTotal : body.totalAmount);
+    
+    console.log("Pricing calculation:", {
+      isPackageBooking,
+      frontendTotal: body.totalAmount,
+      calculatedTotal,
+      finalTotal
+    });
 
     // Insert booking
     const { data: booking, error: bookingError } = await supabase
