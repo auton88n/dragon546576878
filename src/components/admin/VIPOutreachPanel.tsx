@@ -819,10 +819,14 @@ export const VIPOutreachPanel = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="flex flex-wrap gap-3 pt-4 border-t">
                 <Button variant="outline" onClick={() => setShowPreview(true)}>
                   <Eye className="h-4 w-4 me-2" />
-                  {isArabic ? 'معاينة' : 'Preview'}
+                  {isArabic ? 'معاينة الدعوة' : 'Preview Invitation'}
+                </Button>
+                <Button variant="outline" onClick={() => setShowVIPEmailPreview(true)} className="border-amber-300 text-amber-700 hover:bg-amber-50">
+                  <Mail className="h-4 w-4 me-2" />
+                  {isArabic ? 'معاينة بريد التأكيد' : 'Preview Confirmation Email'}
                 </Button>
                 <Button 
                   className="bg-amber-600 hover:bg-amber-700"
@@ -1342,6 +1346,14 @@ export const VIPOutreachPanel = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* VIP Confirmation Email Preview */}
+      <VIPConfirmationEmailPreview
+        open={showVIPEmailPreview}
+        onOpenChange={setShowVIPEmailPreview}
+        perks={customPerks.filter(p => selectedPerks.has(p.id))}
+        guestCount={guestAllowance}
+      />
     </>
   );
 };
