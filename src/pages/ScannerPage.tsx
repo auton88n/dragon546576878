@@ -1098,22 +1098,42 @@ const ScannerPage = () => {
         <div 
           className={cn(
             'fixed inset-0 z-50 flex flex-col items-center justify-center text-white p-6 animate-fade-in',
+            // VIP gets special gold styling
+            groupResult.isVIP && groupResult.status === 'valid' ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600' :
             groupResult.status === 'valid' ? 'bg-success' :
             groupResult.status === 'arrived' ? 'bg-warning' :
             groupResult.status === 'not_paid' ? 'bg-amber-600' :
             'bg-destructive'
           )}
         >
+          {/* VIP Badge */}
+          {groupResult.isVIP && (
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md rounded-full px-6 py-2 border-2 border-white/40 shadow-xl">
+              <span className="text-lg font-bold tracking-wider flex items-center gap-2">
+                <span className="text-2xl">👑</span>
+                <span>VIP GUEST</span>
+                <span className="text-2xl">👑</span>
+              </span>
+            </div>
+          )}
+          
           {/* Status Icon */}
           <div className="scale-125 mb-2">
-            {groupResult.status === 'valid' ? <CheckCircle className="h-24 w-24" /> :
+            {groupResult.isVIP && groupResult.status === 'valid' ? (
+              <div className="relative">
+                <CheckCircle className="h-24 w-24" />
+                <span className="absolute -top-2 -right-2 text-4xl">✨</span>
+              </div>
+            ) : groupResult.status === 'valid' ? <CheckCircle className="h-24 w-24" /> :
              groupResult.status === 'arrived' ? <AlertTriangle className="h-24 w-24" /> :
              <XCircle className="h-24 w-24" />}
           </div>
           
           {/* Status Text */}
           <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-2 text-center leading-tight">
-            {groupResult.status === 'valid' ? (isArabic ? 'حجز صالح' : 'Valid Reservation') :
+            {groupResult.isVIP && groupResult.status === 'valid' 
+              ? (isArabic ? 'مرحباً بضيفنا الكريم!' : 'Welcome, Honored Guest!')
+              : groupResult.status === 'valid' ? (isArabic ? 'حجز صالح' : 'Valid Reservation') :
              groupResult.status === 'arrived' ? (isArabic ? 'وصلوا مسبقاً' : 'Already Arrived') :
              groupResult.status === 'not_paid' ? (isArabic ? 'لم يتم الدفع' : 'Not Paid') :
              groupResult.status === 'wrong_date' ? (isArabic ? 'تاريخ خاطئ' : 'Wrong Date') :
@@ -1123,7 +1143,12 @@ const ScannerPage = () => {
           
           {/* Booking Details Card */}
           {groupResult.booking && (
-            <div className="bg-white/25 backdrop-blur-md rounded-2xl p-5 text-center border-2 border-white/40 w-full max-w-sm shadow-2xl mt-4">
+            <div className={cn(
+              "backdrop-blur-md rounded-2xl p-5 text-center border-2 w-full max-w-sm shadow-2xl mt-4",
+              groupResult.isVIP 
+                ? "bg-white/30 border-yellow-200/60" 
+                : "bg-white/25 border-white/40"
+            )}>
               {/* Customer Name */}
               <p className="text-2xl md:text-3xl font-bold mb-2">{groupResult.booking.customerName}</p>
               
@@ -1131,7 +1156,10 @@ const ScannerPage = () => {
               <p className="text-lg opacity-90 font-mono mb-3">{groupResult.booking.bookingReference}</p>
               
               {/* Large Guest Count */}
-              <div className="bg-white/30 rounded-xl py-4 px-6 mb-4">
+              <div className={cn(
+                "rounded-xl py-4 px-6 mb-4",
+                groupResult.isVIP ? "bg-white/40" : "bg-white/30"
+              )}>
                 <div className="text-5xl font-bold mb-2">{groupResult.booking.totalGuests}</div>
                 <div className="text-lg opacity-90">{isArabic ? 'إجمالي الزوار' : 'Total Guests'}</div>
                 
@@ -1162,6 +1190,15 @@ const ScannerPage = () => {
                   <div className="bg-white text-red-600 rounded-xl px-6 py-3 font-bold text-xl shadow-lg border-2 border-red-600">
                     <span className="font-mono">{groupResult.booking.totalAmount} SAR</span>
                   </div>
+                </div>
+              )}
+              
+              {/* VIP Complimentary Badge */}
+              {groupResult.isVIP && groupResult.status === 'valid' && (
+                <div className="bg-gradient-to-r from-yellow-200 to-amber-200 text-amber-800 rounded-xl px-4 py-2 text-sm font-bold mb-3 inline-flex items-center gap-2">
+                  <span>🌟</span>
+                  <span>{isArabic ? 'دعوة خاصة' : 'Special Invitation'}</span>
+                  <span>🌟</span>
                 </div>
               )}
               
