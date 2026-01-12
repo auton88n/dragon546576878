@@ -449,7 +449,7 @@ const generateEmailTemplate = (
                 © ${new Date().getFullYear()} Souq Almufaijer. ${isArabic ? 'جميع الحقوق محفوظة' : 'All rights reserved'}.
               </p>
               <!-- AYN AI Branding -->
-              <a href="https://ayn-ai.com" target="_blank" style="color: #8B7355; margin: 0; font-size: 10px; font-family: Arial, sans-serif; text-decoration: none;">
+              <a href="https://aynn.io" target="_blank" style="color: #8B7355; margin: 0; font-size: 10px; font-family: Arial, sans-serif; text-decoration: none;">
                 Powered by <span style="font-weight: 600; color: #3D2E1F;">AYN AI</span>
               </a>
             </td>
