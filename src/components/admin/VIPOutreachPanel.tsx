@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Crown, Users, Mail, History, Plus, Trash2, Edit, Send, Eye, Loader2, User, Phone, Building, Globe, CheckCircle, XCircle, Clock, MailOpen, Video, Gift, Camera, Utensils, MapPin, Sparkles, X } from 'lucide-react';
+import VIPConfirmationEmailPreview from './VIPConfirmationEmailPreview';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -133,6 +134,7 @@ export const VIPOutreachPanel = () => {
   const [eventTime, setEventTime] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showVIPEmailPreview, setShowVIPEmailPreview] = useState(false);
 
   // NEW: Enhanced compose state
   const [guestAllowance, setGuestAllowance] = useState<number>(2);
