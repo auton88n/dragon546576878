@@ -374,14 +374,29 @@ const RefundsPanel = () => {
   };
 
   // Link payment to booking
-  const handleLinkToBooking = async (bookingId: string) => {
+  const handleLinkToBooking = async (bookingId: string, forceLink = false) => {
     if (!linkDialog) return;
     setLinkingPayment(bookingId);
     try {
       const { data, error } = await supabase.functions.invoke('link-orphan-payment', {
-        body: { bookingId, paymentId: linkDialog.payment.id }
+        body: { bookingId, paymentId: linkDialog.payment.id, forceLink }
       });
       if (error) throw error;
+      
+      // Handle amount mismatch with force link option
+      if (data.error && data.canForceLink) {
+        const confirmForce = window.confirm(
+          isArabic 
+            ? `⚠️ فرق في المبلغ!\n\nالحجز: ${data.bookingAmount} ر.س\nالدفع: ${data.paymentAmount} ر.س\nالفرق: ${(data.bookingAmount - data.paymentAmount).toFixed(2)} ر.س\n\nهل تريد الربط بالقوة؟`
+            : `⚠️ Amount Mismatch!\n\nBooking: ${data.bookingAmount} SAR\nPayment: ${data.paymentAmount} SAR\nDifference: ${(data.bookingAmount - data.paymentAmount).toFixed(2)} SAR\n\nForce link anyway?`
+        );
+        if (confirmForce) {
+          return handleLinkToBooking(bookingId, true);
+        }
+        setLinkingPayment(null);
+        return;
+      }
+      
       if (data.error) throw new Error(data.error);
       
       toast({
