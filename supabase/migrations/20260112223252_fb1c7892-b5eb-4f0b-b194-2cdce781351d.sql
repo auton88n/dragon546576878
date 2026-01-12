@@ -1,0 +1,33 @@
+INSERT INTO custom_invoices (
+  invoice_number,
+  client_name,
+  client_email,
+  client_phone,
+  client_type,
+  num_adults,
+  num_children,
+  total_amount,
+  visit_date,
+  visit_time,
+  services,
+  notes,
+  language,
+  status,
+  expires_at
+) VALUES (
+  'INV-' || UPPER(SUBSTR(MD5(RANDOM()::TEXT), 1, 6)),
+  'وليد',
+  'crossmint7@gmail.com',
+  '+966500000000',
+  'individual',
+  25,
+  0,
+  1000,
+  '2026-01-10',
+  '14:00',
+  '[]'::jsonb,
+  'Special group rate: 40 SAR per adult (25 adults × 40 = 1000 SAR)',
+  'ar',
+  'pending',
+  NOW() + INTERVAL '7 days'
+);
