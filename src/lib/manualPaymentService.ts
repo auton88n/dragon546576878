@@ -44,9 +44,9 @@ export async function markBookingAsPaid(
       // Don't fail completely - tickets can be regenerated
     }
 
-    // Step 4: Send confirmation email with tickets
+    // Step 4: Send confirmation email with tickets (force bypasses rate limit for admin)
     const { error: emailError } = await supabase.functions.invoke('send-booking-confirmation', {
-      body: { bookingId },
+      body: { bookingId, force: true },
     });
 
     if (emailError) {
@@ -76,9 +76,9 @@ export async function regenerateTickets(
 
     if (error) throw error;
 
-    // Also resend confirmation email with the new tickets
+    // Also resend confirmation email with the new tickets (force bypasses rate limit)
     await supabase.functions.invoke('send-booking-confirmation', {
-      body: { bookingId },
+      body: { bookingId, force: true },
     });
 
     return { success: true };
