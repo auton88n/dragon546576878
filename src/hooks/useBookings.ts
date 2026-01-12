@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -13,13 +13,38 @@ export interface BookingFilters {
   hideAbandoned: boolean;
 }
 
-const THROTTLE_MS = 2000;
+const THROTTLE_MS = 5000; // Increased to 5 seconds for less frequent updates
+const DEBOUNCE_MS = 300; // Debounce for filter changes
+
+// Debounce hook for search/filter inputs
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  
+  return debouncedValue;
+};
 
 export const useBookings = (filters: BookingFilters, page: number = 1, pageSize: number = 20) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const lastFetchRef = useRef<number>(0);
+  
+  // Debounce the search filter to prevent rapid queries
+  const debouncedSearch = useDebounce(filters.search, DEBOUNCE_MS);
+  
+  // Create stable filter reference with debounced search
+  const stableFilters = useMemo(() => ({
+    ...filters,
+    search: debouncedSearch,
+  }), [filters.status, filters.paymentStatus, filters.dateFrom, filters.dateTo, filters.hideAbandoned, debouncedSearch]);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -81,7 +106,7 @@ export const useBookings = (filters: BookingFilters, page: number = 1, pageSize:
     } finally {
       setLoading(false);
     }
-  }, [filters, page, pageSize]);
+  }, [stableFilters, page, pageSize]);
 
   const throttledFetch = useCallback(() => {
     const now = Date.now();

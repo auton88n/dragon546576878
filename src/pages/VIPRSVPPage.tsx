@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import { CheckCircle, XCircle, Calendar, Clock, MapPin, Gift, Camera, Utensils, Users, Play } from 'lucide-react';
+import { CheckCircle, XCircle, Calendar, Clock, MapPin, Gift, Camera, Utensils, Users, Play, Download, QrCode } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 
@@ -38,6 +38,15 @@ interface VIPContact {
   preferred_language: 'ar' | 'en';
 }
 
+interface VIPTicketData {
+  bookingReference: string;
+  visitDate: string;
+  visitTime: string;
+  guestCount: number;
+  qrCodeUrl: string | null;
+  ticketCode: string;
+}
+
 const perkIcons: Record<string, React.ReactNode> = {
   private_tour: <MapPin className="h-5 w-5" />,
   photography: <Camera className="h-5 w-5" />,
@@ -64,6 +73,8 @@ const VIPRSVPPage = () => {
   const [declineReason, setDeclineReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<'accepted' | 'declined' | null>(null);
+  const [vipTicket, setVipTicket] = useState<VIPTicketData | null>(null);
+  const [generatingTicket, setGeneratingTicket] = useState(false);
 
   const isArabic = contact?.preferred_language === 'ar';
   const dir = isArabic ? 'rtl' : 'ltr';
@@ -162,6 +173,34 @@ const VIPRSVPPage = () => {
       }
 
       setSubmitted('accepted');
+
+      // Generate VIP tickets
+      setGeneratingTicket(true);
+      try {
+        const { data: ticketResult, error: ticketError } = await supabase.functions.invoke('generate-vip-tickets', {
+          body: {
+            invitationId: invitation.id,
+            guestCount: (guestCount || 0) + 1, // Include the VIP themselves
+          },
+        });
+
+        if (ticketError) {
+          console.error('VIP ticket generation error:', ticketError);
+        } else if (ticketResult?.success) {
+          setVipTicket({
+            bookingReference: ticketResult.booking.bookingReference,
+            visitDate: ticketResult.booking.visitDate,
+            visitTime: ticketResult.booking.visitTime || '15:00',
+            guestCount: ticketResult.booking.guestCount,
+            qrCodeUrl: ticketResult.ticket?.qrCodeUrl || null,
+            ticketCode: ticketResult.ticket?.ticketCode || '',
+          });
+        }
+      } catch (ticketErr) {
+        console.error('Ticket generation failed:', ticketErr);
+      } finally {
+        setGeneratingTicket(false);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -239,9 +278,82 @@ const VIPRSVPPage = () => {
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">
                     {isArabic ? 'شكراً لتأكيد حضوركم!' : 'Thank you for confirming!'}
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 mb-6">
                     {isArabic ? 'نتطلع لاستقبالكم في سوق المفيجر' : 'We look forward to welcoming you at Souq Almufaijer'}
                   </p>
+
+                  {/* VIP Ticket Display */}
+                  {generatingTicket ? (
+                    <div className="mt-6 p-6 bg-[#FAF6F1] rounded-xl">
+                      <LoadingSpinner size="md" />
+                      <p className="mt-3 text-[#5C4A32]">
+                        {isArabic ? 'جاري إنشاء تذكرتك الخاصة...' : 'Generating your VIP ticket...'}
+                      </p>
+                    </div>
+                  ) : vipTicket ? (
+                    <div className="mt-6 p-6 bg-gradient-to-br from-[#FAF6F1] to-[#F5F1E8] rounded-xl border-2 border-[#C9A962]">
+                      <div className="flex items-center justify-center gap-2 mb-4">
+                        <QrCode className="h-6 w-6 text-[#C9A962]" />
+                        <h3 className="text-lg font-bold text-[#4A3625]">
+                          {isArabic ? 'تذكرة VIP الخاصة بكم' : 'Your VIP Ticket'}
+                        </h3>
+                      </div>
+                      
+                      {vipTicket.qrCodeUrl && (
+                        <div className="mb-4">
+                          <img 
+                            src={vipTicket.qrCodeUrl} 
+                            alt="VIP QR Code" 
+                            className="w-56 h-56 mx-auto rounded-xl border-4 border-[#C9A962] shadow-lg"
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="space-y-2 text-sm">
+                        <p className="font-mono text-[#4A3625] font-bold tracking-wider">
+                          {vipTicket.ticketCode}
+                        </p>
+                        <p className="text-[#5C4A32]">
+                          <span className="font-medium">{isArabic ? 'التاريخ:' : 'Date:'}</span>{' '}
+                          {format(new Date(vipTicket.visitDate), 'PPP', { locale: isArabic ? ar : enUS })}
+                        </p>
+                        <p className="text-[#5C4A32]">
+                          <span className="font-medium">{isArabic ? 'الضيوف:' : 'Guests:'}</span>{' '}
+                          {vipTicket.guestCount} {isArabic ? 'شخص' : 'person(s)'}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 flex flex-col gap-2">
+                        {vipTicket.qrCodeUrl && (
+                          <Button
+                            variant="outline"
+                            className="w-full border-[#C9A962] text-[#4A3625] hover:bg-[#C9A962]/10"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = vipTicket.qrCodeUrl!;
+                              link.download = `VIP-Ticket-${vipTicket.ticketCode}.gif`;
+                              link.click();
+                            }}
+                          >
+                            <Download className="h-4 w-4 me-2" />
+                            {isArabic ? 'حفظ رمز QR' : 'Save QR Code'}
+                          </Button>
+                        )}
+                      </div>
+
+                      <p className="mt-4 text-xs text-[#8B6F47]">
+                        {isArabic 
+                          ? 'تم إرسال التذكرة أيضاً إلى بريدكم الإلكتروني'
+                          : 'A copy has also been sent to your email'}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm text-[#8B6F47]">
+                      {isArabic 
+                        ? 'سيتم إرسال تذكرتكم إلى بريدكم الإلكتروني قريباً'
+                        : 'Your ticket will be sent to your email shortly'}
+                    </p>
+                  )}
                 </>
               ) : (
                 <>

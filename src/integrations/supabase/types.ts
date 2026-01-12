@@ -1020,6 +1020,7 @@ export type Database = {
       }
       vip_invitations: {
         Row: {
+          booking_id: string | null
           confirmed_at: string | null
           confirmed_guests: number | null
           contact_id: string | null
@@ -1038,6 +1039,7 @@ export type Database = {
           rsvp_token: string
         }
         Insert: {
+          booking_id?: string | null
           confirmed_at?: string | null
           confirmed_guests?: number | null
           contact_id?: string | null
@@ -1056,6 +1058,7 @@ export type Database = {
           rsvp_token?: string
         }
         Update: {
+          booking_id?: string | null
           confirmed_at?: string | null
           confirmed_guests?: number | null
           contact_id?: string | null
@@ -1074,6 +1077,13 @@ export type Database = {
           rsvp_token?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "vip_invitations_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vip_invitations_contact_id_fkey"
             columns: ["contact_id"]
