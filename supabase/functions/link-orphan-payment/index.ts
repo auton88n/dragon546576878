@@ -9,6 +9,7 @@ const corsHeaders = {
 interface LinkRequest {
   bookingId: string;
   paymentId: string;
+  forceLink?: boolean; // Allow admin to override amount mismatch
 }
 
 serve(async (req) => {
@@ -128,18 +129,25 @@ serve(async (req) => {
       );
     }
 
-    // 4. Verify amount matches
+    // 4. Verify amount matches (with optional force override for admin)
     const expectedAmountHalalas = Math.round(booking.total_amount * 100);
-    if (payment.amount !== expectedAmountHalalas) {
+    const amountMismatch = payment.amount !== expectedAmountHalalas;
+    
+    if (amountMismatch && !body.forceLink) {
       return new Response(
         JSON.stringify({ 
           success: false, 
           error: `Amount mismatch: booking is ${booking.total_amount} SAR, payment is ${payment.amount / 100} SAR`,
           bookingAmount: booking.total_amount,
           paymentAmount: payment.amount / 100,
+          canForceLink: true, // Tell frontend that force linking is available
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+    
+    if (amountMismatch && body.forceLink) {
+      console.warn(`ADMIN FORCE LINK: Amount mismatch overridden by ${user.email}. Booking: ${booking.total_amount} SAR, Payment: ${payment.amount / 100} SAR`);
     }
 
     // 5. Check if this payment is already linked to another booking
@@ -184,10 +192,10 @@ serve(async (req) => {
     // 7. Log the manual link event
     await supabase.from("payment_logs").insert([{
       booking_id: body.bookingId,
-      event_type: "manual_link",
+      event_type: amountMismatch ? "manual_link_forced" : "manual_link",
       payment_id: body.paymentId,
       payment_method: paymentMethod,
-      amount: booking.total_amount,
+      amount: payment.amount / 100, // Log actual payment amount
       status_before: booking.payment_status,
       status_after: "completed",
       changed_by: user.id,
@@ -196,6 +204,10 @@ serve(async (req) => {
         linkedBy: user.email,
         cardBrand: payment.source?.company,
         cardLast4: payment.source?.number?.slice(-4),
+        forceLinked: amountMismatch,
+        bookingAmount: booking.total_amount,
+        paymentAmount: payment.amount / 100,
+        amountDifference: amountMismatch ? (booking.total_amount - payment.amount / 100) : 0,
       },
     }]);
 
