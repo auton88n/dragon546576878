@@ -133,22 +133,34 @@ const generateVIPEmailHTML = (
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light only">
   <meta name="supported-color-schemes" content="light only">
+  <meta name="x-apple-disable-message-reformatting">
   <title>${subject}</title>
+  <style>
+    :root { color-scheme: light only; }
+    @media (prefers-color-scheme: dark) {
+      .email-body { background-color: #4A3625 !important; }
+      .email-content { background-color: #4A3625 !important; }
+    }
+    [data-ogsc] .email-body { background-color: #4A3625 !important; }
+    [data-ogsc] .email-content { background-color: #4A3625 !important; }
+    [data-ogsb] .email-body { background-color: #4A3625 !important; }
+    [data-ogsb] .email-content { background-color: #4A3625 !important; }
+  </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F5F1E8; direction: ${dir}; -webkit-text-fill-color: inherit;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+<body class="email-body" style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #4A3625 !important; direction: ${dir}; -webkit-text-fill-color: inherit;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #4A3625 !important;">
     <tr>
       <td style="padding: 32px 16px;">
-        <table role="presentation" style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(139, 111, 71, 0.12);">
+        <table role="presentation" style="max-width: 580px; margin: 0 auto; background-color: #4A3625 !important; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);">
           
-          <!-- Header - Compact -->
+          <!-- Header - Compact with Gold gradient -->
           <tr>
-            <td style="background: linear-gradient(135deg, #8B6F47 0%, #5C4A32 100%); padding: 20px 16px; text-align: center;">
-              <div style="width: 60px; height: 2px; background: linear-gradient(90deg, #C9A962, #E8D5A3, #C9A962); margin: 0 auto 12px auto;"></div>
-              <h1 style="color: #FFFFFF; font-size: 20px; margin: 0 0 6px 0; font-weight: 700; font-family: 'Cairo', Arial, sans-serif;">
+            <td style="background: linear-gradient(135deg, #C9A962 0%, #E8D5A3 50%, #C9A962 100%) !important; padding: 20px 16px; text-align: center;">
+              <div style="width: 60px; height: 2px; background: linear-gradient(90deg, #4A3625, #3D2E1F, #4A3625); margin: 0 auto 12px auto;"></div>
+              <h1 style="color: #3D2E1F !important; font-size: 20px; margin: 0 0 6px 0; font-weight: 700; font-family: 'Cairo', Arial, sans-serif;">
                 سوق المفيجر
               </h1>
-              <p style="color: #F5F1E8; font-size: 12px; margin: 0;">
+              <p style="color: #4A3625 !important; font-size: 12px; margin: 0; font-weight: 600;">
                 ${isArabic ? 'دعوة حصرية للشخصيات المميزة' : 'Exclusive VIP Invitation'}
               </p>
             </td>
@@ -156,36 +168,36 @@ const generateVIPEmailHTML = (
           
           <!-- Main Content -->
           <tr>
-            <td style="padding: 28px 24px;">
+            <td class="email-content" style="padding: 28px 24px; background-color: #4A3625 !important;">
               <!-- Greeting -->
-              <p style="color: #3D2E1F; font-size: 16px; margin: 0 0 18px 0; line-height: 1.5; font-weight: 500;">
+              <p style="color: #F5F1E8 !important; font-size: 16px; margin: 0 0 18px 0; line-height: 1.5; font-weight: 500;">
                 ${greeting}
               </p>
               
               <!-- Message Body -->
-              <div style="color: #5C4A3A; font-size: 14px; margin: 0 0 24px 0; line-height: 1.7;">
-                ${messageBody.split('\n').map(p => `<p style="margin: 0 0 12px 0;">${p}</p>`).join('')}
+              <div style="color: #D4C5B0 !important; font-size: 14px; margin: 0 0 24px 0; line-height: 1.7;">
+                ${messageBody.split('\n').map(p => `<p style="margin: 0 0 12px 0; color: #D4C5B0 !important;">${p}</p>`).join('')}
               </div>
               
               <!-- Guest + Event Details - Side by Side with Equal Heights -->
               <table role="presentation" style="width: 100%; margin-bottom: 16px;">
                 <tr>
                   <td style="width: 48%; vertical-align: top; padding-${isArabic ? 'left' : 'right'}: 8px; height: 70px;">
-                    <div style="background-color: #FAF7F2; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962; height: 100%; box-sizing: border-box;">
-                      <p style="color: #8B6F47; font-size: 10px; margin: 0 0 6px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
+                    <div style="background-color: #3D2E1F !important; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962; height: 100%; box-sizing: border-box;">
+                      <p style="color: #C9A962 !important; font-size: 10px; margin: 0 0 6px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
                         ${isArabic ? 'عدد الضيوف' : 'GUESTS'}
                       </p>
-                      <p style="color: #3D2E1F; font-size: 14px; margin: 0; font-weight: 600;">
+                      <p style="color: #F5F1E8 !important; font-size: 14px; margin: 0; font-weight: 600;">
                         ${isArabic ? `حتى ${guestAllowance} ضيوف` : `Up to ${guestAllowance}`}
                       </p>
                     </div>
                   </td>
                   <td style="width: 48%; vertical-align: top; padding-${isArabic ? 'right' : 'left'}: 8px; height: 70px;">
-                    <div style="background-color: #FAF7F2; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962; height: 100%; box-sizing: border-box;">
-                      <p style="color: #8B6F47; font-size: 10px; margin: 0 0 6px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
+                    <div style="background-color: #3D2E1F !important; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #C9A962; height: 100%; box-sizing: border-box;">
+                      <p style="color: #C9A962 !important; font-size: 10px; margin: 0 0 6px 0; font-weight: 600; ${!isArabic ? 'text-transform: uppercase;' : ''}">
                         ${isArabic ? 'الموعد' : 'DATE & TIME'}
                       </p>
-                      <p style="color: #3D2E1F; font-size: 14px; margin: 0; font-weight: 600;">
+                      <p style="color: #F5F1E8 !important; font-size: 14px; margin: 0; font-weight: 600;">
                         ${eventDate ? eventDate : (isArabic ? 'سيُحدد لاحقاً' : 'TBD')}${eventTime ? ` • ${eventTime}` : ''}
                       </p>
                     </div>
@@ -212,7 +224,7 @@ const generateVIPEmailHTML = (
                                   </td>
                                 </tr>
                               </table>
-                              <p style="color: #FFFFFF; font-size: 13px; font-weight: 600; margin: 0;">
+                              <p style="color: #FFFFFF !important; font-size: 13px; font-weight: 600; margin: 0;">
                                 ${isArabic ? 'اكتشف سحر المفيجر' : 'Discover Almufaijer'}
                               </p>
                             </div>
@@ -230,7 +242,7 @@ const generateVIPEmailHTML = (
               <table role="presentation" style="width: 100%; margin-bottom: 16px;">
                 <tr>
                   <td style="text-align: center; padding: 4px 0;">
-                    <a href="${rsvpUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #5C4A32, #4A3625); color: #ffffff; text-decoration: none; padding: 11px 28px; border-radius: 6px; font-size: 14px; font-weight: 600; border: 1px solid #C9A962;">
+                    <a href="${rsvpUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #C9A962, #E8D5A3) !important; color: #3D2E1F !important; text-decoration: none; padding: 11px 28px; border-radius: 6px; font-size: 14px; font-weight: 600; border: 1px solid #C9A962;">
                       ${isArabic ? 'تأكيد الحضور' : 'Confirm Attendance'}
                     </a>
                   </td>
@@ -240,8 +252,8 @@ const generateVIPEmailHTML = (
               
               ${offerDetails ? `
               <!-- Additional Details -->
-              <div style="background-color: #FAF7F2; padding: 12px 14px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #E8D5A3;">
-                <p style="color: #5C4A3A; font-size: 12px; margin: 0; line-height: 1.5;">
+              <div style="background-color: #3D2E1F !important; padding: 12px 14px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #C9A962;">
+                <p style="color: #D4C5B0 !important; font-size: 12px; margin: 0; line-height: 1.5;">
                   ${offerDetails}
                 </p>
               </div>
@@ -249,10 +261,10 @@ const generateVIPEmailHTML = (
               
               <!-- Signature -->
               <div style="width: 50px; height: 1px; background: linear-gradient(90deg, transparent, #C9A962, transparent); margin: 8px auto 10px auto;"></div>
-              <p style="color: #5C4A3A; font-size: 12px; margin: 0; text-align: center;">
+              <p style="color: #D4C5B0 !important; font-size: 12px; margin: 0; text-align: center;">
                 ${regardsText}
               </p>
-              <p style="color: #3D2E1F; font-size: 13px; font-weight: 600; margin: 4px 0 0 0; text-align: center;">
+              <p style="color: #F5F1E8 !important; font-size: 13px; font-weight: 600; margin: 4px 0 0 0; text-align: center;">
                 ${teamText}
               </p>
             </td>
@@ -260,8 +272,8 @@ const generateVIPEmailHTML = (
           
           <!-- Footer - Compact -->
           <tr>
-            <td style="background-color: #4A3625; padding: 14px; text-align: center;">
-              <p style="color: #C9A962; font-size: 12px; font-weight: 500; margin: 0;">
+            <td style="background-color: #3D2E1F !important; padding: 14px; text-align: center;">
+              <p style="color: #C9A962 !important; font-size: 12px; font-weight: 500; margin: 0;">
                 ${isArabic ? 'سوق المفيجر | قرية المفيجر التراثية' : 'Souq Almufaijer | Heritage Village'}
               </p>
             </td>

@@ -181,26 +181,29 @@ const generateVIPEmailTemplate = (
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light only">
   <meta name="supported-color-schemes" content="light only">
+  <meta name="x-apple-disable-message-reformatting">
   <title>${translations.title}</title>
   <style>
     :root { color-scheme: light only; }
     @media (prefers-color-scheme: dark) {
-      .email-body { background-color: #F5F1EB !important; }
-      .email-content { background-color: #FFFFFF !important; }
+      .email-body { background-color: #4A3625 !important; }
+      .email-content { background-color: #4A3625 !important; }
     }
-    [data-ogsc] .email-body { background-color: #F5F1EB !important; }
-    [data-ogsc] .email-content { background-color: #FFFFFF !important; }
+    [data-ogsc] .email-body { background-color: #4A3625 !important; }
+    [data-ogsc] .email-content { background-color: #4A3625 !important; }
+    [data-ogsb] .email-body { background-color: #4A3625 !important; }
+    [data-ogsb] .email-content { background-color: #4A3625 !important; }
   </style>
 </head>
-<body class="email-body" style="margin: 0; padding: 0; background-color: #F5F1EB !important; font-family: Arial, sans-serif; direction: ${direction};">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #F5F1EB !important;">
+<body class="email-body" style="margin: 0; padding: 0; background-color: #4A3625 !important; font-family: Arial, sans-serif; direction: ${direction}; -webkit-text-fill-color: inherit;">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #4A3625 !important;">
     <tr>
       <td align="center" style="padding: 24px 16px;">
         <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px;">
           
           <!-- Premium VIP Header -->
           <tr>
-            <td align="center" style="background: linear-gradient(135deg, #4A3625 0%, #3D2E1F 50%, #4A3625 100%); padding: 40px 24px; border-radius: 20px 20px 0 0; position: relative;">
+            <td align="center" style="background: linear-gradient(135deg, #4A3625 0%, #3D2E1F 50%, #4A3625 100%) !important; padding: 40px 24px; border-radius: 20px 20px 0 0; position: relative;">
               <!-- Decorative top border -->
               <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, transparent 0%, #C9A962 20%, #E8D5A3 50%, #C9A962 80%, transparent 100%);"></div>
               
@@ -208,19 +211,19 @@ const generateVIPEmailTemplate = (
                 <tr>
                   <td align="center" style="padding-bottom: 8px;">
                     <!-- VIP Badge -->
-                    <span style="display: inline-block; background: linear-gradient(135deg, #C9A962 0%, #E8D5A3 50%, #C9A962 100%); color: #4A3625; padding: 6px 24px; border-radius: 20px; font-size: 11px; font-weight: 700; font-family: Arial, sans-serif; letter-spacing: 3px; text-transform: uppercase;">
+                    <span style="display: inline-block; background: linear-gradient(135deg, #C9A962 0%, #E8D5A3 50%, #C9A962 100%) !important; color: #4A3625 !important; padding: 6px 24px; border-radius: 20px; font-size: 11px; font-weight: 700; font-family: Arial, sans-serif; letter-spacing: 3px; text-transform: uppercase;">
                       VIP INVITATION
                     </span>
                   </td>
                 </tr>
                 <tr>
                   <td align="center" style="padding: 16px 0 4px 0;">
-                    <h1 style="color: #C9A962; font-size: 32px; margin: 0; font-weight: 700; font-family: 'Times New Roman', serif;">سوق المفيجر</h1>
+                    <h1 style="color: #C9A962 !important; font-size: 32px; margin: 0; font-weight: 700; font-family: 'Times New Roman', serif;">سوق المفيجر</h1>
                   </td>
                 </tr>
                 <tr>
                   <td align="center" style="padding-bottom: 20px;">
-                    <p style="color: #D4C5B0; font-size: 11px; margin: 0; letter-spacing: 4px; text-transform: uppercase; font-family: Arial, sans-serif;">SOUQ ALMUFAIJER</p>
+                    <p style="color: #D4C5B0 !important; font-size: 11px; margin: 0; letter-spacing: 4px; text-transform: uppercase; font-family: Arial, sans-serif;">SOUQ ALMUFAIJER</p>
                   </td>
                 </tr>
                 <tr>
@@ -230,7 +233,7 @@ const generateVIPEmailTemplate = (
                 </tr>
                 <tr>
                   <td align="center">
-                    <p style="color: #F5F1E8; margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 1px; font-family: Arial, sans-serif;">
+                    <p style="color: #F5F1E8 !important; margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 1px; font-family: Arial, sans-serif;">
                       ✓ ${isArabic ? "تم تأكيد الحضور" : "ATTENDANCE CONFIRMED"}
                     </p>
                   </td>
@@ -241,38 +244,38 @@ const generateVIPEmailTemplate = (
           
           <!-- Main Content -->
           <tr>
-            <td class="email-content" style="background-color: #FFFFFF !important; padding: 32px 24px; border-radius: 0 0 20px 20px;">
+            <td class="email-content" style="background-color: #4A3625 !important; padding: 32px 24px; border-radius: 0 0 20px 20px;">
               
               <!-- Greeting -->
-              <h2 style="color: #3D2E1F; margin: 0 0 12px; font-size: 22px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.greeting}</h2>
-              <p style="color: #5C4A3A; margin: 0 0 24px; line-height: 1.7; font-size: 15px; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.thankYou}</p>
+              <h2 style="color: #F5F1E8 !important; margin: 0 0 12px; font-size: 22px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.greeting}</h2>
+              <p style="color: #D4C5B0 !important; margin: 0 0 24px; line-height: 1.7; font-size: 15px; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.thankYou}</p>
               
               
               <!-- Event Details Card -->
               <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
                 <tr>
                   <td style="padding-bottom: 12px;">
-                    <h3 style="color: #3D2E1F; margin: 0; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">
+                    <h3 style="color: #C9A962 !important; margin: 0; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">
                       📅 ${translations.eventDetails}
                     </h3>
                   </td>
                 </tr>
                 <tr>
                   <td>
-                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #FAF8F5; border-radius: 12px; border: 1px solid #E8DED0;">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #3D2E1F !important; border-radius: 12px; border: 1px solid #C9A962;">
                       <tr>
-                        <td width="50%" style="padding: 16px; vertical-align: top; border-${isArabic ? "left" : "right"}: 1px solid #E8DED0;">
-                          <p style="color: #8B6F47; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.date}</p>
-                          <p style="color: #3D2E1F; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${formattedDate}</p>
+                        <td width="50%" style="padding: 16px; vertical-align: top; border-${isArabic ? "left" : "right"}: 1px solid #C9A962;">
+                          <p style="color: #C9A962 !important; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.date}</p>
+                          <p style="color: #F5F1E8 !important; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${formattedDate}</p>
                         </td>
                         <td width="50%" style="padding: 16px; vertical-align: top;">
-                          <p style="color: #8B6F47; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.guests}</p>
-                          <p style="color: #3D2E1F; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${booking.adult_count || 1} ${isArabic ? "شخص" : "person(s)"}</p>
+                          <p style="color: #C9A962 !important; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.guests}</p>
+                          <p style="color: #F5F1E8 !important; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${booking.adult_count || 1} ${isArabic ? "شخص" : "person(s)"}</p>
                         </td>
                       </tr>
                       <tr>
-                        <td colspan="2" style="padding: 12px 16px; background-color: #4A3625; border-radius: 0 0 12px 12px;">
-                          <p style="color: #C9A962; margin: 0; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif; text-align: center;">
+                        <td colspan="2" style="padding: 12px 16px; background-color: #C9A962 !important; border-radius: 0 0 12px 12px;">
+                          <p style="color: #3D2E1F !important; margin: 0; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif; text-align: center;">
                             ☀️ ${translations.validAllDay} ${translations.operatingHours}
                           </p>
                         </td>
@@ -287,20 +290,6 @@ const generateVIPEmailTemplate = (
               
               <!-- QR Code -->
               ${qrHtml}
-              
-              <!-- Closing -->
-              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 24px;">
-                <tr>
-                  <td align="center" style="padding: 20px; background: linear-gradient(135deg, #FAF7F2 0%, #F5F1E8 100%); border-radius: 12px; border: 1px solid #E8DED0;">
-                    <p style="color: #4A3625; margin: 0 0 8px; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif;">
-                      ${translations.seeYouSoon}
-                    </p>
-                    <p style="color: #8B6F47; margin: 0; font-size: 12px; font-family: Arial, sans-serif;">
-                      ${translations.questions} <a href="mailto:info@almufaijer.com" style="color: #C9A962; text-decoration: none; font-weight: 600;">info@almufaijer.com</a>
-                    </p>
-                  </td>
-                </tr>
-              </table>
               
             </td>
           </tr>
