@@ -117,7 +117,7 @@ const generateVIPEmailTemplate = (
         </tr>
         <tr>
           <td>
-            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #4A3625; border-radius: 12px; border: 2px solid #C9A962;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#4A3625" class="dark-cell" style="background-color: #4A3625 !important; border-radius: 12px; border: 2px solid #C9A962;">
               ${perkItems}
             </table>
           </td>
@@ -185,18 +185,22 @@ const generateVIPEmailTemplate = (
   <title>${translations.title}</title>
   <style>
     :root { color-scheme: light only; }
+    * { -webkit-text-fill-color: inherit !important; }
+    body, table, td, div, p, span { background-color: inherit !important; }
     @media (prefers-color-scheme: dark) {
-      .email-body { background-color: #4A3625 !important; }
-      .email-content { background-color: #4A3625 !important; }
+      .email-body, .email-content, .dark-cell { background-color: #4A3625 !important; }
+      .darker-cell { background-color: #3D2E1F !important; }
+      .gold-cell { background-color: #C9A962 !important; }
     }
-    [data-ogsc] .email-body { background-color: #4A3625 !important; }
-    [data-ogsc] .email-content { background-color: #4A3625 !important; }
-    [data-ogsb] .email-body { background-color: #4A3625 !important; }
-    [data-ogsb] .email-content { background-color: #4A3625 !important; }
+    [data-ogsc] .email-body, [data-ogsb] .email-body { background-color: #4A3625 !important; }
+    [data-ogsc] .email-content, [data-ogsb] .email-content { background-color: #4A3625 !important; }
+    [data-ogsc] .dark-cell, [data-ogsb] .dark-cell { background-color: #4A3625 !important; }
+    [data-ogsc] .darker-cell, [data-ogsb] .darker-cell { background-color: #3D2E1F !important; }
+    [data-ogsc] .gold-cell, [data-ogsb] .gold-cell { background-color: #C9A962 !important; }
   </style>
 </head>
-<body class="email-body" style="margin: 0; padding: 0; background-color: #4A3625 !important; font-family: Arial, sans-serif; direction: ${direction}; -webkit-text-fill-color: inherit;">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #4A3625 !important;">
+<body class="email-body" bgcolor="#4A3625" style="margin: 0; padding: 0; background-color: #4A3625 !important; font-family: Arial, sans-serif; direction: ${direction}; -webkit-text-fill-color: inherit;">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#4A3625" style="background-color: #4A3625 !important;">
     <tr>
       <td align="center" style="padding: 24px 16px;">
         <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px;">
@@ -244,7 +248,7 @@ const generateVIPEmailTemplate = (
           
           <!-- Main Content -->
           <tr>
-            <td class="email-content" style="background-color: #4A3625 !important; padding: 32px 24px; border-radius: 0 0 20px 20px;">
+            <td class="email-content dark-cell" bgcolor="#4A3625" style="background-color: #4A3625 !important; padding: 32px 24px; border-radius: 0 0 20px 20px;">
               
               <!-- Greeting -->
               <h2 style="color: #F5F1E8 !important; margin: 0 0 12px; font-size: 22px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.greeting}</h2>
@@ -262,19 +266,19 @@ const generateVIPEmailTemplate = (
                 </tr>
                 <tr>
                   <td>
-                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #3D2E1F !important; border-radius: 12px; border: 1px solid #C9A962;">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#3D2E1F" class="darker-cell" style="background-color: #3D2E1F !important; border-radius: 12px; border: 1px solid #C9A962;">
                       <tr>
-                        <td width="50%" style="padding: 16px; vertical-align: top; border-${isArabic ? "left" : "right"}: 1px solid #C9A962;">
+                        <td width="50%" bgcolor="#3D2E1F" class="darker-cell" style="background-color: #3D2E1F !important; padding: 16px; vertical-align: top; border-${isArabic ? "left" : "right"}: 1px solid #C9A962;">
                           <p style="color: #C9A962 !important; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.date}</p>
                           <p style="color: #F5F1E8 !important; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${formattedDate}</p>
                         </td>
-                        <td width="50%" style="padding: 16px; vertical-align: top;">
+                        <td width="50%" bgcolor="#3D2E1F" class="darker-cell" style="background-color: #3D2E1F !important; padding: 16px; vertical-align: top;">
                           <p style="color: #C9A962 !important; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.guests}</p>
                           <p style="color: #F5F1E8 !important; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${booking.adult_count || 1} ${isArabic ? "شخص" : "person(s)"}</p>
                         </td>
                       </tr>
                       <tr>
-                        <td colspan="2" style="padding: 12px 16px; background-color: #C9A962 !important; border-radius: 0 0 12px 12px;">
+                        <td colspan="2" bgcolor="#C9A962" class="gold-cell" style="background-color: #C9A962 !important; padding: 12px 16px; border-radius: 0 0 12px 12px;">
                           <p style="color: #3D2E1F !important; margin: 0; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif; text-align: center;">
                             ☀️ ${translations.validAllDay} ${translations.operatingHours}
                           </p>
@@ -296,7 +300,7 @@ const generateVIPEmailTemplate = (
           
           <!-- Footer -->
           <tr>
-            <td align="center" style="padding: 24px 16px;">
+            <td align="center" bgcolor="#4A3625" class="dark-cell" style="background-color: #4A3625 !important; padding: 24px 16px;">
               <a href="https://maps.app.goo.gl/g4qJ4mM9ZVqg323t8" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #8B7355 0%, #6B5A45 100%); color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif; margin-bottom: 16px;">
                 📍 ${isArabic ? "احصل على الاتجاهات" : "Get Directions"}
               </a>
