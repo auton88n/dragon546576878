@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Eye, Globe, Moon, Sun, Monitor } from 'lucide-react';
+import { Eye, Globe } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useLanguage } from '@/hooks/useLanguage';
 
 interface VIPPerk {
@@ -51,12 +51,18 @@ const generateVIPConfirmationPreview = (
     scanInstructions: isArabic 
       ? "قم بإظهار هذا الرمز عند البوابة الرئيسية"
       : "Present this code at the main entrance",
+    
     seeYouSoon: isArabic ? "نتطلع لاستقبالكم!" : "We look forward to welcoming you!",
     address: isArabic ? "سوق المفيجر، المملكة العربية السعودية" : "Souq Almufaijer, Kingdom of Saudi Arabia",
+    questions: isArabic 
+      ? "للاستفسارات، تواصلوا معنا على"
+      : "For inquiries, contact us at",
   };
 
+  // Sample date
   const sampleDate = isArabic ? "الجمعة، ٢٥ يناير ٢٠٢٦" : "Friday, January 25, 2026";
 
+  // Generate perks HTML
   let perksHtml = "";
   if (perks && perks.length > 0) {
     const perkItems = perks.map((perk) => {
@@ -72,7 +78,7 @@ const generateVIPConfirmationPreview = (
                   <span style="font-size: 20px;">${emoji}</span>
                 </td>
                 <td style="text-align: ${textAlign}; vertical-align: middle;">
-                  <span style="color: #F5F1E8 !important; font-size: 14px; font-family: Arial, sans-serif;">${label}</span>
+                  <span style="color: #F5F1E8; font-size: 14px; font-family: Arial, sans-serif;">${label}</span>
                 </td>
               </tr>
             </table>
@@ -84,14 +90,14 @@ const generateVIPConfirmationPreview = (
       <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
         <tr>
           <td style="padding-bottom: 12px;">
-            <h3 style="color: #C9A962 !important; margin: 0; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">
+            <h3 style="color: #C9A962; margin: 0; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">
               ✨ ${translations.yourPerks}
             </h3>
           </td>
         </tr>
         <tr>
           <td>
-            <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#4A3625" class="dark-cell" style="background-color: #4A3625 !important; border-radius: 12px; border: 2px solid #C9A962;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #4A3625; border-radius: 12px; border: 2px solid #C9A962;">
               ${perkItems}
             </table>
           </td>
@@ -99,28 +105,29 @@ const generateVIPConfirmationPreview = (
       </table>`;
   }
 
+  // QR code section with placeholder
   const qrHtml = `
     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
       <tr>
         <td style="padding-bottom: 12px;">
-          <h3 style="color: #C9A962 !important; margin: 0; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">
+          <h3 style="color: #3D2E1F; margin: 0; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">
             🎫 ${translations.entryTicket}
           </h3>
         </td>
       </tr>
       <tr>
         <td align="center">
-          <table cellpadding="0" cellspacing="0" border="0" width="300" style="background: linear-gradient(135deg, #FAF7F2 0%, #F5F1E8 100%) !important; border-radius: 20px; border: 3px solid #C9A962; box-shadow: 0 8px 24px rgba(74, 54, 37, 0.15);">
+          <table cellpadding="0" cellspacing="0" border="0" width="300" style="background: linear-gradient(135deg, #FAF7F2 0%, #F5F1E8 100%); border-radius: 20px; border: 3px solid #C9A962; box-shadow: 0 8px 24px rgba(74, 54, 37, 0.15);">
             <tr>
               <td align="center" style="padding: 24px 20px 16px 20px;">
-                <span style="display: inline-block; background: linear-gradient(135deg, #C9A962 0%, #E8D5A3 50%, #C9A962 100%) !important; color: #4A3625 !important; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 700; font-family: Arial, sans-serif; letter-spacing: 2px; text-transform: uppercase;">
+                <span style="display: inline-block; background: linear-gradient(135deg, #C9A962 0%, #E8D5A3 50%, #C9A962 100%); color: #4A3625; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 700; font-family: Arial, sans-serif; letter-spacing: 2px; text-transform: uppercase;">
                   VIP GUEST
                 </span>
               </td>
             </tr>
             <tr>
               <td align="center" style="padding: 0 24px 16px 24px;">
-                <div style="width: 200px; height: 200px; background: #f0f0f0 !important; border: 4px solid #C9A962; border-radius: 16px; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 200px; height: 200px; background: #f0f0f0; border: 4px solid #C9A962; border-radius: 16px; display: flex; align-items: center; justify-content: center;">
                   <svg width="150" height="150" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="150" height="150" fill="#E5E5E5"/>
                     <rect x="15" y="15" width="30" height="30" fill="#333"/>
@@ -138,19 +145,19 @@ const generateVIPConfirmationPreview = (
             </tr>
             <tr>
               <td align="center" style="padding: 0 20px 8px 20px;">
-                <span style="display: inline-block; background-color: #4A3625 !important; color: #F5F1E8 !important; padding: 6px 16px; border-radius: 12px; font-size: 12px; font-weight: 600; font-family: Arial, sans-serif;">
+                <span style="display: inline-block; background-color: #4A3625; color: #F5F1E8; padding: 6px 16px; border-radius: 12px; font-size: 12px; font-weight: 600; font-family: Arial, sans-serif;">
                   ${guestCount} ${isArabic ? "ضيف" : "Guest(s)"}
                 </span>
               </td>
             </tr>
             <tr>
-              <td align="center" style="padding: 0 20px 16px 20px; font-family: monospace; font-size: 12px; color: #4A3625 !important; letter-spacing: 2px; font-weight: 700;">
+              <td align="center" style="padding: 0 20px 16px 20px; font-family: monospace; font-size: 12px; color: #4A3625; letter-spacing: 2px; font-weight: 700;">
                 VIP-SAMPLE-2026
               </td>
             </tr>
             <tr>
               <td align="center" style="padding: 0 20px 20px 20px;">
-                <p style="color: #8B6F47 !important; margin: 0; font-size: 11px; font-family: Arial, sans-serif;">
+                <p style="color: #8B6F47; margin: 0; font-size: 11px; font-family: Arial, sans-serif;">
                   📱 ${translations.scanInstructions}
                 </p>
               </td>
@@ -167,49 +174,42 @@ const generateVIPConfirmationPreview = (
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light only">
   <meta name="supported-color-schemes" content="light only">
-  <meta name="x-apple-disable-message-reformatting">
   <title>${translations.title}</title>
   <style>
     :root { color-scheme: light only; }
-    * { -webkit-text-fill-color: inherit !important; }
-    body, table, td, div, p, span { background-color: inherit !important; }
     @media (prefers-color-scheme: dark) {
-      .email-body, .email-content, .dark-cell { background-color: #4A3625 !important; }
-      .darker-cell { background-color: #3D2E1F !important; }
-      .gold-cell { background-color: #C9A962 !important; }
+      .email-body { background-color: #F5F1EB !important; }
+      .email-content { background-color: #FFFFFF !important; }
     }
-    [data-ogsc] .email-body, [data-ogsb] .email-body { background-color: #4A3625 !important; }
-    [data-ogsc] .email-content, [data-ogsb] .email-content { background-color: #4A3625 !important; }
-    [data-ogsc] .dark-cell, [data-ogsb] .dark-cell { background-color: #4A3625 !important; }
-    [data-ogsc] .darker-cell, [data-ogsb] .darker-cell { background-color: #3D2E1F !important; }
-    [data-ogsc] .gold-cell, [data-ogsb] .gold-cell { background-color: #C9A962 !important; }
+    [data-ogsc] .email-body { background-color: #F5F1EB !important; }
+    [data-ogsc] .email-content { background-color: #FFFFFF !important; }
   </style>
 </head>
-<body class="email-body" bgcolor="#4A3625" style="margin: 0; padding: 0; background-color: #4A3625 !important; font-family: Arial, sans-serif; direction: ${direction}; -webkit-text-fill-color: inherit;">
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#4A3625" style="background-color: #4A3625 !important;">
+<body class="email-body" style="margin: 0; padding: 0; background-color: #F5F1EB !important; font-family: Arial, sans-serif; direction: ${direction};">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #F5F1EB !important;">
     <tr>
       <td align="center" style="padding: 24px 16px;">
         <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px;">
           
           <!-- Premium VIP Header -->
           <tr>
-            <td align="center" style="background: linear-gradient(135deg, #4A3625 0%, #3D2E1F 50%, #4A3625 100%) !important; padding: 40px 24px; border-radius: 20px 20px 0 0; position: relative;">
+            <td align="center" style="background: linear-gradient(135deg, #4A3625 0%, #3D2E1F 50%, #4A3625 100%); padding: 40px 24px; border-radius: 20px 20px 0 0; position: relative;">
               <table cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center" style="padding-bottom: 8px;">
-                    <span style="display: inline-block; background: linear-gradient(135deg, #C9A962 0%, #E8D5A3 50%, #C9A962 100%) !important; color: #4A3625 !important; padding: 6px 24px; border-radius: 20px; font-size: 11px; font-weight: 700; font-family: Arial, sans-serif; letter-spacing: 3px; text-transform: uppercase;">
+                    <span style="display: inline-block; background: linear-gradient(135deg, #C9A962 0%, #E8D5A3 50%, #C9A962 100%); color: #4A3625; padding: 6px 24px; border-radius: 20px; font-size: 11px; font-weight: 700; font-family: Arial, sans-serif; letter-spacing: 3px; text-transform: uppercase;">
                       VIP INVITATION
                     </span>
                   </td>
                 </tr>
                 <tr>
                   <td align="center" style="padding: 16px 0 4px 0;">
-                    <h1 style="color: #C9A962 !important; font-size: 32px; margin: 0; font-weight: 700; font-family: 'Times New Roman', serif;">سوق المفيجر</h1>
+                    <h1 style="color: #C9A962; font-size: 32px; margin: 0; font-weight: 700; font-family: 'Times New Roman', serif;">سوق المفيجر</h1>
                   </td>
                 </tr>
                 <tr>
                   <td align="center" style="padding-bottom: 20px;">
-                    <p style="color: #D4C5B0 !important; font-size: 11px; margin: 0; letter-spacing: 4px; text-transform: uppercase; font-family: Arial, sans-serif;">SOUQ ALMUFAIJER</p>
+                    <p style="color: #D4C5B0; font-size: 11px; margin: 0; letter-spacing: 4px; text-transform: uppercase; font-family: Arial, sans-serif;">SOUQ ALMUFAIJER</p>
                   </td>
                 </tr>
                 <tr>
@@ -219,7 +219,7 @@ const generateVIPConfirmationPreview = (
                 </tr>
                 <tr>
                   <td align="center">
-                    <p style="color: #F5F1E8 !important; margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 1px; font-family: Arial, sans-serif;">
+                    <p style="color: #F5F1E8; margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 1px; font-family: Arial, sans-serif;">
                       ✓ ${isArabic ? "تم تأكيد الحضور" : "ATTENDANCE CONFIRMED"}
                     </p>
                   </td>
@@ -230,38 +230,38 @@ const generateVIPConfirmationPreview = (
           
           <!-- Main Content -->
           <tr>
-            <td class="email-content dark-cell" bgcolor="#4A3625" style="background-color: #4A3625 !important; padding: 32px 24px; border-radius: 0 0 20px 20px;">
+            <td class="email-content" style="background-color: #FFFFFF !important; padding: 32px 24px; border-radius: 0 0 20px 20px;">
               
               <!-- Greeting -->
-              <h2 style="color: #F5F1E8 !important; margin: 0 0 12px; font-size: 22px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.greeting}</h2>
-              <p style="color: #D4C5B0 !important; margin: 0 0 24px; line-height: 1.7; font-size: 15px; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.thankYou}</p>
+              <h2 style="color: #3D2E1F; margin: 0 0 12px; font-size: 22px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.greeting}</h2>
+              <p style="color: #5C4A3A; margin: 0 0 24px; line-height: 1.7; font-size: 15px; font-family: Arial, sans-serif; text-align: ${textAlign};">${translations.thankYou}</p>
               
               
               <!-- Event Details Card -->
               <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 24px;">
                 <tr>
                   <td style="padding-bottom: 12px;">
-                    <h3 style="color: #C9A962 !important; margin: 0; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">
+                    <h3 style="color: #3D2E1F; margin: 0; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif; text-align: ${textAlign};">
                       📅 ${translations.eventDetails}
                     </h3>
                   </td>
                 </tr>
                 <tr>
                   <td>
-                    <table cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#3D2E1F" class="darker-cell" style="background-color: #3D2E1F !important; border-radius: 12px; border: 1px solid #C9A962;">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #FAF8F5; border-radius: 12px; border: 1px solid #E8DED0;">
                       <tr>
-                        <td width="50%" bgcolor="#3D2E1F" class="darker-cell" style="background-color: #3D2E1F !important; padding: 16px; vertical-align: top; border-${isArabic ? "left" : "right"}: 1px solid #C9A962;">
-                          <p style="color: #C9A962 !important; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.date}</p>
-                          <p style="color: #F5F1E8 !important; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${sampleDate}</p>
+                        <td width="50%" style="padding: 16px; vertical-align: top; border-${isArabic ? "left" : "right"}: 1px solid #E8DED0;">
+                          <p style="color: #8B6F47; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.date}</p>
+                          <p style="color: #3D2E1F; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${sampleDate}</p>
                         </td>
-                        <td width="50%" bgcolor="#3D2E1F" class="darker-cell" style="background-color: #3D2E1F !important; padding: 16px; vertical-align: top;">
-                          <p style="color: #C9A962 !important; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.guests}</p>
-                          <p style="color: #F5F1E8 !important; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${guestCount} ${isArabic ? "شخص" : "person(s)"}</p>
+                        <td width="50%" style="padding: 16px; vertical-align: top;">
+                          <p style="color: #8B6F47; margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; font-family: Arial, sans-serif;">${translations.guests}</p>
+                          <p style="color: #3D2E1F; margin: 0; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif;">${guestCount} ${isArabic ? "شخص" : "person(s)"}</p>
                         </td>
                       </tr>
                       <tr>
-                        <td colspan="2" bgcolor="#C9A962" class="gold-cell" style="background-color: #C9A962 !important; padding: 12px 16px; border-radius: 0 0 12px 12px;">
-                          <p style="color: #3D2E1F !important; margin: 0; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif; text-align: center;">
+                        <td colspan="2" style="padding: 12px 16px; background-color: #4A3625; border-radius: 0 0 12px 12px;">
+                          <p style="color: #C9A962; margin: 0; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif; text-align: center;">
                             ☀️ ${translations.validAllDay} ${translations.operatingHours}
                           </p>
                         </td>
@@ -277,21 +277,35 @@ const generateVIPConfirmationPreview = (
               <!-- QR Code -->
               ${qrHtml}
               
+              <!-- Closing -->
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 24px;">
+                <tr>
+                  <td align="center" style="padding: 20px; background: linear-gradient(135deg, #FAF7F2 0%, #F5F1E8 100%); border-radius: 12px; border: 1px solid #E8DED0;">
+                    <p style="color: #4A3625; margin: 0 0 8px; font-size: 16px; font-weight: 700; font-family: Arial, sans-serif;">
+                      ${translations.seeYouSoon}
+                    </p>
+                    <p style="color: #8B6F47; margin: 0; font-size: 12px; font-family: Arial, sans-serif;">
+                      ${translations.questions} <a href="mailto:info@almufaijer.com" style="color: #C9A962; text-decoration: none; font-weight: 600;">info@almufaijer.com</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
             </td>
           </tr>
           
           <!-- Footer -->
           <tr>
-            <td align="center" bgcolor="#4A3625" class="dark-cell" style="background-color: #4A3625 !important; padding: 24px 16px;">
-              <a href="https://maps.app.goo.gl/g4qJ4mM9ZVqg323t8" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #8B7355 0%, #6B5A45 100%) !important; color: #FFFFFF !important; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif; margin-bottom: 16px;">
+            <td align="center" style="padding: 24px 16px;">
+              <a href="https://maps.app.goo.gl/g4qJ4mM9ZVqg323t8" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #8B7355 0%, #6B5A45 100%); color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif; margin-bottom: 16px;">
                 📍 ${isArabic ? "احصل على الاتجاهات" : "Get Directions"}
               </a>
-              <p style="color: #D4C5B0 !important; margin: 0 0 6px; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif;">${translations.address}</p>
-              <p style="color: #8B7355 !important; margin: 0 0 8px; font-size: 11px; font-family: Arial, sans-serif;">
+              <p style="color: #5C4A3A; margin: 0 0 6px; font-size: 13px; font-weight: 600; font-family: Arial, sans-serif;">${translations.address}</p>
+              <p style="color: #8B7355; margin: 0 0 8px; font-size: 11px; font-family: Arial, sans-serif;">
                 © ${new Date().getFullYear()} Souq Almufaijer. ${isArabic ? "جميع الحقوق محفوظة" : "All rights reserved"}.
               </p>
-              <a href="https://ayn-ai.com" target="_blank" style="color: #8B7355 !important; margin: 0; font-size: 10px; font-family: Arial, sans-serif; text-decoration: none;">
-                Powered by <span style="font-weight: 600; color: #D4C5B0 !important;">AYN AI</span>
+              <a href="https://ayn-ai.com" target="_blank" style="color: #8B7355; margin: 0; font-size: 10px; font-family: Arial, sans-serif; text-decoration: none;">
+                Powered by <span style="font-weight: 600; color: #3D2E1F;">AYN AI</span>
               </a>
             </td>
           </tr>
@@ -307,110 +321,59 @@ const VIPConfirmationEmailPreview = ({ open, onOpenChange, perks, guestCount }: 
   const { currentLanguage, isRTL } = useLanguage();
   const isAdminArabic = currentLanguage === 'ar';
   const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
-  const [darkModePreview, setDarkModePreview] = useState<'light' | 'dark' | 'both'>('both');
 
   const htmlContent = useMemo(() => {
     return generateVIPConfirmationPreview(perks, guestCount, previewLang === 'ar');
   }, [previewLang, perks, guestCount]);
 
-  const renderPreviewFrame = (mode: 'light' | 'dark', className?: string) => (
-    <div className={`flex flex-col ${className || ''}`}>
-      <div className={`text-center py-2 text-xs font-medium rounded-t-lg border border-b-0 ${
-        mode === 'dark' 
-          ? 'bg-gray-800 text-gray-300 border-gray-700' 
-          : 'bg-gray-100 text-gray-600 border-gray-200'
-      }`}>
-        {mode === 'light' 
-          ? (isAdminArabic ? '☀️ الوضع الفاتح' : '☀️ Light Mode')
-          : (isAdminArabic ? '🌙 الوضع الداكن' : '🌙 Dark Mode')}
-      </div>
-      <div className={`flex-1 overflow-auto rounded-b-lg border ${
-        mode === 'dark' 
-          ? 'bg-gray-900 border-gray-700' 
-          : 'bg-white border-gray-200'
-      }`}>
-        <iframe
-          srcDoc={htmlContent}
-          className="w-full min-h-[500px] border-0"
-          title={`VIP Email Preview - ${mode}`}
-        />
-      </div>
-    </div>
-  );
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`max-w-6xl max-h-[90vh] overflow-hidden flex flex-col ${isRTL ? 'rtl' : 'ltr'}`}>
+      <DialogContent className={`max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${isRTL ? 'rtl' : 'ltr'}`}>
         <DialogHeader className="flex-shrink-0 border-b border-border/50 pb-4">
-          <DialogTitle className="flex items-center gap-2 text-lg rtl:flex-row-reverse">
-            <Eye className="h-5 w-5 text-amber-600" />
-            {isAdminArabic ? 'معاينة بريد التأكيد VIP' : 'VIP Confirmation Email Preview'}
-          </DialogTitle>
+          <div className="flex items-center justify-between rtl:flex-row-reverse">
+            <DialogTitle className="flex items-center gap-2 text-lg rtl:flex-row-reverse">
+              <Eye className="h-5 w-5 text-amber-600" />
+              {isAdminArabic ? 'معاينة بريد التأكيد VIP' : 'VIP Confirmation Email Preview'}
+            </DialogTitle>
+          </div>
           
-          <div className="mt-4 flex flex-wrap items-center gap-4">
-            {/* Language Toggle */}
+          {/* Language Toggle */}
+          <div className="mt-4">
             <Tabs value={previewLang} onValueChange={(v) => setPreviewLang(v as 'ar' | 'en')}>
-              <TabsList className="grid w-[200px] grid-cols-2">
-                <TabsTrigger value="ar" className="gap-1.5 text-xs">
-                  <Globe className="h-3.5 w-3.5" />
+              <TabsList className="grid w-full max-w-[300px] grid-cols-2">
+                <TabsTrigger value="ar" className="gap-2 rtl:flex-row-reverse">
+                  <Globe className="h-4 w-4" />
                   العربية
                 </TabsTrigger>
-                <TabsTrigger value="en" className="gap-1.5 text-xs">
-                  <Globe className="h-3.5 w-3.5" />
+                <TabsTrigger value="en" className="gap-2">
+                  <Globe className="h-4 w-4" />
                   English
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-
-            {/* Dark Mode Toggle */}
-            <ToggleGroup 
-              type="single" 
-              value={darkModePreview} 
-              onValueChange={(v) => v && setDarkModePreview(v as 'light' | 'dark' | 'both')} 
-              className="border rounded-lg p-0.5"
-            >
-              <ToggleGroupItem 
-                value="light" 
-                className="gap-1.5 text-xs px-3 h-8 data-[state=on]:bg-amber-100 data-[state=on]:text-amber-800"
-              >
-                <Sun className="h-3.5 w-3.5" />
-                {isAdminArabic ? 'فاتح' : 'Light'}
-              </ToggleGroupItem>
-              <ToggleGroupItem 
-                value="dark" 
-                className="gap-1.5 text-xs px-3 h-8 data-[state=on]:bg-slate-700 data-[state=on]:text-slate-100"
-              >
-                <Moon className="h-3.5 w-3.5" />
-                {isAdminArabic ? 'داكن' : 'Dark'}
-              </ToggleGroupItem>
-              <ToggleGroupItem 
-                value="both" 
-                className="gap-1.5 text-xs px-3 h-8 data-[state=on]:bg-primary/20 data-[state=on]:text-primary"
-              >
-                <Monitor className="h-3.5 w-3.5" />
-                {isAdminArabic ? 'جنباً لجنب' : 'Side by Side'}
-              </ToggleGroupItem>
-            </ToggleGroup>
           </div>
         </DialogHeader>
 
-        {/* Email Preview */}
-        <div className="flex-1 overflow-hidden mt-4">
-          {darkModePreview === 'both' ? (
-            <div className="grid grid-cols-2 gap-4 h-full">
-              {renderPreviewFrame('light', 'h-full')}
-              {renderPreviewFrame('dark', 'h-full')}
-            </div>
-          ) : (
-            renderPreviewFrame(darkModePreview, 'h-full')
-          )}
+        {/* Email Preview in iframe */}
+        <div className="flex-1 overflow-hidden rounded-lg border border-border/50 bg-muted/20 mt-4">
+          <div className="h-full overflow-auto">
+            <iframe
+              srcDoc={htmlContent}
+              title="VIP Email Preview"
+              className="w-full min-h-[600px] border-0"
+              style={{ backgroundColor: '#F5F1EB' }}
+            />
+          </div>
         </div>
 
-        <p className="text-xs text-muted-foreground text-center mt-3">
-          💡 {isAdminArabic 
-            ? 'التصميم مُحسّن لمنع انعكاس الألوان في الوضع الداكن' 
-            : 'Design optimized to prevent color inversion in dark mode'}
-        </p>
+        {/* Footer note */}
+        <div className="flex-shrink-0 pt-4 border-t border-border/50">
+          <p className="text-xs text-muted-foreground text-center">
+            {isAdminArabic 
+              ? 'هذه معاينة لبريد التأكيد الذي سيُرسل للضيف عند تأكيد حضوره من صفحة RSVP. يتم استخدام بيانات نموذجية.' 
+              : 'This is a preview of the confirmation email sent to VIP guests after they confirm via the RSVP page. Sample data is used.'}
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   );
