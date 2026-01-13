@@ -1098,6 +1098,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_abandoned_bookings: { Args: { hours_old?: number }; Returns: Json }
       check_rate_limit: {
         Args: {
           p_action_type: string

@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.track-marketing-qr]
 verify_jwt = false
+
+[functions.cancel-abandoned-bookings]
+verify_jwt = false
