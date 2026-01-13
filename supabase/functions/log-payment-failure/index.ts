@@ -72,10 +72,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Optionally update booking status to failed if it's still pending
+    // Update booking status to failed and cancelled if it's still pending
     const { error: updateError } = await supabase
       .from("bookings")
-      .update({ payment_status: "failed" })
+      .update({ 
+        payment_status: "failed",
+        booking_status: "cancelled",
+        cancelled_at: new Date().toISOString()
+      })
       .eq("id", body.bookingId)
       .eq("payment_status", "pending");
 

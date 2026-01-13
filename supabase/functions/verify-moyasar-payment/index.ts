@@ -244,11 +244,12 @@ serve(async (req) => {
     // Determine payment method
     const paymentMethod = payment.source?.type || "card";
 
-    // Update booking as paid
+    // Update booking as paid AND confirmed
     const { error: updateError } = await supabase
       .from("bookings")
       .update({
         payment_status: "completed",
+        booking_status: "confirmed",
         payment_id: body.paymentId,
         payment_method: paymentMethod,
         paid_at: new Date().toISOString(),
