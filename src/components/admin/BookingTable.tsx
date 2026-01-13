@@ -217,6 +217,40 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     }
   };
 
+  const getPaymentBadge = (payment_status: string) => {
+    const config: Record<string, { className: string; labelAr: string; labelEn: string }> = {
+      completed: { 
+        className: 'bg-emerald-500/15 text-emerald-600 border-emerald-400/40 dark:text-emerald-400',
+        labelAr: 'مدفوع',
+        labelEn: 'Paid'
+      },
+      pending: { 
+        className: 'bg-amber-500/15 text-amber-600 border-amber-400/40 dark:text-amber-400',
+        labelAr: 'معلق',
+        labelEn: 'Pending'
+      },
+      failed: { 
+        className: 'bg-red-500/15 text-red-600 border-red-400/40 dark:text-red-400',
+        labelAr: 'فاشل',
+        labelEn: 'Failed'
+      },
+    };
+    
+    const { className, labelAr, labelEn } = config[payment_status] || config.pending;
+    
+    return (
+      <Badge 
+        variant="outline" 
+        className={cn(
+          className, 
+          'text-[10px] font-medium px-2 py-0.5 rounded-full'
+        )}
+      >
+        {isArabic ? labelAr : labelEn}
+      </Badge>
+    );
+  };
+
   const getStatusBadge = (booking: Booking) => {
     const { booking_status, payment_status, qr_codes_generated } = booking;
     
@@ -358,7 +392,10 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
             {booking.booking_reference}
           </span>
         </div>
-        {getStatusBadge(booking)}
+        <div className="flex items-center gap-2 rtl:flex-row-reverse">
+          {getPaymentBadge(booking.payment_status)}
+          {getStatusBadge(booking)}
+        </div>
       </div>
 
       {/* Customer Info */}
@@ -510,10 +547,11 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
           {booking.adult_count + booking.child_count + (booking.senior_count || 0)}
         </span>
       </TableCell>
-      <TableCell className="w-[8%] font-semibold text-accent text-start text-sm p-2">
+      <TableCell className="w-[7%] font-semibold text-accent text-start text-sm p-2">
         {booking.total_amount} {isArabic ? 'ر.س' : 'SAR'}
       </TableCell>
-      <TableCell className="w-[10%] p-2">{getStatusBadge(booking)}</TableCell>
+      <TableCell className="w-[6%] p-2">{getPaymentBadge(booking.payment_status)}</TableCell>
+      <TableCell className="w-[9%] p-2">{getStatusBadge(booking)}</TableCell>
       <TableCell className="w-[8%] p-2">
         {(() => {
           const stage = getJourneyStage(booking);
@@ -685,8 +723,9 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                   <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'الزيارة' : 'Visit'}</TableHead>
                   <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'وقت الشراء' : 'Purchased'}</TableHead>
                   <TableHead className="w-[4%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
-                  <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-                  <TableHead className="w-[10%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead className="w-[7%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                  <TableHead className="w-[6%] text-accent font-semibold">{isArabic ? 'الدفع' : 'Payment'}</TableHead>
+                  <TableHead className="w-[9%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
                   <TableHead className="w-[8%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
                   <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'البريد' : 'Email'}><Mail className="h-4 w-4 mx-auto" /></TableHead>
                   <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'التذكير' : 'Reminder'}><Bell className="h-4 w-4 mx-auto" /></TableHead>
@@ -732,8 +771,9 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
                     <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'الزيارة' : 'Visit'}</TableHead>
                     <TableHead className="w-[10%] text-accent font-semibold text-start">{isArabic ? 'وقت الشراء' : 'Purchased'}</TableHead>
                     <TableHead className="w-[4%] text-accent font-semibold text-center">{isArabic ? 'عدد' : '#'}</TableHead>
-                    <TableHead className="w-[8%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
-                    <TableHead className="w-[10%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                    <TableHead className="w-[7%] text-accent font-semibold text-start">{isArabic ? 'المبلغ' : 'Amount'}</TableHead>
+                    <TableHead className="w-[6%] text-accent font-semibold">{isArabic ? 'الدفع' : 'Payment'}</TableHead>
+                    <TableHead className="w-[9%] text-accent font-semibold">{isArabic ? 'الحالة' : 'Status'}</TableHead>
                     <TableHead className="w-[8%] text-accent font-semibold">{isArabic ? 'المرحلة' : 'Stage'}</TableHead>
                     <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'البريد' : 'Email'}><Mail className="h-4 w-4 mx-auto" /></TableHead>
                     <TableHead className="w-10 text-accent font-semibold text-center" title={isArabic ? 'التذكير' : 'Reminder'}><Bell className="h-4 w-4 mx-auto" /></TableHead>
