@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, RefreshCw, ExternalLink } from 'lucide-react';
+import { AlertTriangle, RefreshCw, ExternalLink, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
+import { toast } from '@/hooks/use-toast';
 
 interface StalledPayment {
   id: string;
@@ -24,6 +25,34 @@ const StalledPaymentsAlert = () => {
   const isArabic = currentLanguage === 'ar';
   const [stalledPayments, setStalledPayments] = useState<StalledPayment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [markingReviewed, setMarkingReviewed] = useState<string | null>(null);
+
+  const markAsReviewed = async (paymentId: string) => {
+    setMarkingReviewed(paymentId);
+    try {
+      const { error } = await supabase
+        .from('payment_logs')
+        .update({ metadata: { reviewed: true, reviewed_at: new Date().toISOString() } })
+        .eq('id', paymentId);
+
+      if (error) throw error;
+
+      setStalledPayments((prev) => prev.filter((p) => p.id !== paymentId));
+      toast({
+        title: isArabic ? 'تم التأشير كمراجع' : 'Marked as reviewed',
+        description: isArabic ? 'تم إزالة الدفعة من القائمة' : 'Payment removed from alert list',
+      });
+    } catch (err) {
+      console.error('Error marking as reviewed:', err);
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل في تحديث الحالة' : 'Failed to update status',
+        variant: 'destructive',
+      });
+    } finally {
+      setMarkingReviewed(null);
+    }
+  };
 
   const fetchStalledPayments = async () => {
     setLoading(true);
@@ -40,7 +69,11 @@ const StalledPaymentsAlert = () => {
         .limit(10);
 
       if (!error && data) {
-        setStalledPayments(data as StalledPayment[]);
+        // Filter out already reviewed payments
+        const unreviewedPayments = data.filter(
+          (p) => !(p.metadata as any)?.reviewed
+        );
+        setStalledPayments(unreviewedPayments as StalledPayment[]);
       }
     } catch (err) {
       console.error('Error fetching stalled payments:', err);
