@@ -837,7 +837,7 @@ const RefundsPanel = () => {
       </Tabs>
 
       {/* Refund Dialog */}
-      <AlertDialog open={refundDialog?.open} onOpenChange={(open) => !open && setRefundDialog(null)}>
+      <AlertDialog open={!!refundDialog} onOpenChange={(open) => !open && setRefundDialog(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{isArabic ? 'تأكيد الاسترداد' : 'Confirm Refund'}</AlertDialogTitle>
@@ -873,7 +873,7 @@ const RefundsPanel = () => {
       </AlertDialog>
 
       {/* Link Payment Dialog */}
-      <AlertDialog open={linkDialog?.open} onOpenChange={(open) => !open && setLinkDialog(null)}>
+      <AlertDialog open={!!linkDialog} onOpenChange={(open) => !open && setLinkDialog(null)}>
         <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -942,7 +942,7 @@ const RefundsPanel = () => {
       </AlertDialog>
 
       {/* Orphan Refund Dialog */}
-      <AlertDialog open={orphanRefundDialog?.open} onOpenChange={(open) => !open && setOrphanRefundDialog(null)}>
+      <AlertDialog open={!!orphanRefundDialog} onOpenChange={(open) => !open && setOrphanRefundDialog(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{isArabic ? 'استرداد دفعة مفقودة' : 'Refund Orphan Payment'}</AlertDialogTitle>

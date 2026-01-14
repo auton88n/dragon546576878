@@ -515,7 +515,7 @@ const RefundManagementPage = () => {
       </div>
 
       {/* Refund Dialog */}
-      <AlertDialog open={refundDialog?.open} onOpenChange={(open) => !open && setRefundDialog(null)}>
+      <AlertDialog open={!!refundDialog} onOpenChange={(open) => !open && setRefundDialog(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
