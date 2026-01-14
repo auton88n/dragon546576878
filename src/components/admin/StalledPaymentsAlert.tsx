@@ -34,7 +34,7 @@ const StalledPaymentsAlert = () => {
       const { data, error } = await supabase
         .from('payment_logs')
         .select('id, booking_id, created_at, amount, metadata')
-        .eq('event_type', 'payment_stalled')
+        .or('event_type.eq.payment_stalled,and(event_type.eq.failure,metadata->>error_type.eq.client_timeout)')
         .gte('created_at', twoHoursAgo)
         .order('created_at', { ascending: false })
         .limit(10);
