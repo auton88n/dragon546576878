@@ -527,6 +527,16 @@ const PaymentPage = () => {
           {submissionStalled && (
             <div className="absolute inset-0 bg-card flex flex-col items-center justify-center z-10 rounded-xl p-6">
               <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
+              
+              {/* Warning Banner */}
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 mb-4 max-w-xs text-center">
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                  {isArabic 
+                    ? '⚠️ قد تكون عملية الدفع قد تمت. يرجى التحقق قبل الدفع مرة أخرى.'
+                    : '⚠️ Your payment may have been processed. Please check status before paying again.'}
+                </p>
+              </div>
+              
               <p className="text-center text-muted-foreground mb-4">
                 {isArabic 
                   ? 'تأخرت عملية الدفع. قد تحتاج لإكمال التحقق البنكي.'
@@ -538,6 +548,16 @@ const PaymentPage = () => {
                     {isArabic ? 'متابعة التحقق البنكي' : 'Continue Bank Verification'}
                   </Button>
                 )}
+                
+                {/* Check Payment Status Button - Primary action when stalled */}
+                <Button 
+                  onClick={() => navigate(`/payment-callback/${bookingId}?id=check&status=initiated`)} 
+                  className="w-full bg-primary"
+                >
+                  <Shield className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                  {isArabic ? 'التحقق من حالة الدفع' : 'Check Payment Status'}
+                </Button>
+                
                 <Button onClick={handleRetry} variant="outline" className="w-full">
                   <RefreshCw className="h-4 w-4 mr-2" />
                   {isArabic ? 'إعادة المحاولة' : 'Retry Payment'}
