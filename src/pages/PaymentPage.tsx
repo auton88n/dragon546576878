@@ -523,60 +523,24 @@ const PaymentPage = () => {
             </div>
           )}
 
-          {/* Stalled State */}
+          {/* Stalled State - Simple processing UI */}
           {submissionStalled && (
             <div className="absolute inset-0 bg-card flex flex-col items-center justify-center z-10 rounded-xl p-6">
-              <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
+              <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
               
-              {/* Warning Banner */}
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 mb-4 max-w-xs text-center">
-                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                  {isArabic 
-                    ? '⚠️ قد تكون عملية الدفع قد تمت. يرجى التحقق قبل الدفع مرة أخرى.'
-                    : '⚠️ Your payment may have been processed. Please check status before paying again.'}
-                </p>
-              </div>
-              
-              <p className="text-center text-muted-foreground mb-4">
-                {isArabic 
-                  ? 'تأخرت عملية الدفع. قد تحتاج لإكمال التحقق البنكي.'
-                  : 'Payment is taking longer than expected. You may need to complete bank verification.'}
+              <p className="text-lg font-medium text-foreground mb-2 text-center">
+                {isArabic ? 'جاري معالجة الدفع...' : 'Processing your payment...'}
               </p>
-              <div className="flex flex-col gap-2 w-full max-w-xs">
-                {transactionUrl && (
-                  <Button onClick={() => window.location.href = transactionUrl} className="w-full">
-                    {isArabic ? 'متابعة التحقق البنكي' : 'Continue Bank Verification'}
-                  </Button>
-                )}
-                
-                {/* Check Payment Status Button - Primary action when stalled */}
-                <Button 
-                  onClick={() => navigate(`/payment-callback/${bookingId}?id=check&status=initiated`)} 
-                  className="w-full bg-primary"
-                >
-                  <Shield className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                  {isArabic ? 'التحقق من حالة الدفع' : 'Check Payment Status'}
+              
+              <p className="text-center text-muted-foreground mb-6">
+                {isArabic ? 'قد يستغرق هذا لحظة.' : 'This may take a moment.'}
+              </p>
+              
+              {transactionUrl && (
+                <Button onClick={() => window.location.href = transactionUrl} className="w-full max-w-xs">
+                  {isArabic ? 'متابعة التحقق البنكي' : 'Continue Bank Verification'}
                 </Button>
-                
-                <Button onClick={handleRetry} variant="outline" className="w-full">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {isArabic ? 'إعادة المحاولة' : 'Retry Payment'}
-                </Button>
-                <Link to="/book" className="w-full">
-                  <Button variant="ghost" className="w-full">
-                    <ArrowLeft className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                    {isArabic ? 'بدء حجز جديد' : 'Start New Booking'}
-                  </Button>
-                </Link>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => window.open('https://wa.me/966500000000', '_blank')}
-                  className="w-full"
-                >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  {isArabic ? 'تواصل معنا' : 'Contact Support'}
-                </Button>
-              </div>
+              )}
             </div>
           )}
 
