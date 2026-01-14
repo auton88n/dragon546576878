@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { lazyWithPreload } from '@/lib/lazyWithPreload';
+import StalledPaymentsAlert from '@/components/admin/StalledPaymentsAlert';
 
 type Booking = Tables<'bookings'>;
 
@@ -245,6 +246,9 @@ const AdminPage = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 rtl:[direction:rtl]">
             {statsCards.map((stat, index) => <StatsCard key={index} {...stat} loading={statsLoading || refreshingStats} />)}
           </div>
+
+          {/* Stalled Payments Alert - Real-time notifications */}
+          <StalledPaymentsAlert />
 
 
 
