@@ -74,6 +74,51 @@ const PaymentPage = () => {
   const submissionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const sdkLoadTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const statusPollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Background polling for payment status - auto-redirects when payment completes
+  const startPaymentStatusPolling = useCallback(() => {
+    // Clear any existing polling
+    if (statusPollingRef.current) {
+      clearInterval(statusPollingRef.current);
+    }
+
+    const pollStartTime = Date.now();
+    const MAX_POLL_DURATION = 5 * 60 * 1000; // 5 minutes
+    const POLL_INTERVAL = 5000; // 5 seconds
+
+    console.log('Starting payment status polling for booking:', bookingId);
+
+    statusPollingRef.current = setInterval(async () => {
+      // Stop polling after 5 minutes
+      if (Date.now() - pollStartTime > MAX_POLL_DURATION) {
+        console.log('Payment polling timeout reached (5 minutes)');
+        if (statusPollingRef.current) {
+          clearInterval(statusPollingRef.current);
+          statusPollingRef.current = null;
+        }
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.functions.invoke('get-booking-for-payment', {
+          body: { bookingId }
+        });
+
+        if (!error && data?.success && data.booking?.payment_status === 'completed') {
+          console.log('Payment completed! Auto-redirecting to confirmation...');
+          if (statusPollingRef.current) {
+            clearInterval(statusPollingRef.current);
+            statusPollingRef.current = null;
+          }
+          navigate(`/confirmation/${bookingId}`);
+        }
+      } catch (err) {
+        console.error('Payment status poll error:', err);
+        // Continue polling on error - don't stop
+      }
+    }, POLL_INTERVAL);
+  }, [bookingId, navigate]);
 
   const updateDebugInfo = useCallback(() => {
     const mount = document.getElementById('moyasar-mount');
@@ -269,6 +314,10 @@ const PaymentPage = () => {
       submissionTimerRef.current = setTimeout(async () => {
         console.warn('Submission watchdog triggered');
         setSubmissionStalled(true);
+        
+        // Start background polling for payment status - will auto-redirect when complete
+        startPaymentStatusPolling();
+        
         await logFailureToServer({ type: 'client_timeout', message: 'Payment submission stalled' }, 'client_timeout');
       }, 25000);
     };
@@ -324,7 +373,7 @@ const PaymentPage = () => {
       setMoyasarError(isArabic ? 'فشل في تهيئة نظام الدفع' : 'Failed to initialize payment system');
       setInitPhase('error');
     }
-  }, [booking, isArabic, isAllowedDomain, currentHostname, startInjectionPolling, updateDebugInfo]);
+  }, [booking, isArabic, isAllowedDomain, currentHostname, startInjectionPolling, updateDebugInfo, startPaymentStatusPolling]);
 
   useEffect(() => {
     if (booking && !moyasarInitStarted.current && isAllowedDomain) {
@@ -338,6 +387,7 @@ const PaymentPage = () => {
       if (submissionTimerRef.current) clearTimeout(submissionTimerRef.current);
       if (sdkLoadTimerRef.current) clearTimeout(sdkLoadTimerRef.current);
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      if (statusPollingRef.current) clearInterval(statusPollingRef.current);
     };
   }, []);
 
