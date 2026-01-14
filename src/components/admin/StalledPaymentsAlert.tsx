@@ -151,14 +151,27 @@ const StalledPaymentsAlert = () => {
                   locale: isArabic ? ar : enUS,
                 })}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2"
-                onClick={() => window.open(`/admin?tab=refunds&search=${payment.booking_id}`, '_blank')}
-              >
-                <ExternalLink className="h-3 w-3" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2"
+                  onClick={() => window.open(`/admin?tab=refunds&search=${payment.booking_id}`, '_blank')}
+                  title={isArabic ? 'فتح في لوحة الاسترداد' : 'Open in Refunds Panel'}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                  onClick={() => markAsReviewed(payment.id)}
+                  disabled={markingReviewed === payment.id}
+                  title={isArabic ? 'تم المراجعة' : 'Mark as Reviewed'}
+                >
+                  <CheckCircle className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
           ))}
           {stalledPayments.length > 3 && (
