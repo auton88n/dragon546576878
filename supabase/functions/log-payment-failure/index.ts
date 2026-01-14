@@ -43,12 +43,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Log the failure to payment_logs
+    // Determine event type - stalled payments use 'payment_stalled', definitive failures use 'failure'
+    const isStalled = body.errorType === 'client_timeout';
+    const eventType = isStalled ? 'payment_stalled' : 'failure';
+
+    // Log the event to payment_logs
     const { error: logError } = await supabase
       .from("payment_logs")
       .insert({
         booking_id: body.bookingId,
-        event_type: "failure",
+        event_type: eventType,
         payment_id: body.paymentId || null,
         payment_method: body.paymentMethod || null,
         amount: body.amount || null,
@@ -60,31 +64,35 @@ Deno.serve(async (req) => {
           error_code: body.errorCode,
           user_agent: req.headers.get("user-agent"),
           timestamp: new Date().toISOString(),
+          requires_admin_review: isStalled,
           ...body.metadata,
         },
       });
 
     if (logError) {
-      console.error("Error logging payment failure:", logError);
+      console.error("Error logging payment event:", logError);
       return new Response(
         JSON.stringify({ success: false, error: logError.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Update booking status to failed and cancelled if it's still pending
-    const { error: updateError } = await supabase
-      .from("bookings")
-      .update({ 
-        payment_status: "failed",
-        booking_status: "cancelled",
-        cancelled_at: new Date().toISOString()
-      })
-      .eq("id", body.bookingId)
-      .eq("payment_status", "pending");
+    // Only cancel booking for definitive failures, NOT for stalled/timeout payments
+    // Stalled payments may still complete via 3DS or delayed processing
+    if (!isStalled) {
+      const { error: updateError } = await supabase
+        .from("bookings")
+        .update({ 
+          payment_status: "failed",
+          booking_status: "cancelled",
+          cancelled_at: new Date().toISOString()
+        })
+        .eq("id", body.bookingId)
+        .eq("payment_status", "pending");
 
-    if (updateError) {
-      console.warn("Could not update booking status:", updateError);
+      if (updateError) {
+        console.warn("Could not update booking status:", updateError);
+      }
     }
 
     console.log("Payment failure logged successfully for booking:", body.bookingId);
