@@ -51,7 +51,8 @@ import {
   Calendar, 
   Mail, 
   Phone,
-  RefreshCw
+  RefreshCw,
+  FileText
 } from 'lucide-react';
 
 interface GroupBookingRequest {
@@ -95,7 +96,23 @@ const groupTypeLabels: Record<string, { en: string; ar: string }> = {
   other: { en: 'Other', ar: 'أخرى' },
 };
 
-const GroupBookingsPanel = () => {
+interface CreateInvoiceData {
+  clientType: 'company';
+  companyName: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  numAdults: number;
+  visitDate: string | null;
+  quotedAmount: number | null;
+  groupRequestId: string;
+}
+
+interface GroupBookingsPanelProps {
+  onCreateInvoice?: (data: CreateInvoiceData) => void;
+}
+
+const GroupBookingsPanel = ({ onCreateInvoice }: GroupBookingsPanelProps = {}) => {
   const { isRTL, currentLanguage, t } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   
@@ -112,6 +129,27 @@ const GroupBookingsPanel = () => {
   const [editStatus, setEditStatus] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editQuotedAmount, setEditQuotedAmount] = useState('');
+
+  const handleCreateInvoice = (request: GroupBookingRequest) => {
+    if (!onCreateInvoice) return;
+    
+    const firstPreferredDate = request.preferred_dates[0] || null;
+    
+    onCreateInvoice({
+      clientType: 'company',
+      companyName: request.organization_name,
+      clientName: request.contact_person,
+      clientEmail: request.email,
+      clientPhone: request.phone,
+      numAdults: request.group_size,
+      visitDate: firstPreferredDate,
+      quotedAmount: request.quoted_amount,
+      groupRequestId: request.id,
+    });
+    
+    setIsDialogOpen(false);
+    toast.success(isArabic ? 'تم نقل البيانات إلى نموذج الفاتورة' : 'Data transferred to invoice form');
+  };
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -483,11 +521,23 @@ const GroupBookingsPanel = () => {
                   />
                 </div>
 
-                <Button onClick={handleUpdate} disabled={updating} className="w-full btn-gold">
-                  {updating 
-                    ? t('common.loading')
-                    : t('common.save')}
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={handleUpdate} disabled={updating} className="flex-1 btn-gold">
+                    {updating 
+                      ? t('common.loading')
+                      : t('common.save')}
+                  </Button>
+                  {onCreateInvoice && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleCreateInvoice(selectedRequest)}
+                      className="gap-2"
+                    >
+                      <FileText className="w-4 h-4" />
+                      {isArabic ? 'إنشاء فاتورة' : 'Create Invoice'}
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           )}

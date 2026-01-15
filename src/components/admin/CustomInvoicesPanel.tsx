@@ -37,7 +37,9 @@ import {
   CheckCircle2,
   Clock,
   Ban,
-  FileSearch
+  FileSearch,
+  QrCode,
+  Percent
 } from 'lucide-react';
 
 // Generate invoice email preview HTML (mirrors the Edge Function template)
@@ -54,6 +56,9 @@ function generateInvoiceEmailPreview(invoice: CustomInvoice, previewLang: 'ar' |
     .map((s: string) => AVAILABLE_SERVICES.find(svc => svc.id === s))
     .filter(Boolean) as { id: string; en: string; ar: string }[];
 
+  const hasDiscount = invoice.discount_amount && invoice.discount_amount > 0;
+  const originalAmount = invoice.original_amount || invoice.total_amount;
+  
   const texts = {
     ar: {
       invoiceNumber: 'فاتورة رقم',
@@ -63,6 +68,8 @@ function generateInvoiceEmailPreview(invoice: CustomInvoice, previewLang: 'ar' |
       time: 'الوقت',
       visitors: 'عدد الزوار',
       services: 'الخدمات',
+      originalAmount: 'السعر الأصلي',
+      corporateDiscount: 'خصم الشركات',
       totalAmount: 'المبلغ الإجمالي',
       currency: 'ريال',
       expires: 'ينتهي رابط الدفع في',
@@ -78,6 +85,8 @@ function generateInvoiceEmailPreview(invoice: CustomInvoice, previewLang: 'ar' |
       time: 'Time',
       visitors: 'Visitors',
       services: 'Services',
+      originalAmount: 'Original Price',
+      corporateDiscount: 'Corporate Discount',
       totalAmount: 'Total Amount',
       currency: 'SAR',
       expires: 'Payment link expires',
@@ -90,6 +99,17 @@ function generateInvoiceEmailPreview(invoice: CustomInvoice, previewLang: 'ar' |
   const t = texts[previewLang];
   const dir = isPreviewArabic ? 'rtl' : 'ltr';
   const textAlign = isPreviewArabic ? 'right' : 'left';
+
+  const discountSection = hasDiscount ? `
+    <tr>
+      <td style="color: #999999 !important; text-decoration: line-through;">${t.originalAmount}:</td>
+      <td style="color: #999999 !important; text-decoration: line-through;">${originalAmount.toLocaleString()} ${t.currency}</td>
+    </tr>
+    <tr>
+      <td style="color: #22c55e !important;">${t.corporateDiscount}:</td>
+      <td style="color: #22c55e !important; font-weight: bold;">-${invoice.discount_amount?.toLocaleString()} ${t.currency}</td>
+    </tr>
+  ` : '';
 
   return `
 <!DOCTYPE html>
@@ -118,6 +138,14 @@ function generateInvoiceEmailPreview(invoice: CustomInvoice, previewLang: 'ar' |
             <td style="padding: 40px 30px;">
               <div style="text-align: ${textAlign};">
                 <h2 style="color: #3D2E1F; margin: 0 0 20px 0;">${t.invoiceNumber}: ${invoice.invoice_number}</h2>
+                ${invoice.client_type === 'company' && invoice.company_name ? `
+                  <p style="color: #C9A86C; font-size: 14px; margin: 0 0 10px 0; font-weight: bold;">
+                    <span style="display: inline-block; background: linear-gradient(135deg, #C9A86C 0%, #8B6F47 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
+                      ${isPreviewArabic ? '🏢 شركة' : '🏢 Corporate'}
+                    </span>
+                    ${invoice.company_name}
+                  </p>
+                ` : ''}
                 <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
                   ${t.greeting}
                 </p>
@@ -145,12 +173,14 @@ function generateInvoiceEmailPreview(invoice: CustomInvoice, previewLang: 'ar' |
                       <td style="color: #3D2E1F; font-weight: bold;">${t.servicesText}</td>
                     </tr>
                     ` : ''}
+                    ${discountSection}
                   </table>
                 </div>
                 
                 <div style="background-color: #5C4A3A; color: #fff; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
                   <p style="margin: 0; font-size: 14px; color: #C9A86C;">${t.totalAmount}</p>
                   <p style="margin: 10px 0 0 0; font-size: 32px; font-weight: bold; color: #ffffff;">${invoice.total_amount.toLocaleString()} ${t.currency}</p>
+                  ${hasDiscount ? `<p style="margin: 5px 0 0 0; font-size: 12px; color: #22c55e;">✓ ${invoice.discount_reason || (isPreviewArabic ? 'خصم شركات' : 'Corporate discount')}</p>` : ''}
                 </div>
                 
                 <p style="color: #666; font-size: 14px;">
@@ -196,6 +226,11 @@ interface CustomInvoice {
   client_email: string;
   client_phone: string;
   total_amount: number;
+  original_amount: number | null;
+  discount_amount: number | null;
+  discount_reason: string | null;
+  group_request_id: string | null;
+  is_corporate: boolean;
   num_adults: number;
   num_children: number;
   services: string[];

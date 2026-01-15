@@ -65,6 +65,7 @@ export type Database = {
           cancelled_at: string | null
           child_count: number
           child_price: number
+          company_name: string | null
           confirmation_email_sent: boolean | null
           created_at: string | null
           currency: string | null
@@ -72,6 +73,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           id: string
+          is_corporate: boolean | null
           language: string
           last_email_sent_at: string | null
           paid_at: string | null
@@ -99,6 +101,7 @@ export type Database = {
           cancelled_at?: string | null
           child_count?: number
           child_price: number
+          company_name?: string | null
           confirmation_email_sent?: boolean | null
           created_at?: string | null
           currency?: string | null
@@ -106,6 +109,7 @@ export type Database = {
           customer_name: string
           customer_phone: string
           id?: string
+          is_corporate?: boolean | null
           language?: string
           last_email_sent_at?: string | null
           paid_at?: string | null
@@ -133,6 +137,7 @@ export type Database = {
           cancelled_at?: string | null
           child_count?: number
           child_price?: number
+          company_name?: string | null
           confirmation_email_sent?: boolean | null
           created_at?: string | null
           currency?: string | null
@@ -140,6 +145,7 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           id?: string
+          is_corporate?: boolean | null
           language?: string
           last_email_sent_at?: string | null
           paid_at?: string | null
@@ -216,13 +222,18 @@ export type Database = {
           company_name: string | null
           created_at: string | null
           created_by: string | null
+          discount_amount: number | null
+          discount_reason: string | null
           expires_at: string
+          group_request_id: string | null
           id: string
           invoice_number: string
+          is_corporate: boolean | null
           language: string | null
           notes: string | null
           num_adults: number
           num_children: number
+          original_amount: number | null
           paid_at: string | null
           payment_id: string | null
           services: Json | null
@@ -241,13 +252,18 @@ export type Database = {
           company_name?: string | null
           created_at?: string | null
           created_by?: string | null
+          discount_amount?: number | null
+          discount_reason?: string | null
           expires_at: string
+          group_request_id?: string | null
           id?: string
           invoice_number: string
+          is_corporate?: boolean | null
           language?: string | null
           notes?: string | null
           num_adults?: number
           num_children?: number
+          original_amount?: number | null
           paid_at?: string | null
           payment_id?: string | null
           services?: Json | null
@@ -266,13 +282,18 @@ export type Database = {
           company_name?: string | null
           created_at?: string | null
           created_by?: string | null
+          discount_amount?: number | null
+          discount_reason?: string | null
           expires_at?: string
+          group_request_id?: string | null
           id?: string
           invoice_number?: string
+          is_corporate?: boolean | null
           language?: string | null
           notes?: string | null
           num_adults?: number
           num_children?: number
+          original_amount?: number | null
           paid_at?: string | null
           payment_id?: string | null
           services?: Json | null
@@ -288,6 +309,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_invoices_group_request_id_fkey"
+            columns: ["group_request_id"]
+            isOneToOne: false
+            referencedRelation: "group_booking_requests"
             referencedColumns: ["id"]
           },
         ]
