@@ -201,11 +201,21 @@ const RefundManagementPage = () => {
     setProcessing(true);
 
     try {
-      const amountInHalalas = Math.round(parseFloat(refundAmount) * 100);
+      // Send amount in SAR (edge function handles conversion to halalas)
+      const amountInSar = Number.parseFloat(refundAmount);
+      if (!Number.isFinite(amountInSar) || amountInSar <= 0) {
+        toast({
+          title: isArabic ? 'خطأ' : 'Error',
+          description: isArabic ? 'مبلغ الاسترداد غير صالح' : 'Invalid refund amount',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('process-refund', {
         body: {
           bookingId: refundDialog.bookingId,
-          amount: amountInHalalas,
+          amount: amountInSar,
           reason: 'Admin refund from Refund Center',
           sendEmail: true
         }

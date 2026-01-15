@@ -133,9 +133,19 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     if (!booking?.payment_id) return;
     setRefunding(true);
     try {
-      const amountInHalalas = refundAmount ? Math.round(parseFloat(refundAmount) * 100) : undefined;
+      // Send amount in SAR (edge function handles conversion to halalas)
+      const amountInSar = refundAmount.trim() ? Number.parseFloat(refundAmount) : undefined;
+      if (refundAmount.trim() && (!Number.isFinite(amountInSar) || amountInSar <= 0)) {
+        toast({
+          title: isArabic ? 'خطأ' : 'Error',
+          description: isArabic ? 'مبلغ الاسترداد غير صالح' : 'Invalid refund amount',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('process-refund', {
-        body: { bookingId: booking.id, amount: amountInHalalas, reason: 'Admin initiated refund' }
+        body: { bookingId: booking.id, amount: amountInSar, reason: 'Admin initiated refund' }
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);
