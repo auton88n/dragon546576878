@@ -62,10 +62,10 @@ export default function InvoiceCallbackPage() {
   }, [searchParams, isArabic, navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="container max-w-lg mx-auto py-12 px-4">
-        <Card className="text-center py-12">
+      <main className="container max-w-lg mx-auto px-4 flex-1 flex items-center justify-center py-8">
+        <Card className="text-center py-12 w-full">
           <CardContent>
             {status === 'loading' && (
               <>
