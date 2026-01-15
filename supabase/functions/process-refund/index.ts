@@ -33,11 +33,24 @@ serve(async (req) => {
       );
     }
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
+    // Retry auth check up to 2 times for transient network errors
+    let user = null;
+    let authError = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const result = await supabaseClient.auth.getUser(
+        authHeader.replace("Bearer ", "")
+      );
+      if (!result.error) {
+        user = result.data.user;
+        break;
+      }
+      authError = result.error;
+      console.log(`Auth attempt ${attempt + 1} failed:`, result.error.message);
+      if (attempt < 1) await new Promise(r => setTimeout(r, 500)); // Wait before retry
+    }
 
     if (authError || !user) {
+      console.error("Auth failed after retries:", authError);
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
