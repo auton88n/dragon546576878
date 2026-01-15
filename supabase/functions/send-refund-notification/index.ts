@@ -100,7 +100,7 @@ serve(async (req) => {
               <!-- Greeting -->
               <p style="font-size: 16px; color: #3D2E1F !important; margin: 0 0 20px; line-height: 1.6; text-align: ${isArabic ? 'right' : 'left'};">
                 ${isArabic 
-                  ? `عزيزي/عزيزتي ${booking.customer_name}،`
+                  ? `عزيزي/عزيزتي <span dir="ltr" style="unicode-bidi: isolate;">${booking.customer_name}</span>،`
                   : `Dear ${booking.customer_name},`
                 }
               </p>
@@ -127,7 +127,10 @@ serve(async (req) => {
                       ${isArabic ? 'المبلغ المسترد' : 'Refund Amount'}
                     </p>
                     <div style="font-size: 32px; font-weight: 800; color: #059669 !important;">
-                      ${refundAmount} ${isArabic ? 'ر.س' : 'SAR'}
+                      ${isArabic 
+                        ? `<span dir="ltr" style="unicode-bidi: isolate;">${refundAmount}</span> ر.س`
+                        : `${refundAmount} SAR`
+                      }
                     </div>
                     <p style="color: #666666 !important; margin: 10px 0 0; font-size: 13px;">
                       ${isFullRefund 
@@ -140,13 +143,18 @@ serve(async (req) => {
               </table>
               
               <!-- Booking Details -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FAF6F1 !important; border-radius: 10px; margin: 0 0 25px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FAF6F1 !important; border-radius: 10px; margin: 0 0 25px;" dir="${isArabic ? 'rtl' : 'ltr'}">
                 <tr>
                   <td style="padding: 15px 20px; border-bottom: 1px solid #E8DED0;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td style="color: #666666 !important; font-size: 14px;">${isArabic ? 'رقم الحجز' : 'Booking Reference'}</td>
-                        <td style="color: #3D2E1F !important; font-weight: 600; font-size: 14px; text-align: ${isArabic ? 'left' : 'right'};">${booking.booking_reference}</td>
+                        ${isArabic ? `
+                          <td dir="ltr" style="color: #3D2E1F !important; font-weight: 600; font-size: 14px; text-align: left; unicode-bidi: isolate;">${booking.booking_reference}</td>
+                          <td style="color: #666666 !important; font-size: 14px; text-align: right;">رقم الحجز</td>
+                        ` : `
+                          <td style="color: #666666 !important; font-size: 14px;">Booking Reference</td>
+                          <td style="color: #3D2E1F !important; font-weight: 600; font-size: 14px; text-align: right;">${booking.booking_reference}</td>
+                        `}
                       </tr>
                     </table>
                   </td>
@@ -155,8 +163,13 @@ serve(async (req) => {
                   <td style="padding: 15px 20px; border-bottom: 1px solid #E8DED0;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td style="color: #666666 !important; font-size: 14px;">${isArabic ? 'المبلغ الأصلي' : 'Original Amount'}</td>
-                        <td style="color: #3D2E1F !important; font-weight: 600; font-size: 14px; text-align: ${isArabic ? 'left' : 'right'};">${booking.total_amount} ${isArabic ? 'ر.س' : 'SAR'}</td>
+                        ${isArabic ? `
+                          <td dir="ltr" style="color: #3D2E1F !important; font-weight: 600; font-size: 14px; text-align: left; unicode-bidi: isolate;">${booking.total_amount} ر.س</td>
+                          <td style="color: #666666 !important; font-size: 14px; text-align: right;">المبلغ الأصلي</td>
+                        ` : `
+                          <td style="color: #666666 !important; font-size: 14px;">Original Amount</td>
+                          <td style="color: #3D2E1F !important; font-weight: 600; font-size: 14px; text-align: right;">${booking.total_amount} SAR</td>
+                        `}
                       </tr>
                     </table>
                   </td>
@@ -165,8 +178,13 @@ serve(async (req) => {
                   <td style="padding: 15px 20px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td style="color: #666666 !important; font-size: 14px;">${isArabic ? 'تاريخ الزيارة' : 'Visit Date'}</td>
-                        <td style="color: #3D2E1F !important; font-weight: 600; font-size: 14px; text-align: ${isArabic ? 'left' : 'right'};">${booking.visit_date}</td>
+                        ${isArabic ? `
+                          <td dir="ltr" style="color: #3D2E1F !important; font-weight: 600; font-size: 14px; text-align: left; unicode-bidi: isolate;">${booking.visit_date}</td>
+                          <td style="color: #666666 !important; font-size: 14px; text-align: right;">تاريخ الزيارة</td>
+                        ` : `
+                          <td style="color: #666666 !important; font-size: 14px;">Visit Date</td>
+                          <td style="color: #3D2E1F !important; font-weight: 600; font-size: 14px; text-align: right;">${booking.visit_date}</td>
+                        `}
                       </tr>
                     </table>
                   </td>
