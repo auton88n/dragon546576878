@@ -58,153 +58,284 @@ function generateInvoiceEmailPreview(invoice: CustomInvoice, previewLang: 'ar' |
 
   const hasDiscount = invoice.discount_amount && invoice.discount_amount > 0;
   const originalAmount = invoice.original_amount || invoice.total_amount;
+  const isCorporate = invoice.is_corporate || invoice.client_type === 'company';
   
-  const texts = {
-    ar: {
-      invoiceNumber: 'فاتورة رقم',
-      greeting: `عزيزي/عزيزتي ${invoice.client_name}،`,
-      intro: 'شكراً لاختياركم سوق المفيجر. تجدون أدناه تفاصيل الفاتورة:',
-      visitDate: 'تاريخ الزيارة',
-      time: 'الوقت',
-      visitors: 'عدد الزوار',
-      services: 'الخدمات',
-      originalAmount: 'السعر الأصلي',
-      corporateDiscount: 'خصم الشركات',
-      totalAmount: 'المبلغ الإجمالي',
-      currency: 'ريال',
-      expires: 'ينتهي رابط الدفع في',
-      payNow: 'ادفع الآن',
-      adultsText: `${invoice.num_adults} بالغ${invoice.num_children > 0 ? ` + ${invoice.num_children} طفل` : ''}`,
-      servicesText: servicesList.map(s => s.ar).join('، '),
-    },
-    en: {
-      invoiceNumber: 'Invoice',
-      greeting: `Dear ${invoice.client_name},`,
-      intro: 'Thank you for choosing Souq Almufaijer. Please find your invoice details below:',
-      visitDate: 'Visit Date',
-      time: 'Time',
-      visitors: 'Visitors',
-      services: 'Services',
-      originalAmount: 'Original Price',
-      corporateDiscount: 'Corporate Discount',
-      totalAmount: 'Total Amount',
-      currency: 'SAR',
-      expires: 'Payment link expires',
-      payNow: 'Pay Now',
-      adultsText: `${invoice.num_adults} Adult${invoice.num_adults > 1 ? 's' : ''}${invoice.num_children > 0 ? ` + ${invoice.num_children} Child${invoice.num_children > 1 ? 'ren' : ''}` : ''}`,
-      servicesText: servicesList.map(s => s.en).join(', '),
-    },
-  };
-
-  const t = texts[previewLang];
   const dir = isPreviewArabic ? 'rtl' : 'ltr';
-  const textAlign = isPreviewArabic ? 'right' : 'left';
+  const lang = isPreviewArabic ? 'ar' : 'en';
 
-  const discountSection = hasDiscount ? `
-    <tr>
-      <td style="color: #999999 !important; text-decoration: line-through;">${t.originalAmount}:</td>
-      <td style="color: #999999 !important; text-decoration: line-through;">${originalAmount.toLocaleString()} ${t.currency}</td>
-    </tr>
-    <tr>
-      <td style="color: #22c55e !important;">${t.corporateDiscount}:</td>
-      <td style="color: #22c55e !important; font-weight: bold;">-${invoice.discount_amount?.toLocaleString()} ${t.currency}</td>
-    </tr>
-  ` : '';
+  // Arabic template
+  if (isPreviewArabic) {
+    const corporateBadge = isCorporate ? `
+      <div style="display: inline-block; background: linear-gradient(135deg, #C9A86C 0%, #8B6F47 100%) !important; color: #4A3625 !important; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; margin: 10px 0;">
+        🏢 حجز شركة${invoice.company_name ? ` - ${invoice.company_name}` : ''}
+      </div>
+    ` : '';
 
-  return `
+    const fastTrackNotice = isCorporate ? `
+      <div style="background-color: #FAF6F1 !important; border-right: 4px solid #C9A86C; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #4A3625 !important; font-weight: bold;">✨ مسار VIP للشركات</p>
+        <p style="margin: 8px 0 0 0; color: #666666 !important; font-size: 14px;">ستحصلون على تذاكر خاصة بمسار سريع للدخول بأولوية يوم الزيارة.</p>
+      </div>
+    ` : '';
+
+    // Unified pricing card
+    const pricingCard = hasDiscount ? `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; border-radius: 12px; overflow: hidden; margin: 20px 0;">
+        <tr>
+          <td style="background-color: rgba(201, 168, 108, 0.15) !important; padding: 12px 20px; text-align: center; border-bottom: 1px solid rgba(201, 168, 108, 0.3);">
+            <span style="display: inline-block; background-color: #C9A86C !important; color: #4A3625 !important; padding: 4px 14px; border-radius: 12px; font-size: 11px; font-weight: bold;">
+              ✨ خصم خاص للشركات
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 20px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding: 8px 0; color: #D4C5B0 !important; font-size: 14px; text-align: right;">السعر الأصلي:</td>
+                <td style="padding: 8px 0; color: #999999 !important; font-size: 14px; text-align: left; text-decoration: line-through;">${originalAmount.toLocaleString()} ريال</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #D4C5B0 !important; font-size: 14px; text-align: right;">الخصم:</td>
+                <td style="padding: 8px 0; color: #7CB97C !important; font-size: 14px; font-weight: bold; text-align: left;">- ${invoice.discount_amount?.toLocaleString()} ريال</td>
+              </tr>
+              ${invoice.discount_reason ? `
+              <tr>
+                <td colspan="2" style="padding: 8px 0 12px 0; color: #A39580 !important; font-size: 12px; text-align: center; font-style: italic;">"${invoice.discount_reason}"</td>
+              </tr>
+              ` : ''}
+            </table>
+            <div style="height: 1px; background: linear-gradient(90deg, transparent, #C9A86C, transparent); margin: 10px 0 15px 0;"></div>
+            <div style="text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #D4C5B0 !important; text-transform: uppercase; letter-spacing: 1px;">المبلغ الإجمالي</p>
+              <p style="margin: 8px 0 0 0; font-size: 36px; font-weight: bold; color: #ffffff !important;">${invoice.total_amount.toLocaleString()} <span style="font-size: 18px;">ريال</span></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    ` : `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; padding: 25px; border-radius: 12px; text-align: center; margin: 20px 0;">
+        <tr>
+          <td>
+            <p style="margin: 0; font-size: 12px; color: #D4C5B0 !important; text-transform: uppercase; letter-spacing: 1px;">المبلغ الإجمالي</p>
+            <p style="margin: 10px 0 0 0; font-size: 36px; font-weight: bold; color: #ffffff !important;">${invoice.total_amount.toLocaleString()} <span style="font-size: 18px;">ريال</span></p>
+          </td>
+        </tr>
+      </table>
+    `;
+
+    return `
 <!DOCTYPE html>
-<html dir="${dir}">
+<html dir="rtl" lang="ar">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light only">
   <meta name="supported-color-schemes" content="light only">
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f1e8;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f1e8; padding: 40px 20px;">
+<body style="margin: 0 !important; padding: 0 !important; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f1e8 !important;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f1e8 !important; padding: 40px 20px;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          <!-- Header -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff !important; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
           <tr>
-            <td style="background-color: #5C4A3A; padding: 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px;">سوق المفيجر</h1>
-              <p style="color: #C9A86C; margin: 10px 0 0 0; font-size: 14px;">Souq Almufaijer</p>
+            <td style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; padding: 30px; text-align: center;">
+              <div style="font-size: 28px; color: #ffffff !important; margin-bottom: 5px;">سوق المفيجر</div>
+              <p style="color: #C9A86C !important; margin: 8px 0 0 0; font-size: 14px; letter-spacing: 2px;">SOUQ ALMUFAIJER</p>
             </td>
           </tr>
-          
-          <!-- Content -->
           <tr>
-            <td style="padding: 40px 30px;">
-              <div style="text-align: ${textAlign};">
-                <h2 style="color: #3D2E1F; margin: 0 0 20px 0;">${t.invoiceNumber}: ${invoice.invoice_number}</h2>
-                ${invoice.client_type === 'company' && invoice.company_name ? `
-                  <p style="color: #C9A86C; font-size: 14px; margin: 0 0 10px 0; font-weight: bold;">
-                    <span style="display: inline-block; background: linear-gradient(135deg, #C9A86C 0%, #8B6F47 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
-                      ${isPreviewArabic ? '🏢 شركة' : '🏢 Corporate'}
-                    </span>
-                    ${invoice.company_name}
-                  </p>
+            <td style="height: 4px; background: linear-gradient(90deg, #C9A86C, #8B6F47, #C9A86C) !important;"></td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 30px; background-color: #ffffff !important; text-align: right;">
+              <h2 style="color: #4A3625 !important; margin: 0 0 10px 0; font-size: 22px;">فاتورة رقم: ${invoice.invoice_number}</h2>
+              ${corporateBadge}
+              <p style="color: #666666 !important; font-size: 16px; line-height: 1.8; margin-top: 20px;">
+                عزيزي/عزيزتي <strong>${invoice.client_name}</strong>،
+              </p>
+              <p style="color: #666666 !important; font-size: 16px; line-height: 1.8;">
+                شكراً لاختياركم سوق المفيجر. تجدون أدناه تفاصيل الفاتورة:
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FAF6F1 !important; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <tr>
+                  <td style="padding: 10px 0; color: #888888 !important; font-size: 14px; width: 40%;">تاريخ الزيارة:</td>
+                  <td style="padding: 10px 0; color: #4A3625 !important; font-weight: bold; font-size: 15px;">${invoice.visit_date}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; color: #888888 !important; font-size: 14px;">الوقت:</td>
+                  <td style="padding: 10px 0; color: #4A3625 !important; font-weight: bold; font-size: 15px;">${invoice.visit_time}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; color: #888888 !important; font-size: 14px;">عدد الزوار:</td>
+                  <td style="padding: 10px 0; color: #4A3625 !important; font-weight: bold; font-size: 15px;">${invoice.num_adults} بالغ${invoice.num_children > 0 ? ` + ${invoice.num_children} طفل` : ''}</td>
+                </tr>
+                ${servicesList.length > 0 ? `
+                <tr>
+                  <td style="padding: 10px 0; color: #888888 !important; font-size: 14px; vertical-align: top;">الخدمات:</td>
+                  <td style="padding: 10px 0; color: #4A3625 !important; font-weight: bold; font-size: 15px;">${servicesList.map(s => s.ar).join('، ')}</td>
+                </tr>
                 ` : ''}
-                <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
-                  ${t.greeting}
-                </p>
-                <p style="color: #3D2E1F; font-size: 16px; line-height: 1.6;">
-                  ${t.intro}
-                </p>
-                
-                <div style="background-color: #f5f1e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                  <table width="100%" cellpadding="5">
-                    <tr>
-                      <td style="color: #3D2E1F;">${t.visitDate}:</td>
-                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.visit_date}</td>
-                    </tr>
-                    <tr>
-                      <td style="color: #3D2E1F;">${t.time}:</td>
-                      <td style="color: #3D2E1F; font-weight: bold;">${invoice.visit_time}</td>
-                    </tr>
-                    <tr>
-                      <td style="color: #3D2E1F;">${t.visitors}:</td>
-                      <td style="color: #3D2E1F; font-weight: bold;">${t.adultsText}</td>
-                    </tr>
-                    ${servicesList.length > 0 ? `
-                    <tr>
-                      <td style="color: #3D2E1F;">${t.services}:</td>
-                      <td style="color: #3D2E1F; font-weight: bold;">${t.servicesText}</td>
-                    </tr>
-                    ` : ''}
-                    ${discountSection}
-                  </table>
-                </div>
-                
-                <div style="background-color: #5C4A3A; color: #fff; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-                  <p style="margin: 0; font-size: 14px; color: #C9A86C;">${t.totalAmount}</p>
-                  <p style="margin: 10px 0 0 0; font-size: 32px; font-weight: bold; color: #ffffff;">${invoice.total_amount.toLocaleString()} ${t.currency}</p>
-                  ${hasDiscount ? `<p style="margin: 5px 0 0 0; font-size: 12px; color: #22c55e;">✓ ${invoice.discount_reason || (isPreviewArabic ? 'خصم شركات' : 'Corporate discount')}</p>` : ''}
-                </div>
-                
-                <p style="color: #666; font-size: 14px;">
-                  ${t.expires}: ${expiresAt}
-                </p>
-              </div>
-              
-              <!-- CTA Button -->
-              <div style="text-align: center; margin: 40px 0;">
-                <a href="${paymentLink}" style="display: inline-block; background-color: #5C4A3A; color: #ffffff; text-decoration: none; padding: 16px 48px; border-radius: 8px; font-size: 18px; font-weight: bold;">
-                  ${t.payNow}
+              </table>
+              ${pricingCard}
+              ${fastTrackNotice}
+              <p style="color: #999999 !important; font-size: 13px; margin-top: 20px;">
+                ⏰ ينتهي رابط الدفع في: <strong>${expiresAt}</strong>
+              </p>
+              <div style="text-align: center; margin: 30px 0 10px 0;">
+                <a href="${paymentLink}" style="display: inline-block; background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%); color: #ffffff !important; text-decoration: none; padding: 16px 50px; border-radius: 8px; font-size: 18px; font-weight: bold;">
+                  ادفع الآن
                 </a>
               </div>
             </td>
           </tr>
-          
-          <!-- Footer -->
           <tr>
-            <td style="background-color: #3D2E1F; padding: 20px; text-align: center;">
-              <p style="color: #C9A86C; margin: 0; font-size: 14px;">
-                سوق المفيجر - Souq Almufaijer
+            <td style="background-color: #4A3625 !important; padding: 20px; text-align: center;">
+              <p style="color: #ffffff !important; margin: 0; font-size: 15px; font-weight: 600;">سوق المفيجر - تراث حي</p>
+              <p style="margin: 10px 0 0 0;">
+                <a href="mailto:info@almufaijer.com" style="color: #C9A86C !important; text-decoration: none; font-size: 12px;">info@almufaijer.com</a>
               </p>
-              <p style="color: #C9A86C; margin: 10px 0 0 0; font-size: 12px;">
-                info@almufaijer.com
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+  }
+
+  // English template
+  const corporateBadge = isCorporate ? `
+    <div style="display: inline-block; background: linear-gradient(135deg, #C9A86C 0%, #8B6F47 100%) !important; color: #4A3625 !important; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; margin: 10px 0;">
+      🏢 Corporate Booking${invoice.company_name ? ` - ${invoice.company_name}` : ''}
+    </div>
+  ` : '';
+
+  const fastTrackNotice = isCorporate ? `
+    <div style="background-color: #FAF6F1 !important; border-left: 4px solid #C9A86C; padding: 15px; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0; color: #4A3625 !important; font-weight: bold;">✨ Corporate VIP Fast-Track</p>
+      <p style="margin: 8px 0 0 0; color: #666666 !important; font-size: 14px;">You will receive special fast-track tickets for priority entry on your visit day.</p>
+    </div>
+  ` : '';
+
+  // Unified pricing card
+  const pricingCard = hasDiscount ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; border-radius: 12px; overflow: hidden; margin: 20px 0;">
+      <tr>
+        <td style="background-color: rgba(201, 168, 108, 0.15) !important; padding: 12px 20px; text-align: center; border-bottom: 1px solid rgba(201, 168, 108, 0.3);">
+          <span style="display: inline-block; background-color: #C9A86C !important; color: #4A3625 !important; padding: 4px 14px; border-radius: 12px; font-size: 11px; font-weight: bold;">
+            ✨ CORPORATE SPECIAL DISCOUNT
+          </span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 20px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="padding: 8px 0; color: #D4C5B0 !important; font-size: 14px;">Original Price:</td>
+              <td style="padding: 8px 0; color: #999999 !important; font-size: 14px; text-align: right; text-decoration: line-through;">${originalAmount.toLocaleString()} SAR</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #D4C5B0 !important; font-size: 14px;">Discount:</td>
+              <td style="padding: 8px 0; color: #7CB97C !important; font-size: 14px; font-weight: bold; text-align: right;">- ${invoice.discount_amount?.toLocaleString()} SAR</td>
+            </tr>
+            ${invoice.discount_reason ? `
+            <tr>
+              <td colspan="2" style="padding: 8px 0 12px 0; color: #A39580 !important; font-size: 12px; text-align: center; font-style: italic;">"${invoice.discount_reason}"</td>
+            </tr>
+            ` : ''}
+          </table>
+          <div style="height: 1px; background: linear-gradient(90deg, transparent, #C9A86C, transparent); margin: 10px 0 15px 0;"></div>
+          <div style="text-align: center;">
+            <p style="margin: 0; font-size: 12px; color: #D4C5B0 !important; text-transform: uppercase; letter-spacing: 1px;">TOTAL TO PAY</p>
+            <p style="margin: 8px 0 0 0; font-size: 36px; font-weight: bold; color: #ffffff !important;">${invoice.total_amount.toLocaleString()} <span style="font-size: 18px;">SAR</span></p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  ` : `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; padding: 25px; border-radius: 12px; text-align: center; margin: 20px 0;">
+      <tr>
+        <td>
+          <p style="margin: 0; font-size: 12px; color: #D4C5B0 !important; text-transform: uppercase; letter-spacing: 1px;">TOTAL TO PAY</p>
+          <p style="margin: 10px 0 0 0; font-size: 36px; font-weight: bold; color: #ffffff !important;">${invoice.total_amount.toLocaleString()} <span style="font-size: 18px;">SAR</span></p>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  return `
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+</head>
+<body style="margin: 0 !important; padding: 0 !important; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f1e8 !important;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f1e8 !important; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff !important; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; padding: 30px; text-align: center;">
+              <div style="font-size: 24px; font-weight: 700; color: #C9A86C !important; letter-spacing: 2px; margin-bottom: 5px;">SOUQ ALMUFAIJER</div>
+              <p style="color: #ffffff !important; margin: 8px 0 0 0; font-size: 16px;">سوق المفيجر</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="height: 4px; background: linear-gradient(90deg, #C9A86C, #8B6F47, #C9A86C) !important;"></td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 30px; background-color: #ffffff !important; text-align: left;">
+              <h2 style="color: #4A3625 !important; margin: 0 0 10px 0; font-size: 22px;">Invoice: ${invoice.invoice_number}</h2>
+              ${corporateBadge}
+              <p style="color: #666666 !important; font-size: 16px; line-height: 1.8; margin-top: 20px;">
+                Dear <strong>${invoice.client_name}</strong>,
+              </p>
+              <p style="color: #666666 !important; font-size: 16px; line-height: 1.8;">
+                Thank you for choosing Souq Almufaijer. Please find your invoice details below:
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FAF6F1 !important; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <tr>
+                  <td style="padding: 10px 0; color: #888888 !important; font-size: 14px; width: 40%;">Visit Date:</td>
+                  <td style="padding: 10px 0; color: #4A3625 !important; font-weight: bold; font-size: 15px;">${invoice.visit_date}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; color: #888888 !important; font-size: 14px;">Time:</td>
+                  <td style="padding: 10px 0; color: #4A3625 !important; font-weight: bold; font-size: 15px;">${invoice.visit_time}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; color: #888888 !important; font-size: 14px;">Visitors:</td>
+                  <td style="padding: 10px 0; color: #4A3625 !important; font-weight: bold; font-size: 15px;">${invoice.num_adults} Adult${invoice.num_adults > 1 ? 's' : ''}${invoice.num_children > 0 ? ` + ${invoice.num_children} Child${invoice.num_children > 1 ? 'ren' : ''}` : ''}</td>
+                </tr>
+                ${servicesList.length > 0 ? `
+                <tr>
+                  <td style="padding: 10px 0; color: #888888 !important; font-size: 14px; vertical-align: top;">Services:</td>
+                  <td style="padding: 10px 0; color: #4A3625 !important; font-weight: bold; font-size: 15px;">${servicesList.map(s => s.en).join(', ')}</td>
+                </tr>
+                ` : ''}
+              </table>
+              ${pricingCard}
+              ${fastTrackNotice}
+              <p style="color: #999999 !important; font-size: 13px; margin-top: 20px;">
+                ⏰ Payment link expires: <strong>${expiresAt}</strong>
+              </p>
+              <div style="text-align: center; margin: 30px 0 10px 0;">
+                <a href="${paymentLink}" style="display: inline-block; background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%); color: #ffffff !important; text-decoration: none; padding: 16px 50px; border-radius: 8px; font-size: 18px; font-weight: bold;">
+                  Pay Now
+                </a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #4A3625 !important; padding: 20px; text-align: center;">
+              <p style="color: #ffffff !important; margin: 0; font-size: 15px; font-weight: 600;">Souq Almufaijer - Living Heritage</p>
+              <p style="margin: 10px 0 0 0;">
+                <a href="mailto:info@almufaijer.com" style="color: #C9A86C !important; text-decoration: none; font-size: 12px;">info@almufaijer.com</a>
               </p>
             </td>
           </tr>
