@@ -1042,16 +1042,16 @@ export function CustomInvoicesPanel() {
             </DialogTitle>
           </DialogHeader>
           {previewInvoice && (
-            <div className="space-y-4">
+            <div className="flex flex-col max-h-[80vh]">
               {/* Language Toggle */}
-              <Tabs value={previewLang} onValueChange={(v) => setPreviewLang(v as 'ar' | 'en')}>
+              <Tabs value={previewLang} onValueChange={(v) => setPreviewLang(v as 'ar' | 'en')} className="mb-4">
                 <TabsList className="grid w-full max-w-[300px] grid-cols-2">
                   <TabsTrigger value="ar">العربية</TabsTrigger>
                   <TabsTrigger value="en">English</TabsTrigger>
                 </TabsList>
               </Tabs>
 
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg text-sm">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg text-sm mb-4">
                 <div className="flex items-center gap-4">
                   <div>
                     <span className="text-muted-foreground">{isArabic ? 'إلى:' : 'To:'}</span>{' '}
@@ -1068,56 +1068,59 @@ export function CustomInvoicesPanel() {
                 </div>
               </div>
               
-              <ScrollArea className="h-[50vh] border rounded-lg bg-white">
-                <iframe
-                  srcDoc={generateInvoiceEmailPreview(previewInvoice, previewLang)}
-                  className="w-full h-[800px] border-0"
-                  title="Email Preview"
-                />
-              </ScrollArea>
+              {/* Scrollable content area containing both email preview and QR section */}
+              <ScrollArea className="flex-1 min-h-0 border rounded-lg overflow-hidden">
+                <div className="bg-white">
+                  <iframe
+                    srcDoc={generateInvoiceEmailPreview(previewInvoice, previewLang)}
+                    className="w-full h-[600px] border-0"
+                    title="Email Preview"
+                  />
+                </div>
 
-              {/* Corporate QR Preview */}
-              {previewInvoice.client_type === 'company' && (
-                <div className="p-4 border rounded-lg bg-amber-50 dark:bg-amber-950/30">
-                  <h4 className="font-medium flex items-center gap-2 mb-3">
-                    <QrCode className="h-4 w-4" />
-                    {previewLang === 'ar' ? 'معاينة رمز الشركة' : 'Corporate Fast-Track QR Preview'}
-                  </h4>
-                  
-                  <div className="flex items-center justify-center p-6 bg-white rounded-lg border-2 border-amber-400">
-                    <div className="text-center">
-                      <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-4 py-1 rounded-full text-sm font-bold mb-3">
-                        {previewLang === 'ar' ? '🏢 مسار الشركات السريع' : '🏢 CORPORATE FAST TRACK'}
-                      </div>
-                      <div className="w-32 h-32 bg-gray-100 border-4 border-amber-400 rounded-lg flex items-center justify-center mx-auto">
-                        <div className="grid grid-cols-5 gap-1 p-2">
-                          {Array.from({ length: 25 }).map((_, i) => (
-                            <div 
-                              key={i} 
-                              className={`w-4 h-4 rounded-sm ${Math.random() > 0.5 ? 'bg-gray-800' : 'bg-transparent'}`}
-                            />
-                          ))}
+                {/* Corporate QR Preview - Inside ScrollArea */}
+                {previewInvoice.client_type === 'company' && (
+                  <div className="p-4 border-t bg-amber-50 dark:bg-amber-950/30">
+                    <h4 className="font-medium flex items-center gap-2 mb-3">
+                      <QrCode className="h-4 w-4" />
+                      {previewLang === 'ar' ? 'معاينة رمز الشركة' : 'Corporate Fast-Track QR Preview'}
+                    </h4>
+                    
+                    <div className="flex items-center justify-center p-6 bg-white rounded-lg border-2 border-amber-400">
+                      <div className="text-center">
+                        <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-4 py-1 rounded-full text-sm font-bold mb-3">
+                          {previewLang === 'ar' ? '🏢 مسار الشركات السريع' : '🏢 CORPORATE FAST TRACK'}
+                        </div>
+                        <div className="w-32 h-32 bg-gray-100 border-4 border-amber-400 rounded-lg flex items-center justify-center mx-auto">
+                          <div className="grid grid-cols-5 gap-1 p-2">
+                            {Array.from({ length: 25 }).map((_, i) => (
+                              <div 
+                                key={i} 
+                                className={`w-4 h-4 rounded-sm ${Math.random() > 0.5 ? 'bg-gray-800' : 'bg-transparent'}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="mt-3 font-bold text-heritage-primary">
+                          {previewInvoice.company_name}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {previewInvoice.num_adults} {previewLang === 'ar' ? 'بالغ' : 'Adults'}
+                          {previewInvoice.num_children > 0 && ` + ${previewInvoice.num_children} ${previewLang === 'ar' ? 'طفل' : 'Children'}`}
                         </div>
                       </div>
-                      <div className="mt-3 font-bold text-heritage-primary">
-                        {previewInvoice.company_name}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {previewInvoice.num_adults} {previewLang === 'ar' ? 'بالغ' : 'Adults'}
-                        {previewInvoice.num_children > 0 && ` + ${previewInvoice.num_children} ${previewLang === 'ar' ? 'طفل' : 'Children'}`}
-                      </div>
                     </div>
+                    
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      {previewLang === 'ar' 
+                        ? 'سيحصل العميل على هذا الرمز للدخول السريع بعد الدفع'
+                        : 'Client will receive this fast-track QR after payment'}
+                    </p>
                   </div>
-                  
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
-                    {previewLang === 'ar' 
-                      ? 'سيحصل العميل على هذا الرمز للدخول السريع بعد الدفع'
-                      : 'Client will receive this fast-track QR after payment'}
-                  </p>
-                </div>
-              )}
+                )}
+              </ScrollArea>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => setPreviewInvoice(null)}>
                   {isArabic ? 'إغلاق' : 'Close'}
                 </Button>
