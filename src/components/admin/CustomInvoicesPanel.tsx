@@ -369,6 +369,7 @@ interface CustomInvoice {
   visit_time: string;
   notes: string | null;
   status: 'pending' | 'paid' | 'expired' | 'cancelled';
+  language: 'ar' | 'en' | null;
   payment_id: string | null;
   paid_at: string | null;
   expires_at: string;
@@ -981,6 +982,9 @@ export function CustomInvoicesPanel() {
                         ) : (
                           <><User className="h-3 w-3" /> {isArabic ? 'فرد' : 'Individual'}</>
                         )}
+                      </Badge>
+                      <Badge variant="secondary" className="gap-1 text-xs">
+                        {invoice.language === 'ar' ? '🇸🇦 العربية' : '🇬🇧 English'}
                       </Badge>
                     </div>
                     <h3 className="font-semibold">
