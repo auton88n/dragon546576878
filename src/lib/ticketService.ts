@@ -299,10 +299,6 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
       };
     }
 
-    // Corporate flag from QR data
-    const isCorporate = isCorporateQR === true || (booking?.is_corporate ?? false);
-    const companyName = companyNameQR || booking?.company_name || undefined;
-
     // Find booking by reference
     const { data: booking, error } = await supabase
       .from('bookings')
@@ -338,8 +334,8 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
     // Detect VIP bookings (VIP- prefix in booking reference)
     const isVIP = booking.booking_reference?.startsWith('VIP-') || false;
     // Corporate status from booking or QR
-    const isCorporateFinal = isCorporate || booking.is_corporate || false;
-    const companyNameFinal = companyName || booking.company_name || undefined;
+    const isCorporateFinal = isCorporateQR === true || booking.is_corporate || false;
+    const companyNameFinal = companyNameQR || booking.company_name || undefined;
 
     const bookingData = {
       id: booking.id,
