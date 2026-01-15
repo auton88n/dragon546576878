@@ -240,11 +240,12 @@ const RefundsPanel = () => {
     setProcessing(true);
 
     try {
-      const amountInHalalas = Math.round(parseFloat(refundAmount) * 100);
+      // Send amount in SAR (edge function handles conversion to halalas)
+      const amountInSar = parseFloat(refundAmount);
       const { data, error } = await supabase.functions.invoke('process-refund', {
         body: {
           bookingId: refundDialog.bookingId,
-          amount: amountInHalalas,
+          amount: amountInSar,
           reason: 'Admin refund from Refund Center',
           sendEmail: true
         }
@@ -443,11 +444,12 @@ const RefundsPanel = () => {
     if (!orphanRefundDialog) return;
     setProcessingOrphanRefund(true);
     try {
-      const amountInHalalas = Math.round(parseFloat(orphanRefundAmount) * 100);
+      // Send amount in SAR (edge function handles conversion to halalas)
+      const amountInSar = parseFloat(orphanRefundAmount);
       const { data, error } = await supabase.functions.invoke('refund-orphan-payment', {
         body: {
           paymentId: orphanRefundDialog.payment.id,
-          amount: amountInHalalas,
+          amount: amountInSar,
           customerEmail: orphanRefundEmail.trim() || undefined,
           reason: orphanRefundReason.trim() || undefined,
         }
