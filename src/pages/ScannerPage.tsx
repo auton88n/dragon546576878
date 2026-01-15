@@ -1117,6 +1117,17 @@ const ScannerPage = () => {
             </div>
           )}
           
+          {/* Corporate Fast-Track Badge */}
+          {groupResult.booking?.isCorporate && !groupResult.isVIP && (
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600/30 to-indigo-600/30 backdrop-blur-md rounded-full px-6 py-2 border-2 border-blue-300/50 shadow-xl">
+              <span className="text-lg font-bold tracking-wider flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />
+                <span>{isArabic ? 'مسار الشركات' : 'CORPORATE FAST-TRACK'}</span>
+                <Briefcase className="h-5 w-5" />
+              </span>
+            </div>
+          )}
+          
           {/* Status Icon */}
           <div className="scale-125 mb-2">
             {groupResult.isVIP && groupResult.status === 'valid' ? (
@@ -1199,6 +1210,14 @@ const ScannerPage = () => {
                   <span>🌟</span>
                   <span>{isArabic ? 'دعوة خاصة' : 'Special Invitation'}</span>
                   <span>🌟</span>
+                </div>
+              )}
+              
+              {/* Corporate Fast-Track Badge */}
+              {groupResult.booking?.isCorporate && !groupResult.isVIP && groupResult.status === 'valid' && (
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl px-4 py-2 text-sm font-bold mb-3 inline-flex items-center gap-2 shadow-lg">
+                  <Briefcase className="h-4 w-4" />
+                  <span>{groupResult.booking.companyName || (isArabic ? 'عميل شركات' : 'Corporate Client')}</span>
                 </div>
               )}
               
