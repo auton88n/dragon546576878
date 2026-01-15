@@ -85,12 +85,15 @@ serve(async (req) => {
     // Generate booking reference
     const bookingReference = `INV-${Date.now().toString(36).toUpperCase()}`;
 
-    // Create booking from invoice with proper language
+    // Check if this is a corporate booking
+    const isCorporate = invoice.is_corporate || invoice.client_type === 'company';
+
+    // Create booking from invoice with proper language and corporate flags
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
       .insert({
         booking_reference: bookingReference,
-        customer_name: invoice.company_name || invoice.client_name,
+        customer_name: invoice.client_name,
         customer_email: invoice.client_email,
         customer_phone: invoice.client_phone,
         visit_date: invoice.visit_date,
@@ -106,10 +109,14 @@ serve(async (req) => {
         payment_method: payment.source?.type || "creditcard",
         paid_at: new Date().toISOString(),
         special_requests: invoice.services ? `Services: ${invoice.services.join(", ")}` : null,
-        language: invoice.language || 'ar', // Use invoice language or default to Arabic
+        language: invoice.language || 'ar',
+        is_corporate: isCorporate,
+        company_name: isCorporate ? invoice.company_name : null,
       })
       .select()
       .single();
+
+    console.log(`Booking created: ${booking?.id}, is_corporate: ${isCorporate}, company: ${invoice.company_name}`);
 
     if (bookingError) {
       console.error("Error creating booking:", bookingError);
