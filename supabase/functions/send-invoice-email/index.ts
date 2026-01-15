@@ -66,6 +66,107 @@ serve(async (req) => {
       .map((s: string) => SERVICES_MAP[s])
       .filter(Boolean);
 
+    // Check if corporate and has discount
+    const isCorporate = invoice.is_corporate || invoice.client_type === 'company';
+    const hasDiscount = invoice.original_amount && invoice.discount_amount && invoice.discount_amount > 0;
+
+    // Generate discount section HTML
+    const generateDiscountSectionAr = () => {
+      if (!hasDiscount) return '';
+      return `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #2D5A3D 0%, #1E4A2D 100%) !important; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <tr>
+            <td style="text-align: center;">
+              <div style="display: inline-block; background-color: #C9A86C !important; color: #1E4A2D !important; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 15px;">
+                خصم خاص للشركات
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding: 6px 0; color: #D4C5B0 !important; text-align: right;">السعر الأصلي:</td>
+                  <td style="padding: 6px 0; color: #ffffff !important; font-weight: bold; text-align: left; text-decoration: line-through;">${invoice.original_amount?.toLocaleString()} ريال</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #D4C5B0 !important; text-align: right;">الخصم:</td>
+                  <td style="padding: 6px 0; color: #C9A86C !important; font-weight: bold; text-align: left;">- ${invoice.discount_amount?.toLocaleString()} ريال</td>
+                </tr>
+                ${invoice.discount_reason ? `
+                <tr>
+                  <td colspan="2" style="padding: 10px 0 0 0; color: #D4C5B0 !important; font-size: 13px; text-align: center; font-style: italic;">"${invoice.discount_reason}"</td>
+                </tr>
+                ` : ''}
+              </table>
+            </td>
+          </tr>
+        </table>
+      `;
+    };
+
+    const generateDiscountSectionEn = () => {
+      if (!hasDiscount) return '';
+      return `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #2D5A3D 0%, #1E4A2D 100%) !important; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <tr>
+            <td style="text-align: center;">
+              <div style="display: inline-block; background-color: #C9A86C !important; color: #1E4A2D !important; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 15px;">
+                CORPORATE SPECIAL DISCOUNT
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding: 6px 0; color: #D4C5B0 !important;">Original Price:</td>
+                  <td style="padding: 6px 0; color: #ffffff !important; font-weight: bold; text-align: right; text-decoration: line-through;">${invoice.original_amount?.toLocaleString()} SAR</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #D4C5B0 !important;">Discount:</td>
+                  <td style="padding: 6px 0; color: #C9A86C !important; font-weight: bold; text-align: right;">- ${invoice.discount_amount?.toLocaleString()} SAR</td>
+                </tr>
+                ${invoice.discount_reason ? `
+                <tr>
+                  <td colspan="2" style="padding: 10px 0 0 0; color: #D4C5B0 !important; font-size: 13px; text-align: center; font-style: italic;">"${invoice.discount_reason}"</td>
+                </tr>
+                ` : ''}
+              </table>
+            </td>
+          </tr>
+        </table>
+      `;
+    };
+
+    // Corporate badge HTML
+    const corporateBadgeAr = isCorporate ? `
+      <div style="display: inline-block; background: linear-gradient(135deg, #C9A86C 0%, #8B6F47 100%) !important; color: #4A3625 !important; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; margin: 10px 0;">
+        🏢 حجز شركة${invoice.company_name ? ` - ${invoice.company_name}` : ''}
+      </div>
+    ` : '';
+
+    const corporateBadgeEn = isCorporate ? `
+      <div style="display: inline-block; background: linear-gradient(135deg, #C9A86C 0%, #8B6F47 100%) !important; color: #4A3625 !important; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; margin: 10px 0;">
+        🏢 Corporate Booking${invoice.company_name ? ` - ${invoice.company_name}` : ''}
+      </div>
+    ` : '';
+
+    // Fast-track notice for corporate
+    const fastTrackNoticeAr = isCorporate ? `
+      <div style="background-color: #FAF6F1 !important; border-right: 4px solid #C9A86C; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #4A3625 !important; font-weight: bold;">✨ مسار VIP للشركات</p>
+        <p style="margin: 8px 0 0 0; color: #666666 !important; font-size: 14px;">ستحصلون على تذاكر خاصة بمسار سريع للدخول بأولوية يوم الزيارة.</p>
+      </div>
+    ` : '';
+
+    const fastTrackNoticeEn = isCorporate ? `
+      <div style="background-color: #FAF6F1 !important; border-left: 4px solid #C9A86C; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #4A3625 !important; font-weight: bold;">✨ Corporate VIP Fast-Track</p>
+        <p style="margin: 8px 0 0 0; color: #666666 !important; font-size: 14px;">You will receive special fast-track tickets for priority entry on your visit day.</p>
+      </div>
+    ` : '';
+
     const emailHtml = `
 <!DOCTYPE html>
 <html dir="rtl">
@@ -104,8 +205,9 @@ serve(async (req) => {
               
               <!-- Arabic Section -->
               <div style="text-align: right; margin-bottom: 40px;">
-                <h2 style="color: #4A3625 !important; margin: 0 0 20px 0;">فاتورة رقم: ${invoice.invoice_number}</h2>
-                <p style="color: #666666 !important; font-size: 16px; line-height: 1.6;">
+                <h2 style="color: #4A3625 !important; margin: 0 0 10px 0;">فاتورة رقم: ${invoice.invoice_number}</h2>
+                ${corporateBadgeAr}
+                <p style="color: #666666 !important; font-size: 16px; line-height: 1.6; margin-top: 15px;">
                   عزيزي/عزيزتي ${invoice.client_name}،
                 </p>
                 <p style="color: #666666 !important; font-size: 16px; line-height: 1.6;">
@@ -133,6 +235,8 @@ serve(async (req) => {
                   ` : ''}
                 </table>
                 
+                ${generateDiscountSectionAr()}
+                
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #5C4A3A !important; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
                   <tr>
                     <td>
@@ -141,6 +245,8 @@ serve(async (req) => {
                     </td>
                   </tr>
                 </table>
+                
+                ${fastTrackNoticeAr}
                 
                 <p style="color: #999999 !important; font-size: 14px;">
                   ينتهي رابط الدفع في: ${expiresAt}
@@ -151,8 +257,9 @@ serve(async (req) => {
               
               <!-- English Section -->
               <div style="text-align: left;">
-                <h2 style="color: #4A3625 !important; margin: 0 0 20px 0;">Invoice: ${invoice.invoice_number}</h2>
-                <p style="color: #666666 !important; font-size: 16px; line-height: 1.6;">
+                <h2 style="color: #4A3625 !important; margin: 0 0 10px 0;">Invoice: ${invoice.invoice_number}</h2>
+                ${corporateBadgeEn}
+                <p style="color: #666666 !important; font-size: 16px; line-height: 1.6; margin-top: 15px;">
                   Dear ${invoice.client_name},
                 </p>
                 <p style="color: #666666 !important; font-size: 16px; line-height: 1.6;">
@@ -179,6 +286,10 @@ serve(async (req) => {
                   </tr>
                   ` : ''}
                 </table>
+                
+                ${generateDiscountSectionEn()}
+                
+                ${fastTrackNoticeEn}
                 
                 <p style="color: #999999 !important; font-size: 14px;">
                   Payment link expires: ${expiresAt}
