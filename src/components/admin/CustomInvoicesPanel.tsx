@@ -288,6 +288,14 @@ export function CustomInvoicesPanel() {
   const [expiresIn, setExpiresIn] = useState('7');
   const [notes, setNotes] = useState('');
   const [invoiceLanguage, setInvoiceLanguage] = useState<'ar' | 'en'>('ar');
+  
+  // Discount fields (for company invoices)
+  const [originalAmount, setOriginalAmount] = useState('');
+  const [discountAmount, setDiscountAmount] = useState('');
+  const [discountReason, setDiscountReason] = useState('');
+  
+  // Email preview language toggle
+  const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
 
   const { data: invoices, isLoading } = useQuery({
     queryKey: ['custom-invoices'],
@@ -314,6 +322,11 @@ export function CustomInvoicesPanel() {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + parseInt(expiresIn));
 
+      // Calculate discount values
+      const hasDiscount = clientType === 'company' && originalAmount && discountAmount;
+      const originalAmt = hasDiscount ? parseFloat(originalAmount) : null;
+      const discountAmt = hasDiscount ? parseFloat(discountAmount) : null;
+      
       const { data, error } = await supabase
         .from('custom_invoices')
         .insert({
@@ -324,6 +337,10 @@ export function CustomInvoicesPanel() {
           client_email: clientEmail,
           client_phone: clientPhone,
           total_amount: parseFloat(totalAmount),
+          original_amount: originalAmt,
+          discount_amount: discountAmt,
+          discount_reason: hasDiscount ? discountReason || null : null,
+          is_corporate: clientType === 'company',
           num_adults: numAdults,
           num_children: numChildren,
           services: selectedServices,
@@ -416,6 +433,9 @@ export function CustomInvoicesPanel() {
     setNumAdults(1);
     setNumChildren(0);
     setTotalAmount('');
+    setOriginalAmount('');
+    setDiscountAmount('');
+    setDiscountReason('');
     setVisitDate(undefined);
     setVisitTime('10:00');
     setSelectedServices([]);
@@ -575,21 +595,89 @@ export function CustomInvoicesPanel() {
                 </div>
               </div>
 
-              {/* Amount */}
-              <div className="space-y-2">
-                <Label>{isArabic ? 'المبلغ الإجمالي (ريال)' : 'Total Amount (SAR)'}</Label>
-                <Input
-                  type="text"
-                  inputMode="decimal"
-                  value={totalAmount}
-                  onChange={(e) => {
-                    // Allow only numbers and decimal point
-                    const value = e.target.value.replace(/[^0-9.]/g, '');
-                    setTotalAmount(value);
-                  }}
-                  placeholder="0.00"
-                  dir="ltr"
-                />
+              {/* Amount Section */}
+              <div className="space-y-4">
+                {clientType === 'company' && (
+                  <div className="p-4 border rounded-lg bg-amber-50 dark:bg-amber-950/30 space-y-4">
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                      <Percent className="h-4 w-4" />
+                      <span className="font-medium">{isArabic ? 'خصم الشركات' : 'Corporate Discount'}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{isArabic ? 'السعر الأصلي (ريال)' : 'Original Price (SAR)'}</Label>
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          value={originalAmount}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9.]/g, '');
+                            setOriginalAmount(value);
+                            // Auto-calculate discount
+                            if (value && totalAmount) {
+                              const diff = parseFloat(value) - parseFloat(totalAmount);
+                              if (diff > 0) setDiscountAmount(String(diff));
+                            }
+                          }}
+                          placeholder="0.00"
+                          dir="ltr"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{isArabic ? 'مبلغ الخصم (ريال)' : 'Discount Amount (SAR)'}</Label>
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          value={discountAmount}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9.]/g, '');
+                            setDiscountAmount(value);
+                          }}
+                          placeholder="0.00"
+                          dir="ltr"
+                          className="text-green-600"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{isArabic ? 'سبب الخصم' : 'Discount Reason'}</Label>
+                      <Input
+                        value={discountReason}
+                        onChange={(e) => setDiscountReason(e.target.value)}
+                        placeholder={isArabic ? 'مثال: خصم شركات 20%' : 'e.g. 20% Corporate Discount'}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <Label>{isArabic ? 'المبلغ الإجمالي (ريال)' : 'Total Amount (SAR)'}</Label>
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={totalAmount}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                      setTotalAmount(value);
+                      // Auto-calculate discount if original is set
+                      if (originalAmount && value) {
+                        const diff = parseFloat(originalAmount) - parseFloat(value);
+                        if (diff > 0) setDiscountAmount(String(diff));
+                      }
+                    }}
+                    placeholder="0.00"
+                    dir="ltr"
+                    className="text-lg font-bold"
+                  />
+                  {clientType === 'company' && originalAmount && discountAmount && parseFloat(discountAmount) > 0 && (
+                    <p className="text-sm text-green-600 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {isArabic 
+                        ? `خصم ${discountAmount} ريال من ${originalAmount} ريال`
+                        : `${discountAmount} SAR discount from ${originalAmount} SAR`}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Visit Date & Time */}
@@ -955,6 +1043,14 @@ export function CustomInvoicesPanel() {
           </DialogHeader>
           {previewInvoice && (
             <div className="space-y-4">
+              {/* Language Toggle */}
+              <Tabs value={previewLang} onValueChange={(v) => setPreviewLang(v as 'ar' | 'en')}>
+                <TabsList className="grid w-full max-w-[300px] grid-cols-2">
+                  <TabsTrigger value="ar">العربية</TabsTrigger>
+                  <TabsTrigger value="en">English</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
               <div className="flex items-center justify-between p-3 bg-muted rounded-lg text-sm">
                 <div className="flex items-center gap-4">
                   <div>
@@ -964,7 +1060,7 @@ export function CustomInvoicesPanel() {
                   <div>
                     <span className="text-muted-foreground">{isArabic ? 'الموضوع:' : 'Subject:'}</span>{' '}
                     <span className="font-medium">
-                      {isArabic 
+                      {previewLang === 'ar' 
                         ? `فاتورة من سوق المفيجر - ${previewInvoice.invoice_number}` 
                         : `Invoice from Souq Almufaijer - ${previewInvoice.invoice_number}`}
                     </span>
@@ -972,13 +1068,54 @@ export function CustomInvoicesPanel() {
                 </div>
               </div>
               
-              <ScrollArea className="h-[60vh] border rounded-lg bg-white">
+              <ScrollArea className="h-[50vh] border rounded-lg bg-white">
                 <iframe
-                  srcDoc={generateInvoiceEmailPreview(previewInvoice)}
+                  srcDoc={generateInvoiceEmailPreview(previewInvoice, previewLang)}
                   className="w-full h-[800px] border-0"
                   title="Email Preview"
                 />
               </ScrollArea>
+
+              {/* Corporate QR Preview */}
+              {previewInvoice.client_type === 'company' && (
+                <div className="p-4 border rounded-lg bg-amber-50 dark:bg-amber-950/30">
+                  <h4 className="font-medium flex items-center gap-2 mb-3">
+                    <QrCode className="h-4 w-4" />
+                    {previewLang === 'ar' ? 'معاينة رمز الشركة' : 'Corporate Fast-Track QR Preview'}
+                  </h4>
+                  
+                  <div className="flex items-center justify-center p-6 bg-white rounded-lg border-2 border-amber-400">
+                    <div className="text-center">
+                      <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-4 py-1 rounded-full text-sm font-bold mb-3">
+                        {previewLang === 'ar' ? '🏢 مسار الشركات السريع' : '🏢 CORPORATE FAST TRACK'}
+                      </div>
+                      <div className="w-32 h-32 bg-gray-100 border-4 border-amber-400 rounded-lg flex items-center justify-center mx-auto">
+                        <div className="grid grid-cols-5 gap-1 p-2">
+                          {Array.from({ length: 25 }).map((_, i) => (
+                            <div 
+                              key={i} 
+                              className={`w-4 h-4 rounded-sm ${Math.random() > 0.5 ? 'bg-gray-800' : 'bg-transparent'}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-3 font-bold text-heritage-primary">
+                        {previewInvoice.company_name}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {previewInvoice.num_adults} {previewLang === 'ar' ? 'بالغ' : 'Adults'}
+                        {previewInvoice.num_children > 0 && ` + ${previewInvoice.num_children} ${previewLang === 'ar' ? 'طفل' : 'Children'}`}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    {previewLang === 'ar' 
+                      ? 'سيحصل العميل على هذا الرمز للدخول السريع بعد الدفع'
+                      : 'Client will receive this fast-track QR after payment'}
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setPreviewInvoice(null)}>
