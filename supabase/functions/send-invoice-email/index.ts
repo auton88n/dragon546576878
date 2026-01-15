@@ -38,51 +38,63 @@ function generateArabicEmail(invoice: any, paymentLink: string, expiresAt: strin
     </div>
   ` : '';
 
-  // Unified pricing card with discount and total combined
+  // Unified pricing card with discount and total combined - centered wrapper for mobile
   const pricingCard = hasDiscount ? `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; border-radius: 12px; overflow: hidden; margin: 20px 0;">
-      <!-- Discount Badge Header -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td style="background-color: rgba(201, 168, 108, 0.15) !important; padding: 12px 20px; text-align: center; border-bottom: 1px solid rgba(201, 168, 108, 0.3);">
-          <span style="display: inline-block; background-color: #C9A86C !important; color: #4A3625 !important; padding: 4px 14px; border-radius: 12px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">
-            ✨ خصم خاص للشركات
-          </span>
-        </td>
-      </tr>
-      <!-- Pricing Details -->
-      <tr>
-        <td style="padding: 20px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; border-radius: 12px; overflow: hidden; margin: 20px auto; max-width: 100%;">
+            <!-- Discount Badge Header -->
             <tr>
-              <td style="padding: 8px 0; color: #D4C5B0 !important; font-size: 14px; text-align: right;">السعر الأصلي:</td>
-              <td style="padding: 8px 0; color: #999999 !important; font-size: 14px; text-align: left; text-decoration: line-through;">${invoice.original_amount?.toLocaleString()} ريال</td>
+              <td style="background-color: rgba(201, 168, 108, 0.15) !important; padding: 12px 20px; text-align: center; border-bottom: 1px solid rgba(201, 168, 108, 0.3);">
+                <span style="display: inline-block; background-color: #C9A86C !important; color: #4A3625 !important; padding: 4px 14px; border-radius: 12px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">
+                  ✨ خصم خاص للشركات
+                </span>
+              </td>
             </tr>
+            <!-- Pricing Details -->
             <tr>
-              <td style="padding: 8px 0; color: #D4C5B0 !important; font-size: 14px; text-align: right;">الخصم:</td>
-              <td style="padding: 8px 0; color: #7CB97C !important; font-size: 14px; font-weight: bold; text-align: left;">- ${invoice.discount_amount?.toLocaleString()} ريال</td>
+              <td style="padding: 20px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" dir="rtl">
+                  <tr>
+                    <td style="padding: 8px 0; color: #D4C5B0 !important; font-size: 14px; text-align: right; width: 50%;">السعر الأصلي:</td>
+                    <td style="padding: 8px 0; color: #999999 !important; font-size: 14px; text-align: left; text-decoration: line-through; width: 50%;">${invoice.original_amount?.toLocaleString()} ريال</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #D4C5B0 !important; font-size: 14px; text-align: right;">الخصم:</td>
+                    <td style="padding: 8px 0; color: #7CB97C !important; font-size: 14px; font-weight: bold; text-align: left;">- ${invoice.discount_amount?.toLocaleString()} ريال</td>
+                  </tr>
+                  ${invoice.discount_reason ? `
+                  <tr>
+                    <td colspan="2" style="padding: 8px 0 12px 0; color: #A39580 !important; font-size: 12px; text-align: center; font-style: italic;">"${invoice.discount_reason}"</td>
+                  </tr>
+                  ` : ''}
+                </table>
+                <!-- Divider -->
+                <div style="height: 1px; background: linear-gradient(90deg, transparent, #C9A86C, transparent); margin: 10px 0 15px 0;"></div>
+                <!-- Total Amount -->
+                <div style="text-align: center;">
+                  <p style="margin: 0; font-size: 12px; color: #D4C5B0 !important; text-transform: uppercase; letter-spacing: 1px;">المبلغ الإجمالي</p>
+                  <p style="margin: 8px 0 0 0; font-size: 36px; font-weight: bold; color: #ffffff !important;">${invoice.total_amount.toLocaleString()} <span style="font-size: 18px;">ريال</span></p>
+                </div>
+              </td>
             </tr>
-            ${invoice.discount_reason ? `
-            <tr>
-              <td colspan="2" style="padding: 8px 0 12px 0; color: #A39580 !important; font-size: 12px; text-align: center; font-style: italic;">"${invoice.discount_reason}"</td>
-            </tr>
-            ` : ''}
           </table>
-          <!-- Divider -->
-          <div style="height: 1px; background: linear-gradient(90deg, transparent, #C9A86C, transparent); margin: 10px 0 15px 0;"></div>
-          <!-- Total Amount -->
-          <div style="text-align: center;">
-            <p style="margin: 0; font-size: 12px; color: #D4C5B0 !important; text-transform: uppercase; letter-spacing: 1px;">المبلغ الإجمالي</p>
-            <p style="margin: 8px 0 0 0; font-size: 36px; font-weight: bold; color: #ffffff !important;">${invoice.total_amount.toLocaleString()} <span style="font-size: 18px;">ريال</span></p>
-          </div>
         </td>
       </tr>
     </table>
   ` : `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; padding: 25px; border-radius: 12px; text-align: center; margin: 20px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td>
-          <p style="margin: 0; font-size: 12px; color: #D4C5B0 !important; text-transform: uppercase; letter-spacing: 1px;">المبلغ الإجمالي</p>
-          <p style="margin: 10px 0 0 0; font-size: 36px; font-weight: bold; color: #ffffff !important;">${invoice.total_amount.toLocaleString()} <span style="font-size: 18px;">ريال</span></p>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #5C4A3A 0%, #4A3625 100%) !important; padding: 25px; border-radius: 12px; text-align: center; margin: 20px auto; max-width: 100%;">
+            <tr>
+              <td>
+                <p style="margin: 0; font-size: 12px; color: #D4C5B0 !important; text-transform: uppercase; letter-spacing: 1px;">المبلغ الإجمالي</p>
+                <p style="margin: 10px 0 0 0; font-size: 36px; font-weight: bold; color: #ffffff !important;">${invoice.total_amount.toLocaleString()} <span style="font-size: 18px;">ريال</span></p>
+              </td>
+            </tr>
+          </table>
         </td>
       </tr>
     </table>
