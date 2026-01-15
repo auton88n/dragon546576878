@@ -31,18 +31,20 @@ const generateGroupTicketCode = (bookingRef: string): string => {
   return `GRP-${bookingRef}-${timestamp}${random}`;
 };
 
-// Generate QR code data for GROUP ticket with guest counts
+// Generate QR code data for GROUP ticket with guest counts and corporate flag
 const generateGroupQRData = (
   ticketCode: string, 
   bookingRef: string, 
   visitDate: string,
   visitTime: string,
   adultCount: number,
-  childCount: number
+  childCount: number,
+  isCorporate: boolean = false,
+  companyName?: string | null
 ): string => {
   const totalGuests = adultCount + childCount;
   
-  const data = {
+  const data: Record<string, unknown> = {
     type: "group", // Indicates this is a group ticket (new format)
     code: ticketCode,
     ref: bookingRef,
@@ -53,6 +55,14 @@ const generateGroupQRData = (
     total: totalGuests,
     ts: Date.now(),
   };
+  
+  // Add corporate fast-track data if applicable
+  if (isCorporate) {
+    data.corp = true;
+    if (companyName) {
+      data.company = companyName;
+    }
+  }
   
   // Generate checksum for validation
   const checksum = btoa(JSON.stringify(data)).slice(-8);
@@ -192,14 +202,22 @@ serve(async (req) => {
     // Generate single group ticket code
     const ticketCode = generateGroupTicketCode(booking.booking_reference);
     
-    // Generate group QR data with guest counts
+    // Check if this is a corporate booking
+    const isCorporate = booking.is_corporate || false;
+    const companyName = booking.company_name || null;
+
+    console.log(`Corporate status: ${isCorporate}, company: ${companyName}`);
+
+    // Generate group QR data with guest counts and corporate flag
     const qrData = generateGroupQRData(
       ticketCode, 
       booking.booking_reference, 
       booking.visit_date,
       booking.visit_time,
       adultCount,
-      childCount
+      childCount,
+      isCorporate,
+      companyName
     );
     
     console.log(`Generating GROUP QR for ${totalGuests} guests (${adultCount} adults, ${childCount} children)...`);

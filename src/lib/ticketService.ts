@@ -42,6 +42,8 @@ export interface GroupTicketValidationResult {
   message: string;
   isGroupTicket: true;
   isVIP?: boolean;
+  isCorporate?: boolean;
+  companyName?: string;
   booking?: {
     id: string;
     bookingReference: string;
@@ -59,6 +61,8 @@ export interface GroupTicketValidationResult {
     arrivalStatus: string;
     arrivedAt?: string;
     isVIP?: boolean;
+    isCorporate?: boolean;
+    companyName?: string;
   };
 }
 
@@ -284,7 +288,7 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
       };
     }
 
-    const { ref: bookingRef, date: visitDate, code: ticketCode } = parsed;
+    const { ref: bookingRef, date: visitDate, code: ticketCode, corp: isCorporateQR, company: companyNameQR } = parsed;
     
     if (!bookingRef || !visitDate) {
       return {
@@ -294,6 +298,10 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
         isGroupTicket: true,
       };
     }
+
+    // Corporate flag from QR data
+    const isCorporate = isCorporateQR === true || (booking?.is_corporate ?? false);
+    const companyName = companyNameQR || booking?.company_name || undefined;
 
     // Find booking by reference
     const { data: booking, error } = await supabase
@@ -329,6 +337,9 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
     
     // Detect VIP bookings (VIP- prefix in booking reference)
     const isVIP = booking.booking_reference?.startsWith('VIP-') || false;
+    // Corporate status from booking or QR
+    const isCorporateFinal = isCorporate || booking.is_corporate || false;
+    const companyNameFinal = companyName || booking.company_name || undefined;
 
     const bookingData = {
       id: booking.id,
@@ -347,6 +358,8 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
       arrivalStatus: booking.arrival_status || 'not_arrived',
       arrivedAt: booking.arrived_at || undefined,
       isVIP,
+      isCorporate: isCorporateFinal,
+      companyName: companyNameFinal,
     };
 
     // Check if already arrived
@@ -364,6 +377,8 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
         message: `Group already admitted${arrivedTime ? ` at ${arrivedTime}` : ''}`,
         isGroupTicket: true,
         isVIP,
+        isCorporate: isCorporateFinal,
+        companyName: companyNameFinal,
         booking: bookingData,
       };
     }
@@ -380,6 +395,8 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
           : `Ticket valid for ${booking.visit_date}`,
         isGroupTicket: true,
         isVIP,
+        isCorporate: isCorporateFinal,
+        companyName: companyNameFinal,
         booking: bookingData,
       };
     }
@@ -392,6 +409,8 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
         message: 'Payment not completed',
         isGroupTicket: true,
         isVIP,
+        isCorporate: isCorporateFinal,
+        companyName: companyNameFinal,
         booking: bookingData,
       };
     }
@@ -400,11 +419,15 @@ export const validateGroupTicket = async (qrData: string): Promise<GroupTicketVa
     return {
       isValid: true,
       status: 'valid',
-      message: isVIP 
-        ? `Welcome VIP! Admit ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`
-        : `Admit ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`,
+      message: isCorporateFinal
+        ? `Corporate Fast-Track: Admit ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`
+        : isVIP 
+          ? `Welcome VIP! Admit ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`
+          : `Admit ${totalGuests} guest${totalGuests !== 1 ? 's' : ''}`,
       isGroupTicket: true,
       isVIP,
+      isCorporate: isCorporateFinal,
+      companyName: companyNameFinal,
       booking: bookingData,
     };
   } catch (err) {
