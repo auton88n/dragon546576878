@@ -141,18 +141,51 @@ serve(async (req) => {
     const adultPrice = body.adultPrice || 0;
     const childPrice = body.childPrice || 0;
     const isPackageBooking = body.isPackageBooking || false;
-    
-    // For package bookings, trust frontend totalAmount (packages have special pricing)
-    // For individual tickets, recalculate for safety
-    const calculatedTotal = (adultCount * adultPrice) + (childCount * childPrice);
-    const finalTotal = isPackageBooking 
-      ? body.totalAmount 
-      : (calculatedTotal > 0 ? calculatedTotal : body.totalAmount);
+    let finalTotal = body.totalAmount;
+
+    // SERVER-SIDE PRICE VALIDATION
+    if (isPackageBooking) {
+      // Validate package pricing against database prices
+      const { data: packages, error: pkgError } = await supabase
+        .from('packages')
+        .select('price, adult_count, child_count')
+        .eq('is_active', true);
+      
+      if (pkgError) {
+        console.error('Failed to fetch packages for validation:', pkgError);
+        // Fall back to trusting frontend if we can't validate
+      } else if (packages && packages.length > 0) {
+        const minPrice = Math.min(...packages.map(p => Number(p.price)));
+        const totalPeople = adultCount + childCount;
+        
+        // Sanity check: price should be at least minimum package price * 0.5
+        // This catches obvious manipulation attempts while allowing valid discounts
+        if (totalPeople > 0 && body.totalAmount < minPrice * 0.5) {
+          console.warn('Suspicious package pricing detected:', {
+            totalAmount: body.totalAmount,
+            minPrice,
+            totalPeople
+          });
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: "Invalid pricing. Please refresh and try again.",
+              error_ar: "تسعير غير صالح. يرجى تحديث الصفحة والمحاولة مرة أخرى."
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+      finalTotal = body.totalAmount;
+    } else {
+      // Individual tickets: recalculate server-side
+      const calculatedTotal = (adultCount * adultPrice) + (childCount * childPrice);
+      finalTotal = calculatedTotal > 0 ? calculatedTotal : body.totalAmount;
+    }
     
     console.log("Pricing calculation:", {
       isPackageBooking,
       frontendTotal: body.totalAmount,
-      calculatedTotal,
       finalTotal
     });
 

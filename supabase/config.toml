@@ -68,3 +68,9 @@ verify_jwt = false
 
 [functions.cancel-abandoned-bookings]
 verify_jwt = false
+
+[functions.submit-contact-form]
+verify_jwt = false
+
+[functions.submit-group-booking]
+verify_jwt = false
