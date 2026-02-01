@@ -1,106 +1,120 @@
 
-# Security Fixes Plan
 
-## Issues to Address
+# Inbound Email Handler for AYN Support Replies
 
-### 1. Payment Amount Calculation Inconsistency (ERROR)
-**Problem**: When `isPackageBooking: true`, the server trusts the frontend `totalAmount` without verification. A malicious user could send `isPackageBooking: true` with a manipulated low `totalAmount` to pay less for their booking.
+## Current Situation
 
-**Solution**: Validate package pricing server-side by:
-1. Fetch package prices from the database in `create-booking` edge function
-2. When `isPackageBooking: true`, verify the `totalAmount` matches the sum of selected packages
-3. Reject requests where the amount doesn't match
+The support ticket system works as follows:
+1. Admin creates a ticket via the AYN Support Panel
+2. Email is sent to `support@mail.aynn.io` with the ticket reference in the subject
+3. The ticket is stored in `support_tickets` table with `ayn_notes` column (currently empty)
+4. The UI already displays `ayn_notes` when present (the "AYN Response" section)
 
-### 2. Public Forms Lack Rate Limiting Protection (ERROR)
-**Problem**: Contact form and group booking have client-side rate limiting only (using localStorage). A determined attacker can bypass this by:
-- Clearing localStorage
-- Using incognito mode
-- Disabling JavaScript
-
-The forms also save to database via RLS "true" policies without server-side protection.
-
-**Solution**: 
-- The `create-booking` function already has server-side rate limiting via `check_rate_limit` RPC
-- Add the same server-side rate limiting to contact form and group booking submissions
-- Create edge functions for form submissions that validate and rate-limit before inserting
-
-### 3. SECURITY DEFINER Functions with Public Access (WARNING)
-**Problem**: Functions like `get_bookings_by_email` are `SECURITY DEFINER` and publicly callable. While they have email validation, they could be used for enumeration attacks.
-
-**Solution**: This is documented and acceptable because:
-- Functions return data only for the specific email, not lists
-- Email must match exactly (case-insensitive)
-- UUIDs are unguessable (128-bit entropy)
-- Add info-level note that this is reviewed and acceptable
+**What's missing**: When AYN replies to the email, that reply needs to be captured and stored in the `ayn_notes` column so it appears in the admin panel.
 
 ---
 
-## Implementation Details
+## Solution Overview
 
-### Part 1: Fix Package Price Validation in `create-booking`
+Create an edge function `receive-support-reply` that:
+1. Receives inbound emails from Resend when AYN replies
+2. Extracts the ticket reference from the email subject
+3. Updates the corresponding ticket with the reply content
+4. Changes the ticket status to `in_progress` to indicate a response was received
 
-**File: `supabase/functions/create-booking/index.ts`**
+---
 
-Add server-side package validation:
+## Components to Create/Modify
 
-```typescript
-// When isPackageBooking is true, verify against database prices
-if (isPackageBooking) {
-  // Fetch packages from database
-  const { data: packages, error: pkgError } = await supabase
-    .from('packages')
-    .select('id, name_en, price, adult_count, child_count')
-    .eq('is_active', true);
-  
-  if (pkgError) {
-    console.error('Failed to fetch packages for validation:', pkgError);
-    // Fall back to trusting frontend if we can't validate
-  } else {
-    // Calculate expected total based on ticket counts matching package configurations
-    // Verify the totalAmount is within acceptable range of expected package pricing
-    // Allow small tolerance for rounding (0.01 SAR)
-    
-    // If totalAmount seems suspicious (e.g., below minimum package price), reject
-    const minPackagePrice = Math.min(...packages.map(p => p.price));
-    if (body.totalAmount < minPackagePrice && (adultCount + childCount) > 0) {
-      return error response for price manipulation attempt
-    }
-  }
-}
+### 1. New Edge Function
+
+**File:** `supabase/functions/receive-support-reply/index.ts`
+
+This function will:
+- Accept webhook POST requests from Resend
+- Verify the request using a webhook secret header (`x-webhook-secret`)
+- Parse the email payload from Resend
+- Extract ticket reference from subject line (e.g., `Re: [Souq Almufaijer] HIGH - Issue title - #8BCE2742`)
+- Find the matching ticket in the database
+- Update `ayn_notes` with the reply content
+- Update `status` to `in_progress` and `updated_at` timestamp
+
+### 2. Config Update
+
+**File:** `supabase/config.toml`
+
+Add:
+```toml
+[functions.receive-support-reply]
+verify_jwt = false
 ```
 
-### Part 2: Add Server-Side Rate Limiting for Contact Form
+### 3. New Secret
 
-**Create: `supabase/functions/submit-contact-form/index.ts`**
+A `SUPPORT_WEBHOOK_SECRET` will need to be added for webhook verification.
 
-New edge function that:
-1. Validates input (name, email, subject, message)
-2. Checks server-side rate limit using `check_rate_limit` RPC
-3. Inserts into `contact_submissions` table
-4. Returns success/error
+---
 
-**Update: `src/pages/ContactPage.tsx`**
-- Call the new edge function instead of direct supabase insert
+## Technical Flow
 
-### Part 3: Add Server-Side Rate Limiting for Group Bookings
+```text
+AYN Team replies to         Resend Inbound           receive-support-reply       support_tickets
+support email                  Webhook                  Edge Function                 table
+      |                           |                           |                         |
+      |-- Reply email ----------->|                           |                         |
+      |                           |-- POST webhook ---------->|                         |
+      |                           |                           |-- Extract ticket ID ----|
+      |                           |                           |-- Update ayn_notes ---->|
+      |                           |                           |-- Set status=in_progress|
+      |                           |<-- 200 OK ----------------|                         |
+```
 
-**Create: `supabase/functions/submit-group-booking/index.ts`**
+---
 
-New edge function that:
-1. Validates all group booking fields
-2. Checks server-side rate limit using `check_rate_limit` RPC  
-3. Inserts into `group_booking_requests` table
-4. Returns success/error
+## Resend Configuration (Manual Steps)
 
-**Update: `src/pages/GroupBookingsPage.tsx`**
-- Call the new edge function instead of direct supabase insert
+After deployment, you will need to configure Resend:
 
-### Part 4: Update Security Findings
+1. **Go to [resend.com/emails/inbound](https://resend.com/emails/inbound)**
+   - Add `support@mail.aynn.io` or create a dedicated reply address
 
-After implementing fixes:
-1. Mark `payment_calc_inconsistency` as fixed (delete finding)
-2. Mark `forms_rate_limiting` as fixed (delete finding)
-3. Update `security_definer_public` to ignored with explanation
+2. **Configure webhook:**
+   - URL: `https://hekgkfdunwpxqbrotfpn.supabase.co/functions/v1/receive-support-reply`
+   - Header: `x-webhook-secret` = (your SUPPORT_WEBHOOK_SECRET value)
+   - Event: `email.received`
+
+---
+
+## Edge Function Implementation Details
+
+The function will:
+
+1. **Validate the webhook secret** from the `x-webhook-secret` header
+2. **Parse the Resend payload** which includes:
+   - `from`: Sender email (AYN support)
+   - `to`: Recipient (support@mail.aynn.io)
+   - `subject`: Email subject containing ticket reference
+   - `text`: Plain text body of the reply
+3. **Extract ticket reference** using regex pattern for `#[A-F0-9]{8}`
+4. **Find the ticket** in the database by matching the first 8 characters of the ID
+5. **Update the ticket** with:
+   - `ayn_notes`: The reply content
+   - `status`: `in_progress`
+   - `updated_at`: Current timestamp
+
+---
+
+## Translation Updates
+
+Add new translation keys for the enhanced UI:
+
+**English:**
+- `admin.support.responseReceived`: "Response received from AYN"
+- `admin.support.awaitingResponse`: "Awaiting AYN response"
+
+**Arabic:**
+- `admin.support.responseReceived`: "تم استلام رد من AYN"
+- `admin.support.awaitingResponse`: "في انتظار رد AYN"
 
 ---
 
@@ -108,122 +122,27 @@ After implementing fixes:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/functions/create-booking/index.ts` | Modify | Add package price validation |
-| `supabase/functions/submit-contact-form/index.ts` | Create | New edge function with rate limiting |
-| `supabase/functions/submit-group-booking/index.ts` | Create | New edge function with rate limiting |
-| `src/pages/ContactPage.tsx` | Modify | Use edge function instead of direct insert |
-| `src/pages/GroupBookingsPage.tsx` | Modify | Use edge function instead of direct insert |
-| `supabase/config.toml` | Modify | Add new function configurations |
+| `supabase/functions/receive-support-reply/index.ts` | Create | Inbound email webhook handler |
+| `supabase/config.toml` | Modify | Add function config |
+| `src/locales/en.json` | Modify | Add new translation keys |
+| `src/locales/ar.json` | Modify | Add new translation keys |
 
 ---
 
-## Technical Details
+## Security Considerations
 
-### Package Price Validation Logic
-
-Current vulnerable code (lines 143-150):
-```typescript
-const isPackageBooking = body.isPackageBooking || false;
-const calculatedTotal = (adultCount * adultPrice) + (childCount * childPrice);
-const finalTotal = isPackageBooking 
-  ? body.totalAmount  // VULNERABLE: trusts frontend
-  : (calculatedTotal > 0 ? calculatedTotal : body.totalAmount);
-```
-
-Fixed code:
-```typescript
-const isPackageBooking = body.isPackageBooking || false;
-let finalTotal = body.totalAmount;
-
-if (isPackageBooking) {
-  // Validate package pricing server-side
-  const { data: packages } = await supabase
-    .from('packages')
-    .select('price, adult_count, child_count')
-    .eq('is_active', true);
-  
-  if (packages && packages.length > 0) {
-    const minPrice = Math.min(...packages.map(p => Number(p.price)));
-    const totalPeople = adultCount + childCount;
-    
-    // Sanity check: price should be at least minimum package price
-    if (totalPeople > 0 && body.totalAmount < minPrice * 0.5) {
-      console.warn('Suspicious package pricing detected:', {
-        totalAmount: body.totalAmount,
-        minPrice,
-        totalPeople
-      });
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Invalid pricing. Please refresh and try again.",
-          error_ar: "تسعير غير صالح. يرجى تحديث الصفحة والمحاولة مرة أخرى."
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    finalTotal = body.totalAmount;
-  }
-} else {
-  // Individual tickets: recalculate server-side
-  const calculatedTotal = (adultCount * adultPrice) + (childCount * childPrice);
-  finalTotal = calculatedTotal > 0 ? calculatedTotal : body.totalAmount;
-}
-```
-
-### Contact Form Edge Function Structure
-
-```typescript
-// submit-contact-form/index.ts
-serve(async (req) => {
-  // CORS handling
-  
-  const { name, email, phone, subject, message } = await req.json();
-  
-  // Input validation with Zod-like checks
-  if (!name || name.length < 3 || name.length > 100) {
-    return error("Invalid name");
-  }
-  if (!email || !validateEmail(email)) {
-    return error("Invalid email");
-  }
-  
-  // Server-side rate limiting
-  const { data: allowed } = await supabase.rpc('check_rate_limit', {
-    p_identifier: email.toLowerCase(),
-    p_action_type: 'contact_form',
-    p_max_attempts: 10,
-    p_window_minutes: 15
-  });
-  
-  if (allowed === false) {
-    return new Response(
-      JSON.stringify({ error: "Too many submissions. Try again later." }),
-      { status: 429 }
-    );
-  }
-  
-  // Insert with service role (bypasses RLS)
-  const { error } = await supabase.from('contact_submissions').insert({
-    name: sanitize(name),
-    email: email.toLowerCase(),
-    phone: phone || null,
-    subject: sanitize(subject),
-    message: sanitize(message),
-  });
-  
-  return success or error response;
-});
-```
+- Webhook secret verification prevents unauthorized access
+- The function validates the ticket reference format before database queries
+- Only updates existing tickets - cannot create new ones via this endpoint
+- Uses service role key internally for database updates
 
 ---
 
-## Security Status After Fix
+## Summary
 
-| Finding | Current | After Fix |
-|---------|---------|-----------|
-| Payment Amount Calculation | Error | Fixed - server validates package prices |
-| Public Forms Rate Limiting | Error | Fixed - server-side rate limiting |
-| SECURITY DEFINER Functions | Warning | Ignored - documented, acceptable risk |
-| RLS Policy Always True | Warning (ignored) | Unchanged - required for public forms |
-| Scanner PII Storage | Info | Already fixed - uses sessionStorage |
+This implementation creates a complete two-way support communication system:
+- **Outbound**: Admins create tickets that send emails to AYN
+- **Inbound**: AYN replies are automatically captured and displayed in the admin panel
+
+The existing UI already handles displaying `ayn_notes`, so once the edge function is deployed and Resend is configured, replies will appear automatically in the ticket history.
+
