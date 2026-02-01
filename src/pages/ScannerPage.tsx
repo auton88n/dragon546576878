@@ -94,9 +94,10 @@ const loadStoredStats = () => {
   return { totalScans: 0, validScans: 0, invalidScans: 0, usedScans: 0 };
 };
 
+// Load recent scans from sessionStorage only (clears on browser close for privacy)
 const loadStoredRecentScans = (): ScanResult[] => {
   try {
-    const stored = safeLocalStorage.getItem(RECENT_SCANS_STORAGE_KEY);
+    const stored = sessionStorage.getItem(RECENT_SCANS_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.date === getTodayKey()) {
@@ -165,11 +166,17 @@ const ScannerPage = () => {
     }));
   }, [todayStats]);
 
+  // Store recent scans in sessionStorage only (clears on browser close for privacy)
+  // This prevents PII (customer names, ticket codes) from persisting on shared devices
   useEffect(() => {
-    safeLocalStorage.setItem(RECENT_SCANS_STORAGE_KEY, JSON.stringify({
-      date: getTodayKey(),
-      scans: recentScans
-    }));
+    try {
+      sessionStorage.setItem(RECENT_SCANS_STORAGE_KEY, JSON.stringify({
+        date: getTodayKey(),
+        scans: recentScans
+      }));
+    } catch (e) {
+      console.error('Failed to save recent scans to sessionStorage:', e);
+    }
   }, [recentScans]);
 
   // Countdown animation when overlay is shown
