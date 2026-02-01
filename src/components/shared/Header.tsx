@@ -77,14 +77,14 @@ const Header = () => {
         willChange: 'transform'
       }}
     >
-      <div className="container flex h-16 md:h-20 items-center justify-between">
+      <div className="container relative flex h-16 md:h-20 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3">
           <Logo variant={isScrolled || !hasHeroSection ? 'default' : 'light'} />
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 whitespace-nowrap">
+        <nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 whitespace-nowrap absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           {navLinks.map((link) => (
             <Link
               key={link.href}
