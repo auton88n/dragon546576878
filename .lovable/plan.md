@@ -1,47 +1,38 @@
 
-## Fix Navigation Menu Visual Balance
+## Fix Navigation Overlap on Tablets
 
-### Problem Analysis
-The navigation appears visually uneven due to:
-1. **`justify-between` layout** pushes logo, nav, and actions to fill the container width
-2. **Navigation is not centered** - it sits between logo and actions, but not in the true center of the header
-3. **No consistent spacing** between logo/nav and nav/actions sections
+### Problem
+On tablet screens (768px - 1024px), the absolutely centered navigation overlaps with the action buttons on the left side. This is because:
+1. The navigation has 6 items with Arabic text that takes significant width
+2. The desktop layout shows at `md` (768px), but there isn't enough horizontal space
+3. The absolute centering doesn't account for the space needed by logo and actions
 
 ### Solution
-Change the header layout to use **absolute positioning** for the navigation, centering it in the header while keeping logo and actions on the sides. This ensures perfect visual balance regardless of text length variations.
+Raise the breakpoint for showing desktop navigation from `md` (768px) to `lg` (1024px). Tablets will use the mobile hamburger menu, which provides a better user experience for that screen size.
 
-### File to Modify
-`src/components/shared/Header.tsx`
+### Changes to `src/components/shared/Header.tsx`
 
-### Changes
+**1. Change desktop navigation visibility (line 87)**
+- From: `hidden md:flex`
+- To: `hidden lg:flex`
 
-**1. Update the header container layout (line 80)**
-Change from `justify-between` to use `relative` positioning:
+**2. Change desktop actions visibility (line 103)**
+- From: `hidden md:flex`  
+- To: `hidden lg:flex`
 
-```tsx
-// Current:
-<div className="container flex h-16 md:h-20 items-center justify-between">
+**3. Change mobile menu visibility (line 118)**
+- From: `flex md:hidden`
+- To: `flex lg:hidden`
 
-// Fixed - add relative for absolute nav positioning:
-<div className="container relative flex h-16 md:h-20 items-center justify-between">
-```
+**4. Change mobile menu dropdown visibility (line 135)**
+- From: `md:hidden`
+- To: `lg:hidden`
 
-**2. Center the navigation absolutely (line 87)**
-Position the nav in the absolute center of the header:
+### Summary
 
-```tsx
-// Current:
-<nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 whitespace-nowrap">
+| Screen Size | Layout | Behavior |
+|-------------|--------|----------|
+| < 1024px (mobile + tablet) | Hamburger menu | Clean, no overlap |
+| ≥ 1024px (desktop) | Full navigation | Centered, balanced |
 
-// Fixed - absolute center positioning:
-<nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 whitespace-nowrap absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-```
-
-### Result
-| Element | Position | Effect |
-|---------|----------|--------|
-| Logo | Left (RTL: Right) | Fixed position |
-| Navigation | **Center (absolute)** | Perfectly centered in viewport |
-| Actions | Right (RTL: Left) | Fixed position |
-
-This ensures the navigation is always visually centered, creating a balanced appearance regardless of individual item text lengths or the widths of the logo/actions sections.
+This ensures tablets use the mobile menu, which is actually a better UX for that screen size given the number of navigation items.
