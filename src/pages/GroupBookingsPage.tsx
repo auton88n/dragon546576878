@@ -10,7 +10,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card, CardContent } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -18,7 +17,6 @@ import { ar, enUS } from 'date-fns/locale';
 import { Users, Calendar as CalendarIcon, DollarSign, Headphones, UtensilsCrossed, Building2, CheckCircle, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CooldownNotice from '@/components/shared/CooldownNotice';
-import { checkRateLimit, recordAttempt, RATE_LIMITS } from '@/lib/rateLimiter';
 const groupBookingSchema = z.object({
   organization_name: z.string().min(3, 'Organization name must be at least 3 characters').max(100),
   contact_person: z.string().min(3, 'Contact person name must be at least 3 characters').max(100),
@@ -118,12 +116,6 @@ const GroupBookingsPage = () => {
       return;
     }
 
-    // Rate limit check
-    const rateLimitResult = checkRateLimit(RATE_LIMITS.GROUP_BOOKING);
-    if (!rateLimitResult.allowed) {
-      setCooldownMinutes(rateLimitResult.remainingMinutes || 1);
-      return;
-    }
     try {
       const validatedData = groupBookingSchema.parse({
         ...formData,
@@ -131,21 +123,34 @@ const GroupBookingsPage = () => {
       });
       setIsSubmitting(true);
 
-      // Record the attempt before submission
-      recordAttempt(RATE_LIMITS.GROUP_BOOKING.key);
-      const {
-        error
-      } = await supabase.from('group_booking_requests').insert({
-        organization_name: validatedData.organization_name,
-        contact_person: validatedData.contact_person,
-        email: validatedData.email,
-        phone: validatedData.phone,
-        group_size: validatedData.group_size,
-        preferred_dates: validatedData.preferred_dates.map(d => d.toISOString()),
-        group_type: validatedData.group_type,
-        special_requirements: validatedData.special_requirements || null
-      });
-      if (error) throw error;
+      const response = await fetch(
+        'https://hekgkfdunwpxqbrotfpn.supabase.co/functions/v1/submit-group-booking',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            organization_name: validatedData.organization_name,
+            contact_person: validatedData.contact_person,
+            email: validatedData.email,
+            phone: validatedData.phone,
+            group_size: validatedData.group_size,
+            preferred_dates: validatedData.preferred_dates.map(d => d.toISOString()),
+            group_type: validatedData.group_type,
+            special_requirements: validatedData.special_requirements || null
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          setCooldownMinutes(60);
+          return;
+        }
+        throw new Error(result.error || 'Failed to submit');
+      }
+
       setIsSuccess(true);
       toast.success(isArabic ? 'تم إرسال طلبكم بنجاح!' : 'Your request has been submitted successfully!');
     } catch (error) {

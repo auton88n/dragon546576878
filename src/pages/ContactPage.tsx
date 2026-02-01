@@ -11,11 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/hooks/useLanguage';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import OptimizedImage from '@/components/shared/OptimizedImage';
 import CooldownNotice from '@/components/shared/CooldownNotice';
-import { checkRateLimit, recordAttempt, RATE_LIMITS } from '@/lib/rateLimiter';
 const heroImage = '/images/hero-contact.webp';
 const contactSchema = z.object({
   name: z.string().trim().min(3, 'Name must be at least 3 characters').max(100),
@@ -53,26 +51,33 @@ const ContactPage = () => {
       return;
     }
 
-    // Rate limit check
-    const rateLimitResult = checkRateLimit(RATE_LIMITS.CONTACT_FORM);
-    if (!rateLimitResult.allowed) {
-      setCooldownMinutes(rateLimitResult.remainingMinutes || 1);
-      return;
-    }
     setIsSubmitting(true);
     try {
-      // Record the attempt before submission
-      recordAttempt(RATE_LIMITS.CONTACT_FORM.key);
-      const {
-        error
-      } = await supabase.from('contact_submissions').insert({
-        name: data.name,
-        email: data.email,
-        phone: data.phone || null,
-        subject: data.subject,
-        message: data.message
-      });
-      if (error) throw error;
+      const response = await fetch(
+        'https://hekgkfdunwpxqbrotfpn.supabase.co/functions/v1/submit-contact-form',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: data.name,
+            email: data.email,
+            phone: data.phone || null,
+            subject: data.subject,
+            message: data.message
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          setCooldownMinutes(15);
+          return;
+        }
+        throw new Error(result.error || 'Failed to submit');
+      }
+
       setIsSubmitted(true);
       reset();
       toast.success(t('contact.success'));
