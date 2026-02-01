@@ -84,7 +84,7 @@ const Header = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 whitespace-nowrap absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <nav className="hidden lg:flex items-center gap-4 lg:gap-6 xl:gap-8 whitespace-nowrap absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -100,7 +100,7 @@ const Header = () => {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <LanguageSwitcher variant={isScrolled || !hasHeroSection ? 'default' : 'light'} />
           <Link 
             to="/book"
@@ -115,7 +115,7 @@ const Header = () => {
         </div>
 
         {/* Mobile Menu Button */}
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex lg:hidden items-center gap-2">
           <LanguageSwitcher variant={isScrolled || !hasHeroSection ? 'default' : 'light'} />
           <button
             onClick={toggleMenu}
@@ -132,7 +132,7 @@ const Header = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-card border-b border-border shadow-xl animate-fade-in">
+        <div className="lg:hidden absolute top-full left-0 right-0 bg-card border-b border-border shadow-xl animate-fade-in">
           <nav className="container py-6 space-y-2">
             {navLinks.map((link) => (
               <Link
