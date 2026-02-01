@@ -138,10 +138,10 @@ const ContactPage = () => {
 
       {/* Main Content */}
       <section className="py-16">
-        <div className="container">
-          <div className="grid lg:grid-cols-2 gap-12">
+        <div className="container max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
-            <Card className="border-border/50 shadow-lg">
+            <Card className="border-border/50 shadow-lg order-2 md:order-1">
               <CardHeader>
                 <CardTitle className="text-2xl">
                   {t('contact.form.title')}
@@ -207,19 +207,19 @@ const ContactPage = () => {
             </Card>
 
             {/* Contact Information & Map */}
-            <div className="space-y-8">
+            <div className="space-y-6 lg:space-y-8 order-1 md:order-2">
               {/* Contact Cards */}
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 lg:gap-4">
                 {contactInfo.map((info, index) => <Card key={index} className="border-border/50">
-                    <CardContent className="p-4 flex items-start gap-4">
-                      <div className="p-2 rounded-lg bg-accent/10">
-                        <info.icon className="h-5 w-5 text-accent" />
+                    <CardContent className="p-3 lg:p-4 flex items-start gap-3 lg:gap-4">
+                      <div className="p-2 rounded-lg bg-accent/10 shrink-0">
+                        <info.icon className="h-4 w-4 lg:h-5 lg:w-5 text-accent" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-foreground text-sm lg:text-base">
                           {currentLanguage === 'ar' ? info.titleAr : info.titleEn}
                         </h3>
-                        <p dir={info.dirType} className="text-sm text-muted-foreground whitespace-pre-line mx-[22px]">
+                        <p dir={info.dirType} className="text-xs lg:text-sm text-muted-foreground whitespace-pre-line break-words">
                           {currentLanguage === 'ar' ? info.contentAr : info.contentEn}
                         </p>
                       </div>
@@ -227,16 +227,16 @@ const ContactPage = () => {
                   </Card>)}
               </div>
 
-              {/* Map Placeholder */}
+              {/* Map */}
               <Card className="border-border/50 overflow-hidden">
-                <CardHeader>
-                  <CardTitle className="text-lg">{t('contact.map.title')}</CardTitle>
+                <CardHeader className="py-3 lg:py-4">
+                  <CardTitle className="text-base lg:text-lg">{t('contact.map.title')}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="aspect-video bg-muted flex items-center justify-center">
                     <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3654.5!2d46.56436420764147!3d23.612384849872548!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDM2JzQ0LjYiTiA0NsKwMzMnNTEuNyJF!5e0!3m2!1sen!2ssa!4v1" width="100%" height="100%" style={{
                     border: 0,
-                    minHeight: '300px'
+                    minHeight: '280px'
                   }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={t('contact.map.title')} />
                   </div>
                 </CardContent>
