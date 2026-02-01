@@ -1,50 +1,47 @@
 
-## Fix Navigation Menu Uneven Spacing
+## Fix Navigation Menu Visual Balance
 
-### Problem
-The navigation menu spacing appears uneven on tablet and desktop, especially in Arabic (RTL) mode. Looking at the screenshot:
-- Navigation items have different text lengths ("الدعم" is short, "حجوزات الشركات" is long)
-- The fixed `gap-8` (32px) between all items makes the visual spacing feel inconsistent
-- On larger screens, the wide gap can make shorter items appear too spread out
-
-### Root Cause
-The current `nav` element uses a fixed `gap-8` which doesn't adapt to different screen sizes or provide visual balance between items of varying text lengths.
+### Problem Analysis
+The navigation appears visually uneven due to:
+1. **`justify-between` layout** pushes logo, nav, and actions to fill the container width
+2. **Navigation is not centered** - it sits between logo and actions, but not in the true center of the header
+3. **No consistent spacing** between logo/nav and nav/actions sections
 
 ### Solution
-Adjust the navigation spacing to be more responsive and use a slightly smaller, more balanced gap:
+Change the header layout to use **absolute positioning** for the navigation, centering it in the header while keeping logo and actions on the sides. This ensures perfect visual balance regardless of text length variations.
 
-**File:** `src/components/shared/Header.tsx`
+### File to Modify
+`src/components/shared/Header.tsx`
 
-### Changes:
+### Changes
 
-**1. Adjust desktop navigation gap (line 87)**
-Change from fixed `gap-8` to responsive gaps:
+**1. Update the header container layout (line 80)**
+Change from `justify-between` to use `relative` positioning:
 
 ```tsx
 // Current:
-<nav className="hidden md:flex items-center gap-8">
+<div className="container flex h-16 md:h-20 items-center justify-between">
 
-// Fixed - responsive gap:
-<nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8">
+// Fixed - add relative for absolute nav positioning:
+<div className="container relative flex h-16 md:h-20 items-center justify-between">
 ```
 
-This creates:
-- **md (tablet):** `gap-4` (16px) - tighter spacing for smaller screens
-- **lg (small desktop):** `gap-6` (24px) - balanced spacing
-- **xl (large desktop):** `gap-8` (32px) - original spacing for wide screens
-
-**2. Add nowrap to prevent text wrapping (line 87)**
-Ensure navigation text doesn't break:
+**2. Center the navigation absolutely (line 87)**
+Position the nav in the absolute center of the header:
 
 ```tsx
+// Current:
 <nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 whitespace-nowrap">
+
+// Fixed - absolute center positioning:
+<nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 whitespace-nowrap absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
 ```
 
-### Summary
-| Screen Size | Gap | Effect |
-|-------------|-----|--------|
-| md (768px+) | 16px | Tighter fit for tablets |
-| lg (1024px+) | 24px | Balanced desktop spacing |
-| xl (1280px+) | 32px | Spacious large screens |
+### Result
+| Element | Position | Effect |
+|---------|----------|--------|
+| Logo | Left (RTL: Right) | Fixed position |
+| Navigation | **Center (absolute)** | Perfectly centered in viewport |
+| Actions | Right (RTL: Left) | Fixed position |
 
-This responsive approach ensures the navigation looks evenly spaced across all device sizes while maintaining readability in both Arabic and English.
+This ensures the navigation is always visually centered, creating a balanced appearance regardless of individual item text lengths or the widths of the logo/actions sections.
