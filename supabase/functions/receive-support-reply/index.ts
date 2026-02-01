@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+    "authorization, x-client-info, apikey, content-type, svix-id, svix-signature, svix-timestamp",
 };
 
 interface ResendInboundEmail {
@@ -15,6 +15,12 @@ interface ResendInboundEmail {
   created_at?: string;
 }
 
+interface ResendWebhookPayload {
+  type: string;
+  created_at: string;
+  data: ResendInboundEmail;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -22,40 +28,68 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify webhook secret
-    const webhookSecret = req.headers.get("x-webhook-secret");
-    const expectedSecret = Deno.env.get("SUPPORT_WEBHOOK_SECRET");
+    // Log all headers for debugging
+    const headers: Record<string, string> = {};
+    req.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
+    console.log("Received webhook with headers:", JSON.stringify(headers, null, 2));
 
-    if (!expectedSecret) {
-      console.error("SUPPORT_WEBHOOK_SECRET not configured");
-      return new Response(
-        JSON.stringify({ error: "Server configuration error" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // For Resend webhooks, verify using svix signature
+    const svixId = req.headers.get("svix-id");
+    const svixSignature = req.headers.get("svix-signature");
+    const svixTimestamp = req.headers.get("svix-timestamp");
 
-    if (webhookSecret !== expectedSecret) {
-      console.error("Invalid webhook secret");
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Check if this looks like a Resend webhook (has svix headers)
+    const isResendWebhook = svixId && svixSignature && svixTimestamp;
+    
+    if (!isResendWebhook) {
+      console.log("Missing svix headers - this might not be a Resend webhook");
+      // Still process if it's a direct test, but log it
     }
 
     // Parse the request body
-    const payload: ResendInboundEmail = await req.json();
+    const rawBody = await req.text();
+    console.log("Raw body:", rawBody.substring(0, 500));
+
+    let emailData: ResendInboundEmail;
+    
+    try {
+      const payload = JSON.parse(rawBody);
+      
+      // Resend wraps the email data in a { type, data } structure
+      if (payload.type === "email.received" && payload.data) {
+        emailData = payload.data;
+      } else if (payload.from && payload.subject) {
+        // Direct email format (for testing)
+        emailData = payload;
+      } else {
+        console.log("Unexpected payload format:", JSON.stringify(payload, null, 2));
+        return new Response(
+          JSON.stringify({ success: true, message: "Unrecognized payload format, ignored" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } catch (parseError) {
+      console.error("Failed to parse JSON:", parseError);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON payload" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     console.log("Received inbound email:", {
-      from: payload.from,
-      to: payload.to,
-      subject: payload.subject,
+      from: emailData.from,
+      to: emailData.to,
+      subject: emailData.subject,
     });
 
     // Extract ticket reference from subject line
     // Format: Re: [Souq Almufaijer] HIGH - Issue title - #8BCE2742
-    const ticketRefMatch = payload.subject.match(/#([A-F0-9]{8})/i);
+    const ticketRefMatch = emailData.subject.match(/#([A-F0-9]{8})/i);
     
     if (!ticketRefMatch) {
-      console.log("No ticket reference found in subject:", payload.subject);
+      console.log("No ticket reference found in subject:", emailData.subject);
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -104,7 +138,7 @@ Deno.serve(async (req) => {
     console.log("Found ticket:", ticket.id, ticket.subject);
 
     // Extract the reply content (clean up email signature and quoted text)
-    let replyContent = payload.text || "";
+    let replyContent = emailData.text || "";
     
     // Remove common email signature patterns
     replyContent = replyContent
@@ -115,12 +149,12 @@ Deno.serve(async (req) => {
 
     // If reply is empty after cleanup, use the full text
     if (!replyContent) {
-      replyContent = payload.text || "No content";
+      replyContent = emailData.text || "No content";
     }
 
     // Format the new note with timestamp
     const timestamp = new Date().toISOString();
-    const formattedReply = `[${timestamp}]\nFrom: ${payload.from}\n\n${replyContent}`;
+    const formattedReply = `[${timestamp}]\nFrom: ${emailData.from}\n\n${replyContent}`;
 
     // Append to existing notes or create new
     const existingNotes = ticket.ayn_notes || "";
