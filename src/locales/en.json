@@ -342,6 +342,8 @@
       "deleteConfirmTitle": "Delete Ticket?",
       "deleteConfirmDesc": "This action cannot be undone. The ticket will be permanently deleted.",
       "aynResponse": "AYN Response",
+      "responseReceived": "Response received from AYN",
+      "awaitingResponse": "Awaiting AYN response",
       "categories": {
         "bug": "Bug Report",
         "feature": "Feature Request",

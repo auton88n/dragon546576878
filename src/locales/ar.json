@@ -342,6 +342,8 @@
       "deleteConfirmTitle": "حذف الطلب؟",
       "deleteConfirmDesc": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف الطلب نهائياً.",
       "aynResponse": "رد AYN",
+      "responseReceived": "تم استلام رد من AYN",
+      "awaitingResponse": "في انتظار رد AYN",
       "categories": {
         "bug": "تقرير خطأ",
         "feature": "طلب ميزة",
