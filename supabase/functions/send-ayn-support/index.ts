@@ -332,7 +332,7 @@ const handler = async (req: Request): Promise<Response> => {
     </div>
     <div class="footer">
       <p style="margin: 0;">For urgent issues | للمشاكل العاجلة</p>
-      <p style="margin: 5px 0; font-size: 18px;">support@aynn.io</p>
+      <p style="margin: 5px 0; font-size: 18px;">support@mail.aynn.io</p>
       <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.2); margin: 15px 0;">
       <p style="margin: 0; opacity: 0.8;">AYN Development Team | فريق تطوير AYN</p>
     </div>
@@ -344,7 +344,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending email to AYN support...");
     const { error: aynEmailError } = await resend.emails.send({
       from: "Souq Almufaijer <info@almufaijer.com>",
-      to: ["support@aynn.io"],
+      to: ["support@mail.aynn.io"],
       reply_to: adminEmail,
       subject: `[Souq Almufaijer] ${priorityInfo.en.toUpperCase()} - ${subject}`,
       html: aynEmailHtml,
