@@ -1,148 +1,82 @@
 
+# Fix for Contact Us and Corporate Bookings Pages - "Small in Corner" Layout Issue
 
-# Inbound Email Handler for AYN Support Replies
+## Problem Identified
+The Contact Us (`/contact`) and Corporate Bookings (`/group-bookings`) pages display content squeezed into a small area on the right side of the screen on tablet devices, leaving a large white/blank area on the left.
 
-## Current Situation
+## Root Cause
+There are two issues causing this layout problem:
 
-The support ticket system works as follows:
-1. Admin creates a ticket via the AYN Support Panel
-2. Email is sent to `support@mail.aynn.io` with the ticket reference in the subject
-3. The ticket is stored in `support_tickets` table with `ayn_notes` column (currently empty)
-4. The UI already displays `ayn_notes` when present (the "AYN Response" section)
+### 1. Conflicting CSS in App.css (Primary Cause)
+The file `src/App.css` contains Vite's default boilerplate CSS that sets:
+```css
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+```
+This conflicts with the proper full-width layout. While `App.css` is not imported in the main app, it may still be processed by Vite and cause unexpected behavior.
 
-**What's missing**: When AYN replies to the email, that reply needs to be captured and stored in the `ayn_notes` column so it appears in the admin panel.
+### 2. Missing Page Structure Classes
+The `ContactPage.tsx` and `GroupBookingsPage.tsx` are missing the `flex flex-col` wrapper that's present in `Index.tsx` (which works correctly).
 
----
-
-## Solution Overview
-
-Create an edge function `receive-support-reply` that:
-1. Receives inbound emails from Resend when AYN replies
-2. Extracts the ticket reference from the email subject
-3. Updates the corresponding ticket with the reply content
-4. Changes the ticket status to `in_progress` to indicate a response was received
-
----
-
-## Components to Create/Modify
-
-### 1. New Edge Function
-
-**File:** `supabase/functions/receive-support-reply/index.ts`
-
-This function will:
-- Accept webhook POST requests from Resend
-- Verify the request using a webhook secret header (`x-webhook-secret`)
-- Parse the email payload from Resend
-- Extract ticket reference from subject line (e.g., `Re: [Souq Almufaijer] HIGH - Issue title - #8BCE2742`)
-- Find the matching ticket in the database
-- Update `ayn_notes` with the reply content
-- Update `status` to `in_progress` and `updated_at` timestamp
-
-### 2. Config Update
-
-**File:** `supabase/config.toml`
-
-Add:
-```toml
-[functions.receive-support-reply]
-verify_jwt = false
+**Working page (Index.tsx):**
+```tsx
+<div className="min-h-screen flex flex-col bg-background ...">
 ```
 
-### 3. New Secret
-
-A `SUPPORT_WEBHOOK_SECRET` will need to be added for webhook verification.
-
----
-
-## Technical Flow
-
-```text
-AYN Team replies to         Resend Inbound           receive-support-reply       support_tickets
-support email                  Webhook                  Edge Function                 table
-      |                           |                           |                         |
-      |-- Reply email ----------->|                           |                         |
-      |                           |-- POST webhook ---------->|                         |
-      |                           |                           |-- Extract ticket ID ----|
-      |                           |                           |-- Update ayn_notes ---->|
-      |                           |                           |-- Set status=in_progress|
-      |                           |<-- 200 OK ----------------|                         |
+**Broken pages:**
+```tsx
+<div className="min-h-screen bg-background" dir={...}>
 ```
 
----
+## Technical Implementation
 
-## Resend Configuration (Manual Steps)
+### Step 1: Clean up App.css
+Remove or reset the conflicting styles in `src/App.css`. Replace the entire content with minimal/empty CSS since all styling is handled through Tailwind and `index.css`.
 
-After deployment, you will need to configure Resend:
+### Step 2: Update ContactPage.tsx
+Add `flex flex-col w-full` to the root container to ensure proper full-width layout.
 
-1. **Go to [resend.com/emails/inbound](https://resend.com/emails/inbound)**
-   - Add `support@mail.aynn.io` or create a dedicated reply address
+**Before:**
+```tsx
+<div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+```
 
-2. **Configure webhook:**
-   - URL: `https://hekgkfdunwpxqbrotfpn.supabase.co/functions/v1/receive-support-reply`
-   - Header: `x-webhook-secret` = (your SUPPORT_WEBHOOK_SECRET value)
-   - Event: `email.received`
+**After:**
+```tsx
+<div className="min-h-screen flex flex-col w-full bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+```
 
----
+### Step 3: Update GroupBookingsPage.tsx  
+Apply the same structural fix to the Corporate Bookings page.
 
-## Edge Function Implementation Details
+**Before:**
+```tsx
+<div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+```
 
-The function will:
+**After:**
+```tsx
+<div className="min-h-screen flex flex-col w-full bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+```
 
-1. **Validate the webhook secret** from the `x-webhook-secret` header
-2. **Parse the Resend payload** which includes:
-   - `from`: Sender email (AYN support)
-   - `to`: Recipient (support@mail.aynn.io)
-   - `subject`: Email subject containing ticket reference
-   - `text`: Plain text body of the reply
-3. **Extract ticket reference** using regex pattern for `#[A-F0-9]{8}`
-4. **Find the ticket** in the database by matching the first 8 characters of the ID
-5. **Update the ticket** with:
-   - `ayn_notes`: The reply content
-   - `status`: `in_progress`
-   - `updated_at`: Current timestamp
+## Files to Modify
+1. `src/App.css` - Reset to empty/minimal styles
+2. `src/pages/ContactPage.tsx` - Add `flex flex-col w-full` to root container
+3. `src/pages/GroupBookingsPage.tsx` - Add `flex flex-col w-full` to root container
 
----
+## Why This Fixes the Issue
+- Removing the `max-width: 1280px` and `padding: 2rem` from `#root` allows the app to use the full viewport width
+- Adding `flex flex-col w-full` ensures the page content stretches to fill the available width
+- This matches the structure of the working Index page
 
-## Translation Updates
+## Testing
+After implementation, test on:
+- Tablet Chrome (normal browser tab) in both Arabic and English
+- Desktop browsers
+- Mobile devices
 
-Add new translation keys for the enhanced UI:
-
-**English:**
-- `admin.support.responseReceived`: "Response received from AYN"
-- `admin.support.awaitingResponse`: "Awaiting AYN response"
-
-**Arabic:**
-- `admin.support.responseReceived`: "تم استلام رد من AYN"
-- `admin.support.awaitingResponse`: "في انتظار رد AYN"
-
----
-
-## Files to Create/Modify
-
-| File | Action | Description |
-|------|--------|-------------|
-| `supabase/functions/receive-support-reply/index.ts` | Create | Inbound email webhook handler |
-| `supabase/config.toml` | Modify | Add function config |
-| `src/locales/en.json` | Modify | Add new translation keys |
-| `src/locales/ar.json` | Modify | Add new translation keys |
-
----
-
-## Security Considerations
-
-- Webhook secret verification prevents unauthorized access
-- The function validates the ticket reference format before database queries
-- Only updates existing tickets - cannot create new ones via this endpoint
-- Uses service role key internally for database updates
-
----
-
-## Summary
-
-This implementation creates a complete two-way support communication system:
-- **Outbound**: Admins create tickets that send emails to AYN
-- **Inbound**: AYN replies are automatically captured and displayed in the admin panel
-
-The existing UI already handles displaying `ayn_notes`, so once the edge function is deployed and Resend is configured, replies will appear automatically in the ticket history.
-
+Verify that the Contact Us and Corporate Bookings pages now fill the entire screen width without blank areas.
