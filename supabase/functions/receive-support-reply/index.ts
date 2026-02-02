@@ -90,10 +90,59 @@ Deno.serve(async (req) => {
     
     if (!ticketRefMatch) {
       console.log("No ticket reference found in subject:", emailData.subject);
+      
+      // Send auto-instruction email to AYN
+      const resendApiKey = Deno.env.get("RESEND_API_KEY");
+      if (resendApiKey) {
+        try {
+          const instructionResponse = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${resendApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "Souq Almufaijer System <info@almufaijer.com>",
+              to: ["support@mail.aynn.io"],
+              subject: "⚠️ Reply Not Linked - Please Use Reply Button",
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="color: #8B6F47;">⚠️ Support Reply Not Linked</h2>
+                  <p>Your email with subject:</p>
+                  <blockquote style="background: #f5f1e8; padding: 15px; border-left: 4px solid #8B6F47; margin: 20px 0;">
+                    <strong>${emailData.subject}</strong>
+                  </blockquote>
+                  <p>Could not be linked to a support ticket because it's missing the ticket reference (e.g., <code>#F57F722C</code>) in the subject line.</p>
+                  
+                  <h3 style="color: #4A3625;">How to Reply Correctly:</h3>
+                  <ol style="line-height: 1.8;">
+                    <li><strong>Find the original ticket email</strong> in your inbox</li>
+                    <li><strong>Click "Reply"</strong> (not "Compose" or "New Email")</li>
+                    <li><strong>Write your response</strong> and send</li>
+                  </ol>
+                  <p>This ensures the subject line keeps the <code>#XXXXXXXX</code> reference so our system can link your reply to the correct ticket.</p>
+                  
+                  <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+                  <p style="color: #888; font-size: 12px;">This is an automated message from Souq Almufaijer ticketing system.</p>
+                </div>
+              `,
+            }),
+          });
+          
+          if (instructionResponse.ok) {
+            console.log("Sent auto-instruction email to AYN");
+          } else {
+            console.error("Failed to send instruction email:", await instructionResponse.text());
+          }
+        } catch (emailError) {
+          console.error("Error sending instruction email:", emailError);
+        }
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: "No ticket reference found, email ignored" 
+          message: "No ticket reference found, instruction email sent to AYN" 
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
