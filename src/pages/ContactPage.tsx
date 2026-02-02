@@ -120,23 +120,20 @@ const ContactPage = () => {
   return <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
-      {/* Hero Section - Matching About page style */}
-      <section className="relative h-[50vh] min-h-[350px] max-h-[500px] overflow-hidden">
+      {/* Hero Section */}
+      <section className="relative z-0 h-[40vh] min-h-[280px] max-h-[400px] overflow-hidden">
         <OptimizedImage src={heroImage} alt="Souq Almufaijer" className="absolute inset-0 w-full h-full object-cover" priority />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/20" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" />
         
-        {/* Hero Content - centered */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="container text-center px-4">
-            <div className="max-w-2xl mx-auto">
-              <span className="inline-block text-accent/90 text-sm md:text-base font-medium tracking-widest uppercase mb-4">
-                {isArabic ? 'تواصل معنا' : 'Get In Touch'}
-              </span>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+        {/* Hero Content - positioned at bottom */}
+        <div className="absolute inset-0 flex items-end justify-center pb-8 md:pb-10">
+          <div className="text-center px-4">
+            <div className="inline-block backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-8 py-6 shadow-2xl">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
                 {t('contact.title')}
               </h1>
-              <div className="w-24 h-1 bg-gradient-to-r from-transparent via-accent to-transparent mx-auto mb-4" />
-              <p className="text-white/80 text-base md:text-lg max-w-xl mx-auto">
+              <p className="text-white/80 text-sm md:text-base max-w-xl mx-auto">
                 {t('contact.subtitle')}
               </p>
             </div>
@@ -145,9 +142,9 @@ const ContactPage = () => {
       </section>
 
       {/* Main Content */}
-      <section className="py-12 md:py-16">
-        <div className="container max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
+      <section className="py-16">
+        <div className="container max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
             <Card className="border-border/50 shadow-lg order-2 md:order-1">
               <CardHeader>
