@@ -18,6 +18,8 @@ html, body {
   scrollbar-width: none;
   overflow-x: hidden;
   max-width: 100vw;
+  width: 100%;
+  min-width: 100%;
 }
 
 html::-webkit-scrollbar,
@@ -31,6 +33,8 @@ body::-webkit-scrollbar {
 #root {
   overflow-x: hidden;
   max-width: 100vw;
+  width: 100%;
+  min-width: 100vw;
 }
 
 /* Apply to common scrollable containers */
