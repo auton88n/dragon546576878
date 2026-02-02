@@ -13,6 +13,24 @@ interface AYNReplyBoxProps {
   dir: TextDir;
 }
 
+// Clean up raw reply content - remove timestamps, email headers, and format nicely
+function cleanReplyContent(raw: string | null): string {
+  if (!raw) return '';
+  
+  return raw
+    // Remove ISO timestamps like [2026-02-02T22:56:02.818Z]
+    .replace(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/g, '')
+    // Remove "From: email@example.com" lines
+    .replace(/^From:\s*\S+@\S+\s*$/gm, '')
+    // Remove separator lines
+    .replace(/^---$/gm, '')
+    // Remove "No content" placeholder
+    .replace(/^No content$/gm, '')
+    // Clean up extra whitespace
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export function AYNReplyBox({
   title,
   newReplyLabel,
@@ -21,7 +39,8 @@ export function AYNReplyBox({
   awaitingLabel,
   dir,
 }: AYNReplyBoxProps) {
-  const hasReply = Boolean(reply?.trim());
+  const cleanedReply = cleanReplyContent(reply);
+  const hasReply = Boolean(cleanedReply);
 
   return (
     <div
@@ -41,9 +60,11 @@ export function AYNReplyBox({
         ) : null}
       </div>
 
-      <div className="mt-2" dir={dir}>
+      <div className="mt-3" dir={dir}>
         {hasReply ? (
-          <div className="whitespace-pre-wrap text-sm leading-relaxed">{reply}</div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+            {cleanedReply}
+          </div>
         ) : (
           <p className="text-sm text-muted-foreground italic">{awaitingLabel}</p>
         )}
