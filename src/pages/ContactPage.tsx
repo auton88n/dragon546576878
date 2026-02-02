@@ -12,9 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/hooks/useLanguage';
 import { toast } from 'sonner';
-import OptimizedImage from '@/components/shared/OptimizedImage';
 import CooldownNotice from '@/components/shared/CooldownNotice';
-const heroImage = '/images/hero-contact.webp';
 const contactSchema = z.object({
   name: z.string().trim().min(3, 'Name must be at least 3 characters').max(100),
   email: z.string().trim().email('Please enter a valid email').max(255),
@@ -121,22 +119,22 @@ const ContactPage = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative z-0 h-[40vh] min-h-[280px] max-h-[400px] overflow-hidden">
-        <OptimizedImage src={heroImage} alt="Souq Almufaijer" className="absolute inset-0 w-full h-full object-cover" priority />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/20" />
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" />
+      <section className="relative pt-24 pb-16 bg-gradient-to-b from-primary/10 to-background">
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='%238B7355' fill-opacity='0.4'/%3E%3C/svg%3E")`,
+            backgroundSize: '30px 30px'
+          }} />
+        </div>
         
-        {/* Hero Content - positioned at bottom */}
-        <div className="absolute inset-0 flex items-end justify-center pb-8 md:pb-10">
-          <div className="text-center px-4">
-            <div className="inline-block backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-8 py-6 shadow-2xl">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
-                {t('contact.title')}
-              </h1>
-              <p className="text-white/80 text-sm md:text-base max-w-xl mx-auto">
-                {t('contact.subtitle')}
-              </p>
-            </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
+              {t('contact.title')}
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+              {t('contact.subtitle')}
+            </p>
           </div>
         </div>
       </section>
