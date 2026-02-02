@@ -242,27 +242,54 @@ export default function AYNSupportPanel() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4">
-                      <div className="space-y-3">
-                        <div>
-                          <Label className="text-xs text-muted-foreground">
-                            {t('admin.support.category')}
-                          </Label>
-                          <p>{t(`admin.support.categories.${ticket.category}`)}</p>
-                        </div>
-                        <div>
-                          <Label className="text-xs text-muted-foreground">
-                            {t('admin.support.description')}
-                          </Label>
-                          <p className="whitespace-pre-wrap text-sm">{ticket.description}</p>
-                        </div>
-                        {ticket.ayn_notes && (
-                          <div className="bg-primary/5 p-3 rounded-lg">
+                      <div className="space-y-4">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div>
                             <Label className="text-xs text-muted-foreground">
+                              {t('admin.support.category')}
+                            </Label>
+                            <p className="font-medium">{t(`admin.support.categories.${ticket.category}`)}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">
+                              {t('admin.support.priority')}
+                            </Label>
+                            <div className="mt-1">{getPriorityBadge(ticket.priority)}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="border rounded-lg p-3 bg-muted/30">
+                          <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Send className="h-3 w-3" />
+                            {t('admin.support.yourMessage')}
+                          </Label>
+                          <p className="whitespace-pre-wrap text-sm mt-1">{ticket.description}</p>
+                        </div>
+
+                        {/* AYN Reply Area - Always visible */}
+                        <div className={`border-2 rounded-lg p-4 ${ticket.ayn_notes ? 'border-primary/40 bg-primary/5' : 'border-dashed border-muted-foreground/30 bg-muted/20'}`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Headset className="h-4 w-4 text-primary" />
+                            <Label className="text-sm font-medium text-primary">
                               {t('admin.support.aynResponse')}
                             </Label>
-                            <p className="whitespace-pre-wrap text-sm">{ticket.ayn_notes}</p>
+                            {ticket.ayn_notes && ticket.status === 'in_progress' && (
+                              <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30">
+                                {t('admin.support.newReply')}
+                              </Badge>
+                            )}
                           </div>
-                        )}
+                          
+                          {ticket.ayn_notes ? (
+                            <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                              {ticket.ayn_notes}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">
+                              {t('admin.support.awaitingReply')}
+                            </p>
+                          )}
+                        </div>
                         <div className="flex items-center justify-between pt-2 border-t">
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Clock className="h-3 w-3" />
