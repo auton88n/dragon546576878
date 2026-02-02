@@ -109,21 +109,27 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Find the ticket by matching the first 8 characters of the ID
-    const { data: tickets, error: searchError } = await supabase
+    // Since UUID doesn't support ILIKE, we fetch recent tickets and match in code
+    const { data: recentTickets, error: searchError } = await supabase
       .from("support_tickets")
       .select("id, subject, status, ayn_notes")
-      .ilike("id", `${ticketRefPrefix}%`)
-      .limit(1);
+      .order("created_at", { ascending: false })
+      .limit(100);
 
     if (searchError) {
-      console.error("Error searching for ticket:", searchError);
+      console.error("Error searching for tickets:", searchError);
       return new Response(
         JSON.stringify({ error: "Database error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!tickets || tickets.length === 0) {
+    // Find the ticket whose ID starts with the extracted prefix
+    const ticket = recentTickets?.find(t => 
+      t.id.toUpperCase().startsWith(ticketRefPrefix)
+    );
+
+    if (!ticket) {
       console.log("No ticket found with reference:", ticketRefPrefix);
       return new Response(
         JSON.stringify({ 
@@ -134,7 +140,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const ticket = tickets[0];
     console.log("Found ticket:", ticket.id, ticket.subject);
 
     // Extract the reply content (clean up email signature and quoted text)
