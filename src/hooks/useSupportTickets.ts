@@ -56,6 +56,27 @@ export function useSupportTickets() {
 
   useEffect(() => {
     fetchTickets();
+
+    // Subscribe to real-time updates for ticket changes (including AYN replies)
+    const channel = supabase
+      .channel('support_tickets_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'support_tickets',
+        },
+        (payload) => {
+          console.log('Support ticket update received:', payload);
+          fetchTickets();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchTickets]);
 
   const createTicket = async (data: CreateTicketData): Promise<boolean> => {
