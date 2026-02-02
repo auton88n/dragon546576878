@@ -1,82 +1,74 @@
 
-# Fix for Contact Us and Corporate Bookings Pages - "Small in Corner" Layout Issue
+# Fix: Contact Us and Corporate Bookings Pages - Layout Issue
 
-## Problem Identified
-The Contact Us (`/contact`) and Corporate Bookings (`/group-bookings`) pages display content squeezed into a small area on the right side of the screen on tablet devices, leaving a large white/blank area on the left.
+## Problem Summary
+The Contact Us (`/contact`) and Corporate Bookings (`/group-bookings`) pages appear "small in corner" on tablet devices on the **published URL only**.
 
-## Root Cause
-There are two issues causing this layout problem:
+## Root Cause Analysis
 
-### 1. Conflicting CSS in App.css (Primary Cause)
-The file `src/App.css` contains Vite's default boilerplate CSS that sets:
+### Comparison of Page Structures
+
+| Page | Root Classes | Works? |
+|------|--------------|--------|
+| Index.tsx | `min-h-screen flex flex-col bg-background` | Yes |
+| BookingPage.tsx | `min-h-screen flex flex-col bg-background` | Yes |
+| TermsPage.tsx | `min-h-screen flex flex-col bg-background` | Yes |
+| ContactPage.tsx | `min-h-screen flex flex-col w-full bg-background` | Fixed (in preview) |
+| GroupBookingsPage.tsx | `min-h-screen flex flex-col w-full bg-background` | Fixed (in preview) |
+| AboutPage.tsx | `min-h-screen bg-background` | Missing structure |
+
+### What Was Already Fixed
+The code for ContactPage and GroupBookingsPage has already been updated with `flex flex-col w-full` classes in the previous change. The global CSS in `index.css` also has:
+
 ```css
+html, body {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100vw;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  min-width: 100vw;
+  max-width: 100vw;
 }
 ```
-This conflicts with the proper full-width layout. While `App.css` is not imported in the main app, it may still be processed by Vite and cause unexpected behavior.
 
-### 2. Missing Page Structure Classes
-The `ContactPage.tsx` and `GroupBookingsPage.tsx` are missing the `flex flex-col` wrapper that's present in `Index.tsx` (which works correctly).
+### Why Published Site Still Broken
+The **published URL** is serving an older cached version of the code. The fixes exist in the preview environment but have not been deployed to production yet.
 
-**Working page (Index.tsx):**
-```tsx
-<div className="min-h-screen flex flex-col bg-background ...">
-```
+## Solution
 
-**Broken pages:**
-```tsx
-<div className="min-h-screen bg-background" dir={...}>
-```
+### Step 1: Publish the Latest Changes
+Click "Publish" → "Update" in the Lovable interface to deploy the fixes that are already in the codebase:
+- Updated ContactPage.tsx with `flex flex-col w-full`
+- Updated GroupBookingsPage.tsx with `flex flex-col w-full`
+- Updated index.css with explicit width rules
 
-## Technical Implementation
+### Step 2: Fix AboutPage.tsx (Preventive)
+The AboutPage is missing the `flex flex-col` structure that all other pages have. Add it for consistency:
 
-### Step 1: Clean up App.css
-Remove or reset the conflicting styles in `src/App.css`. Replace the entire content with minimal/empty CSS since all styling is handled through Tailwind and `index.css`.
-
-### Step 2: Update ContactPage.tsx
-Add `flex flex-col w-full` to the root container to ensure proper full-width layout.
-
-**Before:**
+**Current:**
 ```tsx
 <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
 ```
 
-**After:**
+**Should be:**
 ```tsx
-<div className="min-h-screen flex flex-col w-full bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+<div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
 ```
 
-### Step 3: Update GroupBookingsPage.tsx  
-Apply the same structural fix to the Corporate Bookings page.
-
-**Before:**
-```tsx
-<div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
-```
-
-**After:**
-```tsx
-<div className="min-h-screen flex flex-col w-full bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
-```
+### Step 3: Clear Browser Cache After Publishing
+After publishing, users need to clear their browser cache or hard refresh:
+- **Chrome Desktop**: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
+- **Chrome Tablet**: Settings → Privacy → Clear browsing data → Cached images and files
 
 ## Files to Modify
-1. `src/App.css` - Reset to empty/minimal styles
-2. `src/pages/ContactPage.tsx` - Add `flex flex-col w-full` to root container
-3. `src/pages/GroupBookingsPage.tsx` - Add `flex flex-col w-full` to root container
+1. **src/pages/AboutPage.tsx** - Add missing `flex flex-col` to root div (preventive fix)
 
-## Why This Fixes the Issue
-- Removing the `max-width: 1280px` and `padding: 2rem` from `#root` allows the app to use the full viewport width
-- Adding `flex flex-col w-full` ensures the page content stretches to fill the available width
-- This matches the structure of the working Index page
-
-## Testing
-After implementation, test on:
-- Tablet Chrome (normal browser tab) in both Arabic and English
-- Desktop browsers
-- Mobile devices
-
-Verify that the Contact Us and Corporate Bookings pages now fill the entire screen width without blank areas.
+## Testing Checklist
+After publishing and clearing cache:
+- Test /contact on tablet (Arabic + English)
+- Test /group-bookings on tablet (Arabic + English)
+- Test /about on tablet (Arabic + English)
+- Verify pages fill full screen width with no blank areas
