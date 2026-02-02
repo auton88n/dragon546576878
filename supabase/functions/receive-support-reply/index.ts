@@ -173,9 +173,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Find the ticket whose ID starts with the extracted prefix
+    // Find the ticket whose ID starts with the extracted prefix (case-insensitive)
     const ticket = recentTickets?.find(t => 
-      t.id.toUpperCase().startsWith(ticketRefPrefix)
+      t.id.toUpperCase().replace(/-/g, '').startsWith(ticketRefPrefix)
     );
 
     if (!ticket) {
