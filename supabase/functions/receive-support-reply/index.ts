@@ -8,17 +8,28 @@ const corsHeaders = {
 
 interface ResendInboundEmail {
   from: string;
-  to: string;
+  to: string | string[];
   subject: string;
-  text: string;
+  text?: string;
   html?: string;
   created_at?: string;
+  email_id?: string;
 }
 
 interface ResendWebhookPayload {
   type: string;
   created_at: string;
   data: ResendInboundEmail;
+}
+
+interface ResendFullEmail {
+  id: string;
+  from: string;
+  to: string[];
+  subject: string;
+  text?: string;
+  html?: string;
+  created_at: string;
 }
 
 Deno.serve(async (req) => {
@@ -210,17 +221,52 @@ Deno.serve(async (req) => {
 
     console.log("Found ticket:", ticket.id, ticket.subject);
 
-    // Extract the reply content (clean up email signature and quoted text)
-    // Try text first, then html stripped of tags
-    let replyContent = emailData.text || "";
+    // Fetch full email content using Resend API (webhook only has metadata)
+    let replyContent = "";
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
     
-    // If no text, try to extract from HTML
-    if (!replyContent && emailData.html) {
-      replyContent = emailData.html
-        .replace(/<[^>]*>/g, ' ')  // Strip HTML tags
-        .replace(/&nbsp;/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+    if (emailData.email_id && resendApiKey) {
+      console.log("Fetching full email content for email_id:", emailData.email_id);
+      try {
+        const emailResponse = await fetch(`https://api.resend.com/emails/${emailData.email_id}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${resendApiKey}`,
+          },
+        });
+        
+        if (emailResponse.ok) {
+          const fullEmail: ResendFullEmail = await emailResponse.json();
+          console.log("Full email fetched, text length:", fullEmail.text?.length || 0, "html length:", fullEmail.html?.length || 0);
+          
+          // Try text first, then html stripped of tags
+          replyContent = fullEmail.text || "";
+          
+          if (!replyContent && fullEmail.html) {
+            replyContent = fullEmail.html
+              .replace(/<[^>]*>/g, ' ')  // Strip HTML tags
+              .replace(/&nbsp;/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim();
+          }
+        } else {
+          console.error("Failed to fetch full email:", await emailResponse.text());
+        }
+      } catch (fetchError) {
+        console.error("Error fetching full email:", fetchError);
+      }
+    }
+    
+    // Fallback to webhook data if available
+    if (!replyContent) {
+      replyContent = emailData.text || "";
+      if (!replyContent && emailData.html) {
+        replyContent = emailData.html
+          .replace(/<[^>]*>/g, ' ')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
     }
     
     // Remove common email signature patterns
@@ -236,6 +282,8 @@ Deno.serve(async (req) => {
     if (!replyContent) {
       replyContent = "تم استلام رد من فريق AYN\nA reply was received from AYN team";
     }
+
+    console.log("Final reply content:", replyContent.substring(0, 200));
 
     // Store clean content without timestamps/headers - just the message
     // Append to existing notes or create new (with simple separator)
