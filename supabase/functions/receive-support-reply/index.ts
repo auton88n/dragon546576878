@@ -179,11 +179,26 @@ Deno.serve(async (req) => {
     );
 
     if (!ticket) {
+      // Enhanced logging: show available ticket prefixes for debugging
+      const availablePrefixes = recentTickets?.map(t => ({
+        id: t.id,
+        prefix: t.id.toUpperCase().replace(/-/g, '').substring(0, 8),
+        subject: t.subject?.substring(0, 50)
+      })) || [];
+      
       console.log("No ticket found with reference:", ticketRefPrefix);
+      console.log("Available ticket prefixes:", JSON.stringify(availablePrefixes, null, 2));
+      console.log("Looking for prefix starting with:", ticketRefPrefix);
+      
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: "Ticket not found, email ignored" 
+          message: "Ticket not found, email ignored",
+          debug: {
+            searchedPrefix: ticketRefPrefix,
+            availableTicketCount: recentTickets?.length || 0,
+            availablePrefixes: availablePrefixes.map(p => p.prefix)
+          }
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
