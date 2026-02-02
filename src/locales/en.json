@@ -1,11 +1,4 @@
 {
-  "admin": {
-    "support": {
-      "yourMessage": "Your Message",
-      "awaitingReply": "Awaiting response from AYN support team...",
-      "newReply": "New Reply"
-    }
-  },
   "common": {
     "appName": "Souq Almufaijer",
     "tagline": "Experience Saudi Heritage",
@@ -351,6 +344,9 @@
       "aynResponse": "AYN Response",
       "responseReceived": "Response received from AYN",
       "awaitingResponse": "Awaiting AYN response",
+      "yourMessage": "Your Message",
+      "awaitingReply": "Awaiting response from AYN support team...",
+      "newReply": "New Reply",
       "categories": {
         "bug": "Bug Report",
         "feature": "Feature Request",
