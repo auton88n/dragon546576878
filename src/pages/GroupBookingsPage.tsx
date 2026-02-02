@@ -198,12 +198,12 @@ const GroupBookingsPage = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative z-0 pt-24 pb-16 bg-gradient-to-b from-primary/10 to-background overflow-hidden">
+      <section className="relative pt-24 pb-16 bg-gradient-to-b from-primary/10 to-background">
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='%238B7355' fill-opacity='0.4'/%3E%3C/svg%3E")`,
-          backgroundSize: '30px 30px'
-        }} />
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='%238B7355' fill-opacity='0.4'/%3E%3C/svg%3E")`,
+            backgroundSize: '30px 30px'
+          }} />
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
@@ -215,7 +215,7 @@ const GroupBookingsPage = () => {
               </span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
               {isArabic ? 'حجوزات الشركات' : 'Corporate Bookings'}
             </h1>
             
