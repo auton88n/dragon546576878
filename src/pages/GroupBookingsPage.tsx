@@ -197,33 +197,34 @@ const GroupBookingsPage = () => {
   return <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
-      {/* Hero Section - Matching About/Contact style */}
-      <section className="relative z-0 h-[40vh] min-h-[280px] max-h-[400px] overflow-hidden">
-        {/* Background Pattern with Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-primary/10 to-background">
+      {/* Hero Section - Matching About page style */}
+      <section className="relative h-[50vh] min-h-[350px] max-h-[500px] overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-foreground">
           <div className="absolute inset-0 opacity-10" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='%238B7355' fill-opacity='0.4'/%3E%3C/svg%3E")`,
-            backgroundSize: '30px 30px'
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='%23ffffff' fill-opacity='0.3'/%3E%3C/svg%3E")`,
+            backgroundSize: '40px 40px'
           }} />
         </div>
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
         
-        {/* Hero Content - positioned at bottom like Contact page */}
-        <div className="absolute inset-0 flex items-end justify-center pb-8 md:pb-10">
-          <div className="text-center px-4">
-            <div className="inline-block backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-6 sm:px-8 py-6 shadow-2xl">
-              <div className="inline-flex items-center gap-2 bg-primary/20 text-primary px-3 py-1 rounded-full mb-4">
+        {/* Hero Content - centered like About page */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="container text-center px-4">
+            <div className="max-w-2xl mx-auto">
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-6">
                 <Building2 className="w-4 h-4" />
-                <span className="text-xs sm:text-sm font-medium">
+                <span className="text-sm font-medium">
                   {isArabic ? 'للمجموعات 20+ شخص' : 'For Groups of 20+ People'}
                 </span>
               </div>
               
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
                 {isArabic ? 'حجوزات الشركات' : 'Corporate Bookings'}
               </h1>
+              <div className="w-24 h-1 bg-gradient-to-r from-transparent via-accent to-transparent mx-auto mb-4" />
               
-              <p className="text-muted-foreground text-sm md:text-base max-w-xl mx-auto">
+              <p className="text-white/80 text-base md:text-lg max-w-xl mx-auto">
                 {isArabic ? 'دعونا نصمم لكم تجربة استثنائية!' : 'Let us create a custom experience for you!'}
               </p>
             </div>
