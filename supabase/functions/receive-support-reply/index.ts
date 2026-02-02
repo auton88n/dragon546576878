@@ -211,29 +211,38 @@ Deno.serve(async (req) => {
     console.log("Found ticket:", ticket.id, ticket.subject);
 
     // Extract the reply content (clean up email signature and quoted text)
+    // Try text first, then html stripped of tags
     let replyContent = emailData.text || "";
     
+    // If no text, try to extract from HTML
+    if (!replyContent && emailData.html) {
+      replyContent = emailData.html
+        .replace(/<[^>]*>/g, ' ')  // Strip HTML tags
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    
     // Remove common email signature patterns
-    replyContent = replyContent
-      .split(/^--\s*$/m)[0]  // Remove signature after "--"
-      .split(/^On .* wrote:$/m)[0]  // Remove quoted reply header
-      .split(/^>.*$/gm).join("")  // Remove quoted lines
-      .trim();
-
-    // If reply is empty after cleanup, use the full text
-    if (!replyContent) {
-      replyContent = emailData.text || "No content";
+    if (replyContent) {
+      replyContent = replyContent
+        .split(/^--\s*$/m)[0]  // Remove signature after "--"
+        .split(/^On .* wrote:$/m)[0]  // Remove quoted reply header
+        .split(/^>.*$/gm).join("")  // Remove quoted lines
+        .trim();
     }
 
-    // Format the new note with timestamp
-    const timestamp = new Date().toISOString();
-    const formattedReply = `[${timestamp}]\nFrom: ${emailData.from}\n\n${replyContent}`;
+    // If still empty, note that we received a reply but couldn't extract content
+    if (!replyContent) {
+      replyContent = "تم استلام رد من فريق AYN\nA reply was received from AYN team";
+    }
 
-    // Append to existing notes or create new
+    // Store clean content without timestamps/headers - just the message
+    // Append to existing notes or create new (with simple separator)
     const existingNotes = ticket.ayn_notes || "";
     const newNotes = existingNotes 
-      ? `${existingNotes}\n\n---\n\n${formattedReply}`
-      : formattedReply;
+      ? `${existingNotes}\n\n${replyContent}`
+      : replyContent;
 
     // Update the ticket
     const { error: updateError } = await supabase
