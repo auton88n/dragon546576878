@@ -171,7 +171,7 @@ const GroupBookingsPage = () => {
     }
   };
   if (isSuccess) {
-    return <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    return <div className="min-h-screen flex flex-col w-full bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <Header />
         <main className="pt-24 pb-16">
           <div className="container mx-auto px-4">
@@ -194,7 +194,7 @@ const GroupBookingsPage = () => {
         <Footer />
       </div>;
   }
-  return <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+  return <div className="min-h-screen flex flex-col w-full bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
       {/* Hero Section */}

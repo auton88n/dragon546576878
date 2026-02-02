@@ -115,7 +115,7 @@ const ContactPage = () => {
     contentAr: 'يومياً (بما في ذلك الجمعة)\n٣:٠٠ م - ١٢:٠٠ ص',
     dirType: 'auto' as const
   }];
-  return <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+  return <div className="min-h-screen flex flex-col w-full bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
       {/* Hero Section */}
