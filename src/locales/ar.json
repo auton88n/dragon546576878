@@ -1,4 +1,11 @@
 {
+  "admin": {
+    "support": {
+      "yourMessage": "رسالتك",
+      "awaitingReply": "في انتظار رد فريق دعم AYN...",
+      "newReply": "رد جديد"
+    }
+  },
   "common": {
     "appName": "سوق المفيجر",
     "tagline": "استكشف التراث السعودي",

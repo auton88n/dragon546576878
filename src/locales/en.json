@@ -1,4 +1,11 @@
 {
+  "admin": {
+    "support": {
+      "yourMessage": "Your Message",
+      "awaitingReply": "Awaiting response from AYN support team...",
+      "newReply": "New Reply"
+    }
+  },
   "common": {
     "appName": "Souq Almufaijer",
     "tagline": "Experience Saudi Heritage",
