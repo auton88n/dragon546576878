@@ -85,8 +85,12 @@ Deno.serve(async (req) => {
     });
 
     // Extract ticket reference from subject line
-    // Format: Re: [Souq Almufaijer] HIGH - Issue title - #8BCE2742
-    const ticketRefMatch = emailData.subject.match(/#([A-F0-9]{8})/i);
+    // Format can vary - look for the LAST 8-char hex reference in the subject
+    // e.g., "Re: #EC19BD12 - MEDIUM - #5466CBC8 - Title" -> we want 5466CBC8
+    const allMatches = emailData.subject.match(/#([A-F0-9]{8})/gi);
+    const ticketRefMatch = allMatches && allMatches.length > 0 
+      ? allMatches[allMatches.length - 1].match(/#([A-F0-9]{8})/i)
+      : null;
     
     if (!ticketRefMatch) {
       console.log("No ticket reference found in subject:", emailData.subject);
