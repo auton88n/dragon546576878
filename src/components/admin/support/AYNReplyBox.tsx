@@ -17,18 +17,34 @@ interface AYNReplyBoxProps {
 function cleanReplyContent(raw: string | null): string {
   if (!raw) return '';
   
-  return raw
+  // Remove the placeholder message if that's the only content
+  const placeholderAr = 'تم استلام رد من فريق AYN';
+  const placeholderEn = 'A reply was received from AYN team';
+  
+  let cleaned = raw
     // Remove ISO timestamps like [2026-02-02T22:56:02.818Z]
-    .replace(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/g, '')
+    .replace(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]\s*/g, '')
     // Remove "From: email@example.com" lines
     .replace(/^From:\s*\S+@\S+\s*$/gm, '')
     // Remove separator lines
-    .replace(/^---$/gm, '')
+    .replace(/^---+\s*$/gm, '')
     // Remove "No content" placeholder
-    .replace(/^No content$/gm, '')
-    // Clean up extra whitespace
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^No content\s*$/gm, '')
+    // Clean up extra whitespace and newlines
+    .replace(/\n{2,}/g, '\n')
     .trim();
+  
+  // If only the placeholder remains, return empty to show "Awaiting reply"
+  const withoutPlaceholder = cleaned
+    .replace(placeholderAr, '')
+    .replace(placeholderEn, '')
+    .trim();
+  
+  if (!withoutPlaceholder) {
+    return ''; // Show "Awaiting reply" instead of placeholder
+  }
+  
+  return cleaned;
 }
 
 export function AYNReplyBox({
