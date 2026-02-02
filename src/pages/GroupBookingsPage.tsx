@@ -197,48 +197,53 @@ const GroupBookingsPage = () => {
   return <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
       
-      {/* Hero Section */}
-      <section className="relative z-0 pt-24 pb-16 bg-gradient-to-b from-primary/10 to-background overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='%238B7355' fill-opacity='0.4'/%3E%3C/svg%3E")`,
-          backgroundSize: '30px 30px'
-        }} />
+      {/* Hero Section - Matching About/Contact style */}
+      <section className="relative z-0 h-[40vh] min-h-[280px] max-h-[400px] overflow-hidden">
+        {/* Background Pattern with Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-primary/10 to-background">
+          <div className="absolute inset-0 opacity-10" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='%238B7355' fill-opacity='0.4'/%3E%3C/svg%3E")`,
+            backgroundSize: '30px 30px'
+          }} />
         </div>
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background" />
         
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-              <Building2 className="w-5 h-5" />
-              <span className="text-sm font-medium">
-                {isArabic ? 'للمجموعات 20+ شخص' : 'For Groups of 20+ People'}
-              </span>
+        {/* Hero Content - positioned at bottom like Contact page */}
+        <div className="absolute inset-0 flex items-end justify-center pb-8 md:pb-10">
+          <div className="text-center px-4">
+            <div className="inline-block backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl px-6 sm:px-8 py-6 shadow-2xl">
+              <div className="inline-flex items-center gap-2 bg-primary/20 text-primary px-3 py-1 rounded-full mb-4">
+                <Building2 className="w-4 h-4" />
+                <span className="text-xs sm:text-sm font-medium">
+                  {isArabic ? 'للمجموعات 20+ شخص' : 'For Groups of 20+ People'}
+                </span>
+              </div>
+              
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">
+                {isArabic ? 'حجوزات الشركات' : 'Corporate Bookings'}
+              </h1>
+              
+              <p className="text-muted-foreground text-sm md:text-base max-w-xl mx-auto">
+                {isArabic ? 'دعونا نصمم لكم تجربة استثنائية!' : 'Let us create a custom experience for you!'}
+              </p>
             </div>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-              {isArabic ? 'حجوزات الشركات' : 'Corporate Bookings'}
-            </h1>
-            
-            <p className="text-lg md:text-xl text-muted-foreground">
-              {isArabic ? 'هل تخططون لزيارة جماعية؟ دعونا نصمم لكم تجربة استثنائية!' : 'Planning a group visit? Let us create a custom experience for you!'}
-            </p>
           </div>
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section className="py-12 bg-muted/30">
+      <section className="py-10 md:py-12 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4 max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 max-w-6xl mx-auto">
             {benefits.map((benefit, index) => <Card key={index} className="bg-card border-border/50 hover:shadow-lg transition-shadow">
-                <CardContent className="p-3 lg:p-4 text-center">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 lg:mb-3">
-                    <benefit.icon className="w-5 h-5 lg:w-6 lg:h-6 text-primary" />
+                <CardContent className="p-3 md:p-4 text-center">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-3">
+                    <benefit.icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-xs lg:text-sm text-foreground mb-1">
+                  <h3 className="font-semibold text-xs md:text-sm text-foreground mb-1">
                     {isArabic ? benefit.titleAr : benefit.titleEn}
                   </h3>
-                  <p className="text-[10px] lg:text-xs text-muted-foreground leading-tight">
+                  <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">
                     {isArabic ? benefit.descAr : benefit.descEn}
                   </p>
                 </CardContent>
@@ -248,9 +253,9 @@ const GroupBookingsPage = () => {
       </section>
 
       {/* Form Section */}
-      <section className="py-16">
+      <section className="py-12 md:py-16">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-2xl md:max-w-3xl mx-auto">
             <div className="text-center mb-10">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
                 {isArabic ? 'طلب عرض سعر' : 'Request a Quote'}
