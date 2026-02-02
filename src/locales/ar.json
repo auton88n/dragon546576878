@@ -1,11 +1,4 @@
 {
-  "admin": {
-    "support": {
-      "yourMessage": "رسالتك",
-      "awaitingReply": "في انتظار رد فريق دعم AYN...",
-      "newReply": "رد جديد"
-    }
-  },
   "common": {
     "appName": "سوق المفيجر",
     "tagline": "استكشف التراث السعودي",
@@ -351,6 +344,9 @@
       "aynResponse": "رد AYN",
       "responseReceived": "تم استلام رد من AYN",
       "awaitingResponse": "في انتظار رد AYN",
+      "yourMessage": "رسالتك",
+      "awaitingReply": "في انتظار رد فريق دعم AYN...",
+      "newReply": "رد جديد",
       "categories": {
         "bug": "تقرير خطأ",
         "feature": "طلب ميزة",
