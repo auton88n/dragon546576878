@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Loader2, Send, Headset, Clock, CheckCircle2, AlertCircle, HelpCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { AYNReplyBox } from '@/components/admin/support/AYNReplyBox';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -267,29 +268,14 @@ export default function AYNSupportPanel() {
                         </div>
 
                         {/* AYN Reply Area - Always visible */}
-                        <div className={`border-2 rounded-lg p-4 ${ticket.ayn_notes ? 'border-primary/40 bg-primary/5' : 'border-dashed border-muted-foreground/30 bg-muted/20'}`}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Headset className="h-4 w-4 text-primary" />
-                            <Label className="text-sm font-medium text-primary">
-                              {t('admin.support.aynResponse')}
-                            </Label>
-                            {ticket.ayn_notes && ticket.status === 'in_progress' && (
-                              <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/30">
-                                {t('admin.support.newReply')}
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          {ticket.ayn_notes ? (
-                            <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                              {ticket.ayn_notes}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-muted-foreground italic">
-                              {t('admin.support.awaitingReply')}
-                            </p>
-                          )}
-                        </div>
+                        <AYNReplyBox
+                          title={t('admin.support.aynResponse')}
+                          reply={ticket.ayn_notes}
+                          awaitingLabel={t('admin.support.awaitingReply')}
+                          dir={isRTL ? 'rtl' : 'ltr'}
+                          showNewReplyBadge={Boolean(ticket.ayn_notes) && ticket.status === 'in_progress'}
+                          newReplyLabel={t('admin.support.newReply')}
+                        />
                         <div className="flex items-center justify-between pt-2 border-t">
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Clock className="h-3 w-3" />

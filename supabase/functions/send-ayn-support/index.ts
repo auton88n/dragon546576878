@@ -251,8 +251,8 @@ const handler = async (req: Request): Promise<Response> => {
         <div class="value">${timestamp}</div>
       </div>
     </div>
-    <div class="footer">
-      <p style="margin: 0;">Reply directly to this email to respond to ${adminName}</p>
+     <div class="footer">
+       <p style="margin: 0;">Reply to this email and keep <strong>#${ticketRef}</strong> in the subject so the system can link your response.</p>
       <p style="margin: 10px 0 0 0; opacity: 0.7;">Project: Souq Almufaijer | tickets.almufaijer.com</p>
     </div>
   </div>
@@ -345,8 +345,10 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: aynEmailError } = await resend.emails.send({
       from: "Souq Almufaijer <info@almufaijer.com>",
       to: ["support@mail.aynn.io"],
-      reply_to: adminEmail,
-      subject: `[Souq Almufaijer] ${priorityInfo.en.toUpperCase()} - ${subject}`,
+      // IMPORTANT: Do NOT set reply_to to the admin.
+      // We want AYN replies to come back to info@almufaijer.com (our system inbox)
+      // so `receive-support-reply` can capture them into the dashboard.
+      subject: `[Souq Almufaijer] ${priorityInfo.en.toUpperCase()} - #${ticketRef} - ${subject}`,
       html: aynEmailHtml,
     });
 
