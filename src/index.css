@@ -43,6 +43,27 @@ body::-webkit-scrollbar {
   max-width: 100%;
 }
 
+/* Tablet-specific CSS Grid fixes (768px - 1366px) */
+/* Targets Safari iOS and Chrome Android rendering quirks */
+@media (min-width: 768px) and (max-width: 1366px) {
+  .grid {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: grid;
+  }
+  
+  .grid > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}
+
 /* Apply to common scrollable containers */
 .overflow-auto::-webkit-scrollbar,
 .overflow-scroll::-webkit-scrollbar,

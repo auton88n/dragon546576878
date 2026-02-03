@@ -245,7 +245,7 @@ const GroupBookingsPage = () => {
       {/* Benefits Section */}
       <section className="py-12 bg-muted/30">
         <div className="container">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4 max-w-6xl mx-auto" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
             {benefits.map((benefit, index) => (
               <Card key={index} className="bg-card border-border/50 hover:shadow-lg transition-shadow">
                 <CardContent className="p-3 lg:p-4 text-center">
@@ -351,7 +351,7 @@ const GroupBookingsPage = () => {
                     </div>
 
                     {/* Email & Phone */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
                       <div className="space-y-2">
                         <Label htmlFor="email">{isArabic ? 'البريد الإلكتروني' : 'Email'} *</Label>
                         <Input
