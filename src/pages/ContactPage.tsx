@@ -121,7 +121,7 @@ const ContactPage = () => {
   ];
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
       {/* Hero Section */}
