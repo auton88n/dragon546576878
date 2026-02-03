@@ -230,7 +230,7 @@ const GroupBookingsPage = () => {
       <section className="py-12 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4 max-w-6xl mx-auto">
-            {benefits.map((benefit, index) => <Card key={index} className="bg-card border-border/50 hover:shadow-lg transition-shadow">
+            {benefits.map((benefit, index) => <Card key={index} className="bg-card border-border/50 hover:shadow-lg transition-shadow min-w-0">
                 <CardContent className="p-3 lg:p-4 text-center">
                   <div className="w-10 h-10 lg:w-12 lg:h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 lg:mb-3">
                     <benefit.icon className="w-5 h-5 lg:w-6 lg:h-6 text-primary" />
