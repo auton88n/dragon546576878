@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import "@/lib/i18n";
 import LoadingSpinner from "./components/shared/LoadingSpinner";
 import ScrollToTop from "./components/shared/ScrollToTop";
@@ -95,7 +95,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <HashRouter>
+      <BrowserRouter>
         <AuthBootstrap />
         <Suspense fallback={<PageLoader />}>
           <ScrollToTop />
@@ -164,7 +164,7 @@ const App = () => (
           </Routes>
           <ChatWidgetGate />
         </Suspense>
-      </HashRouter>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
