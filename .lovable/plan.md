@@ -1,72 +1,85 @@
 
+## Goal
+Fix the “large empty space on the left / content pushed to the far right” issue that happens **only in Arabic (RTL)** on **Contact** and **Corporate/Company Bookings** pages.
 
-# Fix RTL Layout Bug - Add Missing RTL Class
+## What I found (why it happens only in Arabic)
+Both **ContactPage** and **GroupBookingsPage** include a “honeypot” anti-spam input that is hidden like this:
 
-## Problem Identified
-
-The pages work in English but break in Arabic because they're missing the **`rtl`/`ltr` CSS class** that the working homepage uses.
-
-**Working Homepage (Index.tsx):**
 ```tsx
-<div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+className="absolute -left-[9999px] opacity-0 pointer-events-none"
 ```
 
-**Broken Pages (Contact/GroupBookings):**
+That huge negative `left` can create an extremely wide invisible layout area. On many browsers you won’t notice it, but on some **tablet browsers in RTL mode**, the page can start at the “rightmost” horizontal scroll position. The result looks exactly like what you described:
+- big blank space on the left
+- the real content appears squeezed to the far right
+- switching to English (LTR) “fixes” it because LTR scroll origin behavior differs
+
+This also explains why the **homepage works**: it doesn’t have an element pushed 9999px off-screen.
+
+## Solution (clean + proven)
+Keep the honeypot feature, but hide it using a method that **does not create horizontal overflow**.
+
+### Change approach
+Replace the honeypot’s `-left-[9999px]` technique with Tailwind’s built-in `sr-only` (screen-reader-only) utility, which hides without creating a giant offscreen box.
+
+This is the safest, simplest fix and aligns with your request to keep things clean and avoid “hacky” layout workarounds.
+
+## Exact code changes to make
+
+### 1) Contact page
+File: `src/pages/ContactPage.tsx`
+
+Find the honeypot input and change:
+
+**FROM**
 ```tsx
-<div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+className="absolute -left-[9999px] opacity-0 pointer-events-none"
 ```
 
-The pages have the `dir` attribute but are **missing the `rtl` or `ltr` class** in the className. Tailwind's RTL utilities and some browser rendering behaviors depend on this class being present.
-
-## Solution
-
-Match the exact pattern from the working homepage by adding the dynamic RTL class.
-
-## Files to Modify
-
-| File | Lines | Change |
-|------|-------|--------|
-| `src/pages/ContactPage.tsx` | 124 | Add `${isRTL ? 'rtl' : 'ltr'}` to className |
-| `src/pages/GroupBookingsPage.tsx` | 180, 208 | Add `${isRTL ? 'rtl' : 'ltr'}` to both wrapper classNames |
-
-## Code Changes
-
-### ContactPage.tsx (Line 124)
-
-**From:**
+**TO**
 ```tsx
-<div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+className="sr-only"
 ```
 
-**To:**
+(We keep the existing `tabIndex={-1}` and `aria-hidden="true"`.)
+
+### 2) Corporate/Company bookings page
+File: `src/pages/GroupBookingsPage.tsx`
+
+Do the same honeypot change:
+
+**FROM**
 ```tsx
-<div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+className="absolute -left-[9999px] opacity-0 pointer-events-none"
 ```
 
-### GroupBookingsPage.tsx (Lines 180 and 208)
-
-**From:**
+**TO**
 ```tsx
-<div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+className="sr-only"
 ```
 
-**To:**
-```tsx
-<div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-```
+## Why this should fix the RTL spacing instantly
+- Removes the main source of **accidental horizontal overflow**
+- Prevents RTL browsers from “starting” the page at a weird horizontal scroll offset
+- Keeps spam protection intact
+- No transforms, no hardware acceleration, no WebKit-specific hacks
 
-## Why This Works
+## Testing checklist (important)
+1. On the actual tablet (the one showing the bug), switch to **Arabic**.
+2. Open:
+   - `/contact`
+   - `/group-bookings`
+3. Confirm:
+   - No empty-left spacing
+   - Content is centered normally
+   - No horizontal “shift” after load
+4. Rotate tablet (portrait/landscape) and re-check.
+5. Submit each form once to ensure nothing broke:
+   - Normal submission still works
+   - Honeypot still blocks submissions if filled
 
-1. The `dir` attribute tells the browser the text direction
-2. The `rtl`/`ltr` **class** enables Tailwind's RTL variants (`rtl:text-right`, etc.)
-3. Some tablet browsers (especially on Android) use both the attribute AND class together for proper layout calculation
-4. The homepage uses this exact pattern and works perfectly on tablets in both languages
-
-## Testing
-
-After publishing:
-1. Open Contact page on tablet in Arabic mode
-2. Verify content spans full width (no collapse to right)
-3. Switch to English - should continue working
-4. Test GroupBookings page the same way
-
+## If it still happens after this (fallback plan)
+If your tablet still shows spacing after removing the 9999px offscreen element, the next likely culprit would be another element causing horizontal overflow in RTL (e.g., a wide popover/calendar). In that case, we’ll:
+- quickly identify the overflowing element (by temporarily highlighting overflow in dev)
+- apply a targeted fix (like `max-w-full`, `overflow-x-clip` on a specific wrapper, or constraining the popover width)
+But the honeypot fix is the highest-probability cause because it appears in exactly the two pages that break.
