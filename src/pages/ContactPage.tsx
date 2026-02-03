@@ -151,7 +151,7 @@ const ContactPage = () => {
       {/* Contact Info Cards */}
       <section className="py-12 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4 max-w-5xl mx-auto">
             {contactInfo.map((info, index) => (
               <Card key={index} className="bg-card border-border/50">
                 <CardContent className="p-3 lg:p-4 text-center">
