@@ -1,30 +1,16 @@
 
-# Mobile Browser CSS Grid Compatibility Fix
 
-## Problem Identified
+# Remove Tablet CSS Fixes Causing Zoom-Out Bug
 
-The Contact and GroupBookings pages work in desktop browser dev tools but break on actual physical tablet devices. This is a classic mobile browser rendering issue where Safari iOS and Chrome Android handle CSS Grid differently than desktop Chrome's simulated mobile view.
+## Problem
 
-**Root Cause**: Desktop dev tools simulate viewport size but use the desktop rendering engine. Real tablets use WebKit (Safari) or mobile Chrome which have different CSS Grid implementations, especially regarding:
-- `min-width` calculations on grid children
-- Hardware acceleration for transforms
-- Flexbox fallbacks for older browsers
+The hardware acceleration and CSS Grid fixes we added are causing a massive zoom-out bug on real tablets, making content microscopic and unusable.
 
-## Current Grid Usage
+## What Will Be Removed
 
-| Page | Section | Grid Classes |
-|------|---------|-------------|
-| ContactPage | Info Cards | `grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4` |
-| ContactPage | Form Fields | `grid grid-cols-1 sm:grid-cols-2` |
-| GroupBookingsPage | Benefits | `grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5` |
-| GroupBookingsPage | Form Fields | `grid grid-cols-1 sm:grid-cols-2` |
+### 1. Remove Tablet Media Query from index.css (lines 46-65)
 
-## Solution: Multi-Layer Compatibility Approach
-
-### Layer 1: Enhance Global CSS (index.css)
-
-Add tablet-specific media query with WebKit prefixes and hardware acceleration:
-
+Delete this entire block:
 ```css
 /* Tablet-specific CSS Grid fixes (768px - 1366px) */
 @media (min-width: 768px) and (max-width: 1366px) {
@@ -47,64 +33,39 @@ Add tablet-specific media query with WebKit prefixes and hardware acceleration:
 }
 ```
 
-### Layer 2: Simplify Grid Breakpoints in Components
+### 2. Remove Hardware Acceleration Inline Styles
 
-Change the tablet breakpoint from `sm:grid-cols-2` (640px) to `lg:grid-cols-2` (1024px) for problematic grids. This ensures tablets show a single-column layout which is guaranteed to work:
+**ContactPage.tsx** - Remove `style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}` from:
+- Line 154: Info cards grid
+- Line 223: Form fields grid (name/email)
+- Line 251: Form fields grid (phone/subject)
 
-**ContactPage.tsx changes:**
-- Line 154: Change `sm:grid-cols-2` to `md:grid-cols-2` for info cards
-- Line 223: Change `sm:grid-cols-2` to `lg:grid-cols-2` for form fields
-- Line 251: Change `sm:grid-cols-2` to `lg:grid-cols-2` for form fields
+**GroupBookingsPage.tsx** - Remove from:
+- Line 248: Benefits grid
+- Line 354: Form fields grid (email/phone)
 
-**GroupBookingsPage.tsx changes:**
-- Line 248: Change `grid-cols-2` to `grid-cols-1 md:grid-cols-2 lg:grid-cols-5` for benefits
-- Line 354: Change `sm:grid-cols-2` to `lg:grid-cols-2` for form fields
+### 3. Keep the Simpler Breakpoints
 
-### Layer 3: Add Hardware Acceleration to Grid Containers
+These stay unchanged:
+- `lg:grid-cols-2` for form fields (already correct)
+- `md:grid-cols-2 lg:grid-cols-5` for benefits (already correct)
 
-Add inline styles for hardware acceleration on the grid containers:
+## What Will Be Added
 
-```tsx
-<div 
-  className="grid ..." 
-  style={{ 
-    transform: 'translateZ(0)',
-    WebkitTransform: 'translateZ(0)'
-  }}
->
-```
+The user's message was cut off before they could specify the simple CSS fix they wanted. I'll wait for them to provide that, or I can proceed with just the removals which should fix the zoom-out issue.
 
-## Implementation Files
+## Files to Modify
 
-1. **src/index.css** - Add tablet-specific CSS fixes after the existing grid fix (around line 44)
-2. **src/pages/ContactPage.tsx** - Update grid breakpoints at lines 154, 223, 251
-3. **src/pages/GroupBookingsPage.tsx** - Update grid breakpoints at lines 248, 354
+| File | Action |
+|------|--------|
+| `src/index.css` | Remove lines 46-65 (tablet media query) |
+| `src/pages/ContactPage.tsx` | Remove inline style props from 3 grid containers |
+| `src/pages/GroupBookingsPage.tsx` | Remove inline style props from 2 grid containers |
 
-## Technical Details
+## Result
 
-### Why Hardware Acceleration Helps
-Adding `transform: translateZ(0)` forces the browser to use GPU rendering for the element, which:
-- Creates a new compositing layer
-- Bypasses some CSS Grid calculation quirks in mobile WebKit
-- Provides more consistent rendering across devices
+After these changes, tablets will display:
+- Normal zoom level (no microscopic content)
+- Single-column layouts on portrait tablets (safe default)
+- Two-column layouts only on larger screens (1024px+)
 
-### Why Larger Breakpoints Help
-Pushing the multi-column breakpoint from `sm` (640px) to `lg` (1024px) means:
-- Portrait tablets (768px-1024px) get single-column layout
-- Only landscape tablets and desktops get multi-column
-- Single-column is immune to grid calculation bugs
-
-### WebKit Prefixes
-The `-webkit-` prefixes ensure compatibility with:
-- Safari on iOS (all versions)
-- Older Android Chrome versions
-- Samsung Internet browser
-
-## Testing After Implementation
-
-1. Publish the changes
-2. Purge any CDN/Cloudflare cache
-3. Wait 3 minutes for propagation
-4. Close tablet browser completely
-5. Test in incognito mode: `almufaijer.com/#/contact`
-6. Test both portrait and landscape orientations
