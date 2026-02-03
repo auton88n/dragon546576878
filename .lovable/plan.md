@@ -1,112 +1,80 @@
 
-# Fix: Contact and Group Bookings Pages - Tablet Layout Issue
 
-## Problem Summary
-On tablet devices (landscape orientation, 1024px-1366px), the Contact Us and Corporate Bookings pages display incorrectly:
-- **Right side** (contact info cards, map, footer) renders correctly
-- **Left side** (contact form) appears completely blank/white
-- The page loads successfully, only the layout is broken
+# Fix: Contact and Group Bookings Pages - Container Class Mismatch
 
-## Root Cause Analysis
+## Problem Identified
 
-### Current Layout Structure (ContactPage.tsx)
+After thorough comparison of all pages, I found the **root cause** of the tablet layout issues on Contact and GroupBookings pages:
+
+### Working Pages (Index, About, Support)
+These use the standard Tailwind container:
 ```tsx
-<section className="py-16">
-  <div className="container max-w-7xl mx-auto">  // Missing px-4 padding
-    <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-      <Card className="... order-2 md:order-1">   // Contact Form
-      <div className="... order-1 md:order-2">    // Contact Info + Map
+<div className="container">
 ```
 
-### Identified Issues
+### Broken Pages (Contact, GroupBookings)
+These use a modified container with redundant/conflicting classes:
+```tsx
+<div className="container mx-auto px-4">
+```
 
-1. **Missing Container Padding**: The main content container uses `container max-w-7xl mx-auto` but lacks explicit `px-4` padding. On tablets, this can cause content to hit the edges and potentially collapse.
+## Why This Causes Issues
 
-2. **Order Swapping Confusion**: Using `order-2 md:order-1` and `order-1 md:order-2` may cause rendering issues on some tablet browsers, especially with CSS Grid.
+The Tailwind config already defines the container with:
+```typescript
+container: {
+  center: true,        // Handles centering (mx-auto is redundant)
+  padding: "2rem",     // 32px padding built-in
+}
+```
 
-3. **Container Max-Width Mismatch**: The `max-w-7xl` (1280px) combined with the Tailwind container config (`2xl: 1400px`) creates an inconsistency. On iPad landscape (1024px), the container should be fine, but the grid children might not have explicit widths.
-
-4. **Missing `min-w-0` on Grid Children**: CSS Grid items can overflow their containers without `min-w-0`, causing one column to push another off-screen.
+**The conflict:**
+- `mx-auto` duplicates what `center: true` already does
+- `px-4` (16px) overrides the configured `padding: "2rem"` (32px)
+- On tablets, this creates inconsistent spacing that causes layout collapse on some browsers
 
 ## Solution
 
-### Fix 1: Add Explicit Padding and Width Constraints
+Standardize all container usage across Contact and GroupBookings pages to match the working pages by removing `mx-auto px-4` from the container classes.
 
-**ContactPage.tsx** - Update the main content container:
-```tsx
-// Current
-<div className="container max-w-7xl mx-auto">
+### Files to Modify
 
-// Fixed
-<div className="container max-w-7xl mx-auto px-4">
-```
+**1. src/pages/ContactPage.tsx**
 
-### Fix 2: Add `min-w-0` to Grid Children
+| Section | Line | Current | Fixed |
+|---------|------|---------|-------|
+| Hero | 139 | `container mx-auto px-4` | `container` |
+| Info Cards | 153 | `container mx-auto px-4` | `container` |
+| Form | 179 | `container mx-auto px-4` | `container` |
+| Map | 309 | `container mx-auto px-4` | `container` |
 
-Prevent grid items from overflowing:
-```tsx
-// Current
-<Card className="border-border/50 shadow-lg order-2 md:order-1">
+**2. src/pages/GroupBookingsPage.tsx**
 
-// Fixed
-<Card className="border-border/50 shadow-lg order-2 md:order-1 min-w-0">
-
-// Current
-<div className="space-y-6 lg:space-y-8 order-1 md:order-2">
-
-// Fixed
-<div className="space-y-6 lg:space-y-8 order-1 md:order-2 min-w-0">
-```
-
-### Fix 3: Remove Order Swapping on Tablets
-
-The order swapping is causing visual confusion. For a cleaner layout on tablets:
-- Keep form first (natural order) on all screen sizes
-- This simplifies the CSS and prevents potential rendering bugs
-
-```tsx
-// Remove order classes entirely for simpler layout
-<Card className="border-border/50 shadow-lg min-w-0">
-<div className="space-y-6 lg:space-y-8 min-w-0">
-```
-
-### Fix 4: Apply Same Fixes to GroupBookingsPage
-
-The same container and grid issues exist in GroupBookingsPage. Apply:
-- Add `px-4` to containers
-- Add `min-w-0` to grid children where applicable
-
-## Files to Modify
-
-1. **src/pages/ContactPage.tsx**
-   - Add `px-4` to main content container (line 144)
-   - Add `min-w-0` to both grid children (lines 147, 213)
-
-2. **src/pages/GroupBookingsPage.tsx**
-   - Add `px-4` to section containers (lines 231, 251)
-   - Add `min-w-0` to benefit cards grid children if needed
+| Section | Line | Current | Fixed |
+|---------|------|---------|-------|
+| Success State | 183 | `container mx-auto px-4` | `container` |
+| Hero | 223 | `container mx-auto px-4` | `container` |
+| Benefits | 247 | `container mx-auto px-4` | `container` |
+| Form | 270 | `container mx-auto px-4` | `container` |
 
 ## Technical Details
 
-### Why `min-w-0` Works
-In CSS Grid/Flexbox, the default `min-width: auto` can cause items to refuse to shrink below their content size. Adding `min-w-0` allows items to shrink properly within the grid, preventing one column from pushing another off-screen.
+### Why `container` Alone Works
 
-### Why `px-4` is Needed
-The Tailwind `container` class uses responsive padding from the config, but combined with `max-w-7xl`, the explicit padding may be overridden. Adding `px-4` ensures consistent horizontal padding on all screen sizes.
+The Tailwind `container` class with the current configuration:
+- Sets responsive max-widths automatically
+- Centers the container horizontally (`center: true`)
+- Applies consistent 2rem (32px) horizontal padding
+- Works consistently across all viewport sizes including tablets
 
-### Tablet Viewport Reference
-- iPad (landscape): 1024px x 768px
-- iPad Pro 11" (landscape): 1194px x 834px  
-- iPad Pro 12.9" (landscape): 1366px x 1024px
+### Why the Extra Classes Cause Problems
 
-All these use `md:grid-cols-2` (triggers at 768px) so the 2-column layout should activate.
+1. **CSS Specificity Conflict**: When both `container` (with built-in padding) and `px-4` are applied, the explicit `px-4` wins due to CSS cascade order
+2. **Insufficient Padding**: 16px (`px-4`) vs 32px (`2rem`) means less breathing room on tablets
+3. **Browser Variance**: Some tablet browsers (especially WebKit-based) calculate widths differently when conflicting padding rules exist
+4. **Grid Children Affected**: Less container padding means grid children have less room, potentially causing overflow on 2-column layouts
 
-## Testing Checklist
-After implementation:
-- Test `/contact` on iPad landscape (1024x768) - both languages
-- Test `/contact` on iPad Pro landscape (1366x1024) - both languages
-- Test `/group-bookings` on same tablet viewports
-- Verify form column is visible on left
-- Verify contact info/map column is visible on right
-- Test RTL (Arabic) layout on tablets
-- Confirm no horizontal scrolling occurs
+## Implementation
+
+The fix requires 8 simple class changes - removing `mx-auto px-4` from container divs in both files.
+
