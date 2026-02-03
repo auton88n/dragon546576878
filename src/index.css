@@ -220,7 +220,7 @@ body::-webkit-scrollbar {
 }
 
 @layer components {
-  /* Safari-compatible transparent header */
+  /* Safari-compatible transparent header - no blur */
   .header-transparent {
     /* Fallback solid color for Safari */
     background-color: rgba(61, 46, 31, 0.2);
@@ -230,8 +230,6 @@ body::-webkit-scrollbar {
       rgba(61, 46, 31, 0.3) 0%,
       rgba(61, 46, 31, 0) 100%
     );
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
   }
 
   /* Safari-compatible solid header with explicit RGBA fallbacks */
