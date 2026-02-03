@@ -34,7 +34,7 @@ body::-webkit-scrollbar {
   overflow-x: hidden;
   max-width: 100vw;
   width: 100%;
-  min-width: 0; /* Changed from 100vw - allows grid children to shrink on Android */
+  min-width: 100%; /* Prevents shrinking on tablets */
 }
 
 /* Fix for Android tablets - ensure grid children don't overflow */
