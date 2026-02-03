@@ -1,74 +1,51 @@
 
-# Fix: Contact Us and Corporate Bookings Pages - Layout Issue
+# Fix 404 Errors on Direct Route Access
 
-## Problem Summary
-The Contact Us (`/contact`) and Corporate Bookings (`/group-bookings`) pages appear "small in corner" on tablet devices on the **published URL only**.
+## Problem
+When users navigate directly to `/contact` or `/group-bookings` (by typing the URL or refreshing the page), the server returns a 404 error because there is no physical file at those paths. The server doesn't know to serve `index.html` and let React Router handle the routing.
 
-## Root Cause Analysis
+## Root Cause
+This is a standard Single Page Application (SPA) routing issue. The React app uses client-side routing (React Router), but when a user directly accesses a URL like `/contact`:
 
-### Comparison of Page Structures
-
-| Page | Root Classes | Works? |
-|------|--------------|--------|
-| Index.tsx | `min-h-screen flex flex-col bg-background` | Yes |
-| BookingPage.tsx | `min-h-screen flex flex-col bg-background` | Yes |
-| TermsPage.tsx | `min-h-screen flex flex-col bg-background` | Yes |
-| ContactPage.tsx | `min-h-screen flex flex-col w-full bg-background` | Fixed (in preview) |
-| GroupBookingsPage.tsx | `min-h-screen flex flex-col w-full bg-background` | Fixed (in preview) |
-| AboutPage.tsx | `min-h-screen bg-background` | Missing structure |
-
-### What Was Already Fixed
-The code for ContactPage and GroupBookingsPage has already been updated with `flex flex-col w-full` classes in the previous change. The global CSS in `index.css` also has:
-
-```css
-html, body {
-  width: 100%;
-  min-width: 100%;
-  max-width: 100vw;
-}
-
-#root {
-  width: 100%;
-  min-width: 100vw;
-  max-width: 100vw;
-}
-```
-
-### Why Published Site Still Broken
-The **published URL** is serving an older cached version of the code. The fixes exist in the preview environment but have not been deployed to production yet.
+1. Browser requests `/contact` from the server
+2. Server looks for a file at `/contact/index.html` or `/contact.html`
+3. No such file exists - server returns 404
+4. React Router never gets a chance to handle the route
 
 ## Solution
+Add a `_redirects` file in the `public/` folder that tells the hosting server to redirect all non-file requests to `index.html`, allowing React Router to handle routing.
 
-### Step 1: Publish the Latest Changes
-Click "Publish" → "Update" in the Lovable interface to deploy the fixes that are already in the codebase:
-- Updated ContactPage.tsx with `flex flex-col w-full`
-- Updated GroupBookingsPage.tsx with `flex flex-col w-full`
-- Updated index.css with explicit width rules
+## Technical Implementation
 
-### Step 2: Fix AboutPage.tsx (Preventive)
-The AboutPage is missing the `flex flex-col` structure that all other pages have. Add it for consistency:
+### File to Create
 
-**Current:**
-```tsx
-<div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+**`public/_redirects`**
+```text
+/*    /index.html   200
 ```
 
-**Should be:**
-```tsx
-<div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
-```
+This single-line configuration:
+- Matches all routes (`/*`)
+- Serves `index.html` instead
+- Returns HTTP status 200 (not 301/302 redirect)
+- Allows React Router to handle all client-side routes
 
-### Step 3: Clear Browser Cache After Publishing
-After publishing, users need to clear their browser cache or hard refresh:
-- **Chrome Desktop**: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
-- **Chrome Tablet**: Settings → Privacy → Clear browsing data → Cached images and files
+### Why This Works
+- The `_redirects` file is recognized by Lovable's hosting infrastructure
+- It acts as a "catch-all" rule for any route that doesn't match a physical file
+- Static assets (JS, CSS, images) still load normally because they exist as actual files
+- All other paths serve `index.html`, which bootstraps React and React Router
 
-## Files to Modify
-1. **src/pages/AboutPage.tsx** - Add missing `flex flex-col` to root div (preventive fix)
+### PWA Consideration
+The project already has `navigateFallback: 'index.html'` in the PWA/Workbox config (line 47 of `vite.config.ts`), which helps with offline routing. However, this only works after the service worker is installed. The `_redirects` file handles the initial server-side routing.
 
-## Testing Checklist
-After publishing and clearing cache:
-- Test /contact on tablet (Arabic + English)
-- Test /group-bookings on tablet (Arabic + English)
-- Test /about on tablet (Arabic + English)
-- Verify pages fill full screen width with no blank areas
+## Files to Create
+1. `public/_redirects` - SPA fallback routing configuration
+
+## Testing After Implementation
+1. Click **Publish → Update** to deploy the changes
+2. Clear browser cache or use Incognito mode
+3. Navigate directly to `https://[your-domain]/contact` - should load Contact page
+4. Navigate directly to `https://[your-domain]/group-bookings` - should load Group Bookings page
+5. Refresh the page on any route - should stay on same page (not 404)
+6. All other routes should continue working normally
