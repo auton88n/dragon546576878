@@ -151,7 +151,7 @@ const ContactPage = () => {
       {/* Contact Info Cards */}
       <section className="py-12 bg-muted/30">
         <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4 max-w-5xl mx-auto" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4 max-w-5xl mx-auto">
             {contactInfo.map((info, index) => (
               <Card key={index} className="bg-card border-border/50">
                 <CardContent className="p-3 lg:p-4 text-center">
@@ -220,7 +220,7 @@ const ContactPage = () => {
                       aria-hidden="true"
                     />
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">{t('contact.form.name')} *</Label>
                         <Input
@@ -248,7 +248,7 @@ const ContactPage = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="phone">{t('contact.form.phone')}</Label>
                         <Input
