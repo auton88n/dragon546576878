@@ -1,89 +1,102 @@
 
-# Fix Tablet Layout Issue - Content Pushed to Far Right
+# Match Pages to Working Homepage Pattern
 
-## Problem Identified
+## Problem Analysis
 
-Based on the screenshot, the Contact and GroupBookings pages show:
-- A massive empty space on the left side
-- All content squeezed into the far right corner
-- The header is not visible at the top
+Based on the screenshot showing content pushed to the far right on tablets, and comparing with the working Index.tsx homepage, there's a key difference in the page wrapper structure.
 
-This is a **flexbox shrink issue** specific to tablet browsers (particularly on Android tablets with RTL mode). The `flex flex-col` wrapper combined with `min-width: 0` on `#root` is causing the content to collapse to minimum size.
-
-## Root Cause Analysis
-
-The issue is in **src/index.css** line 37:
-```css
-#root {
-  overflow-x: hidden;
-  max-width: 100vw;
-  width: 100%;
-  min-width: 0; /* THIS is causing the shrink on tablets */
-}
-```
-
-The `min-width: 0` was added to fix a different grid issue, but on RTL tablet browsers, it's allowing the root container to shrink below its natural width.
-
-## Solution
-
-### 1. Fix the `#root` styles in index.css
-
-Replace the problematic `min-width: 0` with proper tablet-safe styles:
-
-```css
-#root {
-  overflow-x: hidden;
-  max-width: 100vw;
-  width: 100%;
-  min-width: 100%; /* Changed from 0 - prevents shrinking on tablets */
-}
-```
-
-### 2. Add explicit full-width to page wrappers
-
-Update ContactPage.tsx and GroupBookingsPage.tsx to add `w-full` to their main wrapper:
-
-**Before:**
+**Working Homepage (Index.tsx line 71):**
 ```tsx
-<div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+<div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
 ```
 
-**After:**
+**Broken Pages (Contact/GroupBookings):**
 ```tsx
 <div className="min-h-screen w-full flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
 ```
 
-## Files to Modify
+The `w-full` class we added in the last fix is interacting badly with the `min-width: 100%` on `#root` in the CSS, causing layout issues on tablets.
 
-| File | Change |
-|------|--------|
-| `src/index.css` | Line 37: Change `min-width: 0` to `min-width: 100%` |
-| `src/pages/ContactPage.tsx` | Line 124: Add `w-full` to wrapper div |
-| `src/pages/GroupBookingsPage.tsx` | Line 208: Add `w-full` to wrapper div |
+## Solution
 
-## Technical Details
+Match the EXACT pattern from the working homepage:
 
-### Why This Fix Works
+### File Changes
 
-1. **`min-width: 100%`** on `#root`:
-   - Prevents the root from shrinking below viewport width
-   - Still allows overflow-x handling to work
-   - Compatible with RTL layouts
+| File | Line(s) | Change |
+|------|---------|--------|
+| `src/pages/ContactPage.tsx` | 124 | Remove `w-full` from wrapper div |
+| `src/pages/GroupBookingsPage.tsx` | 180, 208 | Remove `w-full` from both wrapper divs |
+| `src/index.css` | 37 | Change `min-width: 100%` back to something safer |
 
-2. **`w-full`** on page wrappers:
-   - Ensures the flex container takes full width
-   - Prevents flexbox from calculating a smaller width
-   - Works on both LTR and RTL layouts
+### 1. ContactPage.tsx (Line 124)
 
-### Why `min-width: 0` Caused the Issue
+**From:**
+```tsx
+<div className="min-h-screen w-full flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+```
 
-On tablet browsers (especially Android WebView), when a flex container has `min-width: 0`, the browser may calculate the minimum content width rather than the viewport width. In RTL mode, this calculation can go wrong, causing the content to collapse.
+**To:**
+```tsx
+<div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+```
 
-## Testing Plan
+### 2. GroupBookingsPage.tsx (Lines 180 and 208)
 
-After deploying:
+**From:**
+```tsx
+<div className="min-h-screen w-full flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+```
+
+**To:**
+```tsx
+<div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+```
+
+### 3. index.css (Line 37)
+
+The `min-width: 100%` combined with RTL may be causing issues. Simplify to match a stable state:
+
+**From:**
+```css
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  min-width: 100%; /* Prevents shrinking on tablets */
+}
+```
+
+**To:**
+```css
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+```
+
+Remove the `min-width` entirely - the `width: 100%` already ensures full width.
+
+## Container Pattern Already Correct
+
+The container usage is already following the correct pattern:
+- `<div className="container">` ✓ (already clean in both pages)
+- Using `max-w-*xl mx-auto` inside containers ✓
+
+No changes needed to container usage.
+
+## Summary of Changes
+
+1. **Remove `w-full`** from ContactPage and GroupBookingsPage wrappers
+2. **Remove `min-width: 100%`** from `#root` in index.css
+3. This makes both pages match the working Index.tsx pattern exactly
+
+## Testing
+
+After publishing:
 1. Clear browser cache on tablet
-2. Navigate to almufaijer.com/contact
+2. Navigate to `/contact` and `/group-bookings`
 3. Verify content spans full width
-4. Test in both portrait and landscape orientations
-5. Test GroupBookingsPage as well
+4. Verify header is visible at top
+5. Test in both Arabic (RTL) and English (LTR) modes
