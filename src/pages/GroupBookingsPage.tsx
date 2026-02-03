@@ -180,7 +180,7 @@ const GroupBookingsPage = () => {
       <div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <Header />
         <main className="flex-1 pt-24 pb-16">
-          <div className="container mx-auto px-4">
+          <div className="container">
             <div className="max-w-2xl mx-auto text-center py-16">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-10 h-10 text-green-600" />
@@ -220,7 +220,7 @@ const GroupBookingsPage = () => {
           />
         </div>
 
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
               <Building2 className="w-5 h-5" />
@@ -244,7 +244,7 @@ const GroupBookingsPage = () => {
 
       {/* Benefits Section */}
       <section className="py-12 bg-muted/30">
-        <div className="container mx-auto px-4">
+        <div className="container">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4 max-w-6xl mx-auto">
             {benefits.map((benefit, index) => (
               <Card key={index} className="bg-card border-border/50 hover:shadow-lg transition-shadow">
@@ -267,7 +267,7 @@ const GroupBookingsPage = () => {
 
       {/* Form Section */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
+        <div className="container">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-10">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
