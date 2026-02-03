@@ -142,9 +142,9 @@ const ContactPage = () => {
       {/* Main Content */}
       <section className="py-16">
         <div className="container max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
-            <Card className="border-border/50 shadow-lg min-w-0">
+            <Card className="border-border/50 shadow-lg min-w-0 w-full">
               <CardHeader>
                 <CardTitle className="text-2xl">
                   {t('contact.form.title')}
@@ -210,7 +210,7 @@ const ContactPage = () => {
             </Card>
 
             {/* Contact Information & Map */}
-            <div className="space-y-6 lg:space-y-8 min-w-0">
+            <div className="space-y-6 lg:space-y-8 min-w-0 w-full">
               {/* Contact Cards */}
               <div className="grid grid-cols-2 gap-3 lg:gap-4">
                 {contactInfo.map((info, index) => <Card key={index} className="border-border/50">
