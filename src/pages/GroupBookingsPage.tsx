@@ -305,7 +305,7 @@ const GroupBookingsPage = () => {
                     </div>
 
                     {/* Email & Phone */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ display: 'grid' }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="email">
                           {isArabic ? 'البريد الإلكتروني' : 'Email'} *

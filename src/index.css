@@ -694,33 +694,3 @@ svg.lucide {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
-
-/* Harmony OS / Huawei browser CSS Grid fallback */
-@supports not (min-width: 0) {
-  .grid {
-    display: flex;
-    flex-wrap: wrap;
-  }
-}
-
-/* Force grid children to be visible on all browsers */
-.grid > * {
-  min-width: 0;
-  max-width: 100%;
-}
-
-/* Tablet landscape grid fix for Harmony OS */
-@media screen and (min-width: 768px) and (max-width: 1400px) and (orientation: landscape) {
-  .md\:grid-cols-2 > * {
-    flex: 1 1 calc(50% - 1rem);
-    min-width: 0;
-    max-width: 50%;
-    width: 50%;
-  }
-  
-  /* Ensure grid container uses proper display */
-  .md\:grid-cols-2 {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
