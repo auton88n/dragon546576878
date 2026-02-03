@@ -1,71 +1,89 @@
 
+# Fix Tablet Layout Issue - Content Pushed to Far Right
 
-# Remove Tablet CSS Fixes Causing Zoom-Out Bug
+## Problem Identified
 
-## Problem
+Based on the screenshot, the Contact and GroupBookings pages show:
+- A massive empty space on the left side
+- All content squeezed into the far right corner
+- The header is not visible at the top
 
-The hardware acceleration and CSS Grid fixes we added are causing a massive zoom-out bug on real tablets, making content microscopic and unusable.
+This is a **flexbox shrink issue** specific to tablet browsers (particularly on Android tablets with RTL mode). The `flex flex-col` wrapper combined with `min-width: 0` on `#root` is causing the content to collapse to minimum size.
 
-## What Will Be Removed
+## Root Cause Analysis
 
-### 1. Remove Tablet Media Query from index.css (lines 46-65)
-
-Delete this entire block:
+The issue is in **src/index.css** line 37:
 ```css
-/* Tablet-specific CSS Grid fixes (768px - 1366px) */
-@media (min-width: 768px) and (max-width: 1366px) {
-  .grid {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: -ms-flexbox;
-    display: grid;
-  }
-  
-  .grid > * {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    overflow: hidden;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-  }
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  min-width: 0; /* THIS is causing the shrink on tablets */
 }
 ```
 
-### 2. Remove Hardware Acceleration Inline Styles
+The `min-width: 0` was added to fix a different grid issue, but on RTL tablet browsers, it's allowing the root container to shrink below its natural width.
 
-**ContactPage.tsx** - Remove `style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}` from:
-- Line 154: Info cards grid
-- Line 223: Form fields grid (name/email)
-- Line 251: Form fields grid (phone/subject)
+## Solution
 
-**GroupBookingsPage.tsx** - Remove from:
-- Line 248: Benefits grid
-- Line 354: Form fields grid (email/phone)
+### 1. Fix the `#root` styles in index.css
 
-### 3. Keep the Simpler Breakpoints
+Replace the problematic `min-width: 0` with proper tablet-safe styles:
 
-These stay unchanged:
-- `lg:grid-cols-2` for form fields (already correct)
-- `md:grid-cols-2 lg:grid-cols-5` for benefits (already correct)
+```css
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  min-width: 100%; /* Changed from 0 - prevents shrinking on tablets */
+}
+```
 
-## What Will Be Added
+### 2. Add explicit full-width to page wrappers
 
-The user's message was cut off before they could specify the simple CSS fix they wanted. I'll wait for them to provide that, or I can proceed with just the removals which should fix the zoom-out issue.
+Update ContactPage.tsx and GroupBookingsPage.tsx to add `w-full` to their main wrapper:
+
+**Before:**
+```tsx
+<div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+```
+
+**After:**
+```tsx
+<div className="min-h-screen w-full flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+```
 
 ## Files to Modify
 
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/index.css` | Remove lines 46-65 (tablet media query) |
-| `src/pages/ContactPage.tsx` | Remove inline style props from 3 grid containers |
-| `src/pages/GroupBookingsPage.tsx` | Remove inline style props from 2 grid containers |
+| `src/index.css` | Line 37: Change `min-width: 0` to `min-width: 100%` |
+| `src/pages/ContactPage.tsx` | Line 124: Add `w-full` to wrapper div |
+| `src/pages/GroupBookingsPage.tsx` | Line 208: Add `w-full` to wrapper div |
 
-## Result
+## Technical Details
 
-After these changes, tablets will display:
-- Normal zoom level (no microscopic content)
-- Single-column layouts on portrait tablets (safe default)
-- Two-column layouts only on larger screens (1024px+)
+### Why This Fix Works
 
+1. **`min-width: 100%`** on `#root`:
+   - Prevents the root from shrinking below viewport width
+   - Still allows overflow-x handling to work
+   - Compatible with RTL layouts
+
+2. **`w-full`** on page wrappers:
+   - Ensures the flex container takes full width
+   - Prevents flexbox from calculating a smaller width
+   - Works on both LTR and RTL layouts
+
+### Why `min-width: 0` Caused the Issue
+
+On tablet browsers (especially Android WebView), when a flex container has `min-width: 0`, the browser may calculate the minimum content width rather than the viewport width. In RTL mode, this calculation can go wrong, causing the content to collapse.
+
+## Testing Plan
+
+After deploying:
+1. Clear browser cache on tablet
+2. Navigate to almufaijer.com/contact
+3. Verify content spans full width
+4. Test in both portrait and landscape orientations
+5. Test GroupBookingsPage as well
