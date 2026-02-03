@@ -216,7 +216,7 @@ const ContactPage = () => {
                       tabIndex={-1}
                       value={honeypot}
                       onChange={(e) => setHoneypot(e.target.value)}
-                      className="absolute -left-[9999px] opacity-0 pointer-events-none"
+                      className="sr-only"
                       aria-hidden="true"
                     />
 
