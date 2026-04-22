@@ -216,7 +216,7 @@ const AdminPage = () => {
   return <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <StaffHeader title="Dashboard" titleAr="لوحة التحكم" showNotifications />
 
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={false}>
         <div className="flex-1 flex w-full pt-20">
           <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
           <SidebarInset className="flex-1 min-w-0">
