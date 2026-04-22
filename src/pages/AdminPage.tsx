@@ -23,10 +23,12 @@ import EmailPreviewDialog from '@/components/admin/EmailPreviewDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { lazyWithPreload } from '@/lib/lazyWithPreload';
 import StalledPaymentsAlert from '@/components/admin/StalledPaymentsAlert';
+import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+import AdminSidebar from '@/components/admin/AdminSidebar';
 
 type Booking = Tables<'bookings'>;
 
