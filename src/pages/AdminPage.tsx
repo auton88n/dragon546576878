@@ -387,8 +387,11 @@ const AdminPage = () => {
               </Suspense>
             </TabsContent>
           </Tabs>
+              </div>
+            </main>
+          </SidebarInset>
         </div>
-      </main>
+      </SidebarProvider>
 
       {/* Powered by AYN Footer */}
       <PoweredByAYN className="border-t border-border" />
