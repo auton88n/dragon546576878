@@ -213,16 +213,15 @@ const AdminPage = () => {
     color: 'text-emerald-600',
     bgColor: 'bg-emerald-500/15'
   }];
-  return <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <StaffHeader title="Dashboard" titleAr="لوحة التحكم" showNotifications />
-
+  return <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <SidebarProvider defaultOpen={false}>
-        <div className="flex-1 flex w-full pt-20">
+        <div className="min-h-screen flex w-full">
           <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-          <SidebarInset className="flex-1 min-w-0">
-            <main className="flex-1 pb-4 px-3 sm:px-4 md:px-6">
+          <SidebarInset className="flex-1 min-w-0 flex flex-col bg-background">
+            <StaffHeader title="Dashboard" titleAr="لوحة التحكم" showNotifications />
+            <main className="flex-1 pb-4 px-3 sm:px-4 md:px-6 pt-20">
               <div className="container px-0">
-                {/* Mobile/Toggle Trigger */}
+                {/* Sidebar Toggle */}
                 <div className="flex items-center gap-2 mb-4">
                   <SidebarTrigger className="text-foreground" />
                 </div>
