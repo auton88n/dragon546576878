@@ -219,8 +219,8 @@ const AdminPage = () => {
           <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
           <SidebarInset className="flex-1 min-w-0 flex flex-col bg-background">
             <StaffHeader title="Dashboard" titleAr="لوحة التحكم" showNotifications />
-            <main className="flex-1 pb-4 px-3 sm:px-4 md:px-6 pt-20">
-              <div className="container px-0">
+            <main className="flex-1 pb-4 px-3 sm:px-4 md:px-6 pt-20 w-full min-w-0 overflow-x-hidden">
+              <div className="w-full max-w-[1400px] mx-auto">
                 {/* Sidebar Toggle */}
                 <div className="flex items-center gap-2 mb-4">
                   <SidebarTrigger className="text-foreground" />
