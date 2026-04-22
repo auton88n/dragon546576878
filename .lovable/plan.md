@@ -1,58 +1,85 @@
 
-
 ## Goal
-Fix the admin sidebar so it is a **narrow, properly-placed icon strip** (like the reference Supabase look) instead of the oversized, full-width dark panel currently overlapping the page.
+Fix the “large empty space on the left / content pushed to the far right” issue that happens **only in Arabic (RTL)** on **Contact** and **Corporate/Company Bookings** pages.
 
-## What's wrong now
-Looking at the screenshot:
-1. The sidebar is **way too wide** — it takes ~half the screen instead of a thin icon column.
-2. It **overlaps the StaffHeader and content** instead of sitting beside them.
-3. It **starts below the header** (top portion is cut by the header bar).
-4. In Arabic (RTL) it's positioned correctly on the right, but the width and stacking are wrong.
+## What I found (why it happens only in Arabic)
+Both **ContactPage** and **GroupBookingsPage** include a “honeypot” anti-spam input that is hidden like this:
 
-Root cause: `SidebarProvider` is wrapped *inside* the page content (after `StaffHeader`) instead of around the whole layout, and the Sidebar is using its default expanded width (`16rem`) because `defaultOpen={false}` alone doesn't override the icon-mode width when the surrounding layout doesn't give it the icon-strip CSS variables. The sidebar is also rendering as an `offcanvas`-style overlay rather than an inline icon rail.
-
-## Fix
-
-### 1. `src/pages/AdminPage.tsx` — restructure layout
-- Wrap the **entire admin page** (header + content) with `SidebarProvider` so the sidebar participates in the page flex layout.
-- Use a top-level flex row: `<SidebarProvider><div className="min-h-screen flex w-full">…</div></SidebarProvider>`.
-- Put `<AdminSidebar />` as the first flex child.
-- Put `<SidebarInset>` (or a plain `flex-1 flex-col` div) containing `StaffHeader` + dashboard content as the second child.
-- Move the `SidebarTrigger` into the StaffHeader area (or a thin top bar above the stats) so users can expand/collapse.
-- Keep `defaultOpen={false}` so it starts collapsed to the narrow icon rail.
-
-### 2. `src/components/admin/AdminSidebar.tsx` — enforce narrow width
-- Keep `collapsible="icon"` (this gives the ~3rem icon-only width when collapsed).
-- Remove any `w-*` overrides on the `<Sidebar>` element so it uses the built-in `--sidebar-width-icon` (3rem) when collapsed and `--sidebar-width` (16rem) only when expanded.
-- Ensure menu buttons stay `h-9 w-9` centered icons (already done) so the rail looks tight.
-- Keep group dividers and the heritage-brown background.
-
-### 3. Result
-```text
-┌────────────────────────────────────────────────────┐
-│  StaffHeader (full width, with sidebar trigger)    │
-├──┬─────────────────────────────────────────────────┤
-│🎫│  Stats cards                                    │
-│📊│                                                 │
-│──│  Stalled payments alert                         │
-│🏢│                                                 │
-│✉️│  Active panel content                           │
-│🎧│                                                 │
-│──│                                                 │
-│💳│                                                 │
-│⚙️│                                                 │
-└──┴─────────────────────────────────────────────────┘
+```tsx
+className="absolute -left-[9999px] opacity-0 pointer-events-none"
 ```
-- Narrow ~48px icon rail on the left (right in Arabic)
-- Sits inline with the page, no overlap
-- Click the trigger in the header to expand to full labels, click again to collapse
 
-## Files Touched
-| File | Change |
-|------|--------|
-| `src/pages/AdminPage.tsx` | Move `SidebarProvider` to wrap the whole page; restructure into flex row with sidebar + inset; place `SidebarTrigger` in the header bar |
-| `src/components/admin/AdminSidebar.tsx` | Remove any width overrides so the built-in icon-rail width (3rem) applies when collapsed |
+That huge negative `left` can create an extremely wide invisible layout area. On many browsers you won’t notice it, but on some **tablet browsers in RTL mode**, the page can start at the “rightmost” horizontal scroll position. The result looks exactly like what you described:
+- big blank space on the left
+- the real content appears squeezed to the far right
+- switching to English (LTR) “fixes” it because LTR scroll origin behavior differs
 
-No other files affected. All panels, hooks, and functionality remain untouched.
+This also explains why the **homepage works**: it doesn’t have an element pushed 9999px off-screen.
 
+## Solution (clean + proven)
+Keep the honeypot feature, but hide it using a method that **does not create horizontal overflow**.
+
+### Change approach
+Replace the honeypot’s `-left-[9999px]` technique with Tailwind’s built-in `sr-only` (screen-reader-only) utility, which hides without creating a giant offscreen box.
+
+This is the safest, simplest fix and aligns with your request to keep things clean and avoid “hacky” layout workarounds.
+
+## Exact code changes to make
+
+### 1) Contact page
+File: `src/pages/ContactPage.tsx`
+
+Find the honeypot input and change:
+
+**FROM**
+```tsx
+className="absolute -left-[9999px] opacity-0 pointer-events-none"
+```
+
+**TO**
+```tsx
+className="sr-only"
+```
+
+(We keep the existing `tabIndex={-1}` and `aria-hidden="true"`.)
+
+### 2) Corporate/Company bookings page
+File: `src/pages/GroupBookingsPage.tsx`
+
+Do the same honeypot change:
+
+**FROM**
+```tsx
+className="absolute -left-[9999px] opacity-0 pointer-events-none"
+```
+
+**TO**
+```tsx
+className="sr-only"
+```
+
+## Why this should fix the RTL spacing instantly
+- Removes the main source of **accidental horizontal overflow**
+- Prevents RTL browsers from “starting” the page at a weird horizontal scroll offset
+- Keeps spam protection intact
+- No transforms, no hardware acceleration, no WebKit-specific hacks
+
+## Testing checklist (important)
+1. On the actual tablet (the one showing the bug), switch to **Arabic**.
+2. Open:
+   - `/contact`
+   - `/group-bookings`
+3. Confirm:
+   - No empty-left spacing
+   - Content is centered normally
+   - No horizontal “shift” after load
+4. Rotate tablet (portrait/landscape) and re-check.
+5. Submit each form once to ensure nothing broke:
+   - Normal submission still works
+   - Honeypot still blocks submissions if filled
+
+## If it still happens after this (fallback plan)
+If your tablet still shows spacing after removing the 9999px offscreen element, the next likely culprit would be another element causing horizontal overflow in RTL (e.g., a wide popover/calendar). In that case, we’ll:
+- quickly identify the overflowing element (by temporarily highlighting overflow in dev)
+- apply a targeted fix (like `max-w-full`, `overflow-x-clip` on a specific wrapper, or constraining the popover width)
+But the honeypot fix is the highest-probability cause because it appears in exactly the two pages that break.

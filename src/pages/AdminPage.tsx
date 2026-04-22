@@ -23,12 +23,10 @@ import EmailPreviewDialog from '@/components/admin/EmailPreviewDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { lazyWithPreload } from '@/lib/lazyWithPreload';
 import StalledPaymentsAlert from '@/components/admin/StalledPaymentsAlert';
-import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
-import AdminSidebar from '@/components/admin/AdminSidebar';
 
 type Booking = Tables<'bookings'>;
 
@@ -88,7 +86,6 @@ const AdminPage = () => {
   const [exporting, setExporting] = useState(false);
   const [sendingReminders, setSendingReminders] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('bookings');
   const handleViewDetails = (booking: Booking) => {
     setSelectedBooking(booking);
     setDetailsOpen(true);
@@ -213,18 +210,11 @@ const AdminPage = () => {
     color: 'text-emerald-600',
     bgColor: 'bg-emerald-500/15'
   }];
-  return <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <SidebarProvider defaultOpen={false}>
-        <div className="min-h-screen flex w-full">
-          <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-          <SidebarInset className="flex-1 min-w-0 flex flex-col bg-background">
-            <StaffHeader title="Dashboard" titleAr="لوحة التحكم" showNotifications />
-            <main className="flex-1 pb-4 px-3 sm:px-4 md:px-6 pt-20 w-full min-w-0 overflow-x-hidden">
-              <div className="w-full max-w-[1400px] mx-auto">
-                {/* Sidebar Toggle */}
-                <div className="flex items-center gap-2 mb-4">
-                  <SidebarTrigger className="text-foreground" />
-                </div>
+  return <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <StaffHeader title="Dashboard" titleAr="لوحة التحكم" showNotifications />
+
+      <main className="flex-1 pt-20 pb-4 px-3 sm:px-4 md:px-6">
+        <div className="container px-0">
           {/* Quick Actions */}
           <div className="flex justify-end rtl:justify-start gap-2 mb-4">
             <Link to="/scan">
@@ -262,8 +252,40 @@ const AdminPage = () => {
 
 
 
-          {/* Tabs Content (navigation handled by sidebar) */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" activationMode="manual">
+          {/* Tabs Navigation - Modern pill-style with grouping */}
+          <Tabs defaultValue="bookings" className="space-y-6" activationMode="manual">
+            <div className="flex justify-center">
+              <TabsList className="inline-flex bg-gradient-to-r from-background via-card to-background border border-accent/30 rounded-2xl p-1.5 gap-1 shadow-lg shadow-accent/10 rtl:[direction:rtl]">
+                <TabsTrigger value="bookings" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
+                  <Ticket className="h-4 w-4" />
+                  {isArabic ? 'الحجوزات' : 'Bookings'}
+                </TabsTrigger>
+                <TabsTrigger value="reports" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
+                  <BarChart3 className="h-4 w-4" />
+                  {isArabic ? 'التقارير' : 'Reports'}
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
+                  <Settings className="h-4 w-4" />
+                  {isArabic ? 'الإعدادات' : 'Settings'}
+                </TabsTrigger>
+                <TabsTrigger value="groups" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
+                  <Building2 className="h-4 w-4" />
+                  {isArabic ? 'الشركات' : 'Corporate'}
+                </TabsTrigger>
+                <TabsTrigger value="messages" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
+                  <Mail className="h-4 w-4" />
+                  {isArabic ? 'الرسائل' : 'Messages'}
+                </TabsTrigger>
+                <TabsTrigger value="ayn-support" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
+                  <Headset className="h-4 w-4" />
+                  {isArabic ? 'دعم AYN' : 'Support'}
+                </TabsTrigger>
+                <TabsTrigger value="refunds" className="gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/70 dark:hover:bg-white/10 hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/90 data-[state=active]:to-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=active]:shadow-accent/25 transition-all duration-200 ease-out rtl:flex-row-reverse">
+                  <CreditCard className="h-4 w-4" />
+                  {isArabic ? 'الاسترداد' : 'Refunds'}
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Bookings Tab */}
             <TabsContent value="bookings">
@@ -386,11 +408,8 @@ const AdminPage = () => {
               </Suspense>
             </TabsContent>
           </Tabs>
-              </div>
-            </main>
-          </SidebarInset>
         </div>
-      </SidebarProvider>
+      </main>
 
       {/* Powered by AYN Footer */}
       <PoweredByAYN className="border-t border-border" />
