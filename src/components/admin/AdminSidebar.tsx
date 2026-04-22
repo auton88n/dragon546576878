@@ -4,15 +4,11 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader,
-  useSidebar,
 } from '@/components/ui/sidebar';
 import { useLanguage } from '@/hooks/useLanguage';
-import Logo from '@/components/shared/Logo';
 import { cn } from '@/lib/utils';
 
 interface AdminSidebarProps {
@@ -23,61 +19,67 @@ interface AdminSidebarProps {
 const AdminSidebar = ({ activeTab, onTabChange }: AdminSidebarProps) => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
-  const { state } = useSidebar();
-  const collapsed = state === 'collapsed';
 
-  const items = [
-    { value: 'bookings', icon: Ticket, labelEn: 'Bookings', labelAr: 'الحجوزات' },
-    { value: 'reports', icon: BarChart3, labelEn: 'Reports', labelAr: 'التقارير' },
-    { value: 'settings', icon: Settings, labelEn: 'Settings', labelAr: 'الإعدادات' },
-    { value: 'groups', icon: Building2, labelEn: 'Corporate', labelAr: 'الشركات' },
-    { value: 'messages', icon: Mail, labelEn: 'Messages', labelAr: 'الرسائل' },
-    { value: 'ayn-support', icon: Headset, labelEn: 'Support', labelAr: 'دعم AYN' },
-    { value: 'refunds', icon: CreditCard, labelEn: 'Refunds', labelAr: 'الاسترداد' },
+  // Grouped to mirror the Supabase reference (dividers between groups)
+  const groups = [
+    [
+      { value: 'bookings', icon: Ticket, labelEn: 'Bookings', labelAr: 'الحجوزات' },
+      { value: 'reports', icon: BarChart3, labelEn: 'Reports', labelAr: 'التقارير' },
+    ],
+    [
+      { value: 'groups', icon: Building2, labelEn: 'Corporate', labelAr: 'الشركات' },
+      { value: 'messages', icon: Mail, labelEn: 'Messages', labelAr: 'الرسائل' },
+      { value: 'ayn-support', icon: Headset, labelEn: 'Support', labelAr: 'دعم AYN' },
+    ],
+    [
+      { value: 'refunds', icon: CreditCard, labelEn: 'Refunds', labelAr: 'الاسترداد' },
+      { value: 'settings', icon: Settings, labelEn: 'Settings', labelAr: 'الإعدادات' },
+    ],
   ];
 
   return (
-    <Sidebar collapsible="icon" className="border-accent/30">
-      <SidebarHeader className="border-b border-border/50 p-4">
-        <div className={cn('flex items-center', collapsed ? 'justify-center' : 'justify-start')}>
-          <Logo />
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          {!collapsed && (
-            <SidebarGroupLabel>
-              {isArabic ? 'القائمة' : 'Navigation'}
-            </SidebarGroupLabel>
-          )}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => {
-                const isActive = activeTab === item.value;
-                const Icon = item.icon;
-                const label = isArabic ? item.labelAr : item.labelEn;
-                return (
-                  <SidebarMenuItem key={item.value}>
-                    <SidebarMenuButton
-                      tooltip={label}
-                      isActive={isActive}
-                      onClick={() => onTabChange(item.value)}
-                      className={cn(
-                        'transition-all',
-                        isActive
-                          ? 'gradient-gold text-accent-foreground font-medium shadow-sm data-[active=true]:gradient-gold data-[active=true]:text-accent-foreground hover:gradient-gold hover:text-accent-foreground'
-                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                      )}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-border/40 [&>div]:bg-sidebar"
+    >
+      <SidebarContent className="bg-sidebar py-3 gap-0">
+        {groups.map((items, gIdx) => (
+          <div key={gIdx}>
+            <SidebarGroup className="py-1">
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-1">
+                  {items.map((item) => {
+                    const isActive = activeTab === item.value;
+                    const Icon = item.icon;
+                    const label = isArabic ? item.labelAr : item.labelEn;
+                    return (
+                      <SidebarMenuItem key={item.value}>
+                        <SidebarMenuButton
+                          tooltip={label}
+                          isActive={isActive}
+                          onClick={() => onTabChange(item.value)}
+                          className={cn(
+                            'h-9 w-9 mx-auto justify-center rounded-md p-0 transition-colors',
+                            '[&>svg]:size-5 [&>span:last-child]:sr-only',
+                            isActive
+                              ? 'bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                              : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                          )}
+                        >
+                          <Icon />
+                          <span>{label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            {gIdx < groups.length - 1 && (
+              <div className="mx-3 my-2 h-px bg-sidebar-border/60" />
+            )}
+          </div>
+        ))}
       </SidebarContent>
     </Sidebar>
   );
