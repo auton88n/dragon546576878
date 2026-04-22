@@ -40,7 +40,7 @@ const AdminSidebar = ({ activeTab, onTabChange }: AdminSidebarProps) => {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-border/40 [&>div]:bg-sidebar [&>div]:!top-16 [&>div]:!h-[calc(100svh-4rem)]"
+      className="border-r border-border/40 [&>div:first-child]:!h-[calc(100svh-4rem)] [&>div:nth-child(2)]:!top-16 [&>div:nth-child(2)]:!h-[calc(100svh-4rem)]"
     >
       <SidebarContent className="bg-sidebar py-3 gap-0">
         {groups.map((items, gIdx) => (
