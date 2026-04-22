@@ -59,23 +59,18 @@ const AdminSidebar = ({ activeTab, onTabChange }: AdminSidebarProps) => {
                 return (
                   <SidebarMenuItem key={item.value}>
                     <SidebarMenuButton
-                      asChild
                       tooltip={label}
                       isActive={isActive}
+                      onClick={() => onTabChange(item.value)}
+                      className={cn(
+                        'transition-all',
+                        isActive
+                          ? 'gradient-gold text-accent-foreground font-medium shadow-sm data-[active=true]:gradient-gold data-[active=true]:text-accent-foreground hover:gradient-gold hover:text-accent-foreground'
+                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                      )}
                     >
-                      <button
-                        type="button"
-                        onClick={() => onTabChange(item.value)}
-                        className={cn(
-                          'flex items-center gap-2 w-full transition-all',
-                          isActive
-                            ? 'gradient-gold text-accent-foreground font-medium shadow-md shadow-accent/25'
-                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                        )}
-                      >
-                        <Icon className="h-4 w-4 shrink-0" />
-                        {!collapsed && <span className="truncate">{label}</span>}
-                      </button>
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
