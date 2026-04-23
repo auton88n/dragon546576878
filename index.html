@@ -4,9 +4,7 @@
 <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     
-    <!-- Moyasar Payment SDK - Official v2.2.5 from jsDelivr -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.css" />
-    <script src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.5/dist/moyasar.umd.min.js"></script>
+    <!-- Moyasar Payment SDK is loaded on demand via src/lib/loadMoyasarSdk.ts (only on payment pages) -->
     <title>سوق المفيجر</title>
     
     <!-- iOS Safari PWA Support -->
@@ -23,9 +21,8 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="description" content="Experience authentic Saudi heritage at Souq Almufaijer in the enchanting Tuwayq Mountains">
     
-    <!-- Preload critical hero images -->
+    <!-- Preload critical homepage hero only -->
     <link rel="preload" as="image" href="/images/hero-heritage-new.webp" type="image/webp" fetchpriority="high" />
-    <link rel="preload" as="image" href="/images/about-hero-tuwayq.webp" type="image/webp" />
     <meta name="author" content="Souq Almufaijer" />
 
     <!-- DNS Prefetch for external resources -->
@@ -36,8 +33,7 @@
     <!-- Preconnect for faster font loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Preconnect for faster Moyasar SDK loading -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <!-- Moyasar SDK is dynamically injected on payment pages; jsDelivr already in dns-prefetch above -->
     
     <!-- Heritage Fonts - Optimized with fewer weights and font-display swap -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">

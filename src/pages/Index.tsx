@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePackages } from '@/hooks/usePackages';
@@ -46,7 +47,7 @@ const Index = () => {
   const closeTime = formatTime(settings.operatingHours.closeTime, isArabic);
   const hoursDisplay = `${openTime} - ${closeTime}`;
   
-  const features = [{
+  const features = useMemo(() => [{
     icon: Landmark,
     image: featureHeritage,
     titleAr: 'التجربة التراثية',
@@ -67,7 +68,7 @@ const Index = () => {
     titleEn: 'Family Friendly',
     descAr: 'مناسبة للعائلات مع أنشطة لجميع الأعمار',
     descEn: 'Suitable for families with activities for all ages'
-  }];
+  }], []);
   return <div className={`min-h-screen flex flex-col bg-background ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header />
 
