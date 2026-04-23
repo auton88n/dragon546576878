@@ -245,7 +245,7 @@ const AdminPage = () => {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 rtl:[direction:rtl]">
-            {statsCards.map((stat, index) => <StatsCard key={index} {...stat} loading={statsLoading || refreshingStats} />)}
+            {statsCards.map((stat, index) => <StatsCard key={index} {...stat} loading={false} />)}
           </div>
 
           {/* Stalled Payments Alert - Real-time notifications */}
