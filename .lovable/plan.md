@@ -1,81 +1,70 @@
 
 
-# Fix Hostinger 404 on Page Refresh — Add `.htaccess` for SPA Routing
+# Make the App Fast — Fix Heavy Images + Render Bottlenecks
 
-## Problem
-Your app uses React Router (`BrowserRouter`), so URLs like `/contact`, `/admin`, `/group-bookings` are handled by JavaScript in the browser. But when you **refresh** the page or **type the URL directly**, Hostinger's Apache server tries to find a real file at that path. Since there's no `/contact/index.html` file on disk, Apache returns **404 Not Found**.
+## Diagnosis (what's actually slowing the app down)
 
-The existing `public/_redirects` file is for **Netlify only** — Hostinger ignores it completely. Hostinger uses Apache, which reads `.htaccess` files.
+I checked your assets and config. The app feels heavy mostly because of **oversized images**, not your React code. Here's what I found:
 
-## Solution
-Add a single `public/.htaccess` file that tells Apache: *"If the requested URL doesn't match a real file or folder, serve `index.html` instead and let React Router handle it."*
+| File | Current size | Should be |
+|---|---|---|
+| `src/assets/feature-tours.webp` | **1.9 MB** | ~80 KB |
+| `src/assets/hero-heritage.webp` | **1.8 MB** | ~200 KB |
+| `public/images/about-hero-tuwayq.webp` | **1.8 MB** | ~200 KB |
+| `src/assets/feature-family.webp` | **1.7 MB** | ~80 KB |
+| `src/assets/package-large-family.webp` | **1.6 MB** | ~80 KB |
+| `src/assets/feature-heritage.webp` | **1.4 MB** | ~80 KB |
+| `src/assets/package-*.webp` (×4) | ~5 MB combined | ~300 KB total |
 
-Vite automatically copies everything inside `public/` into the build output (`dist/`), so the file ends up at the root of your deployment without any config changes.
+Total image weight on the homepage alone is **~7 MB**. On a phone over 4G this is several seconds of waiting + heavy decoding work that locks the main thread.
 
-## File to Create
+Two more contributors:
+1. **Moyasar payment SDK loads on every page** (homepage included) from `index.html` even though it's only needed on `/pay/:bookingId`.
+2. **Two hero images preloaded eagerly** in `index.html` — even when you're on a page that doesn't use them.
 
-### `public/.htaccess`
+## Plan
 
-```apache
-# SPA fallback for React Router on Apache (Hostinger)
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
+### 1. Re-compress all heavy images (biggest win)
+Re-encode the WebP files with proper quality + max-width. Targets:
+- Hero images: max 1920px wide, quality 75 → ~150–250 KB each
+- Feature/package cards: max 800px wide, quality 75 → ~50–100 KB each
 
-  # Don't rewrite real files or directories (assets, images, favicon, etc.)
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
+Will also add a 2x WebP version for retina (no-op on older devices).
 
-  # Everything else falls back to index.html so React Router can handle it
-  RewriteRule ^ index.html [L]
-</IfModule>
+Expected: page weight drops from ~7 MB to **under 1 MB**.
 
-# Correct MIME types (helps avoid module/script load issues)
-<IfModule mod_mime.c>
-  AddType application/javascript .js
-  AddType text/css .css
-  AddType image/svg+xml .svg
-  AddType application/manifest+json .webmanifest
-</IfModule>
+### 2. Stop loading the Moyasar SDK on every page
+Remove the `<script>` and `<link>` for Moyasar from `index.html`. The project already has `src/lib/loadMoyasarSdk.ts` which can inject it on demand on the payment page only.
 
-# Long-term caching for hashed build assets
-<IfModule mod_expires.c>
-  ExpiresActive On
-  ExpiresByType text/css "access plus 1 year"
-  ExpiresByType application/javascript "access plus 1 year"
-  ExpiresByType image/png "access plus 1 year"
-  ExpiresByType image/jpeg "access plus 1 year"
-  ExpiresByType image/webp "access plus 1 year"
-  ExpiresByType image/svg+xml "access plus 1 year"
-  ExpiresByType font/woff2 "access plus 1 year"
-</IfModule>
+Saves ~200 KB JS + a CSS file + a render-blocking script tag from every page load.
 
-# Never cache index.html (so users always get the latest app version)
-<IfModule mod_headers.c>
-  <FilesMatch "index\.html$">
-    Header set Cache-Control "no-cache, no-store, must-revalidate"
-    Header set Pragma "no-cache"
-    Header set Expires "0"
-  </FilesMatch>
-</IfModule>
-```
+### 3. Trim eager preloads in `index.html`
+- Keep `hero-heritage-new.webp` preloaded (it's used above the fold on `/`).
+- Remove the eager preload of `about-hero-tuwayq.webp` (only used on `/about`).
 
-## How to Deploy to Hostinger
+### 4. Tiny render-side improvements
+- Add `width`/`height` attributes on the hero image and feature images so the browser reserves space → no layout shift, faster paint.
+- Replace `min-h-screen` hero with a fixed responsive height so first paint isn't waiting on viewport calc.
+- Memoize the `features` array in `Index.tsx` so it doesn't re-create on every render.
 
-1. After this change is published in Lovable, **rebuild/export** the project (or pull the latest if you're auto-deploying from Git).
-2. Upload the contents of the `dist/` folder to your Hostinger `public_html` directory.
-3. **Important:** `.htaccess` is a hidden file — make sure your FTP client (FileZilla → View → Show hidden files) or Hostinger File Manager (Settings → Show hidden files) is configured to show and upload it.
-4. Confirm `.htaccess` exists in `public_html/` next to `index.html`.
+## What stays the same
+- All visuals, layouts, animations, RTL behavior — unchanged.
+- All functionality (booking, payment, admin, scanner) — unchanged.
+- Image quality at normal viewing sizes will look identical; only the file size shrinks.
 
-## Testing
-1. Visit your site, navigate to `/contact` via the menu — works (it always did).
-2. **Refresh the page** while on `/contact` — should now load correctly instead of 404.
-3. **Paste `https://yourdomain.com/group-bookings` directly** into a new tab — should load correctly.
-4. Try `/admin`, `/my-tickets`, `/about` — all should refresh-safe now.
+## Files I'll touch
+| File | Change |
+|---|---|
+| `src/assets/*.webp` (8 files) | Re-encode smaller |
+| `public/images/hero-heritage-new.webp`, `about-hero-tuwayq.webp`, `hero-booking.webp`, `hero-contact.webp` | Re-encode smaller |
+| `index.html` | Remove Moyasar SDK + extra preload |
+| `src/lib/loadMoyasarSdk.ts` | Confirm it injects SDK on demand (already does — verify) |
+| `src/pages/PaymentPage.tsx` / `DetailsAndPayment.tsx` | Ensure they call `loadMoyasarSdk()` before mounting form |
+| `src/pages/Index.tsx` | Memoize features, add explicit dimensions |
 
-## Notes
-- The existing `public/_redirects` file is harmless to keep (Hostinger ignores it) but is **not** what fixes Hostinger.
-- This does not affect Lovable's preview or `.lovable.app` hosting — those already handle SPA fallback automatically.
-- No code changes to `App.tsx`, routes, or any component are needed.
+## Expected result
+- Homepage payload: **~7 MB → ~800 KB**
+- First Contentful Paint on 4G: **~4–6s → ~1.5s**
+- No more "heavy/laggy" feeling on scroll and page transitions
+- Payment page still works exactly the same (SDK loads when you arrive there)
 
