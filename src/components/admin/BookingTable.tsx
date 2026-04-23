@@ -307,7 +307,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
         variant="outline" 
         className={cn(
           className, 
-          'flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide uppercase backdrop-blur-sm transition-all duration-200 hover:scale-[1.02]',
+          'flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide uppercase',
           isRTL && 'flex-row-reverse'
         )}
       >

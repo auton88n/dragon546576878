@@ -183,9 +183,10 @@ const AdminPage = () => {
       setSendingReminders(false);
     }
   };
+  // Display values (showcase numbers for presentation)
   const statsCards = [{
     title: isArabic ? 'إجمالي الإيرادات' : 'Total Revenue',
-    value: stats.totalRevenue,
+    value: 580000,
     suffix: isArabic ? 'ر.س' : 'SAR',
     icon: DollarSign,
     color: 'text-foreground',
@@ -193,19 +194,19 @@ const AdminPage = () => {
     featured: true
   }, {
     title: isArabic ? 'الحجوزات اليوم' : "Today's Bookings",
-    value: stats.todayBookings,
+    value: 3000,
     icon: Ticket,
     color: 'text-primary',
     bgColor: 'bg-primary/15'
   }, {
     title: isArabic ? 'الزوار اليوم' : "Today's Visitors",
-    value: stats.todayVisitors,
+    value: 20000,
     icon: Users,
     color: 'text-accent',
     bgColor: 'bg-accent/15'
   }, {
     title: isArabic ? 'التذاكر الممسوحة' : 'Tickets Scanned',
-    value: stats.ticketsScanned,
+    value: 5000,
     icon: QrCode,
     color: 'text-emerald-600',
     bgColor: 'bg-emerald-500/15'
@@ -244,7 +245,7 @@ const AdminPage = () => {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 rtl:[direction:rtl]">
-            {statsCards.map((stat, index) => <StatsCard key={index} {...stat} loading={statsLoading || refreshingStats} />)}
+            {statsCards.map((stat, index) => <StatsCard key={index} {...stat} loading={false} />)}
           </div>
 
           {/* Stalled Payments Alert - Real-time notifications */}
