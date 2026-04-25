@@ -27,6 +27,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { lazyWithPreload } from '@/lib/lazyWithPreload';
 import StalledPaymentsAlert from '@/components/admin/StalledPaymentsAlert';
+import ErrorBoundary from '@/components/shared/ErrorBoundary';
+
+const PanelErrorFallback = ({ isArabic }: { isArabic: boolean }) => (
+  <Card className="glass-card border-destructive/30">
+    <CardContent className="p-6 text-center space-y-3">
+      <p className="text-foreground font-medium">
+        {isArabic ? 'تعذر تحميل هذا القسم' : 'This section failed to load'}
+      </p>
+      <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+        {isArabic ? 'إعادة المحاولة' : 'Try Again'}
+      </Button>
+    </CardContent>
+  </Card>
+);
 
 type Booking = Tables<'bookings'>;
 
