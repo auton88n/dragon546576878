@@ -260,10 +260,9 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
         <Badge 
           variant="outline" 
           className={cn(
-            'bg-gradient-to-r from-red-500/20 to-rose-400/15 text-red-600 border-red-400/40',
-            'shadow-sm shadow-red-500/20 animate-pulse backdrop-blur-sm',
+            'bg-red-500/15 text-red-600 border-red-400/40',
             'flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide uppercase',
-            'dark:from-red-500/25 dark:to-rose-400/20 dark:text-red-400',
+            'dark:text-red-400',
             isRTL && 'flex-row-reverse'
           )}
         >
