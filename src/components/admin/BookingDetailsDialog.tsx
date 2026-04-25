@@ -678,16 +678,22 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
             </Button>
           </div>
 
-          {/* Email History */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
-            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                <History className="h-4 w-4 text-blue-600" />
-              </div>
-              {isArabic ? 'سجل البريد الإلكتروني' : 'Email History'}
-            </h3>
-            <EmailStatusTracker bookingId={booking.id} />
-          </div>
+          {/* Email History (lazy-mounted) */}
+          <Collapsible open={emailHistoryOpen} onOpenChange={setEmailHistoryOpen} className="glass-card rounded-xl p-5 border border-accent/10">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between gap-2">
+                <span className="flex items-center gap-2 rtl:flex-row-reverse">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <History className="h-4 w-4 text-blue-600" />
+                  </div>
+                  {isArabic ? 'سجل البريد الإلكتروني' : 'Email History'}
+                </span>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-4">
+              {emailHistoryOpen && <EmailStatusTracker bookingId={booking.id} />}
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Find Orphan Payment - Only show when payment_id is null */}
           {!booking.payment_id && booking.payment_status !== 'completed' && (
