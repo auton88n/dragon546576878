@@ -35,76 +35,84 @@ export const useBookings = (filters: BookingFilters, page: number = 1, pageSize:
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const lastFetchRef = useRef<number>(0);
-  
+  const requestIdRef = useRef<number>(0);
+
   // Debounce the search filter to prevent rapid queries
   const debouncedSearch = useDebounce(filters.search, DEBOUNCE_MS);
-  
+
   // Create stable filter reference with debounced search
   const stableFilters = useMemo(() => ({
-    ...filters,
+    status: filters.status,
+    paymentStatus: filters.paymentStatus,
+    dateFrom: filters.dateFrom,
+    dateTo: filters.dateTo,
+    hideAbandoned: filters.hideAbandoned,
     search: debouncedSearch,
   }), [filters.status, filters.paymentStatus, filters.dateFrom, filters.dateTo, filters.hideAbandoned, debouncedSearch]);
 
   const fetchBookings = useCallback(async () => {
+    const reqId = ++requestIdRef.current;
     setLoading(true);
+    setError(null);
     try {
       let query = supabase
         .from('bookings')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
-      // Apply search filter
-      if (filters.search) {
+      // Apply search filter (use debounced value)
+      if (stableFilters.search) {
+        const safe = stableFilters.search.replace(/[%,()]/g, '');
         query = query.or(
-          `booking_reference.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%,customer_email.ilike.%${filters.search}%`
+          `booking_reference.ilike.%${safe}%,customer_name.ilike.%${safe}%,customer_email.ilike.%${safe}%`
         );
       }
 
-      // Apply booking status filter
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('booking_status', filters.status);
+      if (stableFilters.status && stableFilters.status !== 'all') {
+        query = query.eq('booking_status', stableFilters.status);
       }
 
-      // Apply payment status filter
-      if (filters.paymentStatus && filters.paymentStatus !== 'all') {
-        query = query.eq('payment_status', filters.paymentStatus);
+      if (stableFilters.paymentStatus && stableFilters.paymentStatus !== 'all') {
+        query = query.eq('payment_status', stableFilters.paymentStatus);
       }
 
-      // Apply date filters
-      if (filters.dateFrom) {
-        query = query.gte('visit_date', filters.dateFrom);
+      if (stableFilters.dateFrom) {
+        query = query.gte('visit_date', stableFilters.dateFrom);
       }
-      if (filters.dateTo) {
-        query = query.lte('visit_date', filters.dateTo);
+      if (stableFilters.dateTo) {
+        query = query.lte('visit_date', stableFilters.dateTo);
       }
 
-      // Hide abandoned bookings (older than 7 days, still pending payment)
-      if (filters.hideAbandoned) {
+      if (stableFilters.hideAbandoned) {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         const cutoffDate = sevenDaysAgo.toISOString();
-        // Abandoned = pending payment AND older than 7 days
-        // Show bookings that are: paid OR created within last 7 days
-        // Using filter to properly negate the condition
         query = query.or(`payment_status.neq.pending,created_at.gte.${cutoffDate}`);
       }
 
-      // Apply pagination
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
       query = query.range(from, to);
 
-      const { data, error, count } = await query;
+      const { data, error: qErr, count } = await query;
 
-      if (error) throw error;
+      // Drop stale responses
+      if (reqId !== requestIdRef.current) return;
+
+      if (qErr) throw qErr;
 
       setBookings(data || []);
       setTotalCount(count || 0);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
+    } catch (err) {
+      if (reqId !== requestIdRef.current) return;
+      console.error('Error fetching bookings:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load bookings');
+      setBookings([]);
+      setTotalCount(0);
     } finally {
-      setLoading(false);
+      if (reqId === requestIdRef.current) setLoading(false);
     }
   }, [stableFilters, page, pageSize]);
 
@@ -140,6 +148,7 @@ export const useBookings = (filters: BookingFilters, page: number = 1, pageSize:
     bookings,
     totalCount,
     loading,
+    error,
     refetch: fetchBookings,
     totalPages: Math.ceil(totalCount / pageSize),
   };

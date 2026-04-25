@@ -81,9 +81,15 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const isArabic = currentLanguage === 'ar';
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
+  const [ticketsError, setTicketsError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+
+  // Lazy-mount heavy collapsible panels only after user opens them
+  const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
+  const [moyasarOpen, setMoyasarOpen] = useState(false);
+  const [orphanOpen, setOrphanOpen] = useState(false);
   
   // Moyasar verification state
   const [verifying, setVerifying] = useState(false);
@@ -103,6 +109,9 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     if (booking && open) {
       fetchTickets();
       setVerification(null); // Reset verification when booking changes
+      setEmailHistoryOpen(false);
+      setMoyasarOpen(false);
+      setOrphanOpen(false);
     }
   }, [booking, open]);
 
@@ -217,14 +226,18 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const fetchTickets = async () => {
     if (!booking) return;
     setLoadingTickets(true);
+    setTicketsError(null);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('tickets')
         .select('*')
         .eq('booking_id', booking.id);
+      if (error) throw error;
       setTickets(data || []);
     } catch (error) {
       console.error('Error fetching tickets:', error);
+      setTicketsError(isArabic ? 'فشل تحميل التذاكر' : 'Failed to load tickets');
+      setTickets([]);
     } finally {
       setLoadingTickets(false);
     }
@@ -528,30 +541,45 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
               )}
             </div>
             {loadingTickets ? (
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {[1, 2, 3].map((i) => (
                   <Skeleton key={i} className="h-28 w-full bg-accent/10" />
                 ))}
               </div>
+            ) : ticketsError ? (
+              <div className="text-center py-6 space-y-3">
+                <p className="text-sm text-destructive">{ticketsError}</p>
+                <Button size="sm" variant="outline" onClick={fetchTickets}>
+                  {isArabic ? 'إعادة المحاولة' : 'Try Again'}
+                </Button>
+              </div>
+            ) : tickets.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                {isArabic ? 'لا توجد تذاكر بعد' : 'No tickets yet'}
+              </p>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {tickets.map((ticket) => (
                   <div
                     key={ticket.id}
-                    className={`rounded-xl p-4 text-center border transition-all ${
+                    className={`rounded-xl p-4 text-center border min-w-0 ${
                       ticket.is_used 
                         ? 'bg-muted/50 border-muted opacity-60' 
-                        : 'bg-background/50 border-accent/20 hover:border-accent/40'
+                        : 'bg-background/50 border-accent/20'
                     }`}
                   >
                     {ticket.qr_code_url && (
                       <img
                         src={ticket.qr_code_url}
                         alt="QR Code"
-                        className="w-20 h-20 mx-auto mb-3 rounded-lg"
+                        loading="lazy"
+                        decoding="async"
+                        width={80}
+                        height={80}
+                        className="w-20 h-20 mx-auto mb-3 rounded-lg max-w-full object-contain"
                       />
                     )}
-                    <p className="text-xs font-mono text-muted-foreground mb-2">{ticket.ticket_code}</p>
+                    <p className="text-xs font-mono text-muted-foreground mb-2 break-all">{ticket.ticket_code}</p>
                     <Badge 
                       variant="outline" 
                       className={ticket.is_used 
@@ -650,16 +678,22 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
             </Button>
           </div>
 
-          {/* Email History */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
-            <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                <History className="h-4 w-4 text-blue-600" />
-              </div>
-              {isArabic ? 'سجل البريد الإلكتروني' : 'Email History'}
-            </h3>
-            <EmailStatusTracker bookingId={booking.id} />
-          </div>
+          {/* Email History (lazy-mounted) */}
+          <Collapsible open={emailHistoryOpen} onOpenChange={setEmailHistoryOpen} className="glass-card rounded-xl p-5 border border-accent/10">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between gap-2">
+                <span className="flex items-center gap-2 rtl:flex-row-reverse">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <History className="h-4 w-4 text-blue-600" />
+                  </div>
+                  {isArabic ? 'سجل البريد الإلكتروني' : 'Email History'}
+                </span>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-4">
+              {emailHistoryOpen && <EmailStatusTracker bookingId={booking.id} />}
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Find Orphan Payment - Only show when payment_id is null */}
           {!booking.payment_id && booking.payment_status !== 'completed' && (

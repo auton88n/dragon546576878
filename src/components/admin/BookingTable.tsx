@@ -260,10 +260,9 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
         <Badge 
           variant="outline" 
           className={cn(
-            'bg-gradient-to-r from-red-500/20 to-rose-400/15 text-red-600 border-red-400/40',
-            'shadow-sm shadow-red-500/20 animate-pulse backdrop-blur-sm',
+            'bg-red-500/15 text-red-600 border-red-400/40',
             'flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide uppercase',
-            'dark:from-red-500/25 dark:to-rose-400/20 dark:text-red-400',
+            'dark:text-red-400',
             isRTL && 'flex-row-reverse'
           )}
         >
@@ -331,7 +330,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
       if (qr_codes_generated) {
         return { label: isArabic ? 'مكتمل' : 'Complete', icon: CheckCircle, color: 'text-emerald-500' };
       }
-      return { label: isArabic ? 'مدفوع - بدون تذاكر' : 'Paid - No Tickets', icon: AlertTriangle, color: 'text-red-500 animate-pulse' };
+      return { label: isArabic ? 'مدفوع - بدون تذاكر' : 'Paid - No Tickets', icon: AlertTriangle, color: 'text-red-500' };
     }
     
     if (payment_status === 'failed') {
@@ -345,7 +344,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     if (payment_id) {
       // Has payment_id - customer started payment process
       if (isRecent) {
-        return { label: isArabic ? 'جاري الدفع' : 'In Progress', icon: Clock, color: 'text-amber-500 animate-pulse' };
+        return { label: isArabic ? 'جاري الدفع' : 'In Progress', icon: Clock, color: 'text-amber-500' };
       }
       return { label: isArabic ? 'دفع معلق' : 'Payment Started', icon: Clock, color: 'text-amber-500' };
     }
