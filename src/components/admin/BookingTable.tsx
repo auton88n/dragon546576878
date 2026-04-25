@@ -330,7 +330,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
       if (qr_codes_generated) {
         return { label: isArabic ? 'مكتمل' : 'Complete', icon: CheckCircle, color: 'text-emerald-500' };
       }
-      return { label: isArabic ? 'مدفوع - بدون تذاكر' : 'Paid - No Tickets', icon: AlertTriangle, color: 'text-red-500 animate-pulse' };
+      return { label: isArabic ? 'مدفوع - بدون تذاكر' : 'Paid - No Tickets', icon: AlertTriangle, color: 'text-red-500' };
     }
     
     if (payment_status === 'failed') {
