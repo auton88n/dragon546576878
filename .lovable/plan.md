@@ -1,70 +1,84 @@
+# Fix Admin Tablet White Screen + Make the App Stable
 
+## Goal
+Make the admin dashboard reliable on tablet/mobile and stop the booking/ticket detail area from showing a white screen or feeling laggy. The fix will keep all current functions, but make the UI safer and lighter.
 
-# Make the App Fast — Fix Heavy Images + Render Bottlenecks
+## What I Found
+The screenshot shows the admin booking details modal open on a tablet-size viewport. The QR/ticket area is loading, but the modal is heavy and can become unstable on tablets because:
 
-## Diagnosis (what's actually slowing the app down)
+1. `BookingDetailsDialog` renders many sections at once: booking info, tickets/QR images, payment info, email history, orphan payment search, Moyasar verification, refund actions.
+2. It also mounts extra async components immediately, especially `EmailStatusTracker`, and `PaymentHistoryPanel` loads when expanded.
+3. The QR images load without explicit image sizing/lazy decoding protections.
+4. There is no local error boundary around the admin table/dialog. If one admin widget fails on tablet, it can blank the whole admin area instead of showing a controlled error card.
+5. `useBookings` has a small bug: it builds `stableFilters` with debounced search, but the query still reads the original `filters.search`, which can cause extra queries and re-renders while typing.
+6. The admin page still uses a wide horizontal tab list; on tablet this creates pressure/overflow and contributes to the “white/laggy” feel.
 
-I checked your assets and config. The app feels heavy mostly because of **oversized images**, not your React code. Here's what I found:
+## Implementation Plan
 
-| File | Current size | Should be |
-|---|---|---|
-| `src/assets/feature-tours.webp` | **1.9 MB** | ~80 KB |
-| `src/assets/hero-heritage.webp` | **1.8 MB** | ~200 KB |
-| `public/images/about-hero-tuwayq.webp` | **1.8 MB** | ~200 KB |
-| `src/assets/feature-family.webp` | **1.7 MB** | ~80 KB |
-| `src/assets/package-large-family.webp` | **1.6 MB** | ~80 KB |
-| `src/assets/feature-heritage.webp` | **1.4 MB** | ~80 KB |
-| `src/assets/package-*.webp` (×4) | ~5 MB combined | ~300 KB total |
+### 1. Add safety wrapper around admin panels
+- Wrap the bookings tab, details dialog, and lazy admin panels with `ErrorBoundary`.
+- If a panel fails, show a clean bilingual error card with “Try again / حاول مرة أخرى” instead of a blank white screen.
+- This prevents one broken widget from taking down the whole `/admin` page.
 
-Total image weight on the homepage alone is **~7 MB**. On a phone over 4G this is several seconds of waiting + heavy decoding work that locks the main thread.
+### 2. Stabilize `BookingDetailsDialog`
+- Add an explicit ticket-loading error state.
+- If tickets fail to load, show a friendly retry panel instead of an empty/white section.
+- Make the QR grid tablet-safe:
+  - use `grid-cols-1 sm:grid-cols-2 md:grid-cols-3`
+  - add `max-w-full`, `object-contain`, `loading="lazy"`, `decoding="async"`
+  - constrain long ticket codes with `break-all`/`truncate`
+- Reduce heavy visual effects inside the modal on tablet.
+- Keep the same buttons: resend email, mark paid, cancel, generate tickets, verify payment, refund.
 
-Two more contributors:
-1. **Moyasar payment SDK loads on every page** (homepage included) from `index.html` even though it's only needed on `/pay/:bookingId`.
-2. **Two hero images preloaded eagerly** in `index.html` — even when you're on a page that doesn't use them.
+### 3. Lazy-load heavy detail sections only when needed
+- Keep critical details visible immediately: customer, booking timeline, tickets, QR, payment status.
+- Move heavier admin-only sections behind collapsible panels:
+  - Email History
+  - Moyasar Verification
+  - Find Lost Payment
+- `EmailStatusTracker` should mount only when its section is opened, not every time the booking dialog opens.
+- `PaymentHistoryPanel` already sits inside a collapsible; keep that behavior.
 
-## Plan
+### 4. Fix bookings hook query stability
+- Update `useBookings` so the Supabase query uses `stableFilters` / debounced search instead of raw `filters.search`.
+- Track fetch errors and return `error` from the hook.
+- Prevent stale requests from overwriting newer results if filters/page change quickly.
+- Keep pagination at 20 items per page.
 
-### 1. Re-compress all heavy images (biggest win)
-Re-encode the WebP files with proper quality + max-width. Targets:
-- Hero images: max 1920px wide, quality 75 → ~150–250 KB each
-- Feature/package cards: max 800px wide, quality 75 → ~50–100 KB each
+### 5. Improve booking table tablet performance
+- Remove remaining expensive per-row effects:
+  - `animate-pulse` on repeated badges
+  - extra `backdrop-blur-sm`
+  - unnecessary row transitions on large tables
+- Keep the mobile card layout for smaller tablets/phones.
+- For tablet widths, make the table wrapper more explicit with horizontal scroll and safe widths so it never creates full-page overflow.
 
-Will also add a 2x WebP version for retina (no-op on older devices).
+### 6. Make admin navigation tablet-friendly
+- Replace the current centered horizontal `TabsList` with a responsive navigation layout:
+  - desktop/tablet: compact scrollable nav bar or sidebar-compatible layout
+  - mobile/tablet narrow widths: horizontal scroll chips that do not overflow the screen
+- This is a smaller stabilizing step; it will not remove any tabs or functions.
 
-Expected: page weight drops from ~7 MB to **under 1 MB**.
+### 7. Add admin loading/error states
+- Bookings tab should show:
+  - skeleton while loading
+  - empty state when no data
+  - error state with retry button if Supabase fails
+- Stalled payments alert should fail silently and not block the dashboard.
 
-### 2. Stop loading the Moyasar SDK on every page
-Remove the `<script>` and `<link>` for Moyasar from `index.html`. The project already has `src/lib/loadMoyasarSdk.ts` which can inject it on demand on the payment page only.
+## Files to Update
 
-Saves ~200 KB JS + a CSS file + a render-blocking script tag from every page load.
-
-### 3. Trim eager preloads in `index.html`
-- Keep `hero-heritage-new.webp` preloaded (it's used above the fold on `/`).
-- Remove the eager preload of `about-hero-tuwayq.webp` (only used on `/about`).
-
-### 4. Tiny render-side improvements
-- Add `width`/`height` attributes on the hero image and feature images so the browser reserves space → no layout shift, faster paint.
-- Replace `min-h-screen` hero with a fixed responsive height so first paint isn't waiting on viewport calc.
-- Memoize the `features` array in `Index.tsx` so it doesn't re-create on every render.
-
-## What stays the same
-- All visuals, layouts, animations, RTL behavior — unchanged.
-- All functionality (booking, payment, admin, scanner) — unchanged.
-- Image quality at normal viewing sizes will look identical; only the file size shrinks.
-
-## Files I'll touch
 | File | Change |
 |---|---|
-| `src/assets/*.webp` (8 files) | Re-encode smaller |
-| `public/images/hero-heritage-new.webp`, `about-hero-tuwayq.webp`, `hero-booking.webp`, `hero-contact.webp` | Re-encode smaller |
-| `index.html` | Remove Moyasar SDK + extra preload |
-| `src/lib/loadMoyasarSdk.ts` | Confirm it injects SDK on demand (already does — verify) |
-| `src/pages/PaymentPage.tsx` / `DetailsAndPayment.tsx` | Ensure they call `loadMoyasarSdk()` before mounting form |
-| `src/pages/Index.tsx` | Memoize features, add explicit dimensions |
+| `src/hooks/useBookings.ts` | Debounced query fix, error state, stale-request protection |
+| `src/pages/AdminPage.tsx` | Add panel error boundaries, responsive nav/table wrappers, pass booking errors |
+| `src/components/admin/BookingTable.tsx` | Reduce animations/effects, safer tablet layout, error-friendly table rendering |
+| `src/components/admin/BookingDetailsDialog.tsx` | Ticket error state, lazy heavy sections, QR image safety, tablet-safe modal layout |
+| `src/components/shared/ErrorBoundary.tsx` | Reuse/extend fallback for admin panels if needed |
 
-## Expected result
-- Homepage payload: **~7 MB → ~800 KB**
-- First Contentful Paint on 4G: **~4–6s → ~1.5s**
-- No more "heavy/laggy" feeling on scroll and page transitions
-- Payment page still works exactly the same (SDK loads when you arrive there)
-
+## Expected Result
+- `/admin` no longer goes white on tablet.
+- Booking/ticket details modal opens faster and stays stable.
+- QR/ticket area always shows either QR codes, loading skeletons, an empty state, or a retryable error — never a blank white area.
+- Booking table scrolls and responds smoothly on tablet.
+- All existing admin functions remain available.
