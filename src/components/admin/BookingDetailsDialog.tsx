@@ -81,9 +81,15 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const isArabic = currentLanguage === 'ar';
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
+  const [ticketsError, setTicketsError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+
+  // Lazy-mount heavy collapsible panels only after user opens them
+  const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
+  const [moyasarOpen, setMoyasarOpen] = useState(false);
+  const [orphanOpen, setOrphanOpen] = useState(false);
   
   // Moyasar verification state
   const [verifying, setVerifying] = useState(false);
@@ -103,6 +109,9 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     if (booking && open) {
       fetchTickets();
       setVerification(null); // Reset verification when booking changes
+      setEmailHistoryOpen(false);
+      setMoyasarOpen(false);
+      setOrphanOpen(false);
     }
   }, [booking, open]);
 
