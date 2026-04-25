@@ -148,6 +148,7 @@ export const useBookings = (filters: BookingFilters, page: number = 1, pageSize:
     bookings,
     totalCount,
     loading,
+    error,
     refetch: fetchBookings,
     totalPages: Math.ceil(totalCount / pageSize),
   };
