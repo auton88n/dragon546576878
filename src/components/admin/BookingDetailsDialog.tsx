@@ -541,30 +541,45 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
               )}
             </div>
             {loadingTickets ? (
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {[1, 2, 3].map((i) => (
                   <Skeleton key={i} className="h-28 w-full bg-accent/10" />
                 ))}
               </div>
+            ) : ticketsError ? (
+              <div className="text-center py-6 space-y-3">
+                <p className="text-sm text-destructive">{ticketsError}</p>
+                <Button size="sm" variant="outline" onClick={fetchTickets}>
+                  {isArabic ? 'إعادة المحاولة' : 'Try Again'}
+                </Button>
+              </div>
+            ) : tickets.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                {isArabic ? 'لا توجد تذاكر بعد' : 'No tickets yet'}
+              </p>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {tickets.map((ticket) => (
                   <div
                     key={ticket.id}
-                    className={`rounded-xl p-4 text-center border transition-all ${
+                    className={`rounded-xl p-4 text-center border min-w-0 ${
                       ticket.is_used 
                         ? 'bg-muted/50 border-muted opacity-60' 
-                        : 'bg-background/50 border-accent/20 hover:border-accent/40'
+                        : 'bg-background/50 border-accent/20'
                     }`}
                   >
                     {ticket.qr_code_url && (
                       <img
                         src={ticket.qr_code_url}
                         alt="QR Code"
-                        className="w-20 h-20 mx-auto mb-3 rounded-lg"
+                        loading="lazy"
+                        decoding="async"
+                        width={80}
+                        height={80}
+                        className="w-20 h-20 mx-auto mb-3 rounded-lg max-w-full object-contain"
                       />
                     )}
-                    <p className="text-xs font-mono text-muted-foreground mb-2">{ticket.ticket_code}</p>
+                    <p className="text-xs font-mono text-muted-foreground mb-2 break-all">{ticket.ticket_code}</p>
                     <Badge 
                       variant="outline" 
                       className={ticket.is_used 
