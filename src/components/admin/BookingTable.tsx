@@ -344,7 +344,7 @@ const BookingTable = memo(({ bookings, loading, onViewDetails, selectedIds = [],
     if (payment_id) {
       // Has payment_id - customer started payment process
       if (isRecent) {
-        return { label: isArabic ? 'جاري الدفع' : 'In Progress', icon: Clock, color: 'text-amber-500 animate-pulse' };
+        return { label: isArabic ? 'جاري الدفع' : 'In Progress', icon: Clock, color: 'text-amber-500' };
       }
       return { label: isArabic ? 'دفع معلق' : 'Payment Started', icon: Clock, color: 'text-amber-500' };
     }
