@@ -360,7 +360,9 @@ const AdminPage = () => {
                     <StatusLegend />
                   </div>
                   
-                  <BookingTable bookings={bookings} loading={bookingsLoading} onViewDetails={handleViewDetails} selectedIds={selectedIds} onSelectionChange={setSelectedIds} onBookingUpdated={handleBookingUpdated} onEditBooking={handleEditBooking} />
+                  <ErrorBoundary fallback={<PanelErrorFallback isArabic={isArabic} />}>
+                    <BookingTable bookings={bookings} loading={bookingsLoading} onViewDetails={handleViewDetails} selectedIds={selectedIds} onSelectionChange={setSelectedIds} onBookingUpdated={handleBookingUpdated} onEditBooking={handleEditBooking} />
+                  </ErrorBoundary>
 
                   {/* Pagination */}
                   {totalPages > 1 && <div className="flex justify-center gap-2 pt-4">
@@ -380,47 +382,59 @@ const AdminPage = () => {
 
             {/* Reports Tab */}
             <TabsContent value="reports">
-              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <ReportsPanel />
-              </Suspense>
+              <ErrorBoundary fallback={<PanelErrorFallback isArabic={isArabic} />}>
+                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                  <ReportsPanel />
+                </Suspense>
+              </ErrorBoundary>
             </TabsContent>
 
             {/* Settings Tab */}
             <TabsContent value="settings">
-              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <SettingsPanel onStatsRefresh={refetchStats} />
-              </Suspense>
+              <ErrorBoundary fallback={<PanelErrorFallback isArabic={isArabic} />}>
+                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                  <SettingsPanel onStatsRefresh={refetchStats} />
+                </Suspense>
+              </ErrorBoundary>
             </TabsContent>
 
             {/* Group Bookings Tab */}
             <TabsContent value="groups">
-              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <div className="space-y-6">
-                  <GroupBookingsPanel />
-                  <CustomInvoicesPanel />
-                </div>
-              </Suspense>
+              <ErrorBoundary fallback={<PanelErrorFallback isArabic={isArabic} />}>
+                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                  <div className="space-y-6">
+                    <GroupBookingsPanel />
+                    <CustomInvoicesPanel />
+                  </div>
+                </Suspense>
+              </ErrorBoundary>
             </TabsContent>
 
             {/* Messages Tab - Contact Forms Only */}
             <TabsContent value="messages">
-              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <ContactSubmissionsPanel />
-              </Suspense>
+              <ErrorBoundary fallback={<PanelErrorFallback isArabic={isArabic} />}>
+                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                  <ContactSubmissionsPanel />
+                </Suspense>
+              </ErrorBoundary>
             </TabsContent>
 
             {/* AYN Support Tab */}
             <TabsContent value="ayn-support">
-              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <AYNSupportPanel />
-              </Suspense>
+              <ErrorBoundary fallback={<PanelErrorFallback isArabic={isArabic} />}>
+                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                  <AYNSupportPanel />
+                </Suspense>
+              </ErrorBoundary>
             </TabsContent>
 
             {/* Refunds Tab */}
             <TabsContent value="refunds">
-              <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                <RefundsPanel />
-              </Suspense>
+              <ErrorBoundary fallback={<PanelErrorFallback isArabic={isArabic} />}>
+                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                  <RefundsPanel />
+                </Suspense>
+              </ErrorBoundary>
             </TabsContent>
           </Tabs>
         </div>
@@ -432,7 +446,9 @@ const AdminPage = () => {
       {/* Bulk Actions Bar */}
       <BulkActionsBar selectedIds={selectedIds} bookings={bookings} onClearSelection={() => setSelectedIds([])} onBookingUpdated={handleBookingUpdated} />
 
-      <BookingDetailsDialog booking={selectedBooking} open={detailsOpen} onOpenChange={setDetailsOpen} onBookingUpdated={refetch} />
+      <ErrorBoundary fallback={<></>}>
+        <BookingDetailsDialog booking={selectedBooking} open={detailsOpen} onOpenChange={setDetailsOpen} onBookingUpdated={refetch} />
+      </ErrorBoundary>
 
       <EditBookingDialog booking={editBooking} open={editOpen} onOpenChange={setEditOpen} onBookingUpdated={handleBookingUpdated} />
 
