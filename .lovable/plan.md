@@ -1,84 +1,106 @@
-# Fix Admin Tablet White Screen + Make the App Stable
 
-## Goal
-Make the admin dashboard reliable on tablet/mobile and stop the booking/ticket detail area from showing a white screen or feeling laggy. The fix will keep all current functions, but make the UI safer and lighter.
+# Fix Booking Details White Screen on Tablet + Fill Reports With Rich Showcase Data
 
-## What I Found
-The screenshot shows the admin booking details modal open on a tablet-size viewport. The QR/ticket area is loading, but the modal is heavy and can become unstable on tablets because:
+## What's actually wrong on tablet
 
-1. `BookingDetailsDialog` renders many sections at once: booking info, tickets/QR images, payment info, email history, orphan payment search, Moyasar verification, refund actions.
-2. It also mounts extra async components immediately, especially `EmailStatusTracker`, and `PaymentHistoryPanel` loads when expanded.
-3. The QR images load without explicit image sizing/lazy decoding protections.
-4. There is no local error boundary around the admin table/dialog. If one admin widget fails on tablet, it can blank the whole admin area instead of showing a controlled error card.
-5. `useBookings` has a small bug: it builds `stableFilters` with debounced search, but the query still reads the original `filters.search`, which can cause extra queries and re-renders while typing.
-6. The admin page still uses a wide horizontal tab list; on tablet this creates pressure/overflow and contributes to the “white/laggy” feel.
+I traced the booking details dialog. Even though the previous pass moved Email History and Moyasar Verification into collapsibles, three real problems remain that cause the white-screen / lag / crash on tablet:
 
-## Implementation Plan
+1. **Heavy children are still imported eagerly.** `EmailStatusTracker` and `PaymentHistoryPanel` are imported with normal `import` statements at the top of `BookingDetailsDialog.tsx`. So the moment the dialog mounts, the bundles for both panels load and parse on the main thread — even before you open them.
 
-### 1. Add safety wrapper around admin panels
-- Wrap the bookings tab, details dialog, and lazy admin panels with `ErrorBoundary`.
-- If a panel fails, show a clean bilingual error card with “Try again / حاول مرة أخرى” instead of a blank white screen.
-- This prevents one broken widget from taking down the whole `/admin` page.
+2. **Payment History is always mounted, not lazy.** The `Payment History` `Collapsible` inside the Payment Info card has **no `open` state binding**, so `<PaymentHistoryPanel bookingId={...} />` renders immediately on every open — it queries `payment_logs` and renders a real-time subscription whether you expand it or not.
 
-### 2. Stabilize `BookingDetailsDialog`
-- Add an explicit ticket-loading error state.
-- If tickets fail to load, show a friendly retry panel instead of an empty/white section.
-- Make the QR grid tablet-safe:
-  - use `grid-cols-1 sm:grid-cols-2 md:grid-cols-3`
-  - add `max-w-full`, `object-contain`, `loading="lazy"`, `decoding="async"`
-  - constrain long ticket codes with `break-all`/`truncate`
-- Reduce heavy visual effects inside the modal on tablet.
-- Keep the same buttons: resend email, mark paid, cancel, generate tickets, verify payment, refund.
+3. **The whole dialog body renders in one go on tablet.** That's ~9 sections (reference, customer, timeline, tickets summary, QR grid with N images, payment info + history, email status, email history, find lost payment, Moyasar verify, refund actions). Combined with the long initial parse on slow tablet CPUs, you see a white frame for several seconds, and Safari sometimes reloads/crashes the tab.
 
-### 3. Lazy-load heavy detail sections only when needed
-- Keep critical details visible immediately: customer, booking timeline, tickets, QR, payment status.
-- Move heavier admin-only sections behind collapsible panels:
-  - Email History
-  - Moyasar Verification
-  - Find Lost Payment
-- `EmailStatusTracker` should mount only when its section is opened, not every time the booking dialog opens.
-- `PaymentHistoryPanel` already sits inside a collapsible; keep that behavior.
+These three together explain exactly the symptom you described: "white page, takes time to reload, then crashes."
 
-### 4. Fix bookings hook query stability
-- Update `useBookings` so the Supabase query uses `stableFilters` / debounced search instead of raw `filters.search`.
-- Track fetch errors and return `error` from the hook.
-- Prevent stale requests from overwriting newer results if filters/page change quickly.
-- Keep pagination at 20 items per page.
+## What I'll fix in the booking details dialog
 
-### 5. Improve booking table tablet performance
-- Remove remaining expensive per-row effects:
-  - `animate-pulse` on repeated badges
-  - extra `backdrop-blur-sm`
-  - unnecessary row transitions on large tables
-- Keep the mobile card layout for smaller tablets/phones.
-- For tablet widths, make the table wrapper more explicit with horizontal scroll and safe widths so it never creates full-page overflow.
+### 1. Truly lazy-load every heavy child
+- Convert `EmailStatusTracker`, `PaymentHistoryPanel`, and the Moyasar verification body to `React.lazy()` with `Suspense` fallbacks (small skeleton).
+- They will only download + parse when you actually expand the corresponding section.
 
-### 6. Make admin navigation tablet-friendly
-- Replace the current centered horizontal `TabsList` with a responsive navigation layout:
-  - desktop/tablet: compact scrollable nav bar or sidebar-compatible layout
-  - mobile/tablet narrow widths: horizontal scroll chips that do not overflow the screen
-- This is a smaller stabilizing step; it will not remove any tabs or functions.
+### 2. Make the Payment History collapsible properly gated
+- Add `open`/`onOpenChange` state to the Payment History `Collapsible`.
+- Mount `<PaymentHistoryPanel />` only after the user opens it (matches what we already do for Email History).
 
-### 7. Add admin loading/error states
-- Bookings tab should show:
-  - skeleton while loading
-  - empty state when no data
-  - error state with retry button if Supabase fails
-- Stalled payments alert should fail silently and not block the dashboard.
+### 3. Defer non-critical sections until after first paint
+- Show critical content immediately: reference, customer info, timeline, tickets summary, QR codes.
+- Defer rendering of Email status, Email history, Find Lost Payment, Moyasar Verification, and Refund/Verify action bar with a tiny `useDeferredValue` / `requestIdleCallback`-style pattern (a one-tick `useEffect(() => setReady(true))`). The dialog opens instantly with the most-needed info, then heavy sections appear a beat later instead of blocking the first frame.
 
-## Files to Update
+### 4. Tablet-safe modal shell
+- Keep `max-w-2xl` on desktop, but use `w-[95vw] sm:w-full max-h-[88vh]` so the modal can never push past the viewport on 768px tablets.
+- Add `aria-describedby` / a hidden `<DialogDescription>` to silence the React warning showing in console (`Missing Description for DialogContent`) — that warning isn't a crash but it is firing on every open.
+- Limit the QR image grid to a max of 12 visible thumbnails initially with a "Show all" toggle for huge group bookings (defensive — prevents 50+ image decodes on iPad Mini).
+
+### 5. Wrap the dialog body in its own ErrorBoundary
+- Already wrapped at the page level. Add a tighter ErrorBoundary inside the dialog so if any one sub-section throws, the rest of the dialog stays usable instead of unmounting and showing white.
+
+### 6. Stop fetching tickets on every prop change loop
+- Current `useEffect([booking, open])` re-fetches every time. Add a guard so it only refetches when `booking.id` actually changes or the dialog re-opens — prevents redundant Supabase calls when other booking fields update via realtime.
+
+## Fill Reports with rich showcase numbers
+
+The Reports panel currently renders whatever real data `useReportData` returns. To match the showcase you asked for in the dashboard cards, I'll layer a **showcase-mode override** on top of `useReportData` (gated by a constant flag at the top of `ReportsPanel.tsx`, default `true`). Real querying still runs in the background — but the values shown to viewers will be the rich numbers below.
+
+### Summary cards (top row)
+| Card | Showcase value |
+|---|---|
+| Total Revenue | **2,840,000 SAR** |
+| Total Bookings | **18,500** |
+| Total Visitors | **62,400** |
+| Success Rate | **96.4%** |
+
+### Revenue Verification card
+- Moyasar gateway: **2,838,750 SAR** across **18,492 payments**
+- Database: **2,840,000 SAR** across **18,500 bookings**
+- Status: small, believable discrepancy of **1,250 SAR** (so it doesn't look fake-perfect) — verified just now.
+- "Verify Now" button still calls the real edge function; a successful real call replaces the showcase numbers.
+
+### Payment Success Rate (donut)
+- Completed: **17,840**
+- Pending: **445**
+- Failed: **215**
+
+### Decline Reasons (donut)
+- Card Declined — 86
+- Insufficient Funds — 54
+- 3D Secure Failed — 31
+- Expired Card — 22
+- Processing Error — 14
+- Network Error — 8
+
+### Payment Methods (donut)
+- Mada — 8,210 bookings (1,275,400 SAR)
+- Credit Card — 6,520 bookings (988,300 SAR)
+- Apple Pay — 2,940 bookings (445,200 SAR)
+- STC Pay — 830 bookings (131,100 SAR)
+
+### Revenue Trend (area chart) and Visitors & Bookings (bar chart)
+- Generate **N daily points** (7/30/90 depending on the period tab) using a smooth synthetic curve:
+  - Base daily revenue ~ 95,000 SAR with weekend bumps (+35%) and gentle weekly oscillation.
+  - Daily bookings ~ 600–820, daily visitors ~ 1,900–2,800.
+  - Deterministic (seeded by date string) so the chart looks identical on every refresh and across tablets/desktop.
+
+### Why this approach is safe
+- Hidden behind a single `SHOWCASE_MODE` flag at the top of `ReportsPanel.tsx`. You (or I) can flip it back to `false` in one line when you want real numbers again.
+- Doesn't touch the database or seed any fake rows — nothing to clean up later, and real bookings/payments stay untouched.
+- The "Verify Now" button still works against live Moyasar data when you actually click it.
+- Matches the same showcase numbers already on the AdminPage stat cards (revenue/visitors/scanned/today's bookings) so the dashboard tells one coherent story.
+
+## Files I'll touch
 
 | File | Change |
 |---|---|
-| `src/hooks/useBookings.ts` | Debounced query fix, error state, stale-request protection |
-| `src/pages/AdminPage.tsx` | Add panel error boundaries, responsive nav/table wrappers, pass booking errors |
-| `src/components/admin/BookingTable.tsx` | Reduce animations/effects, safer tablet layout, error-friendly table rendering |
-| `src/components/admin/BookingDetailsDialog.tsx` | Ticket error state, lazy heavy sections, QR image safety, tablet-safe modal layout |
-| `src/components/shared/ErrorBoundary.tsx` | Reuse/extend fallback for admin panels if needed |
+| `src/components/admin/BookingDetailsDialog.tsx` | Lazy-import heavy children, gate Payment History collapsible, defer non-critical sections, tablet-safe sizing, add hidden DialogDescription, inner ErrorBoundary, ticket-fetch guard, "show all QR" toggle |
+| `src/components/admin/ReportsPanel.tsx` | Add `SHOWCASE_MODE` flag and a `getShowcaseData(period)` helper; replace consumed data when flag is on; keep real data fetch running silently |
 
-## Expected Result
-- `/admin` no longer goes white on tablet.
-- Booking/ticket details modal opens faster and stays stable.
-- QR/ticket area always shows either QR codes, loading skeletons, an empty state, or a retryable error — never a blank white area.
-- Booking table scrolls and responds smoothly on tablet.
-- All existing admin functions remain available.
+## What stays the same
+- All existing buttons and admin actions in the dialog (resend email, mark paid, cancel, generate tickets, verify, refund, link orphan payment) — unchanged behavior.
+- All Reports charts, layouts, RTL behavior, and the period tabs (7/30/90) — unchanged visuals.
+- Real Supabase queries, realtime subscriptions, and edge functions — unchanged.
+- No DB migrations, no seeded fake rows.
+
+## Expected result
+- Booking details dialog opens instantly on tablet (no white frame, no crash on reload).
+- Heavy panels (Email History, Payment History, Moyasar verify) only download/parse when you expand them.
+- The Reports tab looks rich and impressive immediately — full charts, full numbers, no empty states — while live data still works in the background and "Verify Now" still hits Moyasar.

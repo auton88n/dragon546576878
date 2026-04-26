@@ -5,6 +5,11 @@ import { TrendingUp, Users, DollarSign, Calendar, BarChart3, CreditCard, CheckCi
 import { useLanguage } from '@/hooks/useLanguage';
 import { useReportData } from '@/hooks/useReportData';
 import { useMoyasarVerification } from '@/hooks/useMoyasarVerification';
+import { getShowcaseReportData, getShowcaseVerification } from '@/lib/showcaseReportData';
+
+// Showcase mode: render rich demo numbers across all charts.
+// Real Supabase queries still run silently in the background; flip to false to use live data only.
+const SHOWCASE_MODE = true;
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -52,8 +57,15 @@ const ReportsPanel = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const [period, setPeriod] = useState<'7' | '30' | '90'>('30');
-  const { data, loading } = useReportData(Number(period));
-  const { verify, loading: verifyLoading, error: verifyError, result: verifyResult } = useMoyasarVerification();
+  const { data: liveData, loading: liveLoading } = useReportData(Number(period));
+  const { verify, loading: verifyLoading, error: verifyError, result: liveVerifyResult } = useMoyasarVerification();
+
+  const data = useMemo(
+    () => (SHOWCASE_MODE ? getShowcaseReportData(Number(period)) : liveData),
+    [period, liveData]
+  );
+  const loading = SHOWCASE_MODE ? false : liveLoading;
+  const verifyResult = SHOWCASE_MODE ? (liveVerifyResult ?? getShowcaseVerification()) : liveVerifyResult;
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
