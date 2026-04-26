@@ -413,7 +413,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         aria-describedby="booking-details-desc"
-        className="w-[95vw] sm:w-full max-w-2xl max-h-[88vh] overflow-y-auto glass-card border-accent/20 pt-10"
+        className="w-[95vw] sm:w-full max-w-2xl max-h-[88vh] overflow-y-auto bg-card border-accent/20 pt-10 shadow-xl"
       >
         <DialogHeader className="pb-4 border-b border-accent/10 pe-12">
           <DialogTitle className="flex items-center justify-between rtl:flex-row-reverse">
@@ -439,7 +439,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
           </div>
 
           {/* Customer Info */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
+          <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
                 <User className="h-4 w-4 text-blue-600" />
@@ -476,7 +476,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
           </div>
 
           {/* Transaction Timeline */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
+          <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
                 <Clock className="h-4 w-4 text-purple-600" />
@@ -535,7 +535,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
           </div>
 
           {/* Tickets */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
+          <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
                 <Ticket className="h-4 w-4 text-accent" />
@@ -569,7 +569,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
           </div>
 
           {/* Generated Tickets / QR Codes */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
+          <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
               <h3 className="font-semibold text-foreground text-start rtl:text-end">
                 {isArabic ? 'رموز QR' : 'QR Codes'} ({tickets.length})
@@ -607,7 +607,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {(showAllQR ? tickets : tickets.slice(0, 12)).map((ticket) => (
+                  {(showAllQR ? tickets : tickets.slice(0, 6)).map((ticket) => (
                     <div
                       key={ticket.id}
                       className={`rounded-xl p-4 text-center border min-w-0 ${
@@ -616,7 +616,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
                           : 'bg-background/50 border-accent/20'
                       }`}
                     >
-                      {ticket.qr_code_url && (
+                      {ticket.qr_code_url && qrPreviewEnabled ? (
                         <img
                           src={ticket.qr_code_url}
                           alt="QR Code"
@@ -626,6 +626,10 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
                           height={80}
                           className="w-20 h-20 mx-auto mb-3 rounded-lg max-w-full object-contain"
                         />
+                      ) : (
+                        <div className="w-20 h-20 mx-auto mb-3 rounded-lg bg-accent/10 flex items-center justify-center">
+                          <Ticket className="h-8 w-8 text-accent" />
+                        </div>
                       )}
                       <p className="text-xs font-mono text-muted-foreground mb-2 break-all">{ticket.ticket_code}</p>
                       <Badge
@@ -642,15 +646,20 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
                     </div>
                   ))}
                 </div>
-                {tickets.length > 12 && !showAllQR && (
-                  <div className="mt-4 text-center">
+                <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
+                  {!qrPreviewEnabled && tickets.some((ticket) => ticket.qr_code_url) && (
+                    <Button size="sm" variant="outline" onClick={() => setQrPreviewEnabled(true)}>
+                      {isArabic ? 'عرض صور QR' : 'Show QR images'}
+                    </Button>
+                  )}
+                  {tickets.length > 6 && !showAllQR && (
                     <Button size="sm" variant="outline" onClick={() => setShowAllQR(true)}>
                       {isArabic
                         ? `عرض كل التذاكر (${tickets.length})`
                         : `Show all tickets (${tickets.length})`}
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             )}
           </div>
