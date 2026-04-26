@@ -284,26 +284,6 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     }
   };
 
-  const fetchTickets = async () => {
-    if (!booking) return;
-    setLoadingTickets(true);
-    setTicketsError(null);
-    try {
-      const { data, error } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('booking_id', booking.id);
-      if (error) throw error;
-      setTickets(data || []);
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-      setTicketsError(isArabic ? 'فشل تحميل التذاكر' : 'Failed to load tickets');
-      setTickets([]);
-    } finally {
-      setLoadingTickets(false);
-    }
-  };
-
   const handleResendEmail = async () => {
     if (!booking) return;
     setResending(true);
