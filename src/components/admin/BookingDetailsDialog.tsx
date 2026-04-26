@@ -402,7 +402,10 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-accent/20 pt-10">
+      <DialogContent
+        aria-describedby="booking-details-desc"
+        className="w-[95vw] sm:w-full max-w-2xl max-h-[88vh] overflow-y-auto glass-card border-accent/20 pt-10"
+      >
         <DialogHeader className="pb-4 border-b border-accent/10 pe-12">
           <DialogTitle className="flex items-center justify-between rtl:flex-row-reverse">
             <span className="text-xl font-bold text-foreground">{isArabic ? 'تفاصيل الحجز' : 'Booking Details'}</span>
@@ -410,6 +413,9 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
               {getStatusConfig(booking.booking_status).label}
             </Badge>
           </DialogTitle>
+          <DialogDescription id="booking-details-desc" className="sr-only">
+            {isArabic ? 'تفاصيل الحجز والتذاكر والدفع' : 'Booking, ticket and payment details'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 pt-4">
