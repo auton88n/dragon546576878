@@ -696,227 +696,237 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
             </Collapsible>
           </div>
 
-          {/* Email Status & Actions */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-transparent rtl:bg-gradient-to-l border border-accent/10">
-            <div className="flex items-center gap-3 rtl:flex-row-reverse">
-              {booking.confirmation_email_sent ? (
-                <>
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <MailCheck className="h-5 w-5 text-emerald-600" />
-                  </div>
-                  <span className="text-emerald-600 font-medium">
-                    {isArabic ? 'تم إرسال البريد الإلكتروني' : 'Email Sent'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                    <X className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <span className="text-muted-foreground font-medium">
-                    {isArabic ? 'لم يتم إرسال البريد' : 'Email Not Sent'}
-                  </span>
-                </>
-              )}
+          {/* Secondary sections — deferred to keep first paint fast on tablets */}
+          {!secondaryReady ? (
+            <div className="space-y-4">
+              <Skeleton className="h-16 w-full bg-accent/10" />
+              <Skeleton className="h-16 w-full bg-accent/10" />
             </div>
-            <Button 
-              onClick={handleResendEmail} 
-              disabled={resending}
-              className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
-            >
-              {resending ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="h-4 w-4" />
-              )}
-              {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
-            </Button>
-          </div>
-
-          {/* Email History (lazy-mounted) */}
-          <Collapsible open={emailHistoryOpen} onOpenChange={setEmailHistoryOpen} className="glass-card rounded-xl p-5 border border-accent/10">
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between gap-2">
-                <span className="flex items-center gap-2 rtl:flex-row-reverse">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                    <History className="h-4 w-4 text-blue-600" />
-                  </div>
-                  {isArabic ? 'سجل البريد الإلكتروني' : 'Email History'}
-                </span>
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-4">
-              {emailHistoryOpen && (
-                <ErrorBoundary fallback={<SectionErrorFallback label={isArabic ? 'فشل تحميل سجل البريد' : 'Failed to load email history'} />}>
-                  <Suspense fallback={<PanelFallback />}>
-                    <EmailStatusTracker bookingId={booking.id} />
-                  </Suspense>
-                </ErrorBoundary>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
-
-          {/* Find Orphan Payment - Only show when payment_id is null */}
-          {!booking.payment_id && booking.payment_status !== 'completed' && (
-            <div className="glass-card rounded-xl p-5 border border-amber-500/30 bg-amber-500/5">
-              <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
-                <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  </div>
-                  {isArabic ? 'البحث عن دفع مفقود' : 'Find Lost Payment'}
-                </h3>
+          ) : (
+            <ErrorBoundary fallback={<SectionErrorFallback label={isArabic ? 'تعذر تحميل بعض الأقسام' : 'Some sections failed to load'} />}>
+              {/* Email Status & Actions */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-transparent rtl:bg-gradient-to-l border border-accent/10">
+                <div className="flex items-center gap-3 rtl:flex-row-reverse">
+                  {booking.confirmation_email_sent ? (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <MailCheck className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <span className="text-emerald-600 font-medium">
+                        {isArabic ? 'تم إرسال البريد الإلكتروني' : 'Email Sent'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                        <X className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <span className="text-muted-foreground font-medium">
+                        {isArabic ? 'لم يتم إرسال البريد' : 'Email Not Sent'}
+                      </span>
+                    </>
+                  )}
+                </div>
                 <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleSearchOrphanPayment}
-                  disabled={searchingPayment}
-                  className="gap-2 border-amber-500/30 text-amber-700 hover:bg-amber-500/10"
+                  onClick={handleResendEmail}
+                  disabled={resending}
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
                 >
-                  {searchingPayment ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
-                  {isArabic ? 'بحث في Moyasar' : 'Search Moyasar'}
+                  {resending ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                  {isArabic ? 'إعادة إرسال البريد' : 'Resend Email'}
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                {isArabic ? 'ابحث عن مدفوعات في Moyasar قد تكون مرتبطة بهذا الحجز' : 'Search for payments in Moyasar that may belong to this booking'}
-              </p>
-              
-              {foundPayments.length > 0 && (
-                <div className="space-y-2 mt-4">
-                  <p className="text-sm font-medium">{isArabic ? 'المدفوعات الموجودة:' : 'Found Payments:'}</p>
-                  {foundPayments.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-background border">
-                      <div className="text-sm">
-                        <p className="font-mono text-xs text-muted-foreground">{p.id}</p>
-                        <p className="font-medium">{p.amount} SAR - <Badge variant={p.status === 'paid' ? 'default' : 'secondary'}>{p.status}</Badge></p>
-                        {p.isLinked && <p className="text-xs text-amber-600">{isArabic ? 'مرتبط بـ' : 'Linked to'} {p.linkedBookingRef}</p>}
+
+              {/* Email History (lazy-mounted) */}
+              <Collapsible open={emailHistoryOpen} onOpenChange={setEmailHistoryOpen} className="glass-card rounded-xl p-5 border border-accent/10 mt-6">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-between gap-2">
+                    <span className="flex items-center gap-2 rtl:flex-row-reverse">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <History className="h-4 w-4 text-blue-600" />
                       </div>
-                      {p.status === 'paid' && !p.isLinked && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleLinkPayment(p.id)}
-                          disabled={linkingPayment === p.id}
-                          className="gap-1"
-                        >
-                          {linkingPayment === p.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3" />}
-                          {isArabic ? 'ربط' : 'Link'}
-                        </Button>
+                      {isArabic ? 'سجل البريد الإلكتروني' : 'Email History'}
+                    </span>
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-4">
+                  {emailHistoryOpen && (
+                    <ErrorBoundary fallback={<SectionErrorFallback label={isArabic ? 'فشل تحميل سجل البريد' : 'Failed to load email history'} />}>
+                      <Suspense fallback={<PanelFallback />}>
+                        <EmailStatusTracker bookingId={booking.id} />
+                      </Suspense>
+                    </ErrorBoundary>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Find Orphan Payment - Only show when payment_id is null */}
+              {!booking.payment_id && booking.payment_status !== 'completed' && (
+                <div className="glass-card rounded-xl p-5 border border-amber-500/30 bg-amber-500/5 mt-6">
+                  <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
+                    <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      </div>
+                      {isArabic ? 'البحث عن دفع مفقود' : 'Find Lost Payment'}
+                    </h3>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSearchOrphanPayment}
+                      disabled={searchingPayment}
+                      className="gap-2 border-amber-500/30 text-amber-700 hover:bg-amber-500/10"
+                    >
+                      {searchingPayment ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+                      {isArabic ? 'بحث في Moyasar' : 'Search Moyasar'}
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {isArabic ? 'ابحث عن مدفوعات في Moyasar قد تكون مرتبطة بهذا الحجز' : 'Search for payments in Moyasar that may belong to this booking'}
+                  </p>
+
+                  {foundPayments.length > 0 && (
+                    <div className="space-y-2 mt-4">
+                      <p className="text-sm font-medium">{isArabic ? 'المدفوعات الموجودة:' : 'Found Payments:'}</p>
+                      {foundPayments.map((p) => (
+                        <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-background border">
+                          <div className="text-sm">
+                            <p className="font-mono text-xs text-muted-foreground">{p.id}</p>
+                            <p className="font-medium">{p.amount} SAR - <Badge variant={p.status === 'paid' ? 'default' : 'secondary'}>{p.status}</Badge></p>
+                            {p.isLinked && <p className="text-xs text-amber-600">{isArabic ? 'مرتبط بـ' : 'Linked to'} {p.linkedBookingRef}</p>}
+                          </div>
+                          {p.status === 'paid' && !p.isLinked && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleLinkPayment(p.id)}
+                              disabled={linkingPayment === p.id}
+                              className="gap-1"
+                            >
+                              {linkingPayment === p.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3" />}
+                              {isArabic ? 'ربط' : 'Link'}
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Moyasar Verification Panel */}
+              {booking.payment_id && (
+                <div className="glass-card rounded-xl p-5 border border-accent/10 mt-6">
+                  <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
+                    <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                        <Search className="h-4 w-4 text-indigo-600" />
+                      </div>
+                      {isArabic ? 'التحقق من Moyasar' : 'Moyasar Verification'}
+                    </h3>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleVerifyPayment}
+                      disabled={verifying}
+                      className="gap-2"
+                    >
+                      {verifying ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+                      {isArabic ? 'تحقق' : 'Verify'}
+                    </Button>
+                  </div>
+
+                  {verification && (
+                    <div className="space-y-3 text-sm">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-start rtl:text-end">
+                          <p className="text-muted-foreground">{isArabic ? 'الحالة في Moyasar' : 'Moyasar Status'}</p>
+                          <Badge className={verification.moyasar.status === 'paid' ? 'bg-emerald-500/20 text-emerald-700' : 'bg-amber-500/20 text-amber-700'}>
+                            {verification.moyasar.status}
+                          </Badge>
+                        </div>
+                        <div className="text-start rtl:text-end">
+                          <p className="text-muted-foreground">{isArabic ? 'المبلغ' : 'Amount'}</p>
+                          <p className="font-medium">{verification.moyasar.amount_format}</p>
+                        </div>
+                      </div>
+                      {verification.moyasar.refunded && verification.moyasar.refunded > 0 && (
+                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                          <p className="text-amber-700 font-medium">
+                            {isArabic ? 'المبلغ المسترد:' : 'Refunded:'} {verification.moyasar.refunded_format}
+                          </p>
+                        </div>
+                      )}
+                      {verification.comparison?.discrepancy && (
+                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2 rtl:flex-row-reverse">
+                          <AlertTriangle className="h-4 w-4 text-red-600" />
+                          <p className="text-red-700">{verification.comparison.discrepancy}</p>
+                        </div>
+                      )}
+                      {verification.moyasar.source && (
+                        <div className="text-start rtl:text-end">
+                          <p className="text-muted-foreground">{isArabic ? 'طريقة الدفع' : 'Payment Method'}</p>
+                          <p className="font-medium">
+                            {verification.moyasar.source.type} - {verification.moyasar.source.company} ****{verification.moyasar.source.number}
+                          </p>
+                        </div>
                       )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Moyasar Verification Panel */}
-          {booking.payment_id && (
-            <div className="glass-card rounded-xl p-5 border border-accent/10">
-              <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
-                <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                    <Search className="h-4 w-4 text-indigo-600" />
-                  </div>
-                  {isArabic ? 'التحقق من Moyasar' : 'Moyasar Verification'}
-                </h3>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleVerifyPayment}
-                  disabled={verifying}
-                  className="gap-2"
-                >
-                  {verifying ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
-                  {isArabic ? 'تحقق' : 'Verify'}
-                </Button>
-              </div>
-              
-              {verification && (
-                <div className="space-y-3 text-sm">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-start rtl:text-end">
-                      <p className="text-muted-foreground">{isArabic ? 'الحالة في Moyasar' : 'Moyasar Status'}</p>
-                      <Badge className={verification.moyasar.status === 'paid' ? 'bg-emerald-500/20 text-emerald-700' : 'bg-amber-500/20 text-amber-700'}>
-                        {verification.moyasar.status}
-                      </Badge>
-                    </div>
-                    <div className="text-start rtl:text-end">
-                      <p className="text-muted-foreground">{isArabic ? 'المبلغ' : 'Amount'}</p>
-                      <p className="font-medium">{verification.moyasar.amount_format}</p>
-                    </div>
-                  </div>
-                  {verification.moyasar.refunded && verification.moyasar.refunded > 0 && (
-                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                      <p className="text-amber-700 font-medium">
-                        {isArabic ? 'المبلغ المسترد:' : 'Refunded:'} {verification.moyasar.refunded_format}
-                      </p>
-                    </div>
-                  )}
-                  {verification.comparison?.discrepancy && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2 rtl:flex-row-reverse">
-                      <AlertTriangle className="h-4 w-4 text-red-600" />
-                      <p className="text-red-700">{verification.comparison.discrepancy}</p>
-                    </div>
-                  )}
-                  {verification.moyasar.source && (
-                    <div className="text-start rtl:text-end">
-                      <p className="text-muted-foreground">{isArabic ? 'طريقة الدفع' : 'Payment Method'}</p>
-                      <p className="font-medium">
-                        {verification.moyasar.source.type} - {verification.moyasar.source.company} ****{verification.moyasar.source.number}
-                      </p>
-                    </div>
                   )}
                 </div>
               )}
-            </div>
-          )}
 
-          {/* Admin Actions for pending payments */}
-          {booking.payment_status === 'pending' && booking.booking_status !== 'cancelled' && (
-            <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <Button 
-                onClick={handleMarkAsPaid} 
-                disabled={markingPaid}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
-              >
-                {markingPaid ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                {isArabic ? 'تأكيد الدفع' : 'Mark as Paid'}
-              </Button>
-              <Button 
-                onClick={handleCancelBooking} 
-                disabled={cancelling}
-                variant="destructive"
-                className="flex-1 gap-2"
-              >
-                {cancelling ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
-                {isArabic ? 'إلغاء الحجز' : 'Cancel Booking'}
-              </Button>
-            </div>
-          )}
+              {/* Admin Actions for pending payments */}
+              {booking.payment_status === 'pending' && booking.booking_status !== 'cancelled' && (
+                <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 mt-6">
+                  <Button
+                    onClick={handleMarkAsPaid}
+                    disabled={markingPaid}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                  >
+                    {markingPaid ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                    {isArabic ? 'تأكيد الدفع' : 'Mark as Paid'}
+                  </Button>
+                  <Button
+                    onClick={handleCancelBooking}
+                    disabled={cancelling}
+                    variant="destructive"
+                    className="flex-1 gap-2"
+                  >
+                    {cancelling ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                    {isArabic ? 'إلغاء الحجز' : 'Cancel Booking'}
+                  </Button>
+                </div>
+              )}
 
-          {/* Refund Actions for completed payments */}
-          {booking.payment_status === 'completed' && booking.payment_id && (
-            <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-              <Button 
-                onClick={handleVerifyPayment} 
-                disabled={verifying}
-                variant="outline"
-                className="flex-1 gap-2"
-              >
-                {verifying ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                {isArabic ? 'التحقق من الدفع' : 'Verify Payment'}
-              </Button>
-              <Button 
-                onClick={() => {
-                  setRefundAmount(String(booking.total_amount));
-                  setShowRefundDialog(true);
-                }}
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white gap-2"
-              >
-                <Undo2 className="h-4 w-4" />
-                {isArabic ? 'معالجة الاسترداد' : 'Process Refund'}
-              </Button>
-            </div>
+              {/* Refund Actions for completed payments */}
+              {booking.payment_status === 'completed' && booking.payment_id && (
+                <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 mt-6">
+                  <Button
+                    onClick={handleVerifyPayment}
+                    disabled={verifying}
+                    variant="outline"
+                    className="flex-1 gap-2"
+                  >
+                    {verifying ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                    {isArabic ? 'التحقق من الدفع' : 'Verify Payment'}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setRefundAmount(String(booking.total_amount));
+                      setShowRefundDialog(true);
+                    }}
+                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white gap-2"
+                  >
+                    <Undo2 className="h-4 w-4" />
+                    {isArabic ? 'معالجة الاسترداد' : 'Process Refund'}
+                  </Button>
+                </div>
+              )}
+            </ErrorBoundary>
           )}
         </div>
       </DialogContent>
