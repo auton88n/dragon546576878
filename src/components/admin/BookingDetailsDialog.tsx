@@ -596,42 +596,53 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
                 {isArabic ? 'لا توجد تذاكر بعد' : 'No tickets yet'}
               </p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {tickets.map((ticket) => (
-                  <div
-                    key={ticket.id}
-                    className={`rounded-xl p-4 text-center border min-w-0 ${
-                      ticket.is_used 
-                        ? 'bg-muted/50 border-muted opacity-60' 
-                        : 'bg-background/50 border-accent/20'
-                    }`}
-                  >
-                    {ticket.qr_code_url && (
-                      <img
-                        src={ticket.qr_code_url}
-                        alt="QR Code"
-                        loading="lazy"
-                        decoding="async"
-                        width={80}
-                        height={80}
-                        className="w-20 h-20 mx-auto mb-3 rounded-lg max-w-full object-contain"
-                      />
-                    )}
-                    <p className="text-xs font-mono text-muted-foreground mb-2 break-all">{ticket.ticket_code}</p>
-                    <Badge 
-                      variant="outline" 
-                      className={ticket.is_used 
-                        ? 'bg-muted text-muted-foreground' 
-                        : 'bg-accent/10 text-accent border-accent/30'
-                      }
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {(showAllQR ? tickets : tickets.slice(0, 12)).map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className={`rounded-xl p-4 text-center border min-w-0 ${
+                        ticket.is_used
+                          ? 'bg-muted/50 border-muted opacity-60'
+                          : 'bg-background/50 border-accent/20'
+                      }`}
                     >
-                      {ticket.is_used 
-                        ? (isArabic ? 'مستخدم' : 'Used') 
-                        : getTicketTypeLabel(ticket.ticket_type)}
-                    </Badge>
+                      {ticket.qr_code_url && (
+                        <img
+                          src={ticket.qr_code_url}
+                          alt="QR Code"
+                          loading="lazy"
+                          decoding="async"
+                          width={80}
+                          height={80}
+                          className="w-20 h-20 mx-auto mb-3 rounded-lg max-w-full object-contain"
+                        />
+                      )}
+                      <p className="text-xs font-mono text-muted-foreground mb-2 break-all">{ticket.ticket_code}</p>
+                      <Badge
+                        variant="outline"
+                        className={ticket.is_used
+                          ? 'bg-muted text-muted-foreground'
+                          : 'bg-accent/10 text-accent border-accent/30'
+                        }
+                      >
+                        {ticket.is_used
+                          ? (isArabic ? 'مستخدم' : 'Used')
+                          : getTicketTypeLabel(ticket.ticket_type)}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+                {tickets.length > 12 && !showAllQR && (
+                  <div className="mt-4 text-center">
+                    <Button size="sm" variant="outline" onClick={() => setShowAllQR(true)}>
+                      {isArabic
+                        ? `عرض كل التذاكر (${tickets.length})`
+                        : `Show all tickets (${tickets.length})`}
+                    </Button>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
 
