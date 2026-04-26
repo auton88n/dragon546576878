@@ -105,9 +105,16 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
 
   // Lazy-mount heavy collapsible panels only after user opens them
   const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
+  const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
   const [moyasarOpen, setMoyasarOpen] = useState(false);
   const [orphanOpen, setOrphanOpen] = useState(false);
-  
+
+  // Defer rendering of heavy lower sections to keep first paint fast on tablets
+  const [secondaryReady, setSecondaryReady] = useState(false);
+
+  // QR grid: cap initial render to 12 thumbnails on big group bookings
+  const [showAllQR, setShowAllQR] = useState(false);
+
   // Moyasar verification state
   const [verifying, setVerifying] = useState(false);
   const [verification, setVerification] = useState<MoyasarVerification | null>(null);
@@ -122,15 +129,23 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const [foundPayments, setFoundPayments] = useState<any[]>([]);
   const [linkingPayment, setLinkingPayment] = useState<string | null>(null);
 
+  // Reset transient state and refetch tickets only when the booking id or open state actually changes
   useEffect(() => {
     if (booking && open) {
       fetchTickets();
-      setVerification(null); // Reset verification when booking changes
+      setVerification(null);
       setEmailHistoryOpen(false);
+      setPaymentHistoryOpen(false);
       setMoyasarOpen(false);
       setOrphanOpen(false);
+      setShowAllQR(false);
+      setSecondaryReady(false);
+      // Defer heavy lower sections until after the dialog has painted
+      const t = setTimeout(() => setSecondaryReady(true), 80);
+      return () => clearTimeout(t);
     }
-  }, [booking, open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booking?.id, open]);
 
   // Verify Moyasar payment status
   const handleVerifyPayment = async () => {
