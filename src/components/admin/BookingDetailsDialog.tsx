@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe, CheckCircle, Ban, History, Wallet, Search, Undo2, AlertTriangle } from 'lucide-react';
@@ -52,6 +52,7 @@ const SectionErrorFallback = ({ label }: { label: string }) => (
 
 type Booking = Tables<'bookings'>;
 type TicketType = Tables<'tickets'>;
+type TicketPreview = Pick<TicketType, 'id' | 'ticket_code' | 'ticket_type' | 'is_used' | 'qr_code_url'>;
 
 interface MoyasarVerification {
   moyasar: {
@@ -96,12 +97,14 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const { currentLanguage } = useLanguage();
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
-  const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [tickets, setTickets] = useState<TicketPreview[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
   const [ticketsError, setTicketsError] = useState<string | null>(null);
+  const ticketFetchIdRef = useRef(0);
   const [resending, setResending] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   // Lazy-mount heavy collapsible panels only after user opens them
   const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
@@ -114,6 +117,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
 
   // QR grid: cap initial render to 12 thumbnails on big group bookings
   const [showAllQR, setShowAllQR] = useState(false);
+  const [qrPreviewEnabled, setQrPreviewEnabled] = useState(false);
 
   // Moyasar verification state
   const [verifying, setVerifying] = useState(false);
@@ -129,6 +133,31 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const [foundPayments, setFoundPayments] = useState<any[]>([]);
   const [linkingPayment, setLinkingPayment] = useState<string | null>(null);
 
+  const fetchTickets = useCallback(async () => {
+    if (!booking || !open) return;
+    const fetchId = ++ticketFetchIdRef.current;
+    setLoadingTickets(true);
+    setTicketsError(null);
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('id, ticket_code, ticket_type, is_used, qr_code_url')
+        .eq('booking_id', booking.id)
+        .order('created_at', { ascending: true })
+        .limit(50);
+      if (error) throw error;
+      if (fetchId !== ticketFetchIdRef.current) return;
+      setTickets((data || []) as TicketPreview[]);
+    } catch (error) {
+      if (fetchId !== ticketFetchIdRef.current) return;
+      console.error('Error fetching tickets:', error);
+      setTicketsError(isArabic ? 'فشل تحميل التذاكر' : 'Failed to load tickets');
+      setTickets([]);
+    } finally {
+      if (fetchId === ticketFetchIdRef.current) setLoadingTickets(false);
+    }
+  }, [booking?.id, isArabic, open]);
+
   // Reset transient state and refetch tickets only when the booking id or open state actually changes
   useEffect(() => {
     if (booking && open) {
@@ -139,13 +168,14 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
       setMoyasarOpen(false);
       setOrphanOpen(false);
       setShowAllQR(false);
+      setQrPreviewEnabled(false);
       setSecondaryReady(false);
       // Defer heavy lower sections until after the dialog has painted
-      const t = setTimeout(() => setSecondaryReady(true), 80);
+      const t = window.setTimeout(() => setSecondaryReady(true), 180);
       return () => clearTimeout(t);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [booking?.id, open]);
+    ticketFetchIdRef.current += 1;
+  }, [booking?.id, fetchTickets, open]);
 
   // Verify Moyasar payment status
   const handleVerifyPayment = async () => {
@@ -255,26 +285,6 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     }
   };
 
-  const fetchTickets = async () => {
-    if (!booking) return;
-    setLoadingTickets(true);
-    setTicketsError(null);
-    try {
-      const { data, error } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('booking_id', booking.id);
-      if (error) throw error;
-      setTickets(data || []);
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-      setTicketsError(isArabic ? 'فشل تحميل التذاكر' : 'Failed to load tickets');
-      setTickets([]);
-    } finally {
-      setLoadingTickets(false);
-    }
-  };
-
   const handleResendEmail = async () => {
     if (!booking) return;
     setResending(true);
@@ -322,8 +332,6 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     }
   };
 
-  const [regenerating, setRegenerating] = useState(false);
-  
   const handleRegenerateTickets = async () => {
     if (!booking) return;
     setRegenerating(true);
@@ -404,7 +412,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         aria-describedby="booking-details-desc"
-        className="w-[95vw] sm:w-full max-w-2xl max-h-[88vh] overflow-y-auto glass-card border-accent/20 pt-10"
+        className="w-[95vw] sm:w-full max-w-2xl max-h-[88vh] overflow-y-auto bg-card border-accent/20 pt-10 shadow-xl"
       >
         <DialogHeader className="pb-4 border-b border-accent/10 pe-12">
           <DialogTitle className="flex items-center justify-between rtl:flex-row-reverse">
@@ -430,7 +438,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
           </div>
 
           {/* Customer Info */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
+          <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
                 <User className="h-4 w-4 text-blue-600" />
@@ -467,7 +475,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
           </div>
 
           {/* Transaction Timeline */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
+          <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
                 <Clock className="h-4 w-4 text-purple-600" />
@@ -526,7 +534,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
           </div>
 
           {/* Tickets */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
+          <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
                 <Ticket className="h-4 w-4 text-accent" />
@@ -560,7 +568,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
           </div>
 
           {/* Generated Tickets / QR Codes */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
+          <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
               <h3 className="font-semibold text-foreground text-start rtl:text-end">
                 {isArabic ? 'رموز QR' : 'QR Codes'} ({tickets.length})
@@ -598,7 +606,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {(showAllQR ? tickets : tickets.slice(0, 12)).map((ticket) => (
+                  {(showAllQR ? tickets : tickets.slice(0, 6)).map((ticket) => (
                     <div
                       key={ticket.id}
                       className={`rounded-xl p-4 text-center border min-w-0 ${
@@ -607,7 +615,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
                           : 'bg-background/50 border-accent/20'
                       }`}
                     >
-                      {ticket.qr_code_url && (
+                      {ticket.qr_code_url && qrPreviewEnabled ? (
                         <img
                           src={ticket.qr_code_url}
                           alt="QR Code"
@@ -617,6 +625,10 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
                           height={80}
                           className="w-20 h-20 mx-auto mb-3 rounded-lg max-w-full object-contain"
                         />
+                      ) : (
+                        <div className="w-20 h-20 mx-auto mb-3 rounded-lg bg-accent/10 flex items-center justify-center">
+                          <Ticket className="h-8 w-8 text-accent" />
+                        </div>
                       )}
                       <p className="text-xs font-mono text-muted-foreground mb-2 break-all">{ticket.ticket_code}</p>
                       <Badge
@@ -633,21 +645,26 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
                     </div>
                   ))}
                 </div>
-                {tickets.length > 12 && !showAllQR && (
-                  <div className="mt-4 text-center">
+                <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
+                  {!qrPreviewEnabled && tickets.some((ticket) => ticket.qr_code_url) && (
+                    <Button size="sm" variant="outline" onClick={() => setQrPreviewEnabled(true)}>
+                      {isArabic ? 'عرض صور QR' : 'Show QR images'}
+                    </Button>
+                  )}
+                  {tickets.length > 6 && !showAllQR && (
                     <Button size="sm" variant="outline" onClick={() => setShowAllQR(true)}>
                       {isArabic
                         ? `عرض كل التذاكر (${tickets.length})`
                         : `Show all tickets (${tickets.length})`}
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             )}
           </div>
 
           {/* Payment Info */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
+          <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                 <CreditCard className="h-4 w-4 text-emerald-600" />
@@ -742,7 +759,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
               </div>
 
               {/* Email History (lazy-mounted) */}
-              <Collapsible open={emailHistoryOpen} onOpenChange={setEmailHistoryOpen} className="glass-card rounded-xl p-5 border border-accent/10 mt-6">
+              <Collapsible open={emailHistoryOpen} onOpenChange={setEmailHistoryOpen} className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm mt-6">
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" className="w-full justify-between gap-2">
                     <span className="flex items-center gap-2 rtl:flex-row-reverse">
@@ -766,7 +783,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
 
               {/* Find Orphan Payment - Only show when payment_id is null */}
               {!booking.payment_id && booking.payment_status !== 'completed' && (
-                <div className="glass-card rounded-xl p-5 border border-amber-500/30 bg-amber-500/5 mt-6">
+                <div className="rounded-xl bg-card border border-amber-500/30 p-5 shadow-sm mt-6">
                   <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
                     <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse">
                       <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
@@ -819,7 +836,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
 
               {/* Moyasar Verification Panel */}
               {booking.payment_id && (
-                <div className="glass-card rounded-xl p-5 border border-accent/10 mt-6">
+                <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm mt-6">
                   <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
                     <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse">
                       <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
