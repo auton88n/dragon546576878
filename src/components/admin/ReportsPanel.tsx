@@ -57,8 +57,15 @@ const ReportsPanel = () => {
   const { currentLanguage } = useLanguage();
   const isArabic = currentLanguage === 'ar';
   const [period, setPeriod] = useState<'7' | '30' | '90'>('30');
-  const { data, loading } = useReportData(Number(period));
-  const { verify, loading: verifyLoading, error: verifyError, result: verifyResult } = useMoyasarVerification();
+  const { data: liveData, loading: liveLoading } = useReportData(Number(period));
+  const { verify, loading: verifyLoading, error: verifyError, result: liveVerifyResult } = useMoyasarVerification();
+
+  const data = useMemo(
+    () => (SHOWCASE_MODE ? getShowcaseReportData(Number(period)) : liveData),
+    [period, liveData]
+  );
+  const loading = SHOWCASE_MODE ? false : liveLoading;
+  const verifyResult = SHOWCASE_MODE ? (liveVerifyResult ?? getShowcaseVerification()) : liveVerifyResult;
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
