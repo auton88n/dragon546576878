@@ -104,6 +104,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const [resending, setResending] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   // Lazy-mount heavy collapsible panels only after user opens them
   const [emailHistoryOpen, setEmailHistoryOpen] = useState(false);
@@ -331,8 +332,6 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
     }
   };
 
-  const [regenerating, setRegenerating] = useState(false);
-  
   const handleRegenerateTickets = async () => {
     if (!booking) return;
     setRegenerating(true);
