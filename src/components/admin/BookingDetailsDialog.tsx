@@ -746,7 +746,13 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-4">
-              {emailHistoryOpen && <EmailStatusTracker bookingId={booking.id} />}
+              {emailHistoryOpen && (
+                <ErrorBoundary fallback={<SectionErrorFallback label={isArabic ? 'فشل تحميل سجل البريد' : 'Failed to load email history'} />}>
+                  <Suspense fallback={<PanelFallback />}>
+                    <EmailStatusTracker bookingId={booking.id} />
+                  </Suspense>
+                </ErrorBoundary>
+              )}
             </CollapsibleContent>
           </Collapsible>
 
