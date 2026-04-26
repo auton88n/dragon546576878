@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe, CheckCircle, Ban, History, Wallet, Search, Undo2, AlertTriangle } from 'lucide-react';
@@ -52,6 +52,7 @@ const SectionErrorFallback = ({ label }: { label: string }) => (
 
 type Booking = Tables<'bookings'>;
 type TicketType = Tables<'tickets'>;
+type TicketPreview = Pick<TicketType, 'id' | 'ticket_code' | 'ticket_type' | 'is_used' | 'qr_code_url'>;
 
 interface MoyasarVerification {
   moyasar: {
@@ -96,9 +97,10 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const { currentLanguage } = useLanguage();
   const { toast } = useToast();
   const isArabic = currentLanguage === 'ar';
-  const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [tickets, setTickets] = useState<TicketPreview[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
   const [ticketsError, setTicketsError] = useState<string | null>(null);
+  const ticketFetchIdRef = useRef(0);
   const [resending, setResending] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -114,6 +116,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
 
   // QR grid: cap initial render to 12 thumbnails on big group bookings
   const [showAllQR, setShowAllQR] = useState(false);
+  const [qrPreviewEnabled, setQrPreviewEnabled] = useState(false);
 
   // Moyasar verification state
   const [verifying, setVerifying] = useState(false);
@@ -129,6 +132,31 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
   const [foundPayments, setFoundPayments] = useState<any[]>([]);
   const [linkingPayment, setLinkingPayment] = useState<string | null>(null);
 
+  const fetchTickets = useCallback(async () => {
+    if (!booking || !open) return;
+    const fetchId = ++ticketFetchIdRef.current;
+    setLoadingTickets(true);
+    setTicketsError(null);
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('id, ticket_code, ticket_type, is_used, qr_code_url')
+        .eq('booking_id', booking.id)
+        .order('created_at', { ascending: true })
+        .limit(50);
+      if (error) throw error;
+      if (fetchId !== ticketFetchIdRef.current) return;
+      setTickets((data || []) as TicketPreview[]);
+    } catch (error) {
+      if (fetchId !== ticketFetchIdRef.current) return;
+      console.error('Error fetching tickets:', error);
+      setTicketsError(isArabic ? 'فشل تحميل التذاكر' : 'Failed to load tickets');
+      setTickets([]);
+    } finally {
+      if (fetchId === ticketFetchIdRef.current) setLoadingTickets(false);
+    }
+  }, [booking?.id, isArabic, open]);
+
   // Reset transient state and refetch tickets only when the booking id or open state actually changes
   useEffect(() => {
     if (booking && open) {
@@ -139,13 +167,14 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
       setMoyasarOpen(false);
       setOrphanOpen(false);
       setShowAllQR(false);
+      setQrPreviewEnabled(false);
       setSecondaryReady(false);
       // Defer heavy lower sections until after the dialog has painted
-      const t = setTimeout(() => setSecondaryReady(true), 80);
+      const t = window.setTimeout(() => setSecondaryReady(true), 180);
       return () => clearTimeout(t);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [booking?.id, open]);
+    ticketFetchIdRef.current += 1;
+  }, [booking?.id, fetchTickets, open]);
 
   // Verify Moyasar payment status
   const handleVerifyPayment = async () => {
