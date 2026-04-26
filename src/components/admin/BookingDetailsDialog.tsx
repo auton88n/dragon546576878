@@ -665,7 +665,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
           </div>
 
           {/* Payment Info */}
-          <div className="glass-card rounded-xl p-5 border border-accent/10">
+          <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-foreground rtl:flex-row-reverse rtl:justify-end">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                 <CreditCard className="h-4 w-4 text-emerald-600" />
@@ -760,7 +760,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
               </div>
 
               {/* Email History (lazy-mounted) */}
-              <Collapsible open={emailHistoryOpen} onOpenChange={setEmailHistoryOpen} className="glass-card rounded-xl p-5 border border-accent/10 mt-6">
+              <Collapsible open={emailHistoryOpen} onOpenChange={setEmailHistoryOpen} className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm mt-6">
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" className="w-full justify-between gap-2">
                     <span className="flex items-center gap-2 rtl:flex-row-reverse">
@@ -784,7 +784,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
 
               {/* Find Orphan Payment - Only show when payment_id is null */}
               {!booking.payment_id && booking.payment_status !== 'completed' && (
-                <div className="glass-card rounded-xl p-5 border border-amber-500/30 bg-amber-500/5 mt-6">
+                <div className="rounded-xl bg-card border border-amber-500/30 p-5 shadow-sm mt-6">
                   <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
                     <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse">
                       <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
@@ -837,7 +837,7 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
 
               {/* Moyasar Verification Panel */}
               {booking.payment_id && (
-                <div className="glass-card rounded-xl p-5 border border-accent/10 mt-6">
+                <div className="rounded-xl bg-card border border-accent/10 p-5 shadow-sm mt-6">
                   <div className="flex items-center justify-between mb-4 rtl:flex-row-reverse">
                     <h3 className="font-semibold flex items-center gap-2 text-foreground rtl:flex-row-reverse">
                       <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
