@@ -673,8 +673,8 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
               </div>
             </div>
 
-            {/* Payment History Collapsible */}
-            <Collapsible className="mt-4">
+            {/* Payment History Collapsible — only mounts the panel when expanded */}
+            <Collapsible open={paymentHistoryOpen} onOpenChange={setPaymentHistoryOpen} className="mt-4">
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm" className="w-full justify-between gap-2">
                   <span className="flex items-center gap-2 rtl:flex-row-reverse">
@@ -685,7 +685,13 @@ const BookingDetailsDialog = ({ booking, open, onOpenChange, onBookingUpdated }:
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-4">
-                <PaymentHistoryPanel bookingId={booking.id} />
+                {paymentHistoryOpen && (
+                  <ErrorBoundary fallback={<SectionErrorFallback label={isArabic ? 'فشل تحميل سجل المدفوعات' : 'Failed to load payment history'} />}>
+                    <Suspense fallback={<PanelFallback />}>
+                      <PaymentHistoryPanel bookingId={booking.id} />
+                    </Suspense>
+                  </ErrorBoundary>
+                )}
               </CollapsibleContent>
             </Collapsible>
           </div>
