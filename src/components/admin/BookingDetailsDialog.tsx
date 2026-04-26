@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { Mail, Phone, Calendar, Clock, Ticket, CreditCard, RefreshCw, MailCheck, X, User, Globe, CheckCircle, Ban, History, Wallet, Search, Undo2, AlertTriangle } from 'lucide-react';
@@ -11,6 +11,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -30,8 +31,24 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
-import EmailStatusTracker from './EmailStatusTracker';
-import PaymentHistoryPanel from './PaymentHistoryPanel';
+import ErrorBoundary from '@/components/shared/ErrorBoundary';
+
+// Heavy children — only download/parse when their section is opened
+const EmailStatusTracker = lazy(() => import('./EmailStatusTracker'));
+const PaymentHistoryPanel = lazy(() => import('./PaymentHistoryPanel'));
+
+const PanelFallback = () => (
+  <div className="space-y-2">
+    <Skeleton className="h-4 w-1/3 bg-accent/10" />
+    <Skeleton className="h-16 w-full bg-accent/10" />
+  </div>
+);
+
+const SectionErrorFallback = ({ label }: { label: string }) => (
+  <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive text-center">
+    {label}
+  </div>
+);
 
 type Booking = Tables<'bookings'>;
 type TicketType = Tables<'tickets'>;
