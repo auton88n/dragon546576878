@@ -5,6 +5,11 @@ import { TrendingUp, Users, DollarSign, Calendar, BarChart3, CreditCard, CheckCi
 import { useLanguage } from '@/hooks/useLanguage';
 import { useReportData } from '@/hooks/useReportData';
 import { useMoyasarVerification } from '@/hooks/useMoyasarVerification';
+import { getShowcaseReportData, getShowcaseVerification } from '@/lib/showcaseReportData';
+
+// Showcase mode: render rich demo numbers across all charts.
+// Real Supabase queries still run silently in the background; flip to false to use live data only.
+const SHOWCASE_MODE = true;
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
